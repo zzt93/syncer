@@ -1,7 +1,8 @@
-package com.github.zzt93.syncer.connect;
+package com.github.zzt93.syncer.input.connect;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.ReflectionUtils;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
@@ -15,10 +16,6 @@ public class NamedThreadFactory implements ThreadFactory {
 
     @Override
     public Thread newThread(Runnable r) {
-        if (r instanceof NamedJob) {
-            return new Thread(r, ((NamedJob) r).getName());
-        }
-        logger.warn("Not the instance of NamedJob", r);
-        return new Thread(r, "" + count.getAndAdd(1L));
+        return new Thread(r, "syncer-tmp-" + count.getAndAdd(1L));
     }
 }

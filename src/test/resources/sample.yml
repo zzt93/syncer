@@ -1,0 +1,24 @@
+syncer:
+
+  input:
+    masters:
+    - address: 127.0.0.1
+      port: 3306
+      user: root
+      password-file: password
+
+    - address: 192.168.1.100
+      port: 3306
+      user: root
+      password-file: password
+
+
+  output:
+    elasticsearch:
+      cluster-name: elasticsearch-demo
+      cluster-nodes: ["192.168.1.100:9300"]
+      user: elastic-user
+      password-file: es-password
+      index: "%{table}"
+      type: "%{table}"
+      document-id: "%{id}"

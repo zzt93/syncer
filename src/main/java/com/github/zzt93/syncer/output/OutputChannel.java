@@ -1,11 +1,15 @@
-package com.github.zzt93.syncer.config.output;
+package com.github.zzt93.syncer.output;
+
+import com.github.zzt93.syncer.common.SyncEvent;
+
+import java.util.List;
 
 /**
  * @author zzt
  */
 public interface OutputChannel {
 
-    void connect();
+    boolean output(SyncEvent event);
 
-    void output();
+    boolean output(List<SyncEvent> batch);
 }
