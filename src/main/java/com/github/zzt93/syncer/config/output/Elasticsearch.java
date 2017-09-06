@@ -1,22 +1,41 @@
 package com.github.zzt93.syncer.config.output;
 
 import com.github.zzt93.syncer.output.OutputChannel;
+import com.github.zzt93.syncer.util.FileUtil;
+import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.transport.InetSocketTransportAddress;
+import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
+import org.springframework.util.Assert;
 
+import java.io.IOException;
+import java.net.InetAddress;
 import java.util.List;
+import java.util.stream.Collectors;
+
+import static org.apache.commons.lang.StringUtils.*;
 
 /**
  * @author zzt
  */
+@Configuration
 public class Elasticsearch implements OutputChannelConfig {
 
+    private static final Logger logger = LoggerFactory.getLogger(Elasticsearch.class);
+    private static final String COMMA = ",";
+    private static final String COLON = ":";
     private String clusterName = "elasticsearch";
     private List<String> clusterNodes;
-
     private String user;
     private String passwordFile;
     private String index;
     private String type;
     private String documentId;
+    private String password;
 
     public String getClusterName() {
         return clusterName;
@@ -48,6 +67,11 @@ public class Elasticsearch implements OutputChannelConfig {
 
     public void setPasswordFile(String passwordFile) {
         this.passwordFile = passwordFile;
+        try {
+            this.password = FileUtil.readAll(passwordFile);
+        } catch (IOException e) {
+            logger.error("Invalid password file location of elasticsearch", e);
+        }
     }
 
     public String getIndex() {
@@ -74,14 +98,44 @@ public class Elasticsearch implements OutputChannelConfig {
         this.documentId = documentId;
     }
 
-    @Override
-    public void connect() {
+    private String clusterNodesString() {
+        return clusterNodes.stream().collect(Collectors.joining(","));
+    }
 
+    @Bean
+    public TransportClient transportClient() throws Exception {
+        PreBuiltXPackTransportClient client = new PreBuiltXPackTransportClient(settings());
+        String clusterNodes = clusterNodesString();
+        Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
+        for (String clusterNode : split(clusterNodes, COMMA)) {
+            String hostName = substringBeforeLast(clusterNode, COLON);
+            String port = substringAfterLast(clusterNode, COLON);
+            Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
+            Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
+            logger.info("adding transport node : " + clusterNode);
+            client.addTransportAddress(new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
+        }
+        return client;
+    }
+
+    private Settings settings() {
+        return Settings.builder()
+                .put("cluster.name", getClusterName())
+                .put("xpack.security.user", user + COLON + password)
+//        .put("client.transport.sniff", clientTransportSniff)
+//        .put("client.transport.ignore_cluster_name", clientIgnoreClusterName)
+//        .put("client.transport.ping_timeout", clientPingTimeout)
+//        .put("client.transport.nodes_sampler_interval", clientNodesSamplerInterval)
+                .build();
     }
 
     @Override
     public OutputChannel build() {
         connect();
         return null;
+    }
+
+    private void connect() {
+
     }
 }

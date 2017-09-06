@@ -7,7 +7,5 @@ import com.github.zzt93.syncer.output.OutputChannel;
  */
 public interface OutputChannelConfig {
 
-    void connect();
-
     OutputChannel build();
 }

@@ -9,6 +9,8 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer;
 import org.springframework.core.io.ClassPathResource;
 
+import javax.annotation.PostConstruct;
+
 /**
  * @author zzt
  */
@@ -44,5 +46,11 @@ public class SyncerConfig {
         propertySourcesPlaceholderConfigurer.setProperties(yaml.getObject());
         return propertySourcesPlaceholderConfigurer;
     }
+
+    @PostConstruct
+    public void initOutput() {
+        output.init();
+    }
+
 }
 

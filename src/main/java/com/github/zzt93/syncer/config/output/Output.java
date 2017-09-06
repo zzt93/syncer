@@ -14,4 +14,10 @@ public class Output {
     public void setElasticsearch(Elasticsearch elasticsearch) {
         this.elasticsearch = elasticsearch;
     }
+
+    public void init() {
+        if (elasticsearch != null) {
+            elasticsearch.build();
+        }
+    }
 }
