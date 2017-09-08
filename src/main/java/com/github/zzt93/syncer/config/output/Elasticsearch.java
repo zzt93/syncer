@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.output;
 
-import com.github.zzt93.syncer.output.OutputChannel;
+import com.github.zzt93.syncer.config.SyncerConfig;
 import com.github.zzt93.syncer.util.FileUtil;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
@@ -8,6 +8,7 @@ import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
@@ -103,9 +104,12 @@ public class Elasticsearch implements OutputChannelConfig {
     }
 
     @Bean
-    public TransportClient transportClient() throws Exception {
-        PreBuiltXPackTransportClient client = new PreBuiltXPackTransportClient(settings());
-        String clusterNodes = clusterNodesString();
+    @ConditionalOnProperty(prefix = "syncer.output.elasticsearch", name = {"cluster-name", "cluster-nodes[0]"})
+    public static TransportClient transportClient(SyncerConfig syncerConfig) throws Exception {
+        Elasticsearch elasticsearch = syncerConfig.getOutput().getElasticsearch();
+        Assert.notNull(elasticsearch, "[Assertion failed] ");
+        PreBuiltXPackTransportClient client = new PreBuiltXPackTransportClient(elasticsearch.settings());
+        String clusterNodes = elasticsearch.clusterNodesString();
         Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
         for (String clusterNode : split(clusterNodes, COMMA)) {
             String hostName = substringBeforeLast(clusterNode, COLON);
@@ -129,13 +133,4 @@ public class Elasticsearch implements OutputChannelConfig {
                 .build();
     }
 
-    @Override
-    public OutputChannel build() {
-        connect();
-        return null;
-    }
-
-    private void connect() {
-
-    }
 }
