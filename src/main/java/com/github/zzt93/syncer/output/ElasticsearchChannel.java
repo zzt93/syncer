@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.output;
 
-import com.github.zzt93.syncer.common.SyncEvent;
+import com.github.zzt93.syncer.common.SyncData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.data.elasticsearch.core.ElasticsearchTemplate;
@@ -12,7 +12,7 @@ import java.util.List;
  * @author zzt
  */
 @Component
-@ConditionalOnProperty(prefix = "syncer.output.elasticsearch", name = {"cluster-name", "cluster-nodes[0]"})
+@ConditionalOnProperty(prefix = "syncer.output.elasticsearch.connection", name = {"cluster-name", "cluster-nodes[0]"})
 public class ElasticsearchChannel implements OutputChannel {
 
     private ElasticsearchTemplate esTemplate;
@@ -23,12 +23,12 @@ public class ElasticsearchChannel implements OutputChannel {
     }
 
     @Override
-    public boolean output(SyncEvent event) {
+    public boolean output(SyncData event) {
         return false;
     }
 
     @Override
-    public boolean output(List<SyncEvent> batch) {
+    public boolean output(List<SyncData> batch) {
         return false;
     }
 }

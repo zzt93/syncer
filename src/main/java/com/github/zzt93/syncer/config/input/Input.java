@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.config.input;
 
+import com.github.zzt93.syncer.config.share.Connection;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -8,14 +10,15 @@ import java.util.List;
  */
 public class Input {
 
-    private List<Master> masters = new ArrayList<>();
+    private Mysql mysql;
+    private List<Connection> connections = new ArrayList<>();
 
-    public List<Master> getMasters() {
-        return masters;
+    public List<Connection> getConnections() {
+        return connections;
     }
 
-    public void setMasters(List<Master> masters) {
-        this.masters = masters;
+    public void setConnections(List<Connection> connections) {
+        this.connections = connections;
     }
 
 }

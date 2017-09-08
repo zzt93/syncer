@@ -1,8 +1,7 @@
 package com.github.zzt93.syncer;
 
 import com.github.zzt93.syncer.config.SyncerConfig;
-import com.github.zzt93.syncer.config.input.Master;
-import com.github.zzt93.syncer.input.connect.MasterConnector;
+import com.github.zzt93.syncer.input.InputStarter;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
@@ -21,9 +20,7 @@ public class SyncerApplication implements CommandLineRunner {
 
     @Override
     public void run(String... strings) throws Exception {
-        for (Master master : syncerConfig.getInput().getMasters()) {
-            new MasterConnector(master).connect();
-        }
+        new InputStarter(syncerConfig.getInput()).start();
     }
 
 }

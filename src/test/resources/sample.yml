@@ -1,24 +1,46 @@
 syncer:
 
   input:
-    masters:
-    - address: 127.0.0.1
-      port: 3306
-      user: root
-      password-file: password
+    mysql:
+      connection:
+        address: 192.168.1.100
+        port: 1234
+        user: root
+        password-file: password
+      schema:
+        name: *
+        tables:
+          - name: affair
+            row-name: [id, name]
+          - name: file
+            row-name: [id, name, uploader]
+          - name: folder
+            row-name: [id, name, uploader]
 
-    - address: 192.168.1.100
-      port: 3306
-      user: root
-      password-file: password
-
+#
+  filter:
+    if:
+      condition: "%{table.name}" == affair
+      actions:
+        - add-field:
+          - field: "time"
+            value:
 
   output:
     elasticsearch:
-      cluster-name: elasticsearch-demo
-      cluster-nodes: ["192.168.1.100:9300"]
-      user: elastic-user
-      password-file: es-password
-      index: "%{table}"
-      type: "%{table}"
-      document-id: "%{id}"
+      connection:
+        cluster-name: elasticsearch
+        cluster-nodes: ["192.168.1.100:9300"]
+        user: elastic-user # optional
+        password-file: es-password # optional
+      input-mapping:
+        index: "%{table.name}-%{time}" # default %{schema}
+        type: "%{table.name}" # default %{table}
+        document-id: "%{id}" # default %{id}
+
+    http:
+      connection:
+        address: 192.168.1.100
+        port: 9700
+      output-class:
+

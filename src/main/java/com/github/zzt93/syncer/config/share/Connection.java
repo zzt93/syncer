@@ -1,9 +1,9 @@
-package com.github.zzt93.syncer.config.input;
+package com.github.zzt93.syncer.config.share;
 
 /**
  * @author zzt
  */
-public class Master {
+public class Connection {
     private String address;
     private int port;
     private String user;

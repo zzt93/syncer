@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.input.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.zzt93.syncer.config.InvalidPasswordException;
-import com.github.zzt93.syncer.config.input.Master;
+import com.github.zzt93.syncer.config.share.Connection;
 import com.github.zzt93.syncer.input.listener.LogLifecycleListener;
 import com.github.zzt93.syncer.input.listener.SyncListener;
 import com.github.zzt93.syncer.util.FileUtil;
@@ -25,16 +25,16 @@ public class MasterConnector {
     private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
     private BinaryLogClient client;
 
-    public MasterConnector(Master master) throws IOException {
-        String password = FileUtil.readAll(master.getPasswordFile());
+    public MasterConnector(Connection connection) throws IOException {
+        String password = FileUtil.readAll(connection.getPasswordFile());
         if (StringUtils.isEmpty(password)) {
             throw new InvalidPasswordException(password);
         }
-        client = new BinaryLogClient(master.getAddress(), master.getPort(), master.getUser(), password);
+        client = new BinaryLogClient(connection.getAddress(), connection.getPort(), connection.getUser(), password);
         client.registerEventListener(new SyncListener());
         client.registerLifecycleListener(new LogLifecycleListener());
 
-        this.remote = NetworkUtil.toIp(master.getAddress()) + ":" + master.getPort();
+        this.remote = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
     }
 
     public void connect() throws IOException {
