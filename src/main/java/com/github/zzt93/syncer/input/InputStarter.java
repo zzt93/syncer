@@ -22,9 +22,9 @@ public class InputStarter {
 
     public void start() throws IOException {
         logger.info("Starting input source", inputConfig);
-        for (Connection connection : inputConfig.getConnections()) {
-            new MasterConnector(connection).connect();
-        }
+//        for (Connection connection : inputConfig.getConnections()) {
+//            new MasterConnector(connection).connect();
+//        }
         logger.info("Stopping syncer");
     }
 }

@@ -7,14 +7,23 @@ import java.util.HashMap;
  */
 public class SyncData {
 
-    private Table table;
-    private HashMap<String, Object> rows;
+    private final Table table;
+    private final HashMap<String, Object> rows = new HashMap<>();
+
+    public SyncData(Table table) {
+        this.table = table;
+    }
 
     public Table getTable() {
         return table;
     }
 
-    public void setTable(Table table) {
-        this.table = table;
+    public SyncData addPair(String colName, Object value) {
+        rows.put(colName, value);
+        return this;
+    }
+
+    public HashMap<String, Object> getRows() {
+        return rows;
     }
 }

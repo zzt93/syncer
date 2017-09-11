@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.config.share.Connection;
 /**
  * @author zzt
  */
-public class Mysql {
+public class MysqlMaster {
 
     private Connection connection;
     private Schema schema;

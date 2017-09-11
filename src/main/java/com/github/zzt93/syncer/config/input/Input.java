@@ -10,15 +10,13 @@ import java.util.List;
  */
 public class Input {
 
-    private Mysql mysql;
-    private List<Connection> connections = new ArrayList<>();
+    private List<MysqlMaster> mysqlMasters = new ArrayList<>();
 
-    public List<Connection> getConnections() {
-        return connections;
+    public List<MysqlMaster> getMysqlMasters() {
+        return mysqlMasters;
     }
 
-    public void setConnections(List<Connection> connections) {
-        this.connections = connections;
+    public void setMysqlMasters(List<MysqlMaster> mysqlMasters) {
+        this.mysqlMasters = mysqlMasters;
     }
-
 }

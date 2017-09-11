@@ -1,26 +1,41 @@
 syncer:
 
   input:
-    mysql:
-      connection:
-        address: 192.168.1.100
-        port: 1234
-        user: root
-        password-file: password
-      schema:
-        name: *
-        tables:
-          - name: affair
-            row-name: [id, name]
-          - name: file
-            row-name: [id, name, uploader]
-          - name: folder
-            row-name: [id, name, uploader]
+    mysql-masters:
+      - connection:
+          address: 192.168.1.100
+          port: 1234
+          user: root
+          password-file: password
+        schema:
+          name: "*"
+          tables:
+            - name: affair
+              row-name: [id, name]
+            - name: file
+              row-name: [id, name, uploader]
+            - name: folder
+              row-name: [id, name, uploader]
+
+      - connection:
+          address: 192.168.1.100
+          port: 1235
+          user: root
+          password-file: password
+        schema:
+          name: "*"
+          tables:
+            - name: affair
+              row-name: [id, name]
+            - name: file
+              row-name: [id, name, uploader]
+            - name: folder
+              row-name: [id, name, uploader]
 
 #
   filter:
     if:
-      condition: "%{table.name}" == affair
+      condition: "%{table.name} == affair"
       actions:
         - add-field:
           - field: "time"
@@ -34,8 +49,8 @@ syncer:
         user: elastic-user # optional
         password-file: es-password # optional
       input-mapping:
-        index: "%{table.name}-%{time}" # default %{schema}
-        type: "%{table.name}" # default %{table}
+        index: "%{table.name}-%{time}" # default %{schema.name}
+        type: "%{table.name}" # default %{table.name}
         document-id: "%{id}" # default %{id}
 
     http:
