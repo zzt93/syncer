@@ -32,14 +32,19 @@ syncer:
             - name: folder
               row-name: [id, name, uploader]
 
-#
+# input result class: com.github.zzt93.syncer.common.SyncData
+
   filter:
-    if:
-      condition: "%{table.name} == affair"
-      actions:
-        - add-field:
-          - field: "time"
-            value:
+    - if:
+        condition: "%{table} == affair"
+        actions:
+          - add-field:
+            - field: "time"
+              value:
+
+
+# filter result class: com.github.zzt93.syncer.common.SyncData
+
 
   output:
     elasticsearch:
@@ -48,14 +53,14 @@ syncer:
         cluster-nodes: ["192.168.1.100:9300"]
         user: elastic-user # optional
         password-file: es-password # optional
-      input-mapping:
-        index: "%{table.name}-%{time}" # default %{schema.name}
-        type: "%{table.name}" # default %{table.name}
+      index-mapping: # mapping from input data to index json
+        index: "%{table}-%{time}" # default %{schema}
+        type: "%{table}" # default %{table}
         document-id: "%{id}" # default %{id}
 
     http:
       connection:
         address: 192.168.1.100
         port: 9700
-      output-class:
+      output-mapper: x.y.z.mapper
 

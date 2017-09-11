@@ -6,4 +6,5 @@ package com.github.zzt93.syncer.config.filter;
  * <h3></h3>
  */
 public class Action {
+    
 }

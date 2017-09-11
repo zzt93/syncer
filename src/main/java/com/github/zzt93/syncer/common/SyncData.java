@@ -7,23 +7,39 @@ import java.util.HashMap;
  */
 public class SyncData {
 
-    private final Table table;
-    private final HashMap<String, Object> rows = new HashMap<>();
+    private final String schema;
+    private final String table;
+    private final HashMap<String, Object> row = new HashMap<>();
+    private final HashMap<String, Object> extra = new HashMap<>();
 
-    public SyncData(Table table) {
+    public SyncData(String schema, String table) {
+        this.schema = schema;
         this.table = table;
     }
 
-    public Table getTable() {
+    public String getTable() {
         return table;
     }
 
-    public SyncData addPair(String colName, Object value) {
-        rows.put(colName, value);
+    public SyncData addRow(String colName, Object value) {
+        row.put(colName, value);
         return this;
     }
 
-    public HashMap<String, Object> getRows() {
-        return rows;
+    public SyncData addExtra(String colName, Object value) {
+        extra.put(colName, value);
+        return this;
+    }
+
+    public HashMap<String, Object> getRow() {
+        return row;
+    }
+
+    public HashMap<String, Object> getExtra() {
+        return extra;
+    }
+
+    public String getSchema() {
+        return schema;
     }
 }

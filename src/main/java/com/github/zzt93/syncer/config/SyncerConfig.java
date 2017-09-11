@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.config.output.Output;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -18,7 +19,7 @@ public class SyncerConfig {
 
     private Input input;
     private Output output;
-    private List<Filter> filter;
+    private List<Filter> filter = new ArrayList<>();
 
     public Input getInput() {
         return input;

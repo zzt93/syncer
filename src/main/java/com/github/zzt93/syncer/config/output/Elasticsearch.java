@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.config.output;
 
 import com.github.zzt93.syncer.config.share.ElasticsearchConnection;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * @author zzt
@@ -9,7 +8,7 @@ import org.springframework.context.annotation.Configuration;
 public class Elasticsearch implements OutputChannelConfig {
 
     private ElasticsearchConnection connection;
-    private InputMapping inputMapping;
+    private IndexMapping indexMapping;
 
     public ElasticsearchConnection getConnection() {
         return connection;
@@ -19,12 +18,12 @@ public class Elasticsearch implements OutputChannelConfig {
         this.connection = connection;
     }
 
-    public InputMapping getInputMapping() {
-        return inputMapping;
+    public IndexMapping getIndexMapping() {
+        return indexMapping;
     }
 
-    public void setInputMapping(InputMapping inputMapping) {
-        this.inputMapping = inputMapping;
+    public void setIndexMapping(IndexMapping indexMapping) {
+        this.indexMapping = indexMapping;
     }
 
 }

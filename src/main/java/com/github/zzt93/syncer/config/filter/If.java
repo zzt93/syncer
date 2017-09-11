@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.config.filter;
 
+import com.github.zzt93.syncer.common.SyncData;
+
 import java.util.List;
 
 /**
@@ -7,7 +9,7 @@ import java.util.List;
  * <p>
  * <h3></h3>
  */
-public class If {
+public class If implements Filter<SyncData> {
 
     private Condition condition;
     private List<Action> actions;
@@ -27,5 +29,10 @@ public class If {
 
     public void setCondition(Condition condition) {
         this.condition = condition;
+    }
+
+    @Override
+    public FilterRes decide(SyncData data) {
+        return null;
     }
 }
