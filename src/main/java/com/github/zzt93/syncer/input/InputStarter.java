@@ -1,8 +1,6 @@
 package com.github.zzt93.syncer.input;
 
-import com.github.zzt93.syncer.config.share.Connection;
 import com.github.zzt93.syncer.config.input.Input;
-import com.github.zzt93.syncer.input.connect.MasterConnector;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -21,10 +19,7 @@ public class InputStarter {
     }
 
     public void start() throws IOException {
-        logger.info("Starting input source", inputConfig);
-//        for (Connection connection : inputConfig.getConnections()) {
-//            new MasterConnector(connection).connect();
-//        }
-        logger.info("Stopping syncer");
+        logger.info("Start connecting to input source", inputConfig);
+        inputConfig.connect();
     }
 }

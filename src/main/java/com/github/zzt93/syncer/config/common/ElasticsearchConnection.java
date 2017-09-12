@@ -1,7 +1,6 @@
-package com.github.zzt93.syncer.config.share;
+package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.config.SyncerConfig;
-import com.github.zzt93.syncer.config.output.Elasticsearch;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;

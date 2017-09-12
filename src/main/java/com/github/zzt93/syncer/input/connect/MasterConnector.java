@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.input.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.zzt93.syncer.config.InvalidPasswordException;
-import com.github.zzt93.syncer.config.share.Connection;
+import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.input.listener.LogLifecycleListener;
 import com.github.zzt93.syncer.input.listener.SyncListener;
 import com.github.zzt93.syncer.util.FileUtil;

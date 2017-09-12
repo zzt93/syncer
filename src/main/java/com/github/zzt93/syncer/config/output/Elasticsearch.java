@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.output;
 
-import com.github.zzt93.syncer.config.share.ElasticsearchConnection;
+import com.github.zzt93.syncer.config.common.ElasticsearchConnection;
 
 /**
  * @author zzt
@@ -8,7 +8,7 @@ import com.github.zzt93.syncer.config.share.ElasticsearchConnection;
 public class Elasticsearch implements OutputChannelConfig {
 
     private ElasticsearchConnection connection;
-    private IndexMapping indexMapping;
+    private DocumentMapping documentMapping;
 
     public ElasticsearchConnection getConnection() {
         return connection;
@@ -18,12 +18,12 @@ public class Elasticsearch implements OutputChannelConfig {
         this.connection = connection;
     }
 
-    public IndexMapping getIndexMapping() {
-        return indexMapping;
+    public DocumentMapping getDocumentMapping() {
+        return documentMapping;
     }
 
-    public void setIndexMapping(IndexMapping indexMapping) {
-        this.indexMapping = indexMapping;
+    public void setDocumentMapping(DocumentMapping documentMapping) {
+        this.documentMapping = documentMapping;
     }
 
 }

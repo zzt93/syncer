@@ -5,7 +5,7 @@ package com.github.zzt93.syncer.config.output;
  * <p>
  * <h3></h3>
  */
-public class IndexMapping {
+public class DocumentMapping {
 
     private String index;
     private String type;

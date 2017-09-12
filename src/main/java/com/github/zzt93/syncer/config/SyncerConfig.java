@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config;
 
-import com.github.zzt93.syncer.config.filter.Filter;
+import com.github.zzt93.syncer.config.filter.FilterConfig;
 import com.github.zzt93.syncer.config.input.Input;
 import com.github.zzt93.syncer.config.output.Output;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -19,7 +19,7 @@ public class SyncerConfig {
 
     private Input input;
     private Output output;
-    private List<Filter> filter = new ArrayList<>();
+    private List<FilterConfig> filter = new ArrayList<>();
 
     public Input getInput() {
         return input;
@@ -37,5 +37,12 @@ public class SyncerConfig {
         this.output = output;
     }
 
+    public List<FilterConfig> getFilter() {
+        return filter;
+    }
+
+    public void setFilter(List<FilterConfig> filter) {
+        this.filter = filter;
+    }
 }
 

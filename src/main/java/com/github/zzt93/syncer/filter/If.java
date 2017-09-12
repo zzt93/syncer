@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.filter;
+package com.github.zzt93.syncer.filter;
 
 import com.github.zzt93.syncer.common.SyncData;
 
@@ -32,7 +32,8 @@ public class If implements Filter<SyncData> {
     }
 
     @Override
-    public FilterRes decide(SyncData data) {
-        return null;
+    public SyncData decide(SyncData data) {
+
+        return data;
     }
 }

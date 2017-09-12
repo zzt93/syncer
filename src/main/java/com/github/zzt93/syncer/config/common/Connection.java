@@ -1,12 +1,10 @@
-package com.github.zzt93.syncer.config.share;
+package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.util.FileUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.stream.Collectors;
 
 /**
  * @author zzt
@@ -62,5 +60,21 @@ public class Connection {
         return password;
     }
 
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
 
+        Connection that = (Connection) o;
+
+        if (port != that.port) return false;
+        return address.equals(that.address);
+    }
+
+    @Override
+    public int hashCode() {
+        int result = address.hashCode();
+        result = 31 * result + port;
+        return result;
+    }
 }

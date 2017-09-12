@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.filter;
+package com.github.zzt93.syncer.filter;
 
 /**
  * Created by zzt on 9/11/17.
