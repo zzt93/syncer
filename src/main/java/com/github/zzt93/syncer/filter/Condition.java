@@ -1,19 +1,17 @@
 package com.github.zzt93.syncer.filter;
 
 /**
- * Created by zzt on 9/11/17.
- * <p>
- * <h3></h3>
+ * Created by zzt on 9/11/17. <p> <h3></h3>
  */
 public class Condition {
 
-    private String condition;
+  private String condition;
 
-    public String getCondition() {
-        return condition;
-    }
+  public String getCondition() {
+    return condition;
+  }
 
-    public void setCondition(String condition) {
-        this.condition = condition;
-    }
+  public void setCondition(String condition) {
+    this.condition = condition;
+  }
 }

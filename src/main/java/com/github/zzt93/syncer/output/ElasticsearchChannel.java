@@ -13,24 +13,26 @@ import org.springframework.stereotype.Component;
  * @author zzt
  */
 @Component
-@ConditionalOnProperty(prefix = "syncer.output.elasticsearch.connection", name = {"cluster-name", "cluster-nodes[0]"})
+@ConditionalOnProperty(prefix = "syncer.output.elasticsearch.connection", name = {"cluster-name",
+    "cluster-nodes[0]"})
 public class ElasticsearchChannel implements OutputChannel {
-    private Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
-    private ElasticsearchTemplate esTemplate;
 
-    @Autowired
-    public ElasticsearchChannel(ElasticsearchTemplate esTemplate) {
-        this.esTemplate = esTemplate;
-    }
+  private Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
+  private ElasticsearchTemplate esTemplate;
 
-    @Override
-    public boolean output(SyncData event) {
-        logger.warn("Deleting rows, should happen", event);
-        return false;
-    }
+  @Autowired
+  public ElasticsearchChannel(ElasticsearchTemplate esTemplate) {
+    this.esTemplate = esTemplate;
+  }
 
-    @Override
-    public boolean output(List<SyncData> batch) {
-        return false;
-    }
+  @Override
+  public boolean output(SyncData event) {
+    logger.warn("Deleting rows, should happen", event);
+    return false;
+  }
+
+  @Override
+  public boolean output(List<SyncData> batch) {
+    return false;
+  }
 }

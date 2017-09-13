@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.output;
 
 import com.github.zzt93.syncer.common.SyncData;
-
 import java.util.List;
 
 /**
@@ -9,7 +8,7 @@ import java.util.List;
  */
 public interface OutputChannel {
 
-    boolean output(SyncData event);
+  boolean output(SyncData event);
 
-    boolean output(List<SyncData> batch);
+  boolean output(List<SyncData> batch);
 }

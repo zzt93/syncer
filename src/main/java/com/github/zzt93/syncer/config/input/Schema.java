@@ -10,35 +10,34 @@ import java.util.regex.Pattern;
  */
 public class Schema {
 
-    private String name;
-    private Pattern namePattern;
-    private List<Table> tables;
+  private String name;
+  private Pattern namePattern;
+  private List<Table> tables;
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-        namePattern = RegexUtil.getRegex(name);
-    }
+  public void setName(String name) {
+    this.name = name;
+    namePattern = RegexUtil.getRegex(name);
+  }
 
-    public List<Table> getTables() {
-        return tables;
-    }
+  public List<Table> getTables() {
+    return tables;
+  }
 
-    public void setTables(List<Table> tables) {
-        this.tables = tables;
-    }
+  public void setTables(List<Table> tables) {
+    this.tables = tables;
+  }
 
-    /**
-     * Connect to
-     * @return
-     */
-    public String getConnectionName () {
-        if (namePattern == null) {
-            return name;
-        }
-        return "";
+  /**
+   * Connect to
+   */
+  public String getConnectionName() {
+    if (namePattern == null) {
+      return name;
     }
+    return "";
+  }
 }

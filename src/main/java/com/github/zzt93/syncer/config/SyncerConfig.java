@@ -3,11 +3,10 @@ package com.github.zzt93.syncer.config;
 import com.github.zzt93.syncer.config.filter.FilterConfig;
 import com.github.zzt93.syncer.config.input.Input;
 import com.github.zzt93.syncer.config.output.Output;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
-
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * @author zzt
@@ -17,32 +16,32 @@ import java.util.List;
 @ConfigurationProperties(prefix = "syncer")
 public class SyncerConfig {
 
-    private Input input;
-    private Output output;
-    private List<FilterConfig> filter = new ArrayList<>();
+  private Input input;
+  private Output output;
+  private List<FilterConfig> filter = new ArrayList<>();
 
-    public Input getInput() {
-        return input;
-    }
+  public Input getInput() {
+    return input;
+  }
 
-    public void setInput(Input input) {
-        this.input = input;
-    }
+  public void setInput(Input input) {
+    this.input = input;
+  }
 
-    public Output getOutput() {
-        return output;
-    }
+  public Output getOutput() {
+    return output;
+  }
 
-    public void setOutput(Output output) {
-        this.output = output;
-    }
+  public void setOutput(Output output) {
+    this.output = output;
+  }
 
-    public List<FilterConfig> getFilter() {
-        return filter;
-    }
+  public List<FilterConfig> getFilter() {
+    return filter;
+  }
 
-    public void setFilter(List<FilterConfig> filter) {
-        this.filter = filter;
-    }
+  public void setFilter(List<FilterConfig> filter) {
+    this.filter = filter;
+  }
 }
 

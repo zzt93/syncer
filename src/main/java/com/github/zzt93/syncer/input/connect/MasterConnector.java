@@ -27,43 +27,45 @@ import org.springframework.util.StringUtils;
  */
 public class MasterConnector {
 
-    private static final ExecutorService service = Executors.newFixedThreadPool(4, new NamedThreadFactory());
-    private final String remote;
-    private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
-    private BinaryLogClient client;
+  private static final ExecutorService service = Executors
+      .newFixedThreadPool(4, new NamedThreadFactory());
+  private final String remote;
+  private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
+  private BinaryLogClient client;
 
-    public MasterConnector(MysqlConnection connection, Schema schema) throws IOException {
-        String password = FileUtil.readAll(connection.getPasswordFile());
-        if (StringUtils.isEmpty(password)) {
-            throw new InvalidPasswordException(password);
-        }
-        client = new BinaryLogClient(connection.getAddress(), connection.getPort(), connection.getUser(), password);
-        client.registerLifecycleListener(new LogLifecycleListener());
-
-        List<Filter> filters = new ArrayList<>();
-        if (schema != null) {
-            try {
-                MetaData metaData = new MetaData.MetaDataBuilder(connection, schema).build();
-                filters.add(new SchemaFilter(metaData, schema));
-            } catch (SQLException e) {
-                logger.error("Fail to connect to master to retrive metadata", e);
-            }
-        }
-        filters.add(new EventToSyncData());
-        client.registerEventListener(new SyncListener(filters));
-
-        remote = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
-
+  public MasterConnector(MysqlConnection connection, Schema schema) throws IOException {
+    String password = FileUtil.readAll(connection.getPasswordFile());
+    if (StringUtils.isEmpty(password)) {
+      throw new InvalidPasswordException(password);
     }
+    client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
+        connection.getUser(), password);
+    client.registerLifecycleListener(new LogLifecycleListener());
 
-    public void connect() throws IOException {
-        service.submit(() -> {
-            Thread.currentThread().setName(remote);
-            try {
-                client.connect();
-            } catch (IOException e) {
-                logger.error("Fail to connect to master", e);
-            }
-        });
+    List<Filter> filters = new ArrayList<>();
+    if (schema != null) {
+      try {
+        MetaData metaData = new MetaData.MetaDataBuilder(connection, schema).build();
+        filters.add(new SchemaFilter(metaData, schema));
+      } catch (SQLException e) {
+        logger.error("Fail to connect to master to retrive metadata", e);
+      }
     }
+    filters.add(new EventToSyncData());
+    client.registerEventListener(new SyncListener(filters));
+
+    remote = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
+
+  }
+
+  public void connect() throws IOException {
+    service.submit(() -> {
+      Thread.currentThread().setName(remote);
+      try {
+        client.connect();
+      } catch (IOException e) {
+        logger.error("Fail to connect to master", e);
+      }
+    });
+  }
 }

@@ -9,14 +9,14 @@ import com.github.zzt93.syncer.config.input.Schema;
  */
 public class SchemaFilter implements Filter<MysqlRowEvent, MysqlRowEvent> {
 
-    private Schema schema;
+  private Schema schema;
 
-    public SchemaFilter(MetaData metaData, Schema schema) {
-        this.schema = schema;
-    }
+  public SchemaFilter(MetaData metaData, Schema schema) {
+    this.schema = schema;
+  }
 
-    @Override
-    public MysqlRowEvent decide(MysqlRowEvent e) {
-        return null;
-    }
+  @Override
+  public MysqlRowEvent decide(MysqlRowEvent e) {
+    return null;
+  }
 }

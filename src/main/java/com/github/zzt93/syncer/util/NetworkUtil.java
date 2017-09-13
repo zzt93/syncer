@@ -8,8 +8,8 @@ import java.net.UnknownHostException;
  */
 public class NetworkUtil {
 
-    public static String toIp(String host) throws UnknownHostException {
-        InetAddress address = InetAddress.getByName(host);
-        return address.getHostAddress();
-    }
+  public static String toIp(String host) throws UnknownHostException {
+    InetAddress address = InetAddress.getByName(host);
+    return address.getHostAddress();
+  }
 }

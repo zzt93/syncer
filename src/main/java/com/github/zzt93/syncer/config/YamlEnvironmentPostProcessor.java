@@ -16,28 +16,28 @@ import org.springframework.stereotype.Component;
 @Component
 public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
-    private final YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
+  private final YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
 
-    @Override
-    public void postProcessEnvironment(ConfigurableEnvironment environment,
-                                       SpringApplication application) {
-        Resource path = new ClassPathResource("syncer.yml");
-        PropertySource<?> propertySource = loadYaml(path);
-        environment.getPropertySources().addLast(propertySource);
-    }
+  @Override
+  public void postProcessEnvironment(ConfigurableEnvironment environment,
+      SpringApplication application) {
+    Resource path = new ClassPathResource("syncer.yml");
+    PropertySource<?> propertySource = loadYaml(path);
+    environment.getPropertySources().addLast(propertySource);
+  }
 
-    private PropertySource<?> loadYaml(Resource path) {
-        if (!path.exists()) {
-            throw new IllegalArgumentException("Sycner config file (syncer.yml) is not on classpath" + path);
-        }
-        try {
-            return this.loader.load("custom-resource", path, null);
-        }
-        catch (IOException ex) {
-            throw new IllegalStateException(
-                    "Failed to load yaml configuration from " + path, ex);
-        }
+  private PropertySource<?> loadYaml(Resource path) {
+    if (!path.exists()) {
+      throw new IllegalArgumentException(
+          "Sycner config file (syncer.yml) is not on classpath" + path);
     }
+    try {
+      return this.loader.load("custom-resource", path, null);
+    } catch (IOException ex) {
+      throw new IllegalStateException(
+          "Failed to load yaml configuration from " + path, ex);
+    }
+  }
 
 }
 

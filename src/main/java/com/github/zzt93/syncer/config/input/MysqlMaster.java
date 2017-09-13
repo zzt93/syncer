@@ -9,43 +9,47 @@ import java.io.IOException;
  */
 public class MysqlMaster {
 
-    private MysqlConnection connection;
-    private Schema schema;
+  private MysqlConnection connection;
+  private Schema schema;
 
-    public MysqlConnection getConnection() {
-        return connection;
-    }
+  public MysqlConnection getConnection() {
+    return connection;
+  }
 
-    public void setConnection(MysqlConnection connection) {
-        this.connection = connection;
-    }
+  public void setConnection(MysqlConnection connection) {
+    this.connection = connection;
+  }
 
-    public Schema getSchema() {
-        return schema;
-    }
+  public Schema getSchema() {
+    return schema;
+  }
 
-    public void setSchema(Schema schema) {
-        this.schema = schema;
-    }
+  public void setSchema(Schema schema) {
+    this.schema = schema;
+  }
 
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (o == null || getClass() != o.getClass()) return false;
+  @Override
+  public boolean equals(Object o) {
+      if (this == o) {
+          return true;
+      }
+      if (o == null || getClass() != o.getClass()) {
+          return false;
+      }
 
-        MysqlMaster that = (MysqlMaster) o;
+    MysqlMaster that = (MysqlMaster) o;
 
-        return connection.equals(that.connection);
-    }
+    return connection.equals(that.connection);
+  }
 
-    @Override
-    public int hashCode() {
-        return connection.hashCode();
-    }
+  @Override
+  public int hashCode() {
+    return connection.hashCode();
+  }
 
-    void connect() throws IOException {
-        new MasterConnector(connection, schema).connect();
-    }
+  void connect() throws IOException {
+    new MasterConnector(connection, schema).connect();
+  }
 
 
 }

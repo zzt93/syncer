@@ -5,14 +5,14 @@ package com.github.zzt93.syncer.config.output;
  */
 public class Output {
 
-    private Elasticsearch elasticsearch;
+  private Elasticsearch elasticsearch;
 
-    public Elasticsearch getElasticsearch() {
-        return elasticsearch;
-    }
+  public Elasticsearch getElasticsearch() {
+    return elasticsearch;
+  }
 
-    public void setElasticsearch(Elasticsearch elasticsearch) {
-        this.elasticsearch = elasticsearch;
-    }
+  public void setElasticsearch(Elasticsearch elasticsearch) {
+    this.elasticsearch = elasticsearch;
+  }
 
 }

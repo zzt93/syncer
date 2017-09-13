@@ -14,30 +14,33 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
 public class MetaData {
 
 
-    public static class MetaDataBuilder {
+  public static class MetaDataBuilder {
 
-        private DataSource dataSource;
+    private DataSource dataSource;
 
-        public MetaDataBuilder(MysqlConnection connection, Schema schema) {
-            dataSource = new DriverManagerDataSource(connection.toConnectionUrl(schema.getConnectionName()), connection.getUser(), connection.getPassword());
-        }
-
-        public MetaData build() throws SQLException {
-            MetaData res = new MetaData();
-            Connection connection = dataSource.getConnection();
-            DatabaseMetaData metaData = connection.getMetaData();
-            try (ResultSet tableResultSet = metaData.getTables(null, "public", null, new String[]{"TABLE"})) {
-                while (tableResultSet.next()) {
-                    String tableName = tableResultSet.getString("TABLE_NAME");
-                    try (ResultSet columnResultSet = metaData.getColumns(null, "public", tableName, null)) {
-                        while (columnResultSet.next()) {
-                            String columnName = columnResultSet.getString("COLUMN_NAME");
-                            System.out.println(columnName);
-                        }
-                    }
-                }
-            }
-            return res;
-        }
+    public MetaDataBuilder(MysqlConnection connection, Schema schema) {
+      dataSource = new DriverManagerDataSource(
+          connection.toConnectionUrl(schema.getConnectionName()), connection.getUser(),
+          connection.getPassword());
     }
+
+    public MetaData build() throws SQLException {
+      MetaData res = new MetaData();
+      Connection connection = dataSource.getConnection();
+      DatabaseMetaData metaData = connection.getMetaData();
+      try (ResultSet tableResultSet = metaData
+          .getTables(null, "public", null, new String[]{"TABLE"})) {
+        while (tableResultSet.next()) {
+          String tableName = tableResultSet.getString("TABLE_NAME");
+          try (ResultSet columnResultSet = metaData.getColumns(null, "public", tableName, null)) {
+            while (columnResultSet.next()) {
+              String columnName = columnResultSet.getString("COLUMN_NAME");
+              System.out.println(columnName);
+            }
+          }
+        }
+      }
+      return res;
+    }
+  }
 }

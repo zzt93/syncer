@@ -7,22 +7,22 @@ import java.util.List;
  */
 public class Table {
 
-    private String name;
-    private List<String> rowName;
+  private String name;
+  private List<String> rowName;
 
-    public String getName() {
-        return name;
-    }
+  public String getName() {
+    return name;
+  }
 
-    public void setName(String name) {
-        this.name = name;
-    }
+  public void setName(String name) {
+    this.name = name;
+  }
 
-    public List<String> getRowName() {
-        return rowName;
-    }
+  public List<String> getRowName() {
+    return rowName;
+  }
 
-    public void setRowName(List<String> rowName) {
-        this.rowName = rowName;
-    }
+  public void setRowName(List<String> rowName) {
+    this.rowName = rowName;
+  }
 }

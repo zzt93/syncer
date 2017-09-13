@@ -9,35 +9,35 @@ import java.util.Map;
  */
 public class FilterConfig {
 
-    private FilterType type;
-    private String condition;
-    private List<Map<String, List<String>>> action = new ArrayList<>();
+  private FilterType type;
+  private String condition;
+  private List<Map<String, List<String>>> action = new ArrayList<>();
 
-    public FilterType getType() {
-        return type;
-    }
+  public FilterType getType() {
+    return type;
+  }
 
-    public void setType(FilterType type) {
-        this.type = type;
-    }
+  public void setType(FilterType type) {
+    this.type = type;
+  }
 
-    public String getCondition() {
-        return condition;
-    }
+  public String getCondition() {
+    return condition;
+  }
 
-    public void setCondition(String condition) {
-        this.condition = condition;
-    }
+  public void setCondition(String condition) {
+    this.condition = condition;
+  }
 
-    public List<Map<String, List<String>>> getAction() {
-        return action;
-    }
+  public List<Map<String, List<String>>> getAction() {
+    return action;
+  }
 
-    public void setAction(List<Map<String, List<String>>> action) {
-        this.action = action;
-    }
+  public void setAction(List<Map<String, List<String>>> action) {
+    this.action = action;
+  }
 
-    enum FilterType {
-        IF
-    }
+  enum FilterType {
+    IF
+  }
 }

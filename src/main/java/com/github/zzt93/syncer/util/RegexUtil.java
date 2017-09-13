@@ -8,11 +8,11 @@ import java.util.regex.PatternSyntaxException;
  */
 public class RegexUtil {
 
-    public static Pattern getRegex(String input) {
-        try {
-            return Pattern.compile(input);
-        } catch (PatternSyntaxException e) {
-            return null;
-        }
+  public static Pattern getRegex(String input) {
+    try {
+      return Pattern.compile(input);
+    } catch (PatternSyntaxException e) {
+      return null;
     }
+  }
 }

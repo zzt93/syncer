@@ -7,8 +7,9 @@ import com.github.zzt93.syncer.common.SyncData;
  * @author zzt
  */
 public class EventToSyncData implements Filter<MysqlRowEvent, SyncData> {
-    @Override
-    public SyncData decide(MysqlRowEvent e) {
-        return new SyncData(e);
-    }
+
+  @Override
+  public SyncData decide(MysqlRowEvent e) {
+    return new SyncData(e);
+  }
 }

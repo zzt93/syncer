@@ -7,23 +7,23 @@ import com.github.zzt93.syncer.config.common.ElasticsearchConnection;
  */
 public class Elasticsearch implements OutputChannelConfig {
 
-    private ElasticsearchConnection connection;
-    private DocumentMapping documentMapping;
+  private ElasticsearchConnection connection;
+  private DocumentMapping documentMapping;
 
-    public ElasticsearchConnection getConnection() {
-        return connection;
-    }
+  public ElasticsearchConnection getConnection() {
+    return connection;
+  }
 
-    public void setConnection(ElasticsearchConnection connection) {
-        this.connection = connection;
-    }
+  public void setConnection(ElasticsearchConnection connection) {
+    this.connection = connection;
+  }
 
-    public DocumentMapping getDocumentMapping() {
-        return documentMapping;
-    }
+  public DocumentMapping getDocumentMapping() {
+    return documentMapping;
+  }
 
-    public void setDocumentMapping(DocumentMapping documentMapping) {
-        this.documentMapping = documentMapping;
-    }
+  public void setDocumentMapping(DocumentMapping documentMapping) {
+    this.documentMapping = documentMapping;
+  }
 
 }

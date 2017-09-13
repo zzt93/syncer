@@ -11,16 +11,16 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @SpringBootApplication
 public class SyncerApplication implements CommandLineRunner {
 
-    @Autowired
-    private SyncerConfig syncerConfig;
+  @Autowired
+  private SyncerConfig syncerConfig;
 
-    public static void main(String[] args) {
-        SpringApplication.run(SyncerApplication.class, args);
-    }
+  public static void main(String[] args) {
+    SpringApplication.run(SyncerApplication.class, args);
+  }
 
-    @Override
-    public void run(String... strings) throws Exception {
-        new InputStarter(syncerConfig.getInput()).start();
-    }
+  @Override
+  public void run(String... strings) throws Exception {
+    new InputStarter(syncerConfig.getInput()).start();
+  }
 
 }

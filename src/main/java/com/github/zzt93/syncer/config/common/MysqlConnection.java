@@ -5,9 +5,9 @@ package com.github.zzt93.syncer.config.common;
  */
 public class MysqlConnection extends Connection {
 
-    public String toConnectionUrl(String schemaName) {
-        String url = "jdbc:mysql://" + getAddress() + ":" + getPort() + "/";
+  public String toConnectionUrl(String schemaName) {
+    String url = "jdbc:mysql://" + getAddress() + ":" + getPort() + "/";
 
-        return url + schemaName;
-    }
+    return url + schemaName;
+  }
 }
