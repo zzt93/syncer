@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.expr;
+package com.github.zzt93.syncer.common.expr;
 
 /**
  * @author zzt

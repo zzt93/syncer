@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.util;
+package com.github.zzt93.syncer.common.util;
 
 import java.io.IOException;
 import java.io.InputStreamReader;

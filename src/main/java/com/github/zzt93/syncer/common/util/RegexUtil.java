@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.util;
+package com.github.zzt93.syncer.common.util;
 
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;

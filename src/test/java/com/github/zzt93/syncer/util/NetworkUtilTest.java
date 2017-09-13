@@ -1,8 +1,9 @@
 package com.github.zzt93.syncer.util;
 
-import org.junit.Test;
+import static org.junit.Assert.assertEquals;
 
-import static org.junit.Assert.*;
+import com.github.zzt93.syncer.common.util.NetworkUtil;
+import org.junit.Test;
 
 /**
  * @author zzt
