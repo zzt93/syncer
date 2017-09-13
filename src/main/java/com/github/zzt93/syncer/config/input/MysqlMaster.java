@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.input;
 
 import com.github.zzt93.syncer.config.common.MysqlConnection;
+import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.input.connect.MasterConnector;
 import java.io.IOException;
 
@@ -47,7 +48,15 @@ public class MysqlMaster {
     return connection.hashCode();
   }
 
-  void connect() throws IOException {
+  @Override
+  public String toString() {
+    return "MysqlMaster{" +
+        "connection=" + connection +
+        ", schema=" + schema +
+        '}';
+  }
+
+  void connect() throws IOException, SchemaUnavailableException {
     new MasterConnector(connection, schema).connect();
   }
 

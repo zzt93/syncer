@@ -8,13 +8,19 @@ import com.github.shyiko.mysql.binlog.event.Event;
  */
 public class MysqlRowEvent {
 
-  private Event tableMap;
-  private Event rowEvent;
+  private final Event tableMap;
+  private final Event rowEvent;
 
   public MysqlRowEvent(Event tableMap, Event rowEvent) {
     this.tableMap = tableMap;
     this.rowEvent = rowEvent;
   }
 
+  public Event getTableMap() {
+    return tableMap;
+  }
 
+  public Event getRowEvent() {
+    return rowEvent;
+  }
 }

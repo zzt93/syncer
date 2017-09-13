@@ -1,8 +1,9 @@
 package com.github.zzt93.syncer.config.input;
 
 import com.github.zzt93.syncer.common.Table;
-import com.github.zzt93.syncer.util.RegexUtil;
-import java.util.List;
+import com.github.zzt93.syncer.common.util.RegexUtil;
+import java.util.HashSet;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -11,8 +12,9 @@ import java.util.regex.Pattern;
 public class Schema {
 
   private String name;
+  private Set<Table> tables = new HashSet<>();
+
   private Pattern namePattern;
-  private List<Table> tables;
 
   public String getName() {
     return name;
@@ -23,21 +25,44 @@ public class Schema {
     namePattern = RegexUtil.getRegex(name);
   }
 
-  public List<Table> getTables() {
+  public Set<Table> getTables() {
     return tables;
   }
 
-  public void setTables(List<Table> tables) {
+  public void setTables(Set<Table> tables) {
     this.tables = tables;
   }
 
   /**
-   * Connect to
+   * If {@link #name} is a regex pattern, connect to default database;
+   * <p></p>
+   * Otherwise, connect to that database.
+   *
+   * @return the database name used in jdbc connection string
    */
   public String getConnectionName() {
     if (namePattern == null) {
       return name;
     }
     return "";
+  }
+
+  public Pattern getNamePattern() {
+    return namePattern;
+  }
+
+  public boolean hasTable(String tableSchema, String tableName) {
+    if (name.equals(tableSchema) ||
+        (namePattern!=null && namePattern.matcher(tableSchema).find())) {
+      return tables.contains(new Table(tableName));
+    }
+    return false ;
+  }
+
+  @Override
+  public String toString() {
+    return "Schema{" +
+        "name='" + name + '\'' +
+        '}';
   }
 }

@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.common;
 
-import com.github.zzt93.syncer.util.FileUtil;
+import com.github.zzt93.syncer.common.util.FileUtil;
 import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -81,5 +81,16 @@ public class Connection {
     int result = address.hashCode();
     result = 31 * result + port;
     return result;
+  }
+
+  @Override
+  public String toString() {
+    return "Connection{" +
+        "address='" + address + '\'' +
+        ", port=" + port +
+        ", user='" + user + '\'' +
+        ", passwordFile='" + passwordFile + '\'' +
+        ", password='" + password + '\'' +
+        '}';
   }
 }

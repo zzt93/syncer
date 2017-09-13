@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.input;
 
 
+import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -35,8 +36,9 @@ public class Input {
     for (MysqlMaster mysqlMaster : mysqlMasterSet) {
       try {
         mysqlMaster.connect();
-      } catch (IOException e) {
-        logger.error("Fail to connect to mysql endpoint", mysqlMaster);
+      } catch (IOException | SchemaUnavailableException e) {
+        logger.error("Fail to connect to mysql endpoint: {}", mysqlMaster);
+        logger.error("", e);
       }
     }
   }
