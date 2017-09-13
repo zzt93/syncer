@@ -8,4 +8,7 @@ public interface Filter<S, T> {
 
   T decide(S e);
 
+  enum FilterRes {
+    ACCEPT, DENY,
+  }
 }

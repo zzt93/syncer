@@ -18,7 +18,7 @@ public class InputStarter {
   }
 
   public void start() throws IOException {
-    logger.info("Start connecting to input source", inputConfig);
+    logger.info("Start connecting to input source {}", inputConfig);
     inputConfig.connect();
   }
 }

@@ -27,7 +27,7 @@ public class ElasticsearchChannel implements OutputChannel {
 
   @Override
   public boolean output(SyncData event) {
-    logger.warn("Deleting rows, should happen", event);
+    logger.warn("Deleting rows: {}, can't handle", event);
     return false;
   }
 
