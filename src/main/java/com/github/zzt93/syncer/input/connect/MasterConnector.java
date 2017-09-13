@@ -1,11 +1,11 @@
 package com.github.zzt93.syncer.input.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
+import com.github.zzt93.syncer.common.SchemaMeta;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NetworkUtil;
 import com.github.zzt93.syncer.config.InvalidPasswordException;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
-import com.github.zzt93.syncer.config.common.SchemaMeta;
 import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.input.Schema;
 import com.github.zzt93.syncer.input.filter.InputEnd;

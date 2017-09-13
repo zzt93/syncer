@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.input.filter;
 
 import com.github.zzt93.syncer.common.MysqlRowEvent;
-import com.github.zzt93.syncer.config.common.SchemaMeta;
+import com.github.zzt93.syncer.common.SchemaMeta;
 
 /**
  * @author zzt

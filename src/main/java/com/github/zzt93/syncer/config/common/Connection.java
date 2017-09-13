@@ -55,7 +55,7 @@ public class Connection {
     }
   }
 
-  String getPassword() {
+  public String getPassword() {
     return password;
   }
 

@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.config.input;
 
 import java.util.List;
 

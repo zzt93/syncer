@@ -1,7 +1,8 @@
-package com.github.zzt93.syncer.config.common;
+package com.github.zzt93.syncer.common;
 
+import com.github.shyiko.mysql.binlog.event.EventData;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
-import com.github.zzt93.syncer.common.MysqlRowEvent;
+import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.config.input.Schema;
 import com.mysql.jdbc.JDBC4Connection;
 import java.sql.Connection;
@@ -9,6 +10,7 @@ import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.HashMap;
+import java.util.Set;
 import java.util.regex.Pattern;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
@@ -46,8 +48,9 @@ public class SchemaMeta {
 
   public boolean filterRow(MysqlRowEvent e) {
     TableMapEventData data = e.getTableMap().getData();
-    if (findTable(data.getDatabase(), data.getTable()) != null) {
-
+    TableMeta table = findTable(data.getDatabase(), data.getTable());
+    if (table != null) {
+      EventData row = e.getRowEvent().getData();
       return true;
     }
     return false;
@@ -79,15 +82,19 @@ public class SchemaMeta {
           while (!finished(res) && tableResultSet.next()) {
             String tableSchema = tableResultSet.getString("TABLE_CAT");
             String tableName = tableResultSet.getString("TABLE_NAME");
-            if (!interested.hasTable(tableSchema, tableName)) {
+            Set<String> tableRow = interested.getTableRow(tableSchema, tableName);
+            if (tableRow == null) {
               continue;
             }
             TableMeta tableMeta = new TableMeta();
             try (ResultSet columnResultSet = metaData.getColumns(null, "public", tableName, null)) {
               while (columnResultSet.next()) {
                 String columnName = columnResultSet.getString("COLUMN_NAME");
+                if (!tableRow.contains(columnName)) {
+                  continue;
+                }
                 int ordinalPosition = columnResultSet.getInt("ORDINAL_POSITION");
-                tableMeta.addNameIndex(columnName, ordinalPosition);
+                tableMeta.addNameIndex(ordinalPosition);
               }
             }
             res.addTableMeta(tableName, tableMeta);
