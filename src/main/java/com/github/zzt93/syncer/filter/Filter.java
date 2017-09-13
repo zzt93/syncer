@@ -6,8 +6,8 @@ package com.github.zzt93.syncer.filter;
  * <p>
  * <h3></h3>
  */
-public interface Filter<E> {
+public interface Filter<S, T> {
 
-    E decide(E e);
+    T decide(S e);
 
 }

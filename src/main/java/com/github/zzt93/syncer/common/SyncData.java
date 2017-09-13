@@ -17,6 +17,11 @@ public class SyncData {
         this.table = table;
     }
 
+    public SyncData(MysqlRowEvent rowEvent) {
+        schema = "";
+        table = "";
+    }
+
     public String getTable() {
         return table;
     }

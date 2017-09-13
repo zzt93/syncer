@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config;
 
+import java.io.IOException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.env.EnvironmentPostProcessor;
 import org.springframework.boot.env.YamlPropertySourceLoader;
@@ -8,8 +9,6 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.Resource;
 import org.springframework.stereotype.Component;
-
-import java.io.IOException;
 
 /**
  * @author zzt
@@ -29,7 +28,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
     private PropertySource<?> loadYaml(Resource path) {
         if (!path.exists()) {
-            throw new IllegalArgumentException("Resource " + path + " does not exist");
+            throw new IllegalArgumentException("Sycner config file (syncer.yml) is not on classpath" + path);
         }
         try {
             return this.loader.load("custom-resource", path, null);

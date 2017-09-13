@@ -1,8 +1,7 @@
 package com.github.zzt93.syncer.config.input;
 
-import com.github.zzt93.syncer.config.common.Connection;
+import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.input.connect.MasterConnector;
-
 import java.io.IOException;
 
 /**
@@ -10,14 +9,14 @@ import java.io.IOException;
  */
 public class MysqlMaster {
 
-    private Connection connection;
+    private MysqlConnection connection;
     private Schema schema;
 
-    public Connection getConnection() {
+    public MysqlConnection getConnection() {
         return connection;
     }
 
-    public void setConnection(Connection connection) {
+    public void setConnection(MysqlConnection connection) {
         this.connection = connection;
     }
 
@@ -45,6 +44,8 @@ public class MysqlMaster {
     }
 
     void connect() throws IOException {
-        new MasterConnector(connection).connect();
+        new MasterConnector(connection, schema).connect();
     }
+
+
 }

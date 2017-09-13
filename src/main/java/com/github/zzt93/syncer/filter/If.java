@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.filter;
 
 import com.github.zzt93.syncer.common.SyncData;
-
 import java.util.List;
 
 /**
@@ -9,7 +8,7 @@ import java.util.List;
  * <p>
  * <h3></h3>
  */
-public class If implements Filter<SyncData> {
+public class If implements Filter<SyncData, SyncData> {
 
     private Condition condition;
     private List<Action> actions;
