@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.input.listener;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
-import com.github.zzt93.syncer.common.MysqlRowEvent;
+import com.github.zzt93.syncer.common.RowEvent;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.filter.Filter.FilterRes;
 import com.github.zzt93.syncer.input.filter.InputEnd;
@@ -41,7 +41,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
       case WRITE_ROWS:
       case UPDATE_ROWS:
       case DELETE_ROWS:
-        MysqlRowEvent aim = start.decide(event, last);
+        RowEvent aim = start.decide(event, last);
         for (InputFilter filter : filters) {
           if (filter.decide(aim) != FilterRes.ACCEPT) {
             // discard: not add to queue
@@ -49,6 +49,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
           }
         }
         SyncData syncData = end.decide(aim);
+        // TODO 9/14/17 add to queue
         break;
     }
   }

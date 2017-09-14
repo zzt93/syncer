@@ -11,7 +11,7 @@ syncer:
           name: "*"
           tables:
             - name: affair
-              row-name: [id, name]
+              row-name: [id, name] # default id is not null, other can be null
             - name: file
               row-name: [id, name, uploader]
             - name: folder

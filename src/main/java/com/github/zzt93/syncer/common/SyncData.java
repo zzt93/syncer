@@ -17,7 +17,7 @@ public class SyncData {
     this.table = table;
   }
 
-  public SyncData(MysqlRowEvent rowEvent) {
+  public SyncData(RowEvent rowEvent) {
     schema = "";
     table = "";
   }

@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.input.filter;
 
-import com.github.zzt93.syncer.common.MysqlRowEvent;
+import com.github.zzt93.syncer.common.RowEvent;
 import com.github.zzt93.syncer.common.SchemaMeta;
 
 /**
@@ -15,7 +15,7 @@ public class SchemaFilter implements InputFilter {
   }
 
   @Override
-  public FilterRes decide(MysqlRowEvent e) {
+  public FilterRes decide(RowEvent e) {
     return schemaMeta.filterRow(e) ? FilterRes.ACCEPT : FilterRes.DENY;
   }
 }

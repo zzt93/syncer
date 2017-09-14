@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.common;
 
-import com.github.shyiko.mysql.binlog.event.EventData;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.config.input.Schema;
@@ -46,14 +45,10 @@ public class SchemaMeta {
     return null;
   }
 
-  public boolean filterRow(MysqlRowEvent e) {
-    TableMapEventData data = e.getTableMap().getData();
+  public boolean filterRow(RowEvent rowEvent) {
+    TableMapEventData data = rowEvent.getTableMap();
     TableMeta table = findTable(data.getDatabase(), data.getTable());
-    if (table != null) {
-      EventData row = e.getRowEvent().getData();
-      return true;
-    }
-    return false;
+    return table != null && rowEvent.filterData(table.getIndex());
   }
 
   public static class MetaDataBuilder {
