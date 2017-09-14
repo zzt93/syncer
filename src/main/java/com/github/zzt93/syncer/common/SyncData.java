@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.common;
 
+import com.github.shyiko.mysql.binlog.event.TableMapEventData;
+import com.github.zzt93.syncer.common.event.RowEvent;
 import java.util.HashMap;
 
 /**
@@ -18,8 +20,10 @@ public class SyncData {
   }
 
   public SyncData(RowEvent rowEvent) {
-    schema = "";
-    table = "";
+    TableMapEventData tableMap = rowEvent.getTableMap();
+    schema = tableMap.getDatabase();
+    table = tableMap.getTable();
+    row.putAll(rowEvent.getData());
   }
 
   public String getTable() {

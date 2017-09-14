@@ -46,16 +46,17 @@ public class MasterConnector {
     client.registerLifecycleListener(new LogLifecycleListener());
 
     List<InputFilter> filters = new ArrayList<>();
+    SchemaMeta schemaMeta = null;
     if (schema != null) {
       try {
-        SchemaMeta schemaMeta = new SchemaMeta.MetaDataBuilder(connection, schema).build();
+        schemaMeta = new SchemaMeta.MetaDataBuilder(connection, schema).build();
         filters.add(new SchemaFilter(schemaMeta));
       } catch (SQLException e) {
         logger.error("Fail to connect to master to retrieve schema metadata", e);
         throw new SchemaUnavailableException(e);
       }
     }
-    client.registerEventListener(new SyncListener(new InputStart(), filters, new InputEnd()));
+    client.registerEventListener(new SyncListener(new InputStart(schemaMeta), filters, new InputEnd()));
 
     remote = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
 

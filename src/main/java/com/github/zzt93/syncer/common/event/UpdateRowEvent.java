@@ -1,10 +1,11 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.common.event;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.UpdateRowsEventData;
 import java.io.Serializable;
 import java.util.BitSet;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 /**
@@ -12,8 +13,9 @@ import java.util.Map.Entry;
  */
 public class UpdateRowEvent extends RowEvent {
 
-  public UpdateRowEvent(Event tableMap, UpdateRowsEventData updateRowsEventData) {
-    super(tableMap);
+  public UpdateRowEvent(Event tableMap, UpdateRowsEventData updateRowsEventData,
+      Map<Integer, String> indexToName) {
+    super(tableMap, indexToName);
     BitSet includedColumns = updateRowsEventData.getIncludedColumns();
     List<Entry<Serializable[], Serializable[]>> rows = updateRowsEventData.getRows();
     int c = 0;

@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.common;
 
-import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.config.input.Schema;
 import com.mysql.jdbc.JDBC4Connection;
@@ -21,7 +20,6 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
  */
 public class SchemaMeta {
 
-
   private final HashMap<String, TableMeta> tableMetas = new HashMap<>();
   private final Pattern schemaPattern;
   private final String schema;
@@ -35,7 +33,7 @@ public class SchemaMeta {
     tableMetas.put(name, tableMeta);
   }
 
-  private TableMeta findTable(String database, String table) {
+  public TableMeta findTable(String database, String table) {
     // schema match?
     if (schema.equals(database) ||
         (schemaPattern != null && schemaPattern.matcher(database).find())) {
@@ -45,11 +43,6 @@ public class SchemaMeta {
     return null;
   }
 
-  public boolean filterRow(RowEvent rowEvent) {
-    TableMapEventData data = rowEvent.getTableMap();
-    TableMeta table = findTable(data.getDatabase(), data.getTable());
-    return table != null && rowEvent.filterData(table.getIndex());
-  }
 
   public static class MetaDataBuilder {
 
@@ -89,7 +82,7 @@ public class SchemaMeta {
                   continue;
                 }
                 int ordinalPosition = columnResultSet.getInt("ORDINAL_POSITION");
-                tableMeta.addNameIndex(ordinalPosition);
+                tableMeta.addNameIndex(columnName, ordinalPosition);
               }
             }
             res.addTableMeta(tableName, tableMeta);
