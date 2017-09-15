@@ -1,6 +1,7 @@
-package com.github.zzt93.syncer.filter;
+package com.github.zzt93.syncer.filter.impl;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.filter.Filter;
 import java.util.List;
 
 /**

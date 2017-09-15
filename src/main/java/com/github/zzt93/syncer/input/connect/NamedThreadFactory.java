@@ -12,9 +12,19 @@ public class NamedThreadFactory implements ThreadFactory {
 
   private static final AtomicLong count = new AtomicLong(1);
   private static Logger logger = LoggerFactory.getLogger(NamedThreadFactory.class);
+  private final String prefix;
+
+  public NamedThreadFactory() {
+    prefix = "syncer-tmp";
+  }
+
+  public NamedThreadFactory(String prefix) {
+    this.prefix = prefix;
+  }
 
   @Override
   public Thread newThread(Runnable r) {
-    return new Thread(r, "syncer-tmp-" + count.getAndAdd(1L));
+    logger.debug("Create a new thread", count);
+    return new Thread(r, prefix + "-" + count.getAndAdd(1L));
   }
 }

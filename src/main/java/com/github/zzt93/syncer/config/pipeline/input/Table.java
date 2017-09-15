@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.input;
+package com.github.zzt93.syncer.config.pipeline.input;
 
 import java.util.List;
 

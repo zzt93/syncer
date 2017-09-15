@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.input;
+package com.github.zzt93.syncer.config.pipeline.input;
 
 import com.github.zzt93.syncer.common.util.RegexUtil;
 import java.util.HashMap;

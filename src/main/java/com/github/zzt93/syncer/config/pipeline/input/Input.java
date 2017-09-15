@@ -1,8 +1,6 @@
-package com.github.zzt93.syncer.config.input;
+package com.github.zzt93.syncer.config.pipeline.input;
 
 
-import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -32,14 +30,8 @@ public class Input {
     }
   }
 
-  public void connect() throws IOException {
-    for (MysqlMaster mysqlMaster : mysqlMasterSet) {
-      try {
-        mysqlMaster.connect();
-      } catch (IOException | SchemaUnavailableException e) {
-        logger.error("Fail to connect to mysql endpoint: {}", mysqlMaster);
-        logger.error("", e);
-      }
-    }
+  public Set<MysqlMaster> getMysqlMasterSet() {
+    return mysqlMasterSet;
   }
+
 }

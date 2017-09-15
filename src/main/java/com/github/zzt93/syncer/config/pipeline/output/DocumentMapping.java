@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.output;
+package com.github.zzt93.syncer.config.pipeline.output;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>

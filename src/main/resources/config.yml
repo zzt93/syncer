@@ -1,0 +1,9 @@
+syncer:
+  input:
+    worker: 4
+
+  filter:
+    worker: 4
+
+  output:
+    worker: 4

@@ -1,9 +1,6 @@
-package com.github.zzt93.syncer.config.input;
+package com.github.zzt93.syncer.config.pipeline.input;
 
-import com.github.zzt93.syncer.config.common.MysqlConnection;
-import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
-import com.github.zzt93.syncer.input.connect.MasterConnector;
-import java.io.IOException;
+import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 
 /**
  * @author zzt
@@ -55,10 +52,5 @@ public class MysqlMaster {
         ", schema=" + schema +
         '}';
   }
-
-  void connect() throws IOException, SchemaUnavailableException {
-    new MasterConnector(connection, schema).connect();
-  }
-
 
 }

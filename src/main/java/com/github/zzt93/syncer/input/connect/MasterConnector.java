@@ -2,12 +2,13 @@ package com.github.zzt93.syncer.input.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.zzt93.syncer.common.SchemaMeta;
+import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NetworkUtil;
-import com.github.zzt93.syncer.config.InvalidPasswordException;
-import com.github.zzt93.syncer.config.common.MysqlConnection;
-import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
-import com.github.zzt93.syncer.config.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
+import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
+import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.input.filter.InputEnd;
 import com.github.zzt93.syncer.input.filter.InputFilter;
 import com.github.zzt93.syncer.input.filter.InputStart;
@@ -18,8 +19,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -27,15 +27,14 @@ import org.springframework.util.StringUtils;
 /**
  * @author zzt
  */
-public class MasterConnector {
+public class MasterConnector implements Runnable {
 
-  private static final ExecutorService service = Executors
-      .newFixedThreadPool(4, new NamedThreadFactory());
   private final String remote;
   private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
   private BinaryLogClient client;
 
-  public MasterConnector(MysqlConnection connection, Schema schema)
+  public MasterConnector(MysqlConnection connection, Schema schema,
+      BlockingQueue<SyncData> queue)
       throws IOException, SchemaUnavailableException {
     String password = FileUtil.readAll(connection.getPasswordFile());
     if (StringUtils.isEmpty(password)) {
@@ -56,20 +55,21 @@ public class MasterConnector {
         throw new SchemaUnavailableException(e);
       }
     }
-    client.registerEventListener(new SyncListener(new InputStart(schemaMeta), filters, new InputEnd()));
+    client.registerEventListener(
+        new SyncListener(new InputStart(schemaMeta), filters, new InputEnd(), queue));
 
     remote = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
 
   }
 
-  public void connect() throws IOException {
-    service.submit(() -> {
-      Thread.currentThread().setName(remote);
-      try {
-        client.connect();
-      } catch (IOException e) {
-        logger.error("Fail to connect to master", e);
-      }
-    });
+
+  @Override
+  public void run() {
+    Thread.currentThread().setName(remote);
+    try {
+      client.connect();
+    } catch (IOException e) {
+      logger.error("Fail to connect to master", e);
+    }
   }
 }

@@ -10,6 +10,7 @@ import com.github.zzt93.syncer.input.filter.InputEnd;
 import com.github.zzt93.syncer.input.filter.InputFilter;
 import com.github.zzt93.syncer.input.filter.InputStart;
 import java.util.List;
+import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,12 +23,15 @@ public class SyncListener implements BinaryLogClient.EventListener {
   private final InputStart start;
   private final InputEnd end;
   private final Logger logger = LoggerFactory.getLogger(SyncListener.class);
+  private final BlockingQueue<SyncData> toFilter;
   private Event last;
 
-  public SyncListener(InputStart inputStart, List<InputFilter> filters, InputEnd inputEnd) {
+  public SyncListener(InputStart inputStart, List<InputFilter> filters, InputEnd inputEnd,
+      BlockingQueue<SyncData> queue) {
     this.filters = filters;
     start = inputStart;
     end = inputEnd;
+    toFilter = queue;
   }
 
   @Override
@@ -49,7 +53,9 @@ public class SyncListener implements BinaryLogClient.EventListener {
           }
         }
         SyncData syncData = end.decide(aim);
-        // TODO 9/14/17 add to queue
+        if (!toFilter.offer(syncData)) {
+          logger.error("Fail to put data to 'filter' processor, space ");
+        }
         break;
     }
   }

@@ -1,10 +1,10 @@
-package com.github.zzt93.syncer.config.common;
+package com.github.zzt93.syncer.config.pipeline.common;
 
 import static org.apache.commons.lang.StringUtils.split;
 import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.apache.commons.lang.StringUtils.substringBeforeLast;
 
-import com.github.zzt93.syncer.config.SyncerConfig;
+import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -34,8 +34,8 @@ public class ElasticsearchConnection extends Connection {
   @Bean
   @ConditionalOnProperty(prefix = "syncer.output.elasticsearch.connection", name = {"cluster-name",
       "cluster-nodes[0]"})
-  public static TransportClient transportClient(SyncerConfig syncerConfig) throws Exception {
-    ElasticsearchConnection elasticsearch = syncerConfig.getOutput().getElasticsearch()
+  public static TransportClient transportClient(PipelineConfig pipelineConfig) throws Exception {
+    ElasticsearchConnection elasticsearch = pipelineConfig.getOutput().getElasticsearch()
         .getConnection();
     Assert.notNull(elasticsearch, "[Assertion failed] ");
     PreBuiltXPackTransportClient client = new PreBuiltXPackTransportClient(

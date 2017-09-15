@@ -1,4 +1,4 @@
-syncer:
+pipeline:
 
   input:
     mysql-masters:

@@ -1,8 +1,8 @@
-package com.github.zzt93.syncer.config;
+package com.github.zzt93.syncer.config.pipeline;
 
-import com.github.zzt93.syncer.config.filter.FilterConfig;
-import com.github.zzt93.syncer.config.input.Input;
-import com.github.zzt93.syncer.config.output.Output;
+import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
+import com.github.zzt93.syncer.config.pipeline.input.Input;
+import com.github.zzt93.syncer.config.pipeline.output.Output;
 import java.util.ArrayList;
 import java.util.List;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -13,8 +13,8 @@ import org.springframework.context.annotation.Configuration;
  */
 //@PropertySource("classpath:syncer.properties") // not work with yml file!
 @Configuration
-@ConfigurationProperties(prefix = "syncer")
-public class SyncerConfig {
+@ConfigurationProperties(prefix = "pipeline")
+public class PipelineConfig {
 
   private Input input;
   private Output output;

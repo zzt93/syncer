@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.common;
+package com.github.zzt93.syncer.config.pipeline.common;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
 import java.io.IOException;

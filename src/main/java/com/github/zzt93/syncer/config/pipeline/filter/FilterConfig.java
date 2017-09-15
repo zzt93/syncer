@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.filter;
+package com.github.zzt93.syncer.config.pipeline.filter;
 
 import java.util.ArrayList;
 import java.util.List;

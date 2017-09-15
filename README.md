@@ -1,6 +1,6 @@
 # Syncer: sync data from mysql to ...
 
-## Config
+## Pipeline Config
 
 ### Input
 MySQL binlog
@@ -11,6 +11,10 @@ MySQL binlog
  - Elasticsearch
  - Http endpoint
  
+## Run
+```
+syncer.jar --pipeline=sample.yml
+```
 
 ## Implementation
 

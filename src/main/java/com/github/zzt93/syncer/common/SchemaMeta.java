@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.common;
 
-import com.github.zzt93.syncer.config.common.MysqlConnection;
-import com.github.zzt93.syncer.config.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.mysql.jdbc.JDBC4Connection;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
