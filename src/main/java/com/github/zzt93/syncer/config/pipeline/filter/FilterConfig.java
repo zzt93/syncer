@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.filter;
 
-import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -11,7 +11,7 @@ public class FilterConfig {
 
   private FilterType type;
   private String condition;
-  private List<Map<String, List<String>>> action = new ArrayList<>();
+  private Map<String, List<String>> action = new HashMap<>();
 
   public FilterType getType() {
     return type;
@@ -29,11 +29,11 @@ public class FilterConfig {
     this.condition = condition;
   }
 
-  public List<Map<String, List<String>>> getAction() {
+  public Map<String, List<String>> getAction() {
     return action;
   }
 
-  public void setAction(List<Map<String, List<String>>> action) {
+  public void setAction(Map<String, List<String>> action) {
     this.action = action;
   }
 

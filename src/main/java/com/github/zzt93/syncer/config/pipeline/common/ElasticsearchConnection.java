@@ -32,7 +32,7 @@ public class ElasticsearchConnection extends Connection {
   private List<String> clusterNodes;
 
   @Bean
-  @ConditionalOnProperty(prefix = "syncer.output.elasticsearch.connection", name = {"cluster-name",
+  @ConditionalOnProperty(prefix = "pipeline.output.elasticsearch.connection", name = {"cluster-name",
       "cluster-nodes[0]"})
   public static TransportClient transportClient(PipelineConfig pipelineConfig) throws Exception {
     ElasticsearchConnection elasticsearch = pipelineConfig.getOutput().getElasticsearch()

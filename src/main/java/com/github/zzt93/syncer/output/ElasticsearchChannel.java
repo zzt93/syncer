@@ -13,7 +13,7 @@ import org.springframework.stereotype.Component;
  * @author zzt
  */
 @Component
-@ConditionalOnProperty(prefix = "syncer.output.elasticsearch.connection", name = {"cluster-name",
+@ConditionalOnProperty(prefix = "pipeline.output.elasticsearch.connection", name = {"cluster-name",
     "cluster-nodes[0]"})
 public class ElasticsearchChannel implements OutputChannel {
 

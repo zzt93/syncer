@@ -21,9 +21,9 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
   @Override
   public void postProcessEnvironment(ConfigurableEnvironment environment,
       SpringApplication application) {
-    String pipelineName = environment.getProperty("pipeline");
+    String pipelineName = environment.getProperty("pipelineConfig");
     if (pipelineName == null) {
-      throw new IllegalArgumentException("No pipeline config file specified, try '--pipeline=sample.yml'");
+      throw new IllegalArgumentException("No pipeline config file specified, try '--pipelineConfig=sample.yml'");
     }
     String configFile = environment.getProperty("config");
     if (configFile == null) {
@@ -40,7 +40,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
           "Syncer config file is not on classpath" + name);
     }
     try {
-      return this.loader.load("custom-resource", path, null);
+      return this.loader.load(name, path, null);
     } catch (IOException ex) {
       throw new IllegalStateException(
           "Failed to load yaml configuration from " + path, ex);

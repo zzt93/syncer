@@ -35,10 +35,10 @@ pipeline:
 # input result class: com.github.zzt93.syncer.common.SyncData
 
   filter:
-    - condition: "%{table == 'affair'}"
+    - condition: "#{table == 'affair'}"
       action:
-        - "true": ["%{addExtra('time', now())}"]
-          "false": ["%{addExtra('tmpVar', 1L)}"]
+        "true": ["#{addExtra('time', new Date())}"]
+        "false": ["#{addExtra('tmpVar', 1L)}"]
 
 
 # filter result class: com.github.zzt93.syncer.common.SyncData
@@ -52,9 +52,9 @@ pipeline:
         user: elastic-user # optional
         password-file: es-password # optional
       document-mapping: # mapping from input data to document json
-        index: "%{table}-%{time}" # default %{schema}
-        type: "%{table}" # default %{table}
-        document-id: "%{id}" # default %{id}
+        index: "#{table}-#{time}" # default #{schema}
+        type: "#{table}" # default #{table}
+        document-id: "#{id}" # default #{id}
 
     http:
       connection:
