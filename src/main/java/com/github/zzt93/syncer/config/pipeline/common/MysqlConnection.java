@@ -5,8 +5,7 @@ package com.github.zzt93.syncer.config.pipeline.common;
  */
 public class MysqlConnection extends Connection {
 
-  public String toConnectionUrl(String schemaName) {
-    String url = "jdbc:mysql://" + getAddress() + ":" + getPort() + "/";
-    return url + schemaName;
+  public String toConnectionUrl(String schema) {
+    return "jdbc:mysql://" + super.toConnectionUrl(null) + "/" + schema;
   }
 }

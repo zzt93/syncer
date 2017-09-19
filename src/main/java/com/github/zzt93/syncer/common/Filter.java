@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.filter;
+package com.github.zzt93.syncer.common;
 
 
 /**

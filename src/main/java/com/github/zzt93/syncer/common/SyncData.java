@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.common;
 
+import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.common.event.RowEvent;
 import java.util.HashMap;
@@ -9,17 +10,20 @@ import java.util.HashMap;
  */
 public class SyncData {
 
+  private final EventType type;
   private final String schema;
   private final String table;
   private final HashMap<String, Object> row = new HashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
 
-  public SyncData(String schema, String table) {
+  public SyncData(EventType type, String schema, String table) {
+    this.type = type;
     this.schema = schema;
     this.table = table;
   }
 
-  public SyncData(RowEvent rowEvent) {
+  public SyncData(RowEvent rowEvent, EventType type) {
+    this.type = type;
     TableMapEventData tableMap = rowEvent.getTableMap();
     schema = tableMap.getDatabase();
     table = tableMap.getTable();
@@ -50,5 +54,9 @@ public class SyncData {
 
   public String getSchema() {
     return schema;
+  }
+
+  public EventType getType() {
+    return type;
   }
 }

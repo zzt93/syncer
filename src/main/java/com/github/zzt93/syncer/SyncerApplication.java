@@ -5,15 +5,18 @@ import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.filter.FilterStarter;
 import com.github.zzt93.syncer.input.InputStarter;
+import com.github.zzt93.syncer.output.OutputStarter;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
+import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration;
 
 
-@SpringBootApplication
+@SpringBootApplication(exclude = { ElasticsearchAutoConfiguration.class, ElasticsearchDataAutoConfiguration.class })
 public class SyncerApplication implements CommandLineRunner {
 
   @Autowired
@@ -31,6 +34,7 @@ public class SyncerApplication implements CommandLineRunner {
     BlockingQueue<SyncData> filterOutput = new LinkedBlockingQueue<>();
     InputStarter.getInstance(pipelineConfig.getInput(), syncerConfig.getInput(), inputFilter).start();
     FilterStarter.getInstance(pipelineConfig.getFilter(), syncerConfig.getFilter(), inputFilter, filterOutput).start();
+    OutputStarter.getInstance(pipelineConfig.getOutput(), syncerConfig.getOutput(), filterOutput).start();
   }
 
 }

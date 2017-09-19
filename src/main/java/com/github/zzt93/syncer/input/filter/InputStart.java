@@ -3,13 +3,13 @@ package com.github.zzt93.syncer.input.filter;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
+import com.github.zzt93.syncer.common.Filter;
 import com.github.zzt93.syncer.common.SchemaMeta;
 import com.github.zzt93.syncer.common.TableMeta;
 import com.github.zzt93.syncer.common.event.DeleteRowEvent;
 import com.github.zzt93.syncer.common.event.RowEvent;
 import com.github.zzt93.syncer.common.event.UpdateRowEvent;
 import com.github.zzt93.syncer.common.event.WriteRowEvent;
-import com.github.zzt93.syncer.filter.Filter;
 import org.springframework.util.Assert;
 
 /**

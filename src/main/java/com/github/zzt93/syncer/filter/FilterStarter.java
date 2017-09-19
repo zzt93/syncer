@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.filter;
 
+import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.syncer.FilterModule;
@@ -16,11 +17,11 @@ import org.springframework.util.Assert;
 /**
  * @author zzt
  */
-public class FilterStarter {
+public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilter>> {
 
   private static FilterStarter instance;
   private ExecutorService service;
-  private FilterJob filterJob;
+  private List<FilterJob> filterJobs = new ArrayList<>();
 
   private FilterStarter(List<FilterConfig> pipeline,
       FilterModule filter, BlockingQueue<SyncData> fromInput,
@@ -45,10 +46,13 @@ public class FilterStarter {
     service = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter"));
 
-    filterJob = new FilterJob(fromInput, toOutput, filters);
+    FilterJob filterJob = new FilterJob(fromInput, toOutput, filters);
+    for (int i = 0; i < module.getWorker(); i++) {
+      filterJobs.add(filterJob);
+    }
   }
 
-  private List<ExprFilter> fromPipelineConfig(List<FilterConfig> filters) {
+  public List<ExprFilter> fromPipelineConfig(List<FilterConfig> filters) {
     SpelExpressionParser parser = new SpelExpressionParser();
     List<ExprFilter> res = new ArrayList<>();
     for (FilterConfig filter : filters) {
@@ -58,6 +62,6 @@ public class FilterStarter {
   }
 
   public void start() throws InterruptedException {
-    service.submit(filterJob);
+    filterJobs.forEach(service::submit);
   }
 }

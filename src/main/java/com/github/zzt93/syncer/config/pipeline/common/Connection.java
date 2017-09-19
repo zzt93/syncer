@@ -93,4 +93,12 @@ public class Connection {
         ", password='" + password + '\'' +
         '}';
   }
+
+  public boolean valid() {
+    return address != null && port > 0 && port < 65536;
+  }
+
+  public String toConnectionUrl(String path) {
+    return getAddress() + ":" + getPort();
+  }
 }

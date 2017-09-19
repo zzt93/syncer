@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.common.event;
 
 
 import com.github.shyiko.mysql.binlog.event.Event;
+import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import java.util.HashMap;
 import java.util.List;
@@ -47,4 +48,6 @@ public abstract class RowEvent {
     }
     return res;
   }
+
+  public abstract EventType type();
 }

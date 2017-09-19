@@ -4,25 +4,21 @@ import static org.apache.commons.lang.StringUtils.split;
 import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.apache.commons.lang.StringUtils.substringBeforeLast;
 
-import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import java.net.InetAddress;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
+import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
 import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
 import org.springframework.util.Assert;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
-@Configuration
 public class ElasticsearchConnection extends Connection {
 
   private static final Logger logger = LoggerFactory.getLogger(ElasticsearchConnection.class);
@@ -31,13 +27,8 @@ public class ElasticsearchConnection extends Connection {
   private String clusterName = "elasticsearch";
   private List<String> clusterNodes;
 
-  @Bean
-  @ConditionalOnProperty(prefix = "pipeline.output.elasticsearch.connection", name = {"cluster-name",
-      "cluster-nodes[0]"})
-  public static TransportClient transportClient(PipelineConfig pipelineConfig) throws Exception {
-    ElasticsearchConnection elasticsearch = pipelineConfig.getOutput().getElasticsearch()
-        .getConnection();
-    Assert.notNull(elasticsearch, "[Assertion failed] ");
+  public TransportClient transportClient() throws Exception {
+    ElasticsearchConnection elasticsearch = this;
     PreBuiltXPackTransportClient client = new PreBuiltXPackTransportClient(
         elasticsearch.settings());
     String clusterNodes = elasticsearch.clusterNodesString();
@@ -54,7 +45,7 @@ public class ElasticsearchConnection extends Connection {
     return client;
   }
 
-  public String getClusterName() {
+  private String getClusterName() {
     return clusterName;
   }
 
@@ -75,8 +66,15 @@ public class ElasticsearchConnection extends Connection {
   }
 
   private Settings settings() {
-    return Settings.builder()
-        .put("cluster.name", getClusterName())
+    Builder builder = Settings.builder()
+        .put("cluster.name", getClusterName());
+    if (getUser() == null && getPassword() == null) {
+      return builder.build();
+    }
+    if (getUser() == null || getPassword() == null) {
+      throw new IllegalArgumentException("Lacking user or password");
+    }
+    return builder
         .put("xpack.security.user", getUser() + COLON + getPassword())
         //        .put("client.transport.sniff", clientTransportSniff)
         //        .put("client.transport.ignore_cluster_name", clientIgnoreClusterName)

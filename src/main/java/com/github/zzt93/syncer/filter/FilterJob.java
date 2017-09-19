@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.filter;
 
+import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.filter.Filter.FilterRes;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
@@ -25,7 +25,7 @@ public class FilterJob implements Callable<Void> {
 
   @Override
   public Void call() throws Exception {
-    while (true) {
+    while (!Thread.interrupted()) {
       SyncData poll = fromInput.poll();
       for (ExprFilter filter : filters) {
         if (filter.decide(poll) == FilterRes.ACCEPT) {
@@ -33,5 +33,6 @@ public class FilterJob implements Callable<Void> {
         }
       }
     }
+    return null;
   }
 }

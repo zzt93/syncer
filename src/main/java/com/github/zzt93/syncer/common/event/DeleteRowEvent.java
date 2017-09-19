@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.common.event;
 
 import com.github.shyiko.mysql.binlog.event.DeleteRowsEventData;
 import com.github.shyiko.mysql.binlog.event.Event;
+import com.github.shyiko.mysql.binlog.event.EventType;
 import java.io.Serializable;
 import java.util.BitSet;
 import java.util.List;
@@ -26,4 +27,8 @@ public class DeleteRowEvent extends RowEvent {
   }
 
 
+  @Override
+  public EventType type() {
+    return EventType.DELETE_ROWS;
+  }
 }
