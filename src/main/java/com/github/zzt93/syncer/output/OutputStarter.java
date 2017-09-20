@@ -5,7 +5,6 @@ import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.output.Output;
 import com.github.zzt93.syncer.config.syncer.OutputModule;
 import com.github.zzt93.syncer.input.connect.NamedThreadFactory;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -18,8 +17,9 @@ import org.springframework.util.Assert;
 public class OutputStarter implements Starter<Output, List<OutputChannel>> {
 
   private static OutputStarter instance;
-  private final List<OutputJob> outputJobs = new ArrayList<>();
+  private final OutputJob outputJob;
   private final ExecutorService service;
+  private final int worker;
 
   private OutputStarter(Output output, OutputModule module,
       BlockingQueue<SyncData> fromFilter) throws Exception {
@@ -29,10 +29,8 @@ public class OutputStarter implements Starter<Output, List<OutputChannel>> {
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-output"));
 
     List<OutputChannel> outputChannels = fromPipelineConfig(output);
-    OutputJob outputJob = new OutputJob(fromFilter, outputChannels);
-    for (int i = 0; i < module.getWorker(); i++) {
-      outputJobs.add(outputJob);
-    }
+    outputJob = new OutputJob(fromFilter, outputChannels);
+    worker = module.getWorker();
   }
 
   public static OutputStarter getInstance(Output output, OutputModule syncerOutput,
@@ -44,7 +42,9 @@ public class OutputStarter implements Starter<Output, List<OutputChannel>> {
   }
 
   public void start() throws InterruptedException {
-    outputJobs.forEach(service::submit);
+    for (int i = 0; i < worker; i++) {
+      service.submit(outputJob);
+    }
   }
 
   @Override

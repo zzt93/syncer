@@ -3,7 +3,11 @@ package com.github.zzt93.syncer.common;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.common.event.RowEvent;
+import java.lang.reflect.Field;
 import java.util.HashMap;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.ReflectionUtils;
 
 /**
  * @author zzt
@@ -15,6 +19,7 @@ public class SyncData {
   private final String table;
   private final HashMap<String, Object> row = new HashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
+  private final Logger logger = LoggerFactory.getLogger(SyncData.class);
 
   public SyncData(EventType type, String schema, String table) {
     this.type = type;
@@ -34,22 +39,23 @@ public class SyncData {
     return table;
   }
 
-  public SyncData addRow(String colName, Object value) {
-    row.put(colName, value);
-    return this;
-  }
-
   public SyncData addExtra(String colName, Object value) {
     extra.put(colName, value);
     return this;
   }
 
-  public HashMap<String, Object> getRow() {
-    return row;
-  }
+  public Object getData(String key) {
+    // check field
+    for (Field field : SyncData.class.getDeclaredFields()) {
+      if (field.getName().equals(key)) {
+        return ReflectionUtils.getField(field, this);
+      }
+    }
 
-  public HashMap<String, Object> getExtra() {
-    return extra;
+    if (row.containsKey(key) && extra.containsKey(key)) {
+      logger.warn("Duplicate key '{}' in row data and extra, behaviour is undefined", key);
+    }
+    return row.containsKey(key) ? row.get(key) : extra.get(key);
   }
 
   public String getSchema() {

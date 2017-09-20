@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.config.pipeline.output;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
 import com.github.zzt93.syncer.output.HttpChannel;
 import com.github.zzt93.syncer.output.OutputChannel;
+import java.util.Collections;
 import java.util.HashMap;
 
 /**
@@ -35,7 +36,7 @@ public class Http implements OutputChannelConfig {
   @Override
   public OutputChannel toChannel() {
     if (connection.valid()) {
-      return new HttpChannel(connection, jsonMapper);
+      return new HttpChannel(connection, Collections.unmodifiableMap(jsonMapper));
     }
     throw new IllegalArgumentException();
   }

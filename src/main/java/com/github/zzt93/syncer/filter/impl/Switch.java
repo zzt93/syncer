@@ -23,6 +23,10 @@ public class Switch implements ExprFilter {
     filter.getAction().forEach((k, v) -> action.put(k, new Actions(v)));
   }
 
+  /**
+   * <a href="https://stackoverflow.com/questions/16775203/is-spelexpression-in-spring-el-thread-safe">
+   *   SpelExpressionParser is thread safe</a>
+   */
   @Override
   public FilterRes decide(SyncData data) {
     StandardEvaluationContext context = new StandardEvaluationContext(data);

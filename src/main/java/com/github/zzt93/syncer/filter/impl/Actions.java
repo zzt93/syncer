@@ -12,7 +12,7 @@ import org.springframework.expression.ParserContext;
  */
 public class Actions implements Expression<Void> {
 
-  private List<String> action = new ArrayList<>();
+  private final List<String> action;
 
   public Actions(List<String> action) {
     this.action = action;

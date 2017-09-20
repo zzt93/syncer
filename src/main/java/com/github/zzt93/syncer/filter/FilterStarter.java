@@ -21,7 +21,8 @@ public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilte
 
   private static FilterStarter instance;
   private ExecutorService service;
-  private List<FilterJob> filterJobs = new ArrayList<>();
+  private FilterJob filterJob;
+  private int worker;
 
   private FilterStarter(List<FilterConfig> pipeline,
       FilterModule filter, BlockingQueue<SyncData> fromInput,
@@ -46,10 +47,8 @@ public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilte
     service = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter"));
 
-    FilterJob filterJob = new FilterJob(fromInput, toOutput, filters);
-    for (int i = 0; i < module.getWorker(); i++) {
-      filterJobs.add(filterJob);
-    }
+    filterJob = new FilterJob(fromInput, toOutput, filters);
+    worker = module.getWorker();
   }
 
   public List<ExprFilter> fromPipelineConfig(List<FilterConfig> filters) {
@@ -62,6 +61,8 @@ public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilte
   }
 
   public void start() throws InterruptedException {
-    filterJobs.forEach(service::submit);
+    for (int i = 0; i < worker; i++) {
+      service.submit(filterJob);
+    }
   }
 }

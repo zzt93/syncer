@@ -8,7 +8,16 @@ import java.util.List;
  */
 public interface OutputChannel {
 
+  /**
+   * Should be thread safe
+   * @param event the data from filter module
+   * @return whether output is success
+   *
+   * @see OutputJob#call()
+   */
   boolean output(SyncData event);
 
   boolean output(List<SyncData> batch);
+
+  String des();
 }

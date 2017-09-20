@@ -93,11 +93,6 @@
             <optional>true</optional>
         </dependency>
 
-        <dependency>
-            <groupId>cn.superid</groupId>
-            <artifactId>search-entity</artifactId>
-            <version>0.0.1-SNAPSHOT</version>
-        </dependency>
     </dependencies>
 
     <build>

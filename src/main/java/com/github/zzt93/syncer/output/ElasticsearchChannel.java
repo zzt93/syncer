@@ -35,4 +35,11 @@ public class ElasticsearchChannel implements OutputChannel {
   public boolean output(List<SyncData> batch) {
     return false;
   }
+
+  @Override
+  public String des() {
+    return "ElasticsearchChannel{" +
+        "esTemplate=" + esTemplate +
+        '}';
+  }
 }
