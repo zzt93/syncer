@@ -5,24 +5,28 @@ import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import java.io.Serializable;
 import java.util.BitSet;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 /**
  * Created by zzt on 9/14/17. <p> <h3></h3>
  */
-public class DeleteRowEvent extends RowEvent {
+public class DeleteRowsEvent extends RowsEvent {
 
-  public DeleteRowEvent(Event tableMap, DeleteRowsEventData deleteRowsEventData,
+  public DeleteRowsEvent(Event tableMap, DeleteRowsEventData deleteRowsEventData,
       Map<Integer, String> indexToName) {
     super(tableMap, indexToName);
     BitSet includedColumns = deleteRowsEventData.getIncludedColumns();
     List<Serializable[]> rows = deleteRowsEventData.getRows();
-    int c = 0;
-    for (int i = 0; i < includedColumns.length(); i++) {
-      if (includedColumns.get(i)) {
-        put(i, rows.get(c++));
+    for (Serializable[] row : rows) {
+      HashMap<Integer, Object> map = new HashMap<>();
+      for (int i = 0; i < row.length; i++) {
+        if (includedColumns.get(i)) {
+          map.put(i + 1, row[i]);
+        }
       }
+      addRow(map);
     }
   }
 

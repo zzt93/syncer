@@ -15,6 +15,7 @@ import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
@@ -83,4 +84,8 @@ public class ElasticsearchConnection extends Connection {
         .build();
   }
 
+  @Override
+  public boolean valid() {
+    return !StringUtils.isEmpty(clusterName) && !clusterNodes.isEmpty();
+  }
 }

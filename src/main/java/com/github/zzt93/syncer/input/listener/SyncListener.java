@@ -5,7 +5,7 @@ import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.common.event.RowEvent;
+import com.github.zzt93.syncer.common.event.RowsEvent;
 import com.github.zzt93.syncer.input.filter.InputEnd;
 import com.github.zzt93.syncer.input.filter.InputFilter;
 import com.github.zzt93.syncer.input.filter.InputStart;
@@ -45,17 +45,23 @@ public class SyncListener implements BinaryLogClient.EventListener {
       case WRITE_ROWS:
       case UPDATE_ROWS:
       case DELETE_ROWS:
-        RowEvent aim = start.decide(event, last);
+        RowsEvent aim = start.decide(last, event);
+        if (aim == null) { // not interested in this database+table
+          return;
+        }
         for (InputFilter filter : filters) {
-          if (filter.decide(aim) != FilterRes.ACCEPT) {
+          if (filter.decide(aim) != FilterRes.ACCEPT) { // not interested in unrelated rows
             // discard: not add to queue
             return;
           }
         }
-        SyncData syncData = end.decide(aim);
-        if (!toFilter.offer(syncData)) {
-          logger.error("Fail to put data to 'filter' processor, space ");
+        SyncData[] syncDatas = end.decide(aim);
+        for (SyncData syncData : syncDatas) {
+          if (!toFilter.offer(syncData)) {
+            logger.error("Fail to put data to 'filter' processor, space unavailable");
+          }
         }
+        last = null;
         break;
     }
   }

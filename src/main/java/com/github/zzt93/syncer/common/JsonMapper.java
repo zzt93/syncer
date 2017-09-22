@@ -34,15 +34,25 @@ public class JsonMapper {
         res.put(key, sub);
       } else if (o instanceof String) {
         String expr = (String) o;
-        if (expr.equals("row.*")) {
-          res.put(key, src.getRow());
-        } else if (expr.equals("extra.*")) {
-          res.put(key, src.getExtra());
-        } else {
-          // TODO 9/20/17 check expr contains template
-          String value = parser.parseExpression(expr, ParserContext.TEMPLATE_EXPRESSION)
-              .getValue(new StandardEvaluationContext(src), String.class);
-          res.put(key, value);
+        switch (expr) {
+          case "row.*":
+            res.put(key, src.getRow());
+            break;
+          case "extra.*":
+            res.put(key, src.getExtra());
+            break;
+          case "row.*.flatten":
+            res.putAll(src.getRow());
+            break;
+          case "extra.*.flatten":
+            res.putAll(src.getExtra());
+            break;
+          default:
+            // TODO 9/20/17 check expr contains template
+            String value = parser.parseExpression(expr, ParserContext.TEMPLATE_EXPRESSION)
+                .getValue(new StandardEvaluationContext(src), String.class);
+            res.put(key, value);
+            break;
         }
       }
     }

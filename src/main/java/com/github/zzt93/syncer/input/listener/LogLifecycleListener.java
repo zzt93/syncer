@@ -13,7 +13,7 @@ public class LogLifecycleListener implements BinaryLogClient.LifecycleListener {
 
   @Override
   public void onConnect(BinaryLogClient client) {
-    logger.info("Connected {}", client);
+    logger.info("Connected {}@{}", client.getBinlogFilename(), client.getBinlogPosition());
   }
 
   @Override
@@ -28,6 +28,6 @@ public class LogLifecycleListener implements BinaryLogClient.LifecycleListener {
 
   @Override
   public void onDisconnect(BinaryLogClient client) {
-    logger.info("Disconnect {}", client);
+    logger.info("Disconnect {}@{}", client.getBinlogFilename(), client.getBinlogPosition());
   }
 }

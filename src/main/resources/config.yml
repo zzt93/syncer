@@ -3,7 +3,7 @@ syncer:
     worker: 4
 
   filter:
-    worker: 4
+    worker: 1
 
   output:
-    worker: 4
+    worker: 1

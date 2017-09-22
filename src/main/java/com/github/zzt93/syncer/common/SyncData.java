@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.common;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
-import com.github.zzt93.syncer.common.event.RowEvent;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,12 +20,11 @@ public class SyncData {
   private final HashMap<String, Object> extra = new HashMap<>();
   private final Logger logger = LoggerFactory.getLogger(SyncData.class);
 
-  public SyncData(RowEvent rowEvent, EventType type) {
+  public SyncData(TableMapEventData tableMap, HashMap<String, Object> data,
+      EventType type) {
     this.type = type;
-    HashMap<String, Object> data = rowEvent.getData();
     Assert.isTrue(data.containsKey("id"), "[Assertion Failure]: no id in data");
     id = data.get("id").toString();
-    TableMapEventData tableMap = rowEvent.getTableMap();
     schema = tableMap.getDatabase();
     table = tableMap.getTable();
     row.putAll(data);
@@ -59,6 +57,10 @@ public class SyncData {
   public void renameRow(String oldKey, String newKey) {
     row.put(newKey, row.get(oldKey));
     row.remove(oldKey);
+  }
+
+  public void removeRow(String rowName) {
+    row.remove(rowName);
   }
 
   public HashMap<String, Object> getRow() {

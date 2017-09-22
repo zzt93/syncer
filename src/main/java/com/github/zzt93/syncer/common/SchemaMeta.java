@@ -36,7 +36,7 @@ public class SchemaMeta {
   public TableMeta findTable(String database, String table) {
     // schema match?
     if (schema.equals(database) ||
-        (schemaPattern != null && schemaPattern.matcher(database).find())) {
+        (schemaPattern != null && schemaPattern.matcher(database).matches())) {
       // table name match?
       return tableMetas.getOrDefault(table, null);
     }

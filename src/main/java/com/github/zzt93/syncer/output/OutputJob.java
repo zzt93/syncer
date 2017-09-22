@@ -22,13 +22,17 @@ public class OutputJob implements Callable<Void> {
   }
 
   @Override
-  public Void call() {
+  public Void call() throws InterruptedException {
     while (!Thread.interrupted()) {
-      SyncData poll = queue.poll();
-      for (OutputChannel channel : channels) {
-        if (!channel.output(poll)) {
-          logger.warn("Fail to write to channel {}", channel);
+      try {
+        SyncData poll = queue.take();
+        for (OutputChannel channel : channels) {
+          if (!channel.output(poll)) {
+            logger.warn("Fail to write to channel {}", channel);
+          }
         }
+      } catch (Exception e) {
+        logger.debug("Output job failed", e);
       }
     }
     return null;

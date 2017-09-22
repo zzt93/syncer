@@ -12,7 +12,7 @@ import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.input.filter.InputEnd;
 import com.github.zzt93.syncer.input.filter.InputFilter;
 import com.github.zzt93.syncer.input.filter.InputStart;
-import com.github.zzt93.syncer.input.filter.SchemaFilter;
+import com.github.zzt93.syncer.input.filter.RowFilter;
 import com.github.zzt93.syncer.input.listener.LogLifecycleListener;
 import com.github.zzt93.syncer.input.listener.SyncListener;
 import java.io.IOException;
@@ -49,7 +49,7 @@ public class MasterConnector implements Runnable {
     if (schema != null) {
       try {
         schemaMeta = new SchemaMeta.MetaDataBuilder(connection, schema).build();
-        filters.add(new SchemaFilter(schemaMeta));
+        filters.add(new RowFilter(schemaMeta));
       } catch (SQLException e) {
         logger.error("Fail to connect to master to retrieve schema metadata", e);
         throw new SchemaUnavailableException(e);
@@ -66,10 +66,13 @@ public class MasterConnector implements Runnable {
   @Override
   public void run() {
     Thread.currentThread().setName(remote);
-    try {
-      client.connect();
-    } catch (IOException e) {
-      logger.error("Fail to connect to master", e);
+    for (int i = 0; i < 3; i++) {
+      try {
+        client.connect();
+      } catch (IOException e) {
+        logger.error("Fail to connect to master", e);
+      }
     }
+    logger.error("Max try exceeds, fail to connect");
   }
 }
