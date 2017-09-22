@@ -7,7 +7,7 @@ import java.util.List;
 /**
  * @author zzt
  */
-public class Output {
+public class PipelineOutput {
 
   private Elasticsearch elasticsearch;
   private Http http;

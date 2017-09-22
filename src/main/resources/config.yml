@@ -7,3 +7,5 @@ syncer:
 
   output:
     worker: 1
+    batch:
+      worker: 2

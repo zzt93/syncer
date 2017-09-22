@@ -1,11 +1,13 @@
-package com.github.zzt93.syncer.output;
+package com.github.zzt93.syncer.output.http;
 
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 
-import com.github.zzt93.syncer.common.JsonMapper;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
+import com.github.zzt93.syncer.output.BatchBuffer;
+import com.github.zzt93.syncer.output.JsonMapper;
+import com.github.zzt93.syncer.output.OutputChannel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -42,7 +44,8 @@ public class HttpChannel implements OutputChannel {
    */
   @Override
   public boolean output(SyncData event) {
-    HashMap<String, Object> res = mapper.mapToJson(event);
+    // TODO 17/9/22 add batch worker
+    HashMap<String, Object> res = mapper.map(event);
     logger.debug("Mapping result: {}", res);
     switch (event.getType()) {
       case UPDATE_ROWS:
@@ -65,6 +68,11 @@ public class HttpChannel implements OutputChannel {
   @Override
   public boolean output(List<SyncData> batch) {
     return false;
+  }
+
+  @Override
+  public BatchBuffer getBuffer() {
+    return null;
   }
 
   @Override

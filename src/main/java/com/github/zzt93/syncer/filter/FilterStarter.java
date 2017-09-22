@@ -3,7 +3,8 @@ package com.github.zzt93.syncer.filter;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
-import com.github.zzt93.syncer.config.syncer.FilterModule;
+import com.github.zzt93.syncer.config.syncer.SyncerFilter;
+import com.github.zzt93.syncer.filter.impl.Statement;
 import com.github.zzt93.syncer.filter.impl.Switch;
 import com.github.zzt93.syncer.input.connect.NamedThreadFactory;
 import java.util.ArrayList;
@@ -25,14 +26,14 @@ public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilte
   private int worker;
 
   private FilterStarter(List<FilterConfig> pipeline,
-      FilterModule filter, BlockingQueue<SyncData> fromInput,
+      SyncerFilter filter, BlockingQueue<SyncData> fromInput,
       BlockingQueue<SyncData> toOutput) {
     List<ExprFilter> filterJobs = fromPipelineConfig(pipeline);
     filterModuleInit(filter, filterJobs, fromInput, toOutput);
   }
 
   public static FilterStarter getInstance(List<FilterConfig> filters,
-      FilterModule filter, BlockingQueue<SyncData> fromInput,
+      SyncerFilter filter, BlockingQueue<SyncData> fromInput,
       BlockingQueue<SyncData> toOutput) {
     if (instance == null) {
       instance = new FilterStarter(filters, filter, fromInput, toOutput);
@@ -40,7 +41,7 @@ public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilte
     return instance;
   }
 
-  private void filterModuleInit(FilterModule module, List<ExprFilter> filters,
+  private void filterModuleInit(SyncerFilter module, List<ExprFilter> filters,
       BlockingQueue<SyncData> fromInput, BlockingQueue<SyncData> toOutput) {
     Assert.isTrue(module.getWorker() <= 8, "Too many worker thread");
     Assert.isTrue(module.getWorker() > 0, "Too few worker thread");
@@ -51,11 +52,19 @@ public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilte
     worker = module.getWorker();
   }
 
+  @Override
   public List<ExprFilter> fromPipelineConfig(List<FilterConfig> filters) {
     SpelExpressionParser parser = new SpelExpressionParser();
     List<ExprFilter> res = new ArrayList<>();
     for (FilterConfig filter : filters) {
-      res.add(new Switch(parser, filter));
+      switch (filter.getType()) {
+        case SWITCH:
+          res.add(new Switch(parser, filter.getSwitcher()));
+          break;
+        case STATEMENT:
+          res.add(new Statement(parser, filter.getStatement()));
+          break;
+      }
     }
     return res;
   }

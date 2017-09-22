@@ -1,8 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.filter;
 
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * @author zzt
@@ -10,8 +8,26 @@ import java.util.Map;
 public class FilterConfig {
 
   private FilterType type;
-  private String condition;
-  private Map<String, List<String>> action = new HashMap<>();
+  private Switcher switcher;
+  private List<String> statement;
+
+  public Switcher getSwitcher() {
+    return switcher;
+  }
+
+  public void setSwitcher(Switcher switcher) {
+    this.switcher = switcher;
+    type = FilterType.SWITCH;
+  }
+
+  public List<String> getStatement() {
+    return statement;
+  }
+
+  public void setStatement(List<String> statement) {
+    this.statement = statement;
+    type = FilterType.STATEMENT;
+  }
 
   public FilterType getType() {
     return type;
@@ -21,23 +37,7 @@ public class FilterConfig {
     this.type = type;
   }
 
-  public String getCondition() {
-    return condition;
-  }
-
-  public void setCondition(String condition) {
-    this.condition = condition;
-  }
-
-  public Map<String, List<String>> getAction() {
-    return action;
-  }
-
-  public void setAction(Map<String, List<String>> action) {
-    this.action = action;
-  }
-
-  enum FilterType {
-    IF
+  public enum FilterType {
+    SWITCH, STATEMENT
   }
 }

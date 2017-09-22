@@ -1,5 +1,6 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.output;
 
+import com.github.zzt93.syncer.common.SyncData;
 import java.util.HashMap;
 import java.util.Map;
 import org.springframework.expression.ParserContext;
@@ -9,8 +10,12 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 /**
  * @author zzt
  */
-public class JsonMapper {
+public class JsonMapper implements Mapper<SyncData, HashMap<String, Object>> {
 
+  public static final String ROW_ALL = "row.*";
+  public static final String ROW_FLATTEN = "row.*.flatten";
+  public static final String EXTRA_ALL = "extra.*";
+  public static final String EXTRA_FLATTEN = "extra.*.flatten";
   private final SpelExpressionParser parser = new SpelExpressionParser();
   private final Map<String, Object> mapping;
 
@@ -18,7 +23,7 @@ public class JsonMapper {
     this.mapping = mapping;
   }
 
-  public HashMap<String, Object> mapToJson(SyncData data) {
+  public HashMap<String, Object> map(SyncData data) {
     HashMap<String, Object> res = new HashMap<>();
     mapToRes(data, mapping, res);
     return res;
@@ -35,16 +40,16 @@ public class JsonMapper {
       } else if (o instanceof String) {
         String expr = (String) o;
         switch (expr) {
-          case "row.*":
+          case ROW_ALL:
             res.put(key, src.getRow());
             break;
-          case "extra.*":
+          case EXTRA_ALL:
             res.put(key, src.getExtra());
             break;
-          case "row.*.flatten":
+          case ROW_FLATTEN:
             res.putAll(src.getRow());
             break;
-          case "extra.*.flatten":
+          case EXTRA_FLATTEN:
             res.putAll(src.getExtra());
             break;
           default:

@@ -19,5 +19,7 @@ public interface OutputChannel {
 
   boolean output(List<SyncData> batch);
 
+  BatchBuffer getBuffer();
+
   String des();
 }

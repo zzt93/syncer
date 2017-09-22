@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
+import com.github.zzt93.syncer.output.JsonMapper;
 import java.util.HashMap;
 
 /**
@@ -10,7 +11,11 @@ public class DocumentMapping {
   private String index;
   private String type;
   private String documentId;
-  private HashMap<String, String> fieldsMapper;
+  private HashMap<String, Object> fieldsMapper = new HashMap<>();
+
+  public DocumentMapping() {
+    fieldsMapper.put("anyKey", JsonMapper.ROW_FLATTEN);
+  }
 
   public String getIndex() {
     return index;
@@ -36,11 +41,11 @@ public class DocumentMapping {
     this.documentId = documentId;
   }
 
-  public HashMap<String, String> getFieldsMapper() {
+  public HashMap<String, Object> getFieldsMapper() {
     return fieldsMapper;
   }
 
-  public void setFieldsMapper(HashMap<String, String> fieldsMapper) {
+  public void setFieldsMapper(HashMap<String, Object> fieldsMapper) {
     this.fieldsMapper = fieldsMapper;
   }
 }

@@ -10,31 +10,31 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "syncer")
 public class SyncerConfig {
 
-  private InputModule input;
-  private FilterModule filter;
-  private OutputModule output;
+  private SyncerInput input;
+  private SyncerFilter filter;
+  private SyncerOutput output;
 
-  public InputModule getInput() {
+  public SyncerInput getInput() {
     return input;
   }
 
-  public void setInput(InputModule input) {
+  public void setInput(SyncerInput input) {
     this.input = input;
   }
 
-  public FilterModule getFilter() {
+  public SyncerFilter getFilter() {
     return filter;
   }
 
-  public void setFilter(FilterModule filter) {
+  public void setFilter(SyncerFilter filter) {
     this.filter = filter;
   }
 
-  public OutputModule getOutput() {
+  public SyncerOutput getOutput() {
     return output;
   }
 
-  public void setOutput(OutputModule output) {
+  public void setOutput(SyncerOutput output) {
     this.output = output;
   }
 }

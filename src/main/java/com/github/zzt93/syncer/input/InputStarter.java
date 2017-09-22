@@ -3,9 +3,9 @@ package com.github.zzt93.syncer.input;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
-import com.github.zzt93.syncer.config.pipeline.input.Input;
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
-import com.github.zzt93.syncer.config.syncer.InputModule;
+import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
+import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.input.connect.MasterConnector;
 import com.github.zzt93.syncer.input.connect.NamedThreadFactory;
 import java.io.IOException;
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class InputStarter implements Starter<Input, Set<MysqlMaster>> {
+public class InputStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
 
   private static InputStarter instance;
   private final ExecutorService service;
@@ -27,16 +27,16 @@ public class InputStarter implements Starter<Input, Set<MysqlMaster>> {
   private final Logger logger = LoggerFactory.getLogger(InputStarter.class);
   private final Set<MysqlMaster> mysqlMasters;
 
-  private InputStarter(Input inputConfig, InputModule input, BlockingQueue<SyncData> queue) {
+  private InputStarter(PipelineInput pipelineInputConfig, SyncerInput input, BlockingQueue<SyncData> queue) {
     this.queue = queue;
-    mysqlMasters = fromPipelineConfig(inputConfig);
+    mysqlMasters = fromPipelineConfig(pipelineInputConfig);
     service = Executors.newFixedThreadPool(input.getWorker(), new NamedThreadFactory("syncer-input"));
   }
 
-  public static InputStarter getInstance(Input inputConfig, InputModule input,
+  public static InputStarter getInstance(PipelineInput pipelineInputConfig, SyncerInput input,
       BlockingQueue<SyncData> queue) {
     if (instance == null) {
-      instance = new InputStarter(inputConfig, input, queue);
+      instance = new InputStarter(pipelineInputConfig, input, queue);
     }
     return instance;
   }
@@ -56,7 +56,7 @@ public class InputStarter implements Starter<Input, Set<MysqlMaster>> {
   }
 
   @Override
-  public Set<MysqlMaster> fromPipelineConfig(Input input) {
-    return input.getMysqlMasterSet();
+  public Set<MysqlMaster> fromPipelineConfig(PipelineInput pipelineInput) {
+    return pipelineInput.getMysqlMasterSet();
   }
 }

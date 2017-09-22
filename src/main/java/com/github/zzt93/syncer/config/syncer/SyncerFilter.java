@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.config.syncer;
 /**
  * @author zzt
  */
-public class InputModule {
+public class SyncerFilter {
 
   private int worker;
 

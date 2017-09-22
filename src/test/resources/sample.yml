@@ -48,7 +48,7 @@ pipeline:
 
   filter:
     - condition: "#{table}"
-      action:
+      switcher:
         "file": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_FILE'}", "#{addRow('type', 'FILE'}" ]
         "folder": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_FILE'}", "#{addRow('type', 'DIR'}"]
         "affair": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_AFFAIR'}"]
@@ -70,21 +70,6 @@ pipeline:
 
 
   output:
-    elasticsearch:
-      connection:
-        cluster-name: elasticsearch
-        cluster-nodes: ["192.168.1.100:9300"]
-        user: elastic-user # optional if not enable security
-        password-file: es-password # optional if not enable security
-      document-mapping: # mapping from input data to document json
-        index: "#{table}-#{extra['suffix']}" # default #{schema}
-        type: "#{table}" # default #{table}
-        document-id: "#{id}" # default #{id}
-        fields-mapper: # rest row.* => row.*
-          "parentId": "#{row['parent_id']}"
-          "superId": "#{row['superid']}"
-          "allianceId": "#{row['alliance_id']}"
-          "row.*": "row.*"
 
     http:
       connection:

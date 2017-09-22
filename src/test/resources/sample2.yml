@@ -48,7 +48,7 @@ pipeline:
 
   filter:
     - condition: "#{table}"
-      action:
+      switcher:
         "file": ["#{addExtra('suffix', row['xxx'])}", "#{addRow('type', 'FILE'}", "#{renameRow('old', 'new')}"]
         "folder": ["#{addExtra('suffix', row['xxx'])}", "#{addRow('type', 'DIR'}"]
         "affair": ["#{addExtra('suffix', row['xxx'])}"]
@@ -81,7 +81,7 @@ pipeline:
         type: "#{table}" # default #{table}
         document-id: "#{id}" # default #{id}
         fields-mapper: # rest row.* => row.*
-          "row.*": "row.*"
+          "row": "row.*"
 
     http:
       connection:
@@ -89,6 +89,6 @@ pipeline:
         port: 9700
       json-mapper:
         "data":
-          "row.*": "row.*"
+          "row": "row.*"
         "type": "#{extra['type']}"
 

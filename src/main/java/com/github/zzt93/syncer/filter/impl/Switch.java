@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.filter.impl;
 
 import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
+import com.github.zzt93.syncer.config.pipeline.filter.Switcher;
 import com.github.zzt93.syncer.filter.ExprFilter;
 import java.util.HashMap;
 import java.util.Map;
@@ -17,10 +17,10 @@ public class Switch implements ExprFilter {
   private final Condition condition;
   private final Map<String, Actions> action = new HashMap<>();
 
-  public Switch(SpelExpressionParser parser, FilterConfig filter) {
+  public Switch(SpelExpressionParser parser, Switcher filter) {
     condition = new Condition(filter.getCondition());
     this.parser = parser;
-    filter.getAction().forEach((k, v) -> action.put(k, new Actions(v)));
+    filter.getCase().forEach((k, v) -> action.put(k, new Actions(v)));
   }
 
   /**
@@ -31,7 +31,10 @@ public class Switch implements ExprFilter {
   public FilterRes decide(SyncData data) {
     StandardEvaluationContext context = new StandardEvaluationContext(data);
     String conditionRes = condition.execute(parser, context);
-    action.get(conditionRes).execute(parser, context);
+    Actions actions = action.get(conditionRes);
+    if (actions != null) {
+      actions.execute(parser, context);
+    }
     return FilterRes.ACCEPT;
   }
 }

@@ -11,9 +11,9 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class Input {
+public class PipelineInput {
 
-  private Logger logger = LoggerFactory.getLogger(Input.class);
+  private Logger logger = LoggerFactory.getLogger(PipelineInput.class);
 
   private List<MysqlMaster> mysqlMasters = new ArrayList<>();
   private Set<MysqlMaster> mysqlMasterSet = new HashSet<>();
