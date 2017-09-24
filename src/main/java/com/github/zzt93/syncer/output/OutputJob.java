@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.output;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.output.channel.OutputChannel;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;

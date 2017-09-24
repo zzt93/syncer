@@ -1,6 +1,7 @@
-package com.github.zzt93.syncer.output;
+package com.github.zzt93.syncer.output.channel;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.output.OutputJob;
 import java.util.List;
 
 /**
@@ -19,7 +20,7 @@ public interface OutputChannel {
 
   boolean output(List<SyncData> batch);
 
-  BatchBuffer getBuffer();
-
   String des();
+
+
 }

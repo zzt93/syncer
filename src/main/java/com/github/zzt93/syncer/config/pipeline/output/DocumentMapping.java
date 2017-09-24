@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
-import com.github.zzt93.syncer.output.JsonMapper;
+import com.github.zzt93.syncer.output.mapper.JsonMapper;
 import java.util.HashMap;
 
 /**

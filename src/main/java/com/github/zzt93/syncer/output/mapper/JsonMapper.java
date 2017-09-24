@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.output;
+package com.github.zzt93.syncer.output.mapper;
 
 import com.github.zzt93.syncer.common.SyncData;
 import java.util.HashMap;

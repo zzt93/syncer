@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
-import com.github.zzt93.syncer.output.OutputChannel;
-import com.github.zzt93.syncer.output.elastic.ElasticsearchChannel;
+import com.github.zzt93.syncer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.output.channel.elastic.ElasticsearchChannel;
 
 /**
  * @author zzt

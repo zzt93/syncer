@@ -1,9 +1,9 @@
-package com.github.zzt93.syncer.output.elastic;
+package com.github.zzt93.syncer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.output.DocumentMapping;
-import com.github.zzt93.syncer.output.JsonMapper;
-import com.github.zzt93.syncer.output.Mapper;
+import com.github.zzt93.syncer.output.mapper.JsonMapper;
+import com.github.zzt93.syncer.output.mapper.Mapper;
 import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.slf4j.Logger;

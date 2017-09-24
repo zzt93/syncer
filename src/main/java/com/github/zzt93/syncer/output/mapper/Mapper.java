@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.output;
+package com.github.zzt93.syncer.output.mapper;
 
 /**
  * @author zzt

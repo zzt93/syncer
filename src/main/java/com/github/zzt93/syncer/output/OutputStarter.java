@@ -5,6 +5,9 @@ import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.input.connect.NamedThreadFactory;
+import com.github.zzt93.syncer.output.batch.BatchJob;
+import com.github.zzt93.syncer.output.channel.BufferedChannel;
+import com.github.zzt93.syncer.output.channel.OutputChannel;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
@@ -33,6 +36,14 @@ public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel
         new NamedThreadFactory("syncer-batch"));
 
     List<OutputChannel> outputChannels = fromPipelineConfig(pipelineOutput);
+    for (OutputChannel outputChannel : outputChannels) {
+      if (outputChannel instanceof BufferedChannel) {
+        BufferedChannel bufferedChannel = (BufferedChannel) outputChannel;
+        batchService.schedule(new BatchJob(bufferedChannel), bufferedChannel.getDelay(),
+                bufferedChannel.getDelayUnit());
+      }
+    }
+
     outputJob = new OutputJob(fromFilter, outputChannels);
     worker = module.getWorker();
   }

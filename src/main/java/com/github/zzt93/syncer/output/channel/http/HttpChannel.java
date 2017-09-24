@@ -1,13 +1,12 @@
-package com.github.zzt93.syncer.output.http;
+package com.github.zzt93.syncer.output.channel.http;
 
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
-import com.github.zzt93.syncer.output.BatchBuffer;
-import com.github.zzt93.syncer.output.JsonMapper;
-import com.github.zzt93.syncer.output.OutputChannel;
+import com.github.zzt93.syncer.output.mapper.JsonMapper;
+import com.github.zzt93.syncer.output.channel.OutputChannel;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,14 +70,10 @@ public class HttpChannel implements OutputChannel {
   }
 
   @Override
-  public BatchBuffer getBuffer() {
-    return null;
-  }
-
-  @Override
   public String des() {
     return "HttpChannel{" +
         "connection='" + connection + '\'' +
         '}';
   }
+
 }

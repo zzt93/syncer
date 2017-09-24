@@ -15,6 +15,7 @@ public class PipelineBatch {
    * delay in {@link TimeUnit#MILLISECONDS}, default is 100
    */
   private int delay = 100;
+  private final TimeUnit delayTimeUnit = TimeUnit.MILLISECONDS;
 
   public int getSize() {
     return size;
@@ -30,5 +31,9 @@ public class PipelineBatch {
 
   public void setDelay(int delay) {
     this.delay = delay;
+  }
+
+  public TimeUnit getDelayTimeUnit() {
+    return delayTimeUnit;
   }
 }
