@@ -10,7 +10,7 @@ import com.github.zzt93.syncer.output.elastic.ElasticsearchChannel;
 public class Elasticsearch implements OutputChannelConfig {
 
   private ElasticsearchConnection connection;
-  private DocumentMapping documentMapping;
+  private DocumentMapping documentMapping = new DocumentMapping();
   private PipelineBatch batch = new PipelineBatch();
 
   public ElasticsearchConnection getConnection() {

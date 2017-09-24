@@ -47,11 +47,13 @@ pipeline:
 #}
 
   filter:
-    - condition: "#{table}"
-      switcher:
-        "file": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_FILE'}", "#{addRow('type', 'FILE'}" ]
-        "folder": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_FILE'}", "#{addRow('type', 'DIR'}"]
-        "affair": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_AFFAIR'}"]
+    - switcher:
+        condition: "#{table}"
+        case:
+          "file": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_FILE')}", "#{addRow('type', 'FILE')}" ]
+          "folder": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_FILE')}", "#{addRow('type', 'DIR')}"]
+          "affair": ["#{addExtra('suffix', row['xxx'])}","#{addExtra('type', 'INDEX_AFFAIR')}"]
+    - statement: ["#{addExtra('xxx', 'yyy')}"]
 
 
 # filter result class: com.github.zzt93.syncer.common.SyncData
@@ -80,6 +82,6 @@ pipeline:
           "parentId": "#{row['parent_id']}"
           "superId": "#{row['superid']}"
           "allianceId": "#{row['alliance_id']}"
-          "row.*": "row.*"
+          "row.*": "row.*.flatten"
         "type": "#{extra['type']}"
 

@@ -8,9 +8,9 @@ import java.util.HashMap;
  */
 public class DocumentMapping {
 
-  private String index;
-  private String type;
-  private String documentId;
+  private String index = "#{schema}";
+  private String type = "#{table}";
+  private String documentId = "#{id}";
   private HashMap<String, Object> fieldsMapper = new HashMap<>();
 
   public DocumentMapping() {
