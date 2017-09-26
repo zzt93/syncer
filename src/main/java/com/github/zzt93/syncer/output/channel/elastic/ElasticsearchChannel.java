@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.output.DocumentMapping;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.output.channel.BufferedChannel;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -98,6 +99,7 @@ public class ElasticsearchChannel implements BufferedChannel {
   }
 
   private void buildRequest(WriteRequestBuilder[] aim) {
+    logger.info("Sending a batch of Elasticsearch: {}", Arrays.toString(aim));
     BulkRequestBuilder bulkRequest = client.prepareBulk();
     for (WriteRequestBuilder builder : aim) {
       if (builder instanceof IndexRequestBuilder) {

@@ -9,6 +9,7 @@ import java.util.Map;
  */
 public class Switcher {
 
+  public static final String DEFAULT = "default";
   private String condition;
   private Map<String, List<String>> Case = new HashMap<>();
 

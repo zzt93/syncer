@@ -2,11 +2,11 @@ package com.github.zzt93.syncer.filter;
 
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerFilter;
 import com.github.zzt93.syncer.filter.impl.Statement;
 import com.github.zzt93.syncer.filter.impl.Switch;
-import com.github.zzt93.syncer.input.connect.NamedThreadFactory;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;

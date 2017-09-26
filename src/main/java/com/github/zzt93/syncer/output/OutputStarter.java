@@ -2,9 +2,9 @@ package com.github.zzt93.syncer.output;
 
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.SyncerOutput;
-import com.github.zzt93.syncer.input.connect.NamedThreadFactory;
 import com.github.zzt93.syncer.output.batch.BatchJob;
 import com.github.zzt93.syncer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.output.channel.OutputChannel;

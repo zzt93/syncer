@@ -13,8 +13,6 @@ import com.github.zzt93.syncer.input.filter.InputEnd;
 import com.github.zzt93.syncer.input.filter.InputFilter;
 import com.github.zzt93.syncer.input.filter.InputStart;
 import com.github.zzt93.syncer.input.filter.RowFilter;
-import com.github.zzt93.syncer.input.listener.LogLifecycleListener;
-import com.github.zzt93.syncer.input.listener.SyncListener;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
@@ -43,6 +41,7 @@ public class MasterConnector implements Runnable {
     client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
+    client.setEventDeserializer(SyncDeserializer.defaultDeserialzer());
 
     List<InputFilter> filters = new ArrayList<>();
     SchemaMeta schemaMeta = null;

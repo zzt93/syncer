@@ -2,12 +2,12 @@ package com.github.zzt93.syncer.input;
 
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.input.connect.MasterConnector;
-import com.github.zzt93.syncer.input.connect.NamedThreadFactory;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;

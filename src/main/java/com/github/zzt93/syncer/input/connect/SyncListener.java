@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.input.listener;
+package com.github.zzt93.syncer.input.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;

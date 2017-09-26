@@ -39,6 +39,8 @@ public class Switch implements ExprFilter {
     Actions actions = action.get(conditionRes);
     if (actions != null) {
       actions.execute(parser, context);
+    } else if (action.containsKey(Switcher.DEFAULT)) {
+      action.get(Switcher.DEFAULT).execute(parser, context);
     }
     return FilterRes.ACCEPT;
   }

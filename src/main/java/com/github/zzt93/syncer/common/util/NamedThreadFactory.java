@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.input.connect;
+package com.github.zzt93.syncer.common.util;
 
 import java.util.concurrent.ThreadFactory;
 import java.util.concurrent.atomic.AtomicLong;
