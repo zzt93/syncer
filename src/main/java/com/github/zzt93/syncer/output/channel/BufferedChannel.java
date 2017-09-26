@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.output.channel;
 
+import com.github.zzt93.syncer.common.ThreadSafe;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -13,5 +14,6 @@ public interface BufferedChannel extends OutputChannel {
 
   TimeUnit getDelayUnit();
 
+  @ThreadSafe
   void flush();
 }

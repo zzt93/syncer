@@ -16,11 +16,13 @@ public class JsonMapper implements Mapper<SyncData, HashMap<String, Object>> {
   public static final String ROW_FLATTEN = "row.*.flatten";
   public static final String EXTRA_ALL = "extra.*";
   public static final String EXTRA_FLATTEN = "extra.*.flatten";
+  public static final String FAKE_KEY = "any.Key";
   private final SpelExpressionParser parser = new SpelExpressionParser();
   private final Map<String, Object> mapping;
 
   public JsonMapper(Map<String, Object> mapping) {
     this.mapping = mapping;
+
   }
 
   public HashMap<String, Object> map(SyncData data) {

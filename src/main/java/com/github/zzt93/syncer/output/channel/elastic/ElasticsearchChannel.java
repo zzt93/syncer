@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.output.DocumentMapping;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
@@ -14,11 +15,13 @@ import java.util.stream.Collectors;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequestBuilder;
+import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.support.WriteRequestBuilder;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.elasticsearch.ElasticsearchException;
 
 /**
  * @author zzt
@@ -35,22 +38,29 @@ public class ElasticsearchChannel implements BufferedChannel {
       PipelineBatch batch)
       throws Exception {
     client = connection.transportClient();
-    this.batchBuffer = new BatchBuffer<>(batch);
+    this.batchBuffer = new BatchBuffer<>(batch, WriteRequestBuilder.class);
     this.batch = batch;
     this.esDocumentMapper = new ESDocumentMapper(documentMapping, client);
   }
 
+  @ThreadSafe(safe = {ESDocumentMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) {
-    return batchBuffer.add(esDocumentMapper.map(event));
+    boolean addRes = batchBuffer.add(esDocumentMapper.map(event));
+    flushIfReachSizeLimit();
+    return addRes;
   }
 
   @Override
   public boolean output(List<SyncData> batch) {
     List<WriteRequestBuilder> collect = batch.stream().map(esDocumentMapper::map)
         .collect(Collectors.toList());
-    return batchBuffer.addAll(collect);
+    // TODO 17/9/25 may be too many request in a single event
+    boolean addRes = batchBuffer.addAll(collect);
+    flushIfReachSizeLimit();
+    return addRes;
   }
+
 
   @Override
   public String des() {
@@ -69,10 +79,35 @@ public class ElasticsearchChannel implements BufferedChannel {
     return batch.getDelayTimeUnit();
   }
 
+
+  @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
   public void flush() {
+    WriteRequestBuilder[] aim = batchBuffer.flush();
+    if (aim != null && aim.length != 0) {
+      buildRequest(aim);
+    }
+  }
+
+  @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
+  private void flushIfReachSizeLimit() {
+    WriteRequestBuilder[] aim = batchBuffer.flushIfReachSizeLimit();
+    if (aim != null && aim.length != 0) {
+      buildRequest(aim);
+    }
+  }
+
+  private void buildRequest(WriteRequestBuilder[] aim) {
     BulkRequestBuilder bulkRequest = client.prepareBulk();
-    batchBuffer.flush();
+    for (WriteRequestBuilder builder : aim) {
+      if (builder instanceof IndexRequestBuilder) {
+        bulkRequest.add(((IndexRequestBuilder) builder));
+      } else if (builder instanceof UpdateRequestBuilder) {
+        bulkRequest.add(((UpdateRequestBuilder) builder));
+      } else if (builder instanceof DeleteRequestBuilder) {
+        bulkRequest.add(((DeleteRequestBuilder) builder));
+      }
+    }
     checkForBulkUpdateFailure(bulkRequest.execute().actionGet());
   }
 

@@ -15,6 +15,7 @@ public interface Filter<S, T> {
    * @see FilterJob#call()
    * @see MasterConnector#run()
    */
+  @ThreadSafe
   T decide(S e);
 
   enum FilterRes {

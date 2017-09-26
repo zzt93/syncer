@@ -7,8 +7,8 @@ import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.HashMap;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 import javax.sql.DataSource;
 import org.slf4j.Logger;
@@ -20,7 +20,10 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
  */
 public class SchemaMeta {
 
-  private final HashMap<String, TableMeta> tableMetas = new HashMap<>();
+  /**
+   * can't use {@link java.util.HashMap}, because it is not immutable
+   */
+  private final ConcurrentHashMap<String, TableMeta> tableMetas = new ConcurrentHashMap<>();
   private final Pattern schemaPattern;
   private final String schema;
 
@@ -33,6 +36,7 @@ public class SchemaMeta {
     tableMetas.put(name, tableMeta);
   }
 
+  @ThreadSafe(safe = {Pattern.class, ConcurrentHashMap.class})
   public TableMeta findTable(String database, String table) {
     // schema match?
     if (schema.equals(database) ||

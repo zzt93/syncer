@@ -1,9 +1,10 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
+
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
-import com.github.zzt93.syncer.output.mapper.JsonMapper;
 import com.github.zzt93.syncer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.output.channel.http.HttpChannel;
+import com.github.zzt93.syncer.output.mapper.JsonMapper;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -17,7 +18,8 @@ public class Http implements OutputChannelConfig {
   private PipelineBatch batch = new PipelineBatch();
 
   public Http() {
-    jsonMapper.put("anyKey", JsonMapper.ROW_FLATTEN);
+    // default value of json mapper
+    jsonMapper.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
   }
 
   public HttpConnection getConnection() {
@@ -29,6 +31,9 @@ public class Http implements OutputChannelConfig {
   }
 
   public HashMap<String, Object> getJsonMapper() {
+    if (jsonMapper.size() > 1 && jsonMapper.containsKey(JsonMapper.FAKE_KEY)) {
+      jsonMapper.remove(JsonMapper.FAKE_KEY);
+    }
     return jsonMapper;
   }
 
@@ -47,7 +52,7 @@ public class Http implements OutputChannelConfig {
   @Override
   public OutputChannel toChannel() {
     if (connection.valid()) {
-      return new HttpChannel(connection, Collections.unmodifiableMap(jsonMapper));
+      return new HttpChannel(connection, Collections.unmodifiableMap(getJsonMapper()));
     }
     throw new IllegalArgumentException();
   }

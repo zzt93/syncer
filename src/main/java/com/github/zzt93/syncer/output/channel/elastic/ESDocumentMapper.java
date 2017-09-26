@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.output.DocumentMapping;
 import com.github.zzt93.syncer.output.mapper.JsonMapper;
 import com.github.zzt93.syncer.output.mapper.Mapper;
@@ -30,6 +31,7 @@ public class ESDocumentMapper implements Mapper<SyncData, WriteRequestBuilder> {
     jsonMapper = new JsonMapper(documentMapping.getFieldsMapper());
   }
 
+  @ThreadSafe(safe = {SpelExpressionParser.class, DocumentMapping.class, TransportClient.class})
   @Override
   public WriteRequestBuilder map(SyncData data) {
     StandardEvaluationContext context = new StandardEvaluationContext(data);
@@ -47,9 +49,9 @@ public class ESDocumentMapper implements Mapper<SyncData, WriteRequestBuilder> {
         return client.prepareIndex(index, type, id).setSource(jsonMapper.map(data));
       case DELETE_ROWS:
         logger.info("Deleting data from Elasticsearch, may affect performance");
-        break;
+        return client.prepareDelete(index, type, id);
       case UPDATE_ROWS:
-        break;
+        return client.prepareUpdate(index, type, id).setDoc(jsonMapper.map(data));
     }
     throw new IllegalArgumentException("Invalid row event type");
   }

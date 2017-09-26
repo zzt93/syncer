@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.filter.impl;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.filter.ExprFilter;
 import java.util.List;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -19,6 +20,7 @@ public class Statement implements ExprFilter {
     this.actions = new Actions(statement);
   }
 
+  @ThreadSafe(safe = {Actions.class, SpelExpressionParser.class})
   @Override
   public FilterRes decide(SyncData e) {
     StandardEvaluationContext context = new StandardEvaluationContext(e);

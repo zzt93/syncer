@@ -33,7 +33,7 @@ public class OutputJob implements Callable<Void> {
           }
         }
       } catch (Exception e) {
-        logger.debug("Output job failed", e);
+        logger.debug("Output job failed with exception", e);
       }
     }
     return null;

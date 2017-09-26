@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class PipelineBatch {
 
   /**
-   * default is 100
+   * default is 100, soft limit
    */
   private int size = 100;
   /**

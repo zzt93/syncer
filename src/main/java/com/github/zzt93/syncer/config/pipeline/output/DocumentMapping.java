@@ -14,7 +14,8 @@ public class DocumentMapping {
   private HashMap<String, Object> fieldsMapper = new HashMap<>();
 
   public DocumentMapping() {
-    fieldsMapper.put("anyKey", JsonMapper.ROW_FLATTEN);
+    // default value of mapper
+    fieldsMapper.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
   }
 
   public String getIndex() {
@@ -42,6 +43,9 @@ public class DocumentMapping {
   }
 
   public HashMap<String, Object> getFieldsMapper() {
+    if (fieldsMapper.size() > 1 && fieldsMapper.containsKey(JsonMapper.FAKE_KEY)) {
+      fieldsMapper.remove(JsonMapper.FAKE_KEY);
+    }
     return fieldsMapper;
   }
 

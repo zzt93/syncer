@@ -1,6 +1,8 @@
 package com.github.zzt93.syncer.filter.impl;
 
+import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.common.expr.Expression;
+import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,9 +21,10 @@ public class Actions implements Expression<Void> {
   private final List<String> action;
 
   public Actions(List<String> action) {
-    this.action = action;
+    this.action = Collections.unmodifiableList(action);
   }
 
+  @ThreadSafe(des = "immutable class")
   @Override
   public Void execute(ExpressionParser parser, EvaluationContext context) {
     for (String s : action) {

@@ -3,9 +3,9 @@ syncer:
     worker: 4
 
   filter:
-    worker: 1
+    worker: 2
 
   output:
-    worker: 1
+    worker: 2
     batch:
       worker: 2

@@ -1,12 +1,13 @@
 package com.github.zzt93.syncer.output.channel.http;
 
+import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
-import com.github.zzt93.syncer.output.mapper.JsonMapper;
 import com.github.zzt93.syncer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.output.mapper.JsonMapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -50,8 +51,7 @@ public class HttpChannel implements OutputChannel {
       case UPDATE_ROWS:
         return execute(res, POST).is2xxSuccessful();
       case DELETE_ROWS:
-        restTemplate.delete(connection);
-        return true;
+        return execute(res, DELETE).is2xxSuccessful();
       case WRITE_ROWS:
         return execute(res, PUT).is2xxSuccessful();
     }

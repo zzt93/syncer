@@ -28,8 +28,9 @@ public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel
 
   private OutputStarter(PipelineOutput pipelineOutput, SyncerOutput module,
       BlockingQueue<SyncData> fromFilter) throws Exception {
-    Assert.isTrue(module.getWorker() <= 8, "Too many worker thread");
-    Assert.isTrue(module.getWorker() > 0, "Too few worker thread");
+    workerAssert(module.getWorker());
+    workerAssert(module.getBatch().getWorker());
+
     service = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-output"));
     batchService = Executors.newScheduledThreadPool(module.getBatch().getWorker(),
@@ -39,8 +40,9 @@ public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel
     for (OutputChannel outputChannel : outputChannels) {
       if (outputChannel instanceof BufferedChannel) {
         BufferedChannel bufferedChannel = (BufferedChannel) outputChannel;
-        batchService.schedule(new BatchJob(bufferedChannel), bufferedChannel.getDelay(),
-                bufferedChannel.getDelayUnit());
+        long delay = bufferedChannel.getDelay();
+        batchService.scheduleWithFixedDelay(new BatchJob(bufferedChannel), delay, delay,
+            bufferedChannel.getDelayUnit());
       }
     }
 
@@ -54,6 +56,11 @@ public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel
       instance = new OutputStarter(pipelineOutput, syncer, fromFilter);
     }
     return instance;
+  }
+
+  private void workerAssert(int worker) {
+    Assert.isTrue(worker <= 8, "Too many worker thread");
+    Assert.isTrue(worker > 0, "Too few worker thread");
   }
 
   public void start() throws InterruptedException {

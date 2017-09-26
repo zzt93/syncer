@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.output.channel;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.output.OutputJob;
 import java.util.List;
 
@@ -16,8 +17,10 @@ public interface OutputChannel {
    *
    * @see OutputJob#call()
    */
+  @ThreadSafe
   boolean output(SyncData event);
 
+  @ThreadSafe
   boolean output(List<SyncData> batch);
 
   String des();

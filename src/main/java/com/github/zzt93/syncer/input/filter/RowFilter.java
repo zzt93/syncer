@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.input.filter;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.common.SchemaMeta;
 import com.github.zzt93.syncer.common.TableMeta;
+import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.common.event.RowsEvent;
 import org.springframework.util.Assert;
 
@@ -17,6 +18,7 @@ public class RowFilter implements InputFilter {
     this.schemaMeta = schemaMeta;
   }
 
+  @ThreadSafe(safe = SchemaMeta.class)
   @Override
   public FilterRes decide(RowsEvent rowsEvent) {
     TableMapEventData data = rowsEvent.getTableMap();
