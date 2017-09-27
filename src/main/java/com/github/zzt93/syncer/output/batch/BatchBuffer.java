@@ -3,9 +3,10 @@ package com.github.zzt93.syncer.output.batch;
 import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import java.lang.reflect.Array;
+import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author zzt
@@ -13,40 +14,46 @@ import java.util.concurrent.LinkedBlockingDeque;
 public class BatchBuffer<T> {
 
   private final int limit;
-  private final BlockingDeque<T> blockingDeque = new LinkedBlockingDeque<>();
-  private final T[] clazz;
+  private final ConcurrentLinkedDeque<T> deque = new ConcurrentLinkedDeque<>();
+  private final AtomicInteger estimateSize = new AtomicInteger(0);
+  private final Class<T> clazz;
 
-  public BatchBuffer(PipelineBatch batch,
-      Class<T> aClass) {
+  public BatchBuffer(PipelineBatch batch, Class<T> aClass) {
     limit = batch.getSize();
-    clazz = (T[]) Array.newInstance(aClass, 0);
+    clazz = aClass;
   }
 
   public boolean add(T data) {
-    return blockingDeque.offer(data);
+    deque.addLast(data);
+    estimateSize.incrementAndGet();
+    return true;
   }
 
   public boolean addAll(List<T> data) {
-    return blockingDeque.addAll(data);
+    boolean res = deque.addAll(data);
+    estimateSize.addAndGet(data.size());
+    return res;
   }
 
-  @ThreadSafe
+  @ThreadSafe(safe = {ConcurrentLinkedDeque.class, AtomicInteger.class})
   public T[] flushIfReachSizeLimit() {
-    synchronized (blockingDeque) {
-      if (limit <= blockingDeque.size()) {
-        T[] res = blockingDeque.toArray(clazz);
-        blockingDeque.clear();
-        return res;
+    if (estimateSize.getAndUpdate(x -> x >= limit ? x - limit : x) > limit) {
+      T[] res = (T[]) Array.newInstance(clazz, limit);
+      for (int i = 0; i < limit; i++) {
+        res[i] = deque.removeFirst();
       }
+      return res;
     }
     return null;
   }
 
   public T[] flush() {
-    synchronized (blockingDeque) {
-      T[] res = blockingDeque.toArray(clazz);
-      blockingDeque.clear();
-      return res;
+    ArrayList<T> res = new ArrayList<>();
+    if (estimateSize.getAndUpdate(x -> 0) > 0) {
+      while (!deque.isEmpty()) {
+        res.add(deque.removeFirst());
+      }
     }
+    return res.toArray((T[]) Array.newInstance(clazz, 0));
   }
 }

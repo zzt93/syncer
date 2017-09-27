@@ -7,6 +7,7 @@ import com.github.shyiko.mysql.binlog.event.deserialization.EventDataDeserialize
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventHeaderV4Deserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.NullEventDataDeserializer;
+import com.github.shyiko.mysql.binlog.event.deserialization.TableMapEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.UpdateRowsEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.WriteRowsEventDataDeserializer;
 import java.util.HashMap;
@@ -27,6 +28,7 @@ public class SyncDeserializer {
         new UpdateRowsEventDataDeserializer(tableMapEventByTableId));
     eventDataDeserializers.put(EventType.DELETE_ROWS,
         new DeleteRowsEventDataDeserializer(tableMapEventByTableId));
+    eventDataDeserializers.put(EventType.TABLE_MAP, new TableMapEventDataDeserializer());
     return new EventDeserializer(new EventHeaderV4Deserializer(), new NullEventDataDeserializer(),
         eventDataDeserializers, tableMapEventByTableId);
   }

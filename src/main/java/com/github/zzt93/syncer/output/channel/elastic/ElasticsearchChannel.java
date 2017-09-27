@@ -56,7 +56,7 @@ public class ElasticsearchChannel implements BufferedChannel {
   public boolean output(List<SyncData> batch) {
     List<WriteRequestBuilder> collect = batch.stream().map(esDocumentMapper::map)
         .collect(Collectors.toList());
-    // TODO 17/9/25 may be too many request in a single event
+    // TODO 17/9/25 may be too many request in a single event, not used now
     boolean addRes = batchBuffer.addAll(collect);
     flushIfReachSizeLimit();
     return addRes;

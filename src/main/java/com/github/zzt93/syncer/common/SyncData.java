@@ -55,8 +55,12 @@ public class SyncData {
   }
 
   public void renameRow(String oldKey, String newKey) {
-    row.put(newKey, row.get(oldKey));
-    row.remove(oldKey);
+    if (row.containsKey(oldKey)) {
+      row.put(newKey, row.get(oldKey));
+      row.remove(oldKey);
+    } else {
+      logger.warn("No such row name: {} in {}.{}", oldKey, schema, table);
+    }
   }
 
   public void removeRow(String rowName) {
