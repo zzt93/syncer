@@ -34,7 +34,7 @@ public class Switch implements ExprFilter {
   @ThreadSafe(safe = {Condition.class, SpelExpressionParser.class, Actions.class})
   @Override
   public FilterRes decide(SyncData data) {
-    StandardEvaluationContext context = new StandardEvaluationContext(data);
+    StandardEvaluationContext context = data.getContext();
     String conditionRes = condition.execute(parser, context);
     Actions actions = action.get(conditionRes);
     if (actions != null) {

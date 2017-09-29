@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.filter.impl;
 
 import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.common.expr.Expression;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import org.slf4j.Logger;
@@ -15,25 +16,35 @@ import org.springframework.expression.ParserContext;
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
-public class Actions implements Expression<Void> {
+public class Actions implements Expression<List<Object>> {
 
   private final Logger logger = LoggerFactory.getLogger(Actions.class);
   private final List<String> action;
+
 
   public Actions(List<String> action) {
     this.action = Collections.unmodifiableList(action);
   }
 
+  public Actions(String expr) {
+    this.action = Collections.singletonList(expr);
+  }
+
   @ThreadSafe(des = "immutable class")
   @Override
-  public Void execute(ExpressionParser parser, EvaluationContext context) {
+  public List<Object> execute(ExpressionParser parser, EvaluationContext context) {
+    ArrayList<Object> res = new ArrayList<>();
     for (String s : action) {
       try {
-        parser.parseExpression(s, ParserContext.TEMPLATE_EXPRESSION).getValue(context);
+        Object value = parser.parseExpression(s, ParserContext.TEMPLATE_EXPRESSION)
+            .getValue(context);
+        if (value != null) {
+          res.add(value);
+        }
       } catch (EvaluationException | ParseException e) {
         logger.error("Invalid expression {}, fail to parse", s, e);
       }
     }
-    return null;
+    return res;
   }
 }

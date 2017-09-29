@@ -33,6 +33,8 @@ public class FilterJob implements Callable<Void> {
         for (ExprFilter filter : filters) {
           if (filter.decide(poll) == FilterRes.ACCEPT) {
             toOutput.offer(poll);
+          } else {
+            break;
           }
         }
       } catch (Exception e) {

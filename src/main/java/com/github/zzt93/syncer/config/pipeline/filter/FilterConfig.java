@@ -10,6 +10,7 @@ public class FilterConfig {
   private FilterType type;
   private Switcher switcher;
   private List<String> statement;
+  private Foreach foreach;
 
   public Switcher getSwitcher() {
     return switcher;
@@ -37,7 +38,22 @@ public class FilterConfig {
     this.type = type;
   }
 
+  public Foreach getForeach() {
+    return foreach;
+  }
+
+  public void setForeach(Foreach foreach) {
+    this.foreach = foreach;
+    type = FilterType.FOREACH;
+  }
+
+  private void typeCheck() {
+    if (type != null) {
+      throw new IllegalArgumentException("Invalid config to combine several filter type");
+    }
+  }
+
   public enum FilterType {
-    SWITCH, STATEMENT
+    SWITCH, STATEMENT, FOREACH
   }
 }

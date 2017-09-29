@@ -34,7 +34,7 @@ public class ESDocumentMapper implements Mapper<SyncData, WriteRequestBuilder> {
   @ThreadSafe(safe = {SpelExpressionParser.class, DocumentMapping.class, TransportClient.class})
   @Override
   public WriteRequestBuilder map(SyncData data) {
-    StandardEvaluationContext context = new StandardEvaluationContext(data);
+    StandardEvaluationContext context = data.getContext();
     String index = parser
         .parseExpression(documentMapping.getIndex(), ParserContext.TEMPLATE_EXPRESSION)
         .getValue(context, String.class);

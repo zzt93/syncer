@@ -23,8 +23,8 @@ public class Statement implements ExprFilter {
   @ThreadSafe(safe = {Actions.class, SpelExpressionParser.class})
   @Override
   public FilterRes decide(SyncData e) {
-    StandardEvaluationContext context = new StandardEvaluationContext(e);
+    StandardEvaluationContext context = e.getContext();
     actions.execute(parser, context);
-    return null;
+    return FilterRes.ACCEPT;
   }
 }
