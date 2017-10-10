@@ -49,10 +49,15 @@ pipeline:
   filter:
     - switcher:
         condition: "#{table}"
-        case:
-          "file": ["#{addExtra('suffix', row['xxx'])}", "#{addRow('type', 'FILE')}", "#{renameRow('old', 'new')}"]
-          "folder": ["#{addExtra('suffix', row['xxx'])}", "#{addRow('type', 'DIR')}"]
-          "affair": ["#{addExtra('suffix', row['xxx'])}"]
+        case: # support default branch
+          "affair": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_AFFAIR'}", "#{renameColumn('xx', 'yy')}" ]
+          "file": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_FILE'}", "#{addRow('type', '0')}"]
+          "folder": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_FILE'}", "#{addRow('type', '1')}"]
+    - statement: [ "#{#tags = row['tags']}", "#{updateColumn('tags', new java.util.ArrayList())}", "#{removeColumns('id', 'xid')}"]
+    - foreach:
+        var: "tag"
+        in: "#{#tags?.split('\n')}"
+        statement: ["#{#map = new java.util.HashMap()}", "#{#map.put('des', #tag)}", "#{row.get('tags').add(#map)}"]
 
 
 # filter result class: com.github.zzt93.syncer.common.SyncData
@@ -69,6 +74,11 @@ pipeline:
 #  }
 #}
 
+# Special expression
+# "row.*"
+# "row.*.flatten"
+# "extra.*"
+# "extra.*.flatten"
 
   output:
     elasticsearch:
