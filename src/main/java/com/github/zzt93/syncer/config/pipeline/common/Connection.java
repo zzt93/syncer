@@ -90,7 +90,6 @@ public class Connection {
         ", port=" + port +
         ", user='" + user + '\'' +
         ", passwordFile='" + passwordFile + '\'' +
-        ", password='" + password + '\'' +
         '}';
   }
 
