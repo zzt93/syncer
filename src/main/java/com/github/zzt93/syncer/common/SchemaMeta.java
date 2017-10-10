@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.common;
 
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.mysql.jdbc.JDBC4Connection;
@@ -65,7 +66,7 @@ public class SchemaMeta {
     public SchemaMeta build() throws SQLException {
       SchemaMeta res = new SchemaMeta(interested.getName(), interested.getNamePattern());
       Connection connection = dataSource.getConnection();
-      // make it to get all data bases for test
+      // make it to get all databases for test
       ((JDBC4Connection) connection).setNullCatalogMeansCurrent(false);
       try {
         DatabaseMetaData metaData = connection.getMetaData();
@@ -79,6 +80,22 @@ public class SchemaMeta {
               continue;
             }
             TableMeta tableMeta = new TableMeta();
+            try (ResultSet primaryKeys = metaData.getPrimaryKeys(tableSchema, "", tableName)) {
+              if (primaryKeys.next()) {
+                int ordinalPosition = primaryKeys.getInt("KEY_SEQ");
+                String columnName = primaryKeys.getString("COLUMN_NAME");
+                if (!tableRow.contains(columnName)) {
+                  logger.warn("Not config primary key as interested column, adding it anyway");
+                }
+                tableMeta.addNameIndex(columnName, ordinalPosition);
+                tableMeta.addPrimaryKey(ordinalPosition);
+              }
+              if (primaryKeys.next()) {
+                InvalidConfigException e = new InvalidConfigException("Not support composite primary key");
+                logger.error("Not support composite primary key {}.{}", tableSchema, tableName, e);
+                throw e;
+              }
+            }
             try (ResultSet columnResultSet = metaData.getColumns(null, "public", tableName, null)) {
               while (columnResultSet.next()) {
                 String columnName = columnResultSet.getString("COLUMN_NAME");

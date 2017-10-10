@@ -11,13 +11,14 @@ import java.util.Map;
 import org.springframework.util.Assert;
 
 /**
+ * <a href="https://dev.mysql.com/doc/internals/en/binlog-row-image.html">binlog row image format</a>
  * @author zzt
  */
 public abstract class RowsEvent {
 
   private final Event tableMap;
   private final Map<Integer, String> indexToName;
-  private List<HashMap<Integer, Object>> data = new ArrayList<>();
+  private List<HashMap<Integer, Object>> rows = new ArrayList<>();
 
   public RowsEvent(Event tableMap, Map<Integer, String> indexToName) {
     this.tableMap = tableMap;
@@ -29,13 +30,13 @@ public abstract class RowsEvent {
   }
 
   void addRow(HashMap<Integer, Object> row) {
-    data.add(row);
+    rows.add(row);
   }
 
   public boolean filterData(List<Integer> index) {
-    Assert.isTrue(!data.isEmpty(), "Assertion Failure: no row");
+    Assert.isTrue(!rows.isEmpty(), "Assertion Failure: no row");
     List<HashMap<Integer, Object>> tmp = new ArrayList<>();
-    for (HashMap<Integer, Object> row : data) {
+    for (HashMap<Integer, Object> row : rows) {
       HashMap<Integer, Object> map = new HashMap<>();
       for (Integer integer : index) {
         if (row.containsKey(integer)) {
@@ -46,13 +47,13 @@ public abstract class RowsEvent {
         tmp.add(map);
       }
     }
-    data = tmp;
-    return !data.isEmpty();
+    rows = tmp;
+    return !rows.isEmpty();
   }
 
-  public List<HashMap<String, Object>> getData() {
+  public List<HashMap<String, Object>> getRows() {
     List<HashMap<String, Object>> res = new ArrayList<>();
-    for (HashMap<Integer, Object> row : data) {
+    for (HashMap<Integer, Object> row : rows) {
       HashMap<String, Object> map = new HashMap<>();
       for (Integer integer : row.keySet()) {
         map.put(indexToName.get(integer), row.get(integer));

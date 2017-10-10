@@ -32,7 +32,7 @@ public class InputStart implements Filter<Event[], RowsEvent> {
       case WRITE_ROWS:
         return new WriteRowsEvent(e[0], e[1].getData(), table.getIndexToName());
       case UPDATE_ROWS:
-        return new UpdateRowsEvent(e[0], e[1].getData(), table.getIndexToName());
+        return new UpdateRowsEvent(e[0], e[1].getData(), table.getIndexToName(), table.getPrimaryKeys());
       case DELETE_ROWS:
         return new DeleteRowsEvent(e[0], e[1].getData(), table.getIndexToName());
       default:

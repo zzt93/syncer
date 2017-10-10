@@ -13,10 +13,10 @@ public class InputEnd implements Filter<RowsEvent, SyncData[]> {
 
   @Override
   public SyncData[] decide(RowsEvent e) {
-    List<HashMap<String, Object>> data = e.getData();
-    SyncData[] res = new SyncData[data.size()];
+    List<HashMap<String, Object>> rows = e.getRows();
+    SyncData[] res = new SyncData[rows.size()];
     for (int i = 0; i < res.length; i++) {
-      res[i] = new SyncData(e.getTableMap(), data.get(i), e.type());
+      res[i] = new SyncData(e.getTableMap(), rows.get(i), e.type());
     }
     return res;
   }
