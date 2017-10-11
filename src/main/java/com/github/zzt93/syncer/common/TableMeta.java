@@ -37,4 +37,11 @@ public class TableMeta {
   public Set<Integer> getPrimaryKeys() {
     return Collections.unmodifiableSet(primaryKeys);
   }
+
+  @Override
+  public String toString() {
+    return "TableMeta{" +
+        "indexToName=" + indexToName +
+        '}';
+  }
 }
