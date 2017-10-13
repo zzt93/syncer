@@ -16,17 +16,17 @@ import org.springframework.expression.ParserContext;
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
-public class Actions implements Expression<List<Object>> {
+public class FilterActions implements Expression<List<Object>> {
 
-  private final Logger logger = LoggerFactory.getLogger(Actions.class);
+  private final Logger logger = LoggerFactory.getLogger(FilterActions.class);
   private final List<String> action;
 
 
-  public Actions(List<String> action) {
+  public FilterActions(List<String> action) {
     this.action = Collections.unmodifiableList(action);
   }
 
-  public Actions(String expr) {
+  public FilterActions(String expr) {
     this.action = Collections.singletonList(expr);
   }
 

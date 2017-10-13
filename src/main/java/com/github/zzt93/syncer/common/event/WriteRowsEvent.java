@@ -8,6 +8,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by zzt on 9/14/17. <p> <h3></h3>
@@ -16,8 +17,8 @@ public class WriteRowsEvent extends RowsEvent {
 
 
   public WriteRowsEvent(Event tableMap, WriteRowsEventData writeRowsEventData,
-      Map<Integer, String> indexToName) {
-    super(tableMap, indexToName);
+      Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
+    super(tableMap, indexToName, primaryKeys);
     BitSet includedColumns = writeRowsEventData.getIncludedColumns();
     List<Serializable[]> rows = writeRowsEventData.getRows();
     for (Serializable[] row : rows) {
@@ -32,7 +33,7 @@ public class WriteRowsEvent extends RowsEvent {
   }
 
   @Override
-  public EventType type() {
+  public EventType operationType() {
     return EventType.WRITE_ROWS;
   }
 }

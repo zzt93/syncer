@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerFilter;
 import com.github.zzt93.syncer.filter.impl.ForeachFilter;
+import com.github.zzt93.syncer.filter.impl.If;
 import com.github.zzt93.syncer.filter.impl.Statement;
 import com.github.zzt93.syncer.filter.impl.Switch;
 import java.util.ArrayList;
@@ -67,6 +68,9 @@ public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilte
           break;
         case FOREACH:
           res.add(new ForeachFilter(parser, filter.getForeach()));
+          break;
+        case IF:
+          res.add(new If(parser, filter.getIfConfig()));
           break;
         default:
           throw new IllegalArgumentException("Unknown filter type");

@@ -6,7 +6,6 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.util.Assert;
 
 /**
  * @author zzt
@@ -14,23 +13,33 @@ import org.springframework.util.Assert;
 public class SyncData {
 
   private final EventType type;
-  private final String schema;
-  private final String table;
-  private final String id;
   private final HashMap<String, Object> row = new HashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
-
   private final Logger logger = LoggerFactory.getLogger(SyncData.class);
   private final StandardEvaluationContext context;
+  private String schema;
+  private String table;
+  /**
+   * table primary key
+   */
+  private String id;
+  private boolean syncWithoutId;
 
-  public SyncData(TableMapEventData tableMap, HashMap<String, Object> data,
-      EventType type) {
+  public SyncData(TableMapEventData tableMap, String primaryKey,
+      HashMap<String, Object> row, EventType type) {
     this.type = type;
-    Assert.isTrue(data.containsKey("id"), "[Assertion Failure]: no id in data");
-    id = data.get("id").toString();
+    Object key = row.get(primaryKey);
+    if (key != null) {
+      id = key.toString();
+    }
     schema = tableMap.getDatabase();
     table = tableMap.getTable();
-    row.putAll(data);
+    this.row.putAll(row);
+    context = new StandardEvaluationContext(this);
+  }
+
+  public SyncData(EventType type) {
+    this.type = type;
     context = new StandardEvaluationContext(this);
   }
 
@@ -48,6 +57,22 @@ public class SyncData {
 
   public EventType getType() {
     return type;
+  }
+
+  public void setSchema(String schema) {
+    this.schema = schema;
+  }
+
+  public void setTable(String table) {
+    this.table = table;
+  }
+
+  public void setId(String id) {
+    this.id = id;
+  }
+
+  public void setSyncWithoutId(boolean syncWithoutId) {
+    this.syncWithoutId = syncWithoutId;
   }
 
   public void addExtra(String key, Object value) {
@@ -77,12 +102,25 @@ public class SyncData {
     }
   }
 
+  public boolean containColumn(String col) {
+    return row.containsKey(col);
+  }
+
   public void updateColumn(String column, Object value) {
     if (row.containsKey(column)) {
       row.put(column, value);
     } else {
       logger.warn("No such row name: {} in {}.{}", column, schema, table);
     }
+  }
+
+  public void syncWithoutId() {
+    syncWithoutId = true;
+    id = null;
+  }
+
+  public boolean isSyncWithoutId() {
+    return syncWithoutId;
   }
 
   public StandardEvaluationContext getContext() {

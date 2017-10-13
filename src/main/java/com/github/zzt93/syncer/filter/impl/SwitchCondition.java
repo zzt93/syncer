@@ -8,21 +8,20 @@ import org.springframework.expression.ParserContext;
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
-public class Condition implements Expression<Boolean> {
+public class SwitchCondition implements Expression<String> {
 
   private final String condition;
 
-  public Condition(String condition) {
+  public SwitchCondition(String condition) {
     this.condition = condition;
   }
 
   @Override
-  public Boolean execute(ExpressionParser parser, EvaluationContext context) {
-    Boolean value = parser.parseExpression(condition, ParserContext.TEMPLATE_EXPRESSION)
-        .getValue(context, Boolean.class);
+  public String execute(ExpressionParser parser, EvaluationContext context) {
+    Object value = parser.parseExpression(condition, ParserContext.TEMPLATE_EXPRESSION).getValue(context);
     if (value == null) {
-      return false;
+      return "";
     }
-    return value;
+    return value.toString();
   }
 }

@@ -30,11 +30,11 @@ public class InputStart implements Filter<Event[], RowsEvent> {
     }
     switch (e[1].getHeader().getEventType()) {
       case WRITE_ROWS:
-        return new WriteRowsEvent(e[0], e[1].getData(), table.getIndexToName());
+        return new WriteRowsEvent(e[0], e[1].getData(), table.getIndexToName(), table.getPrimaryKeys());
       case UPDATE_ROWS:
         return new UpdateRowsEvent(e[0], e[1].getData(), table.getIndexToName(), table.getPrimaryKeys());
       case DELETE_ROWS:
-        return new DeleteRowsEvent(e[0], e[1].getData(), table.getIndexToName());
+        return new DeleteRowsEvent(e[0], e[1].getData(), table.getIndexToName(), table.getPrimaryKeys());
       default:
         throw new IllegalArgumentException();
     }

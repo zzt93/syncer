@@ -8,6 +8,7 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Created by zzt on 9/14/17. <p> <h3></h3>
@@ -15,8 +16,8 @@ import java.util.Map;
 public class DeleteRowsEvent extends RowsEvent {
 
   public DeleteRowsEvent(Event tableMap, DeleteRowsEventData deleteRowsEventData,
-      Map<Integer, String> indexToName) {
-    super(tableMap, indexToName);
+      Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
+    super(tableMap, indexToName, primaryKeys);
     BitSet includedColumns = deleteRowsEventData.getIncludedColumns();
     List<Serializable[]> rows = deleteRowsEventData.getRows();
     for (Serializable[] row : rows) {
@@ -32,7 +33,7 @@ public class DeleteRowsEvent extends RowsEvent {
 
 
   @Override
-  public EventType type() {
+  public EventType operationType() {
     return EventType.DELETE_ROWS;
   }
 }

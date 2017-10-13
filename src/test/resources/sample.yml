@@ -48,7 +48,7 @@ pipeline:
 
   filter:
     - switcher:
-        condition: "#{table}"
+        switch: "#{table}"
         case: # support default branch
           "affair": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_AFFAIR'}", "#{renameColumn('xx', 'yy')}" ]
           "file": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_FILE'}", "#{addRow('type', '0')}"]
@@ -58,7 +58,14 @@ pipeline:
         var: "tag"
         in: "#{#tags?.split('\n')}"
         statement: ["#{#map = new java.util.HashMap()}", "#{#map.put('des', #tag)}", "#{row.get('tags').add(#map)}"]
-
+    - if:
+        condition: "#{table} == 'affair'"
+        if-body:
+          clone:
+            fields: [row]
+            new: ["#{table = 'role'}", "#{row['id']}"]
+        else-body:
+          drop: {}
 
 # filter result class: com.github.zzt93.syncer.common.SyncData
 #{

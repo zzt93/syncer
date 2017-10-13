@@ -30,7 +30,7 @@ public class UpdateRowsEvent extends RowsEvent {
 
   public UpdateRowsEvent(Event tableMap, UpdateRowsEventData updateRowsEventData,
       Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
-    super(tableMap, indexToName);
+    super(tableMap, indexToName,primaryKeys);
     BitSet includedColumns = updateRowsEventData.getIncludedColumns();
     List<Entry<Serializable[], Serializable[]>> rows = updateRowsEventData.getRows();
     for (Entry<Serializable[], Serializable[]> row : rows) {
@@ -56,7 +56,7 @@ public class UpdateRowsEvent extends RowsEvent {
   }
 
   @Override
-  public EventType type() {
+  public EventType operationType() {
     return EventType.UPDATE_ROWS;
   }
 }

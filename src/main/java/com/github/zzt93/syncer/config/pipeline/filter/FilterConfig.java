@@ -10,7 +10,8 @@ public class FilterConfig {
   private FilterType type;
   private Switcher switcher;
   private List<String> statement;
-  private Foreach foreach;
+  private ForeachConfig foreach;
+  private IfConfig ifConfig;
 
   public Switcher getSwitcher() {
     return switcher;
@@ -38,13 +39,22 @@ public class FilterConfig {
     this.type = type;
   }
 
-  public Foreach getForeach() {
+  public ForeachConfig getForeach() {
     return foreach;
   }
 
-  public void setForeach(Foreach foreach) {
+  public void setForeach(ForeachConfig foreach) {
     this.foreach = foreach;
     type = FilterType.FOREACH;
+  }
+
+  public IfConfig getIfConfig() {
+    return ifConfig;
+  }
+
+  public void setIfConfig(IfConfig ifConfig) {
+    this.ifConfig = ifConfig;
+    type = FilterType.IF;
   }
 
   private void typeCheck() {
@@ -54,6 +64,6 @@ public class FilterConfig {
   }
 
   public enum FilterType {
-    SWITCH, STATEMENT, FOREACH
+    SWITCH, STATEMENT, FOREACH, IF
   }
 }
