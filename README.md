@@ -8,7 +8,15 @@
 
 - Not support composite primary key
 - Not support update primary key
+
+## Notice
+
+- Don't update/delete use `syncer` and other way (REST api or Java api) at the same time, it may cause unpredictable version conflict
+- Update/Delete by query will be executed at once, i.e. will not be buffered or use batch
   
+
+## TODO
+
 ## Pipeline Config
 
 ### Input

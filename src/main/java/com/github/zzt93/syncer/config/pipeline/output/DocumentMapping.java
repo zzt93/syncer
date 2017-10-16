@@ -12,6 +12,11 @@ public class DocumentMapping {
   private String type = "#{table}";
   private String documentId = "#{id}";
   private HashMap<String, Object> fieldsMapper = new HashMap<>();
+  private Boolean noUseIdForIndex = false;
+  // TODO 17/10/16 use it???
+  private Boolean supportSyncByQuery = false;
+  // TODO 17/10/16 implement
+  private HashMap<String, Object> upsert = new HashMap<>();
 
   public DocumentMapping() {
     // default value of mapper
@@ -51,5 +56,17 @@ public class DocumentMapping {
 
   public void setFieldsMapper(HashMap<String, Object> fieldsMapper) {
     this.fieldsMapper = fieldsMapper;
+  }
+
+  public Boolean getNoUseIdForIndex() {
+    return noUseIdForIndex;
+  }
+
+  public Boolean getSupportSyncByQuery() {
+    return supportSyncByQuery;
+  }
+
+  public void setNoUseIdForIndex(Boolean noUseIdForIndex) {
+    this.noUseIdForIndex = noUseIdForIndex;
   }
 }

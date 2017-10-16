@@ -6,6 +6,7 @@ import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.util.Assert;
 
 /**
  * @author zzt
@@ -24,6 +25,7 @@ public class SyncData {
    */
   private String id;
   private boolean syncWithoutId;
+  private String syncWithCol;
 
   public SyncData(TableMapEventData tableMap, String primaryKey,
       HashMap<String, Object> row, EventType type) {
@@ -47,32 +49,28 @@ public class SyncData {
     return id;
   }
 
+  public void setId(String id) {
+    this.id = id;
+  }
+
   public String getTable() {
     return table;
-  }
-
-  public String getSchema() {
-    return schema;
-  }
-
-  public EventType getType() {
-    return type;
-  }
-
-  public void setSchema(String schema) {
-    this.schema = schema;
   }
 
   public void setTable(String table) {
     this.table = table;
   }
 
-  public void setId(String id) {
-    this.id = id;
+  public String getSchema() {
+    return schema;
   }
 
-  public void setSyncWithoutId(boolean syncWithoutId) {
-    this.syncWithoutId = syncWithoutId;
+  public void setSchema(String schema) {
+    this.schema = schema;
+  }
+
+  public EventType getType() {
+    return type;
   }
 
   public void addExtra(String key, Object value) {
@@ -114,13 +112,26 @@ public class SyncData {
     }
   }
 
-  public void syncWithoutId() {
-    syncWithoutId = true;
-    id = null;
+  public void syncByQueryCol(String syncWithCol) {
+    if (row.containsKey(syncWithCol)) {
+      this.syncWithCol = syncWithCol;
+      syncWithoutId = true;
+      id = null;
+    } else {
+      logger.warn("No such column {} to be used to sync by query it", syncWithCol);
+    }
   }
 
   public boolean isSyncWithoutId() {
     return syncWithoutId;
+  }
+
+  public void setSyncWithoutId(boolean syncWithoutId) {
+    this.syncWithoutId = syncWithoutId;
+  }
+
+  public String getSyncWithCol() {
+    return syncWithCol;
   }
 
   public StandardEvaluationContext getContext() {
@@ -133,5 +144,10 @@ public class SyncData {
 
   public HashMap<String, Object> getExtra() {
     return extra;
+  }
+
+  public Object getRowValue(String col) {
+    Assert.isTrue(row.containsKey(col), row.toString() + "[No such column]: " + col);
+    return row.get(col);
   }
 }

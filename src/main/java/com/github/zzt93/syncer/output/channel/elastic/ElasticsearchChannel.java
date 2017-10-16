@@ -11,8 +11,10 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
+import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -21,6 +23,8 @@ import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -47,21 +51,50 @@ public class ElasticsearchChannel implements BufferedChannel {
   @ThreadSafe(safe = {ESDocumentMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) {
-    boolean addRes = batchBuffer.add(esDocumentMapper.map(event));
-    flushIfReachSizeLimit();
-    return addRes;
+    Object builder = esDocumentMapper.map(event);
+    if (builder instanceof WriteRequestBuilder) {
+      boolean addRes = batchBuffer.add((WriteRequestBuilder) builder);
+      flushIfReachSizeLimit();
+      return addRes;
+    } else {
+      bulkByScrollRequest((AbstractBulkByScrollRequestBuilder) builder);
+    }
+    return true;
   }
 
   @Override
   public boolean output(List<SyncData> batch) {
-    List<WriteRequestBuilder> collect = batch.stream().map(esDocumentMapper::map)
+    List<WriteRequestBuilder> collect = batch
+        .stream()
+        .map(data -> {
+          Object builder = esDocumentMapper.map(data);
+          if (builder instanceof WriteRequestBuilder) {
+            return ((WriteRequestBuilder) builder);
+          }
+          bulkByScrollRequest((AbstractBulkByScrollRequestBuilder) builder);
+          return null;
+        })
+        .filter(Objects::isNull)
         .collect(Collectors.toList());
-    // TODO 17/9/25 may be too many request in a single event, not used now
     boolean addRes = batchBuffer.addAll(collect);
     flushIfReachSizeLimit();
     return addRes;
   }
 
+  private void bulkByScrollRequest(AbstractBulkByScrollRequestBuilder builder) {
+    builder.execute(new ActionListener<BulkByScrollResponse>() {
+      @Override
+      public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
+        logger.info("Update/Delete by query update {} or delete {} documents",
+            bulkByScrollResponse.getUpdated(), bulkByScrollResponse.getDeleted());
+      }
+
+      @Override
+      public void onFailure(Exception e) {
+        logger.error("Fail to update/delete by query", e);
+      }
+    });
+  }
 
   @Override
   public String des() {
