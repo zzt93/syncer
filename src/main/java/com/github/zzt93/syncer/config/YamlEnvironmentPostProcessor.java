@@ -37,7 +37,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     Resource path = new ClassPathResource(name);
     if (!path.exists()) {
       throw new IllegalArgumentException(
-          "Syncer config file is not on classpath" + name);
+          "Syncer config file is not on classpath: " + name);
     }
     try {
       return this.loader.load(name, path, null);

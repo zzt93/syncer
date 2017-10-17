@@ -11,6 +11,6 @@ public class FileUtil {
 
   public static String readAll(String resourceName) throws IOException {
     return FileCopyUtils
-        .copyToString(new InputStreamReader(ClassLoader.getSystemResourceAsStream(resourceName)));
+        .copyToString(new InputStreamReader(FileUtil.class.getClassLoader().getResourceAsStream(resourceName)));
   }
 }

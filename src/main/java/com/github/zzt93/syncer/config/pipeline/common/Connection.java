@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.common;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
-import java.io.IOException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -50,8 +49,8 @@ public class Connection {
     this.passwordFile = passwordFile;
     try {
       this.password = FileUtil.readAll(passwordFile);
-    } catch (IOException e) {
-      logger.error("Invalid password file location", e);
+    } catch (Exception e) {
+      logger.error("Fail to read password file from classpath, you may consider using absolute path", e);
     }
   }
 
