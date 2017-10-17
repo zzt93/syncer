@@ -38,6 +38,7 @@ public class MasterConnector implements Runnable {
     if (StringUtils.isEmpty(password)) {
       throw new InvalidPasswordException(password);
     }
+    // TODO 17/10/17 remember last binlog file and position, restore from file/db
     client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
