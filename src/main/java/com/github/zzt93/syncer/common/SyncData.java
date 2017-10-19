@@ -18,6 +18,7 @@ public class SyncData {
   private final HashMap<String, Object> extra = new HashMap<>();
   private final Logger logger = LoggerFactory.getLogger(SyncData.class);
   private final StandardEvaluationContext context;
+  private final HashMap<String, Object> syncBy = new HashMap<>();
   private String schema;
   private String table;
   /**
@@ -25,7 +26,6 @@ public class SyncData {
    */
   private String id;
   private boolean syncWithoutId;
-  private String syncWithCol;
 
   public SyncData(TableMapEventData tableMap, String primaryKey,
       HashMap<String, Object> row, EventType type) {
@@ -112,26 +112,29 @@ public class SyncData {
     }
   }
 
-  public void syncByQueryCol(String syncWithCol) {
-    if (row.containsKey(syncWithCol)) {
-      this.syncWithCol = syncWithCol;
-      syncWithoutId = true;
-      id = null;
-    } else {
-      logger.warn("No such column {} to be used to sync by query it", syncWithCol);
-    }
+  public SyncData syncByQuery(String syncWithCol, String value) {
+    syncBy.put(syncWithCol, value);
+    syncWithoutId = true;
+    id = null;
+    return this;
   }
 
   public boolean isSyncWithoutId() {
-    return syncWithoutId;
+    if (syncWithoutId) {
+      if (!syncBy.isEmpty()) {
+        return true;
+      }
+      logger.warn("No filter to sync by whereas syncWithoutId is set");
+    }
+    return false;
   }
 
   public void setSyncWithoutId(boolean syncWithoutId) {
     this.syncWithoutId = syncWithoutId;
   }
 
-  public String getSyncWithCol() {
-    return syncWithCol;
+  public HashMap<String, Object> getSyncBy() {
+    return syncBy;
   }
 
   public StandardEvaluationContext getContext() {

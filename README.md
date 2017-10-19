@@ -1,5 +1,8 @@
 # Syncer: sync data from mysql to ...
 
+## Features
+
+
 ## Limitation
 
 - MySQL config
@@ -8,6 +11,7 @@
 
 - Not support composite primary key
 - Not support update primary key
+- Only support update/delete by query exact value, i.e. no support query analyzed field (`text` query when update)
 
 ## Notice
 
@@ -16,6 +20,7 @@
   
 
 ## TODO
+- Support set parent of ES
 
 ## Pipeline Config
 
