@@ -13,19 +13,22 @@ import org.springframework.util.Assert;
  */
 public class SyncData {
 
+  private final Logger logger = LoggerFactory.getLogger(SyncData.class);
+
   private final EventType type;
   private final HashMap<String, Object> row = new HashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
-  private final Logger logger = LoggerFactory.getLogger(SyncData.class);
   private final StandardEvaluationContext context;
-  private final HashMap<String, Object> syncBy = new HashMap<>();
   private String schema;
   private String table;
   /**
    * table primary key
    */
   private String id;
-  private boolean syncWithoutId;
+
+  private SyncByQueryES syncByQuery = new SyncByQueryES();
+  private SyncByQueryES syncByQueryES = new SyncByQueryES();
+
 
   public SyncData(TableMapEventData tableMap, String primaryKey,
       HashMap<String, Object> row, EventType type) {
@@ -77,9 +80,13 @@ public class SyncData {
     extra.put(key, value);
   }
 
-  public void addRow(String colName, Object value) {
+  public void addColumn(String colName, Object value) {
+    if (value == null) {
+      logger.warn("Adding column({}) with null, discarded", colName);
+    }
     row.put(colName, value);
   }
+
 
   public void renameColumn(String oldKey, String newKey) {
     if (row.containsKey(oldKey)) {
@@ -112,31 +119,6 @@ public class SyncData {
     }
   }
 
-  public SyncData syncByQuery(String syncWithCol, String value) {
-    syncBy.put(syncWithCol, value);
-    syncWithoutId = true;
-    id = null;
-    return this;
-  }
-
-  public boolean isSyncWithoutId() {
-    if (syncWithoutId) {
-      if (!syncBy.isEmpty()) {
-        return true;
-      }
-      logger.warn("No filter to sync by whereas syncWithoutId is set");
-    }
-    return false;
-  }
-
-  public void setSyncWithoutId(boolean syncWithoutId) {
-    this.syncWithoutId = syncWithoutId;
-  }
-
-  public HashMap<String, Object> getSyncBy() {
-    return syncBy;
-  }
-
   public StandardEvaluationContext getContext() {
     return context;
   }
@@ -153,4 +135,88 @@ public class SyncData {
     Assert.isTrue(row.containsKey(col), row.toString() + "[No such column]: " + col);
     return row.get(col);
   }
+
+  public HashMap<String, Object> getSyncBy() {
+    return syncByQuery.getSyncBy();
+  }
+
+  public boolean isSyncWithoutId() {
+    return syncByQuery.isSyncWithoutId();
+  }
+
+  public SyncByQueryES syncByQuery() {
+    return syncByQueryES;
+  }
+
+  public ExtraQueryES extraQuery(String indexName) {
+    return new ExtraQueryES().setIndexName(indexName);
+  }
+
+  /**
+   * ----------- update/delete by query -----------
+   */
+  static class SyncByQueryES {
+
+    private static final Logger logger = LoggerFactory.getLogger(SyncByQueryES.class);
+
+    private final HashMap<String, Object> syncBy = new HashMap<>();
+
+    SyncByQueryES filter(String syncWithCol, String value) {
+      syncBy.put(syncWithCol, value);
+      return this;
+    }
+
+    boolean isSyncWithoutId() {
+      if (!syncBy.isEmpty()) {
+        return true;
+      }
+      logger.warn("No filter to use for sync whereas syncWithoutId is set");
+      return false;
+    }
+
+    HashMap<String, Object> getSyncBy() {
+      return syncBy;
+    }
+
+  }
+
+  /**
+   * ----------- add separated query before index ------------
+   */
+  private static class ExtraQueryES {
+
+    private static final Logger logger = LoggerFactory.getLogger(ExtraQueryES.class);
+    private final HashMap<String, Object> queryBy = new HashMap<>();
+    private String queryId;
+    private String indexName;
+    private String[] target;
+
+    public ExtraQueryES filter(String field, Object value) {
+      queryBy.put(field, value);
+      return this;
+    }
+
+    public ExtraQueryES select(String... field) {
+      target = field;
+      return this;
+    }
+
+    public String getIndexName() {
+      return indexName;
+    }
+
+    ExtraQueryES setIndexName(String indexName) {
+      this.indexName = indexName;
+      return this;
+    }
+
+    public HashMap<String, Object> getQueryBy() {
+      return queryBy;
+    }
+
+    public String[] getTarget() {
+      return target;
+    }
+  }
+
 }

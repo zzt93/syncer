@@ -6,19 +6,19 @@ import java.util.HashMap;
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
-public class DocumentMapping {
+public class RequestMapping {
 
   private String index = "#{schema}";
   private String type = "#{table}";
   private String documentId = "#{id}";
   private HashMap<String, Object> fieldsMapper = new HashMap<>();
   private Boolean noUseIdForIndex = false;
-  // TODO 17/10/16 use it???
-  private Boolean supportSyncByQuery = false;
+  private QueryMapping queryMapping = new QueryMapping();
+
   // TODO 17/10/16 implement
   private HashMap<String, Object> upsert = new HashMap<>();
 
-  public DocumentMapping() {
+  public RequestMapping() {
     // default value of mapper
     fieldsMapper.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
   }
@@ -62,11 +62,15 @@ public class DocumentMapping {
     return noUseIdForIndex;
   }
 
-  public Boolean getSupportSyncByQuery() {
-    return supportSyncByQuery;
-  }
-
   public void setNoUseIdForIndex(Boolean noUseIdForIndex) {
     this.noUseIdForIndex = noUseIdForIndex;
   }
-}
+
+
+  public QueryMapping getQueryMapping() {
+    return queryMapping;
+  }
+
+  public void setQueryMapping(QueryMapping queryMapping) {
+    this.queryMapping = queryMapping;
+  }}

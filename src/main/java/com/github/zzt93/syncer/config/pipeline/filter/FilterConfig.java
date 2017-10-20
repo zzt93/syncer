@@ -11,7 +11,7 @@ public class FilterConfig {
   private Switcher switcher;
   private List<String> statement;
   private ForeachConfig foreach;
-  private IfConfig ifConfig;
+  private IfConfig If;
 
   public Switcher getSwitcher() {
     return switcher;
@@ -48,12 +48,12 @@ public class FilterConfig {
     type = FilterType.FOREACH;
   }
 
-  public IfConfig getIfConfig() {
-    return ifConfig;
+  public IfConfig getIf() {
+    return If;
   }
 
-  public void setIfConfig(IfConfig ifConfig) {
-    this.ifConfig = ifConfig;
+  public void setIf(IfConfig anIf) {
+    this.If = anIf;
     type = FilterType.IF;
   }
 

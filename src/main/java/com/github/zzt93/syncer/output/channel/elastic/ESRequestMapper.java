@@ -5,7 +5,7 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.ThreadSafe;
-import com.github.zzt93.syncer.config.pipeline.output.DocumentMapping;
+import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
 import com.github.zzt93.syncer.output.mapper.JsonMapper;
 import com.github.zzt93.syncer.output.mapper.Mapper;
 import java.util.Collections;
@@ -26,35 +26,35 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 /**
  * @author zzt
  */
-public class ESDocumentMapper implements Mapper<SyncData, Object> {
+public class ESRequestMapper implements Mapper<SyncData, Object> {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
-  private final DocumentMapping documentMapping;
+  private final RequestMapping requestMapping;
   private final TransportClient client;
   private final SpelExpressionParser parser;
-  private final JsonMapper jsonMapper;
+  private final JsonMapper documentMapper;
 
-  public ESDocumentMapper(DocumentMapping documentMapping, TransportClient client) {
-    this.documentMapping = documentMapping;
+  public ESRequestMapper(TransportClient client, RequestMapping requestMapping) {
+    this.requestMapping = requestMapping;
     this.client = client;
     parser = new SpelExpressionParser();
-    jsonMapper = new JsonMapper(documentMapping.getFieldsMapper());
+    documentMapper = new JsonMapper(requestMapping.getFieldsMapper());
   }
 
-  @ThreadSafe(safe = {SpelExpressionParser.class, DocumentMapping.class, TransportClient.class})
+  @ThreadSafe(safe = {SpelExpressionParser.class, RequestMapping.class, TransportClient.class})
   @Override
   public Object map(SyncData data) {
     StandardEvaluationContext context = data.getContext();
-    String index = eval(documentMapping.getIndex(), context);
-    String type = eval(documentMapping.getType(), context);
-    String id = eval(documentMapping.getDocumentId(), context);
+    String index = eval(requestMapping.getIndex(), context);
+    String type = eval(requestMapping.getType(), context);
+    String id = eval(requestMapping.getDocumentId(), context);
     switch (data.getType()) {
       case WRITE_ROWS:
         // TODO 17/10/18 index by query
-        if (documentMapping.getNoUseIdForIndex()) {
-          return client.prepareIndex(index, type).setSource(jsonMapper.map(data));
+        if (requestMapping.getNoUseIdForIndex()) {
+          return client.prepareIndex(index, type).setSource(documentMapper.map(data));
         }
-        return client.prepareIndex(index, type, id).setSource(jsonMapper.map(data));
+        return client.prepareIndex(index, type, id).setSource(documentMapper.map(data));
       case DELETE_ROWS:
         logger.info("Deleting data from Elasticsearch, may affect performance");
         if (data.isSyncWithoutId()) {
@@ -72,7 +72,7 @@ public class ESDocumentMapper implements Mapper<SyncData, Object> {
               .filter(getFilter(data))
               .script(getScript(data));
         }
-        return client.prepareUpdate(index, type, id).setDoc(jsonMapper.map(data));
+        return client.prepareUpdate(index, type, id).setDoc(documentMapper.map(data));
     }
     throw new IllegalArgumentException("Invalid row event type");
   }

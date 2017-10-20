@@ -4,8 +4,8 @@ import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
-import com.github.zzt93.syncer.config.pipeline.output.DocumentMapping;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
 import com.github.zzt93.syncer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.output.channel.BufferedChannel;
 import java.util.Arrays;
@@ -35,27 +35,27 @@ import org.slf4j.LoggerFactory;
 public class ElasticsearchChannel implements BufferedChannel {
 
   private final BatchBuffer<WriteRequestBuilder> batchBuffer;
-  private final ESDocumentMapper esDocumentMapper;
+  private final ESRequestMapper esRequestMapper;
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final TransportClient client;
   private final PipelineBatch batch;
 
-  public ElasticsearchChannel(ElasticsearchConnection connection, DocumentMapping documentMapping,
+  public ElasticsearchChannel(ElasticsearchConnection connection, RequestMapping requestMapping,
       PipelineBatch batch)
       throws Exception {
     client = connection.transportClient();
     this.batchBuffer = new BatchBuffer<>(batch, WriteRequestBuilder.class);
     this.batch = batch;
-    this.esDocumentMapper = new ESDocumentMapper(documentMapping, client);
+    this.esRequestMapper = new ESRequestMapper(client, requestMapping);
   }
 
-  @ThreadSafe(safe = {ESDocumentMapper.class, BatchBuffer.class})
+  @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) {
     if (event.getType() == EventType.DELETE_ROWS) {
       return false;
     }
-    Object builder = esDocumentMapper.map(event);
+    Object builder = esRequestMapper.map(event);
     if (builder instanceof WriteRequestBuilder) {
       boolean addRes = batchBuffer.add((WriteRequestBuilder) builder);
       flushIfReachSizeLimit();
@@ -71,7 +71,7 @@ public class ElasticsearchChannel implements BufferedChannel {
     List<WriteRequestBuilder> collect = batch
         .stream()
         .map(data -> {
-          Object builder = esDocumentMapper.map(data);
+          Object builder = esRequestMapper.map(data);
           if (builder instanceof WriteRequestBuilder) {
             return ((WriteRequestBuilder) builder);
           }

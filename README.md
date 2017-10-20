@@ -2,6 +2,22 @@
 
 ## Features
 
+### Input
+
+- Table name filter, support regex
+- Interested column filter
+
+### Output
+- Elasticsearch
+  - Bulk operation
+  - Update/Delete documents by `UpdateByQuery` or `DeleteByQuery`
+  - Join/merge documents from different source when push to ES<sup>[1](#myfootnote1)</sup>
+    - One to many relationship (parent-child relationship in ES)for document in different index
+    - Self referential relationship handle
+
+- Http endpoint
+
+<a name="myfootnote1">[1]</a>: Be careful about this feature, it may affect your performance
 
 ## Limitation
 
@@ -21,6 +37,9 @@
 
 ## TODO
 - Support set parent of ES
+- Simplify `#{}`
+- Remember start file/position of binlog
+- Two instance connect to same mysql server bug (sid, cid, serverid)
 
 ## Pipeline Config
 
@@ -31,15 +50,19 @@ MySQL master binlog
 - statement
 - switcher
 - foreach
+- if
+  - clone
+  - drop
+  - statement
 
 ### Output Choice
 
  - Elasticsearch
- - Http Endpoint
+ - Http endpoint
  
 ## Run
 ```
-syncer.jar --pipeline=sample.yml
+syncer.jar --pipeline=/absolute/path/to/sample.yml
 ```
 
 ## Implementation

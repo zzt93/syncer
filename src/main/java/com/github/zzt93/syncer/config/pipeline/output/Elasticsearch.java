@@ -10,7 +10,7 @@ import com.github.zzt93.syncer.output.channel.elastic.ElasticsearchChannel;
 public class Elasticsearch implements OutputChannelConfig {
 
   private ElasticsearchConnection connection;
-  private DocumentMapping documentMapping = new DocumentMapping();
+  private RequestMapping requestMapping = new RequestMapping();
   private PipelineBatch batch = new PipelineBatch();
 
   public ElasticsearchConnection getConnection() {
@@ -21,13 +21,14 @@ public class Elasticsearch implements OutputChannelConfig {
     this.connection = connection;
   }
 
-  public DocumentMapping getDocumentMapping() {
-    return documentMapping;
+  public RequestMapping getRequestMapping() {
+    return requestMapping;
   }
 
-  public void setDocumentMapping(DocumentMapping documentMapping) {
-    this.documentMapping = documentMapping;
+  public void setRequestMapping(RequestMapping requestMapping) {
+    this.requestMapping = requestMapping;
   }
+
 
   public PipelineBatch getBatch() {
     return batch;
@@ -40,7 +41,7 @@ public class Elasticsearch implements OutputChannelConfig {
   @Override
   public OutputChannel toChannel() throws Exception {
     if (connection.valid()) {
-      return new ElasticsearchChannel(connection, documentMapping, batch);
+      return new ElasticsearchChannel(connection, requestMapping,  batch);
     }
     throw new IllegalArgumentException();
   }

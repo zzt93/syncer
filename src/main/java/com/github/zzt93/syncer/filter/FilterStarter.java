@@ -70,7 +70,7 @@ public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilte
           res.add(new ForeachFilter(parser, filter.getForeach()));
           break;
         case IF:
-          res.add(new If(parser, filter.getIfConfig()));
+          res.add(new If(parser, filter.getIf()));
           break;
         default:
           throw new IllegalArgumentException("Unknown filter type");
