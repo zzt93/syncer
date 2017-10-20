@@ -31,13 +31,16 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private final RequestMapping requestMapping;
   private final TransportClient client;
   private final SpelExpressionParser parser;
-  private final JsonMapper documentMapper;
+  private final JsonMapper requestBodyMapper;
 
   public ESRequestMapper(TransportClient client, RequestMapping requestMapping) {
     this.requestMapping = requestMapping;
     this.client = client;
     parser = new SpelExpressionParser();
-    documentMapper = new JsonMapper(requestMapping.getFieldsMapper());
+    requestBodyMapper = new JsonMapper(requestMapping.getFieldsMapping());
+    if (requestMapping.hasQueryMapping()) {
+
+    }
   }
 
   @ThreadSafe(safe = {SpelExpressionParser.class, RequestMapping.class, TransportClient.class})
@@ -51,9 +54,9 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
       case WRITE_ROWS:
         // TODO 17/10/18 index by query
         if (requestMapping.getNoUseIdForIndex()) {
-          return client.prepareIndex(index, type).setSource(documentMapper.map(data));
+          return client.prepareIndex(index, type).setSource(requestBodyMapper.map(data));
         }
-        return client.prepareIndex(index, type, id).setSource(documentMapper.map(data));
+        return client.prepareIndex(index, type, id).setSource(requestBodyMapper.map(data));
       case DELETE_ROWS:
         logger.info("Deleting data from Elasticsearch, may affect performance");
         if (data.isSyncWithoutId()) {
@@ -71,7 +74,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
               .filter(getFilter(data))
               .script(getScript(data));
         }
-        return client.prepareUpdate(index, type, id).setDoc(documentMapper.map(data));
+        return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data));
     }
     throw new IllegalArgumentException("Invalid row event type");
   }

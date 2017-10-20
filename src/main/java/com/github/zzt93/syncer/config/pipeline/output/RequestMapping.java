@@ -11,16 +11,16 @@ public class RequestMapping {
   private String index = "schema";
   private String type = "table";
   private String documentId = "id";
-  private HashMap<String, Object> fieldsMapper = new HashMap<>();
+  private HashMap<String, Object> fieldsMapping = new HashMap<>();
   private Boolean noUseIdForIndex = false;
-  private QueryMapping queryMapping = new QueryMapping();
+  private QueryMapping queryMapping;
 
   // TODO 17/10/16 implement
   private HashMap<String, Object> upsert = new HashMap<>();
 
   public RequestMapping() {
     // default value of mapper
-    fieldsMapper.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
+    fieldsMapping.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
   }
 
   public String getIndex() {
@@ -47,15 +47,15 @@ public class RequestMapping {
     this.documentId = documentId;
   }
 
-  public HashMap<String, Object> getFieldsMapper() {
-    if (fieldsMapper.size() > 1 && fieldsMapper.containsKey(JsonMapper.FAKE_KEY)) {
-      fieldsMapper.remove(JsonMapper.FAKE_KEY);
+  public HashMap<String, Object> getFieldsMapping() {
+    if (fieldsMapping.size() > 1 && fieldsMapping.containsKey(JsonMapper.FAKE_KEY)) {
+      fieldsMapping.remove(JsonMapper.FAKE_KEY);
     }
-    return fieldsMapper;
+    return fieldsMapping;
   }
 
-  public void setFieldsMapper(HashMap<String, Object> fieldsMapper) {
-    this.fieldsMapper = fieldsMapper;
+  public void setFieldsMapping(HashMap<String, Object> fieldsMapping) {
+    this.fieldsMapping = fieldsMapping;
   }
 
   public Boolean getNoUseIdForIndex() {
@@ -73,4 +73,9 @@ public class RequestMapping {
 
   public void setQueryMapping(QueryMapping queryMapping) {
     this.queryMapping = queryMapping;
-  }}
+  }
+
+  public boolean hasQueryMapping() {
+    return queryMapping != null;
+  }
+}

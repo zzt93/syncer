@@ -53,9 +53,7 @@ public class JsonMapper implements Mapper<SyncData, HashMap<String, Object>> {
             res.putAll(src.getExtra());
             break;
           default:
-            // TODO 9/20/17 check expr contains template
-            String value = parser.parseExpression(expr)
-                .getValue(src.getContext(), String.class);
+            String value = parser.parseExpression(expr).getValue(src.getContext(), String.class);
             res.put(key, value);
             break;
         }

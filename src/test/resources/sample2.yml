@@ -91,14 +91,14 @@ pipeline:
         index: "table + #suffix" # default schema
         type: "table" # default table
         document-id: "id" # default id
-        fields-mapper: # rest row.* => row.*
+        fields-mapping: # rest row.* => row.*
           "row": "row.*.flatten"
 
     http:
       connection:
         address: 192.168.1.100
         port: 9700
-      json-mapper:
+      json-mapping:
         "data": "row.*"
         "type": "extra['type']"
 

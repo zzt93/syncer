@@ -48,6 +48,8 @@ MySQL master binlog
 
 - statement
 - switcher
+  - support `default` case
+  - only execute one case
 - foreach
 - if
   - clone
@@ -61,7 +63,7 @@ MySQL master binlog
  
 ## Run
 ```
-syncer.jar --pipeline=/absolute/path/to/sample.yml
+java -jar syncer.jar --pipeline=/absolute/path/to/sample.yml
 ```
 
 ## Implementation

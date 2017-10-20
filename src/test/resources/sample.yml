@@ -93,7 +93,7 @@ pipeline:
       connection:
         address: 192.168.1.100
         port: 9700
-      json-mapper:
+      json-mapping:
         "data":
           "parentId": "row['parent_id']"
           "superId": "row['superid']"
