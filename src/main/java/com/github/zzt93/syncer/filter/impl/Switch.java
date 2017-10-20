@@ -20,7 +20,7 @@ public class Switch implements ExprFilter {
   private final Map<String, Actions> action;
 
   public Switch(SpelExpressionParser parser, Switcher filter) {
-    condition = new Condition(filter.getCondition());
+    condition = new Condition(filter.getSwitch());
     this.parser = parser;
     Map<String, Actions> tmp = new HashMap<>();
     filter.getCase().forEach((k, v) -> tmp.put(k, new Actions(v)));

@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.filter.impl;
 
 import com.github.zzt93.syncer.common.expr.Expression;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParserContext;
@@ -13,6 +14,9 @@ public class Condition implements Expression<String> {
   private final String condition;
 
   public Condition(String condition) {
+    if (condition == null) {
+      throw new InvalidConfigException("switcher.switch is a must, can't be null");
+    }
     this.condition = condition;
   }
 

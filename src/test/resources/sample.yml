@@ -48,7 +48,7 @@ pipeline:
 
   filter:
     - switcher:
-        condition: "#{table}"
+        aSwitch: "#{table}"
         case: # support default branch
           "affair": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_AFFAIR'}", "#{renameColumn('xx', 'yy')}" ]
           "file": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_FILE'}", "#{addRow('type', '0')}"]
