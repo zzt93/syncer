@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.output.mapper;
 import com.github.zzt93.syncer.common.SyncData;
 import java.util.HashMap;
 import java.util.Map;
-import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
@@ -55,7 +54,7 @@ public class JsonMapper implements Mapper<SyncData, HashMap<String, Object>> {
             break;
           default:
             // TODO 9/20/17 check expr contains template
-            String value = parser.parseExpression(expr, ParserContext.TEMPLATE_EXPRESSION)
+            String value = parser.parseExpression(expr)
                 .getValue(src.getContext(), String.class);
             res.put(key, value);
             break;

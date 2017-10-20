@@ -11,7 +11,6 @@ import org.springframework.expression.EvaluationContext;
 import org.springframework.expression.EvaluationException;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.ParseException;
-import org.springframework.expression.ParserContext;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
@@ -36,7 +35,7 @@ public class FilterActions implements Expression<List<Object>> {
     ArrayList<Object> res = new ArrayList<>();
     for (String s : action) {
       try {
-        Object value = parser.parseExpression(s, ParserContext.TEMPLATE_EXPRESSION)
+        Object value = parser.parseExpression(s)
             .getValue(context);
         if (value != null) {
           res.add(value);

@@ -37,7 +37,6 @@
 
 ## TODO
 - Support set parent of ES
-- Simplify `#{}`
 - Remember start file/position of binlog
 - Two instance connect to same mysql server bug (sid, cid, serverid)
 

@@ -8,9 +8,9 @@ import java.util.HashMap;
  */
 public class RequestMapping {
 
-  private String index = "#{schema}";
-  private String type = "#{table}";
-  private String documentId = "#{id}";
+  private String index = "schema";
+  private String type = "table";
+  private String documentId = "id";
   private HashMap<String, Object> fieldsMapper = new HashMap<>();
   private Boolean noUseIdForIndex = false;
   private QueryMapping queryMapping = new QueryMapping();

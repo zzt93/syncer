@@ -19,7 +19,6 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.expression.ParserContext;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -79,7 +78,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
 
   private String eval(String expr, StandardEvaluationContext context) {
    return parser
-        .parseExpression(expr, ParserContext.TEMPLATE_EXPRESSION)
+        .parseExpression(expr)
         .getValue(context, String.class);
   }
 
