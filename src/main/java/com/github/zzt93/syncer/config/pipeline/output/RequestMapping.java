@@ -13,7 +13,7 @@ public class RequestMapping {
   private String documentId = "id";
   private HashMap<String, Object> fieldsMapping = new HashMap<>();
   private Boolean noUseIdForIndex = false;
-  private QueryMapping queryMapping;
+  private Boolean enableExtraQuery;
 
   // TODO 17/10/16 implement
   private HashMap<String, Object> upsert = new HashMap<>();
@@ -66,16 +66,13 @@ public class RequestMapping {
     this.noUseIdForIndex = noUseIdForIndex;
   }
 
-
-  public QueryMapping getQueryMapping() {
-    return queryMapping;
+  public RequestMapping setEnableExtraQuery(Boolean enableExtraQuery) {
+    this.enableExtraQuery = enableExtraQuery;
+    return this;
   }
 
-  public void setQueryMapping(QueryMapping queryMapping) {
-    this.queryMapping = queryMapping;
+  public boolean getEnableExtraQuery() {
+    return enableExtraQuery;
   }
 
-  public boolean hasQueryMapping() {
-    return queryMapping != null;
-  }
 }

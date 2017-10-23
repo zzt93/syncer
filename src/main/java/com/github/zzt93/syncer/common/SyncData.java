@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.common;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -148,8 +149,9 @@ public class SyncData {
     return syncByQueryES;
   }
 
-  public ExtraQueryES extraQuery(String indexName) {
-    return new ExtraQueryES().setIndexName(indexName);
+  public ExtraQueryES extraQuery(String indexName, String typeName) {
+    // TODO 17/10/23 handle multiple extra query?
+    return new ExtraQueryES(this).setIndexName(indexName).setTypeName(typeName);
   }
 
   /**
@@ -183,13 +185,29 @@ public class SyncData {
   /**
    * ----------- add separated query before index ------------
    */
-  private static class ExtraQueryES {
+  public static class ExtraQueryES {
 
     private static final Logger logger = LoggerFactory.getLogger(ExtraQueryES.class);
     private final HashMap<String, Object> queryBy = new HashMap<>();
+    private final SyncData data;
     private String queryId;
     private String indexName;
+    private String typeName;
     private String[] target;
+    private String[] cols;
+
+    private ExtraQueryES(SyncData data) {
+      this.data = data;
+    }
+
+    public String getTypeName() {
+      return typeName;
+    }
+
+    ExtraQueryES setTypeName(String typeName) {
+      this.typeName = typeName;
+      return this;
+    }
 
     public ExtraQueryES filter(String field, Object value) {
       queryBy.put(field, value);
@@ -198,6 +216,17 @@ public class SyncData {
 
     public ExtraQueryES select(String... field) {
       target = field;
+      return this;
+    }
+
+    public ExtraQueryES addColumn(String ... cols) {
+      if (cols.length != target.length) {
+        throw new InvalidConfigException("Column length is not same as query select result");
+      }
+      this.cols = cols;
+      for (String col : cols) {
+        data.getRow().put(col, this);
+      }
       return this;
     }
 
@@ -216,6 +245,10 @@ public class SyncData {
 
     public String[] getTarget() {
       return target;
+    }
+
+    public String getCol(int i) {
+      return cols[i];
     }
   }
 

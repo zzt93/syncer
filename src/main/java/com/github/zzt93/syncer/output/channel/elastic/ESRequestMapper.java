@@ -37,10 +37,13 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     this.requestMapping = requestMapping;
     this.client = client;
     parser = new SpelExpressionParser();
-    requestBodyMapper = new JsonMapper(requestMapping.getFieldsMapping());
-    if (requestMapping.hasQueryMapping()) {
-
+    ESQueryMapper esQueryMapper;
+    if (requestMapping.getEnableExtraQuery()) {
+      esQueryMapper = new ESQueryMapper(client);
+    } else {
+      esQueryMapper = null;
     }
+    requestBodyMapper = new JsonMapper(requestMapping.getFieldsMapping(), esQueryMapper);
   }
 
   @ThreadSafe(safe = {SpelExpressionParser.class, RequestMapping.class, TransportClient.class})
@@ -52,7 +55,6 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     String id = eval(requestMapping.getDocumentId(), context);
     switch (data.getType()) {
       case WRITE_ROWS:
-        // TODO 17/10/18 index by query
         if (requestMapping.getNoUseIdForIndex()) {
           return client.prepareIndex(index, type).setSource(requestBodyMapper.map(data));
         }
@@ -68,7 +70,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
         return client.prepareDelete(index, type, id);
       case UPDATE_ROWS:
         if (data.isSyncWithoutId()) {
-          logger.warn("Deleting data by query, may affect performance");
+          logger.warn("Updating data by query, may affect performance");
           return UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
               .source(index)
               .filter(getFilter(data))

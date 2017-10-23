@@ -10,8 +10,6 @@ public class QueryMapping {
   private Boolean supportUpdateByQuery = false;
   private Boolean supportDeleteByQuery = false;
 
-  private String queryExpr;
-
   public Boolean getSupportAllByQuery() {
     return supportAllByQuery;
   }
@@ -44,11 +42,4 @@ public class QueryMapping {
     this.supportUpdateByQuery = supportUpdateByQuery;
   }
 
-  public String getQueryExpr() {
-    return queryExpr;
-  }
-
-  public void setQueryExpr(String queryExpr) {
-    this.queryExpr = queryExpr;
-  }
 }
