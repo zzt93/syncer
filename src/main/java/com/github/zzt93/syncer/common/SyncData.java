@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.common;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import java.util.Arrays;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,8 +17,12 @@ public class SyncData {
 
   private final Logger logger = LoggerFactory.getLogger(SyncData.class);
 
-  private final EventType type;
-  private final HashMap<String, Object> row = new HashMap<>();
+  private EventType type;
+  private String action;
+  /*
+   * The following is data field
+   */
+  private final HashMap<String, Object> records = new HashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
   private final StandardEvaluationContext context;
   private String schema;
@@ -28,25 +33,34 @@ public class SyncData {
   private String id;
 
   private SyncByQueryES syncByQuery = new SyncByQueryES();
-  private SyncByQueryES syncByQueryES = new SyncByQueryES();
 
 
   public SyncData(TableMapEventData tableMap, String primaryKey,
       HashMap<String, Object> row, EventType type) {
     this.type = type;
+    action = type.toString();
     Object key = row.get(primaryKey);
     if (key != null) {
       id = key.toString();
     }
     schema = tableMap.getDatabase();
     table = tableMap.getTable();
-    this.row.putAll(row);
+    records.putAll(row);
     context = new StandardEvaluationContext(this);
   }
 
-  public SyncData(EventType type) {
-    this.type = type;
+  public SyncData() {
     context = new StandardEvaluationContext(this);
+  }
+
+  public SyncData setType(EventType type) {
+    this.type = type;
+    return this;
+  }
+
+  public SyncData setAction(String action) {
+    this.action = action;
+    return this;
   }
 
   public String getId() {
@@ -59,6 +73,10 @@ public class SyncData {
 
   public String getTable() {
     return table;
+  }
+
+  public String getAction() {
+    return action;
   }
 
   public void setTable(String table) {
@@ -81,42 +99,41 @@ public class SyncData {
     extra.put(key, value);
   }
 
-  public void addColumn(String colName, Object value) {
+  public void addRecord(String key, Object value) {
     if (value == null) {
-      logger.warn("Adding column({}) with null, discarded", colName);
+      logger.warn("Adding column({}) with null, discarded", key);
     }
-    row.put(colName, value);
+    records.put(key, value);
   }
 
-
-  public void renameColumn(String oldKey, String newKey) {
-    if (row.containsKey(oldKey)) {
-      row.put(newKey, row.get(oldKey));
-      row.remove(oldKey);
+  public void renameRecord(String oldKey, String newKey) {
+    if (records.containsKey(oldKey)) {
+      records.put(newKey, records.get(oldKey));
+      records.remove(oldKey);
     } else {
-      logger.warn("No such row name: {} in {}.{}", oldKey, schema, table);
+      logger.warn("No such record name: {} in {}.{}", oldKey, schema, table);
     }
   }
 
-  public void removeColumn(String colName) {
-    row.remove(colName);
+  public void removeRecord(String key) {
+    records.remove(key);
   }
 
-  public void removeColumns(String... colNames) {
-    for (String colName : colNames) {
-      row.remove(colName);
+  public void removeRecords(String... keys) {
+    for (String colName : keys) {
+      records.remove(colName);
     }
   }
 
-  public boolean containColumn(String col) {
-    return row.containsKey(col);
+  public boolean containRecord(String key) {
+    return records.containsKey(key);
   }
 
-  public void updateColumn(String column, Object value) {
-    if (row.containsKey(column)) {
-      row.put(column, value);
+  public void updateRecord(String key, Object value) {
+    if (records.containsKey(key)) {
+      records.put(key, value);
     } else {
-      logger.warn("No such row name: {} in {}.{}", column, schema, table);
+      logger.warn("No such record name: {} in {}.{}", key, schema, table);
     }
   }
 
@@ -124,17 +141,17 @@ public class SyncData {
     return context;
   }
 
-  public HashMap<String, Object> getRow() {
-    return row;
+  public HashMap<String, Object> getRecords() {
+    return records;
   }
 
   public HashMap<String, Object> getExtra() {
     return extra;
   }
 
-  public Object getRowValue(String col) {
-    Assert.isTrue(row.containsKey(col), row.toString() + "[No such column]: " + col);
-    return row.get(col);
+  public Object getRecordValue(String key) {
+    Assert.isTrue(records.containsKey(key), records.toString() + "[No such record]: " + key);
+    return records.get(key);
   }
 
   public HashMap<String, Object> getSyncBy() {
@@ -145,12 +162,14 @@ public class SyncData {
     return syncByQuery.isSyncWithoutId();
   }
 
+  /**
+   * update/delete by query
+   */
   public SyncByQueryES syncByQuery() {
-    return syncByQueryES;
+    return syncByQuery;
   }
 
   public ExtraQueryES extraQuery(String indexName, String typeName) {
-    // TODO 17/10/23 handle multiple extra query?
     return new ExtraQueryES(this).setIndexName(indexName).setTypeName(typeName);
   }
 
@@ -163,17 +182,13 @@ public class SyncData {
 
     private final HashMap<String, Object> syncBy = new HashMap<>();
 
-    SyncByQueryES filter(String syncWithCol, String value) {
+    public SyncByQueryES filter(String syncWithCol, Object value) {
       syncBy.put(syncWithCol, value);
       return this;
     }
 
     boolean isSyncWithoutId() {
-      if (!syncBy.isEmpty()) {
-        return true;
-      }
-      logger.warn("No filter to use for sync whereas syncWithoutId is set");
-      return false;
+      return !syncBy.isEmpty();
     }
 
     HashMap<String, Object> getSyncBy() {
@@ -219,13 +234,13 @@ public class SyncData {
       return this;
     }
 
-    public ExtraQueryES addColumn(String ... cols) {
+    public ExtraQueryES addRecord(String... cols) {
       if (cols.length != target.length) {
         throw new InvalidConfigException("Column length is not same as query select result");
       }
       this.cols = cols;
       for (String col : cols) {
-        data.getRow().put(col, this);
+        data.getRecords().put(col, this);
       }
       return this;
     }
@@ -249,6 +264,12 @@ public class SyncData {
 
     public String getCol(int i) {
       return cols[i];
+    }
+
+    @Override
+    public String toString() {
+      return "ExtraQueryES{select " + Arrays.toString(target) + " as " + Arrays.toString(cols)
+          + " from " + indexName + "." + typeName + " where " + queryBy +"}";
     }
   }
 

@@ -1,5 +1,8 @@
 package com.github.zzt93.syncer.config.pipeline.filter;
 
+import com.google.common.collect.Lists;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -7,16 +10,20 @@ import java.util.List;
  */
 public class CloneConfig {
 
-  private List<String> fields;
-  private List<String> New;
-  private List<String> old;
+  /**
+   * default only clone event type & action, i.e. non-data field
+   */
+  private List<String> copyValue = Lists.newArrayList();
+  private List<String> New = new ArrayList<>();
+  private List<String> old = new ArrayList<>();
 
-  public List<String> getFields() {
-    return fields;
+  public List<String> getCopyValue() {
+    return copyValue;
   }
 
-  public void setFields(List<String> fields) {
-    this.fields = fields;
+  public void setCopyValue(List<String> copyValue) {
+    this.copyValue = copyValue;
+    copyValue.addAll(Arrays.asList("action", "type"));
   }
 
   public List<String> getNew() {

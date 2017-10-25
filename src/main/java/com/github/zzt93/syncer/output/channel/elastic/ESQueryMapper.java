@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.SyncData.ExtraQueryES;
 import com.github.zzt93.syncer.output.mapper.Mapper;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import org.elasticsearch.action.search.SearchResponse;
@@ -40,6 +41,9 @@ public class ESQueryMapper implements Mapper<ExtraQueryES, Map<String, Object>> 
     SearchHits hits = response.getHits();
     if (hits.totalHits > 1) {
       logger.warn("Multiple query results exists, only use the first");
+    } else if (hits.totalHits == 0) {
+      logger.warn("Fail to find any match by " + extraQueryES);
+      return Collections.emptyMap();
     }
     SearchHit hit = hits.getAt(0);
     Map<String, Object> res = new HashMap<>();

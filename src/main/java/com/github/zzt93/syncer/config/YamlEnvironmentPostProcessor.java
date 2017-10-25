@@ -40,7 +40,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
       path = new FileSystemResource(name);
       if (!path.exists()) {
         throw new IllegalArgumentException(
-            "Syncer config file is not on classpath and it is not a absolute path file " + name);
+            "Syncer config file is not on classpath and it is not a absolute path file, fail to find it: " + name);
       }
     }
     try {

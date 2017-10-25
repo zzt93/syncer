@@ -88,12 +88,12 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   }
 
   private Script getScript(SyncData data) {
-    HashMap<String, Object> update = data.getRow();
+    HashMap<String, Object> update = data.getRecords();
     StringBuilder code = new StringBuilder();
     StandardEvaluationContext context = data.getContext();
     for (String col : update.keySet()) {
       String expr = update.get(col).toString();
-      code.append("ctx._source.").append(col).append(" = ").append(eval(expr, context)).append(";");
+      code.append("ctx._source.").append(col).append(" = \"").append(expr).append("\";");
     }
     return new Script(ScriptType.INLINE, "painless", code.toString(), Collections.emptyMap());
   }
@@ -104,7 +104,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     StandardEvaluationContext context = data.getContext();
     for (String s : syncBy.keySet()) {
       String expr = syncBy.get(s).toString();
-      builder.filter(termQuery(s, eval(expr, context)));
+      builder.filter(termQuery(s, expr));
     }
     return builder;
   }

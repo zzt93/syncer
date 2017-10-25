@@ -68,3 +68,15 @@ java -jar syncer.jar --pipeline=/absolute/path/to/sample.yml
 
 ## Implementation
 
+### Input Module
+
+- Load yml file into environment property source
+- Bind property source into config model class
+
+#### Problem & Notice
+
+- For collection field: getter and setter will all be invoked -- this behavior depends on Spring Boot
+  - If only invoke getter?
+  - For list and map field, has different behavior:
+    - list: `list = getList(); list.clear(); list.add(xxx); setList(list);`
+    - map: `map = getMap(); map.add(xxx); setMap(map);`
