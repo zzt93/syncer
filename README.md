@@ -11,19 +11,23 @@
 - Elasticsearch
   - Bulk operation
   - Update/Delete documents by `UpdateByQuery` or `DeleteByQuery`
-  - Join/merge documents from different source when push to ES<sup>[1](#myfootnote1)</sup>
+  - Join/merge documents from different source when push to ES<sup>[1](#join_in_es)</sup>
     - One to many relationship (parent-child relationship in ES)for document in different index
     - Self referential relationship handle
 
 - Http endpoint
 
-<a name="myfootnote1">[1]</a>: Be careful about this feature, it may affect your performance
+<a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
 
 ## Limitation
 
 - MySQL config
   - binlog_format: row
-  - binlog_row_image: full
+  - binlog_row_image: full<sup>[2](#full_row_image)</sup>
+
+<a name="full_row_image">[2]</a>: Even though the row image is full, 
+we will ignore unchanged column in update event and
+other fields except primary key in delete event
 
 - Not support composite primary key
 - Not support update primary key

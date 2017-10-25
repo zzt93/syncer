@@ -89,7 +89,7 @@ public class ElasticsearchChannel implements BufferedChannel {
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
-        logger.info("Update/Delete by query update {} or delete {} documents",
+        logger.info("Update/Delete by query: update {} or delete {} documents",
             bulkByScrollResponse.getUpdated(), bulkByScrollResponse.getDeleted());
       }
 
