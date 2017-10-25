@@ -62,7 +62,7 @@ pipeline:
         condition: "table == 'affair'"
         if-body:
           clone:
-            fields: [row]
+            copyValue: [row]
             new: ["table = 'role'", "row['id']"]
         else-body:
           drop: {}
