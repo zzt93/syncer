@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.output.mapper.JsonMapper;
 import java.util.HashMap;
 
@@ -14,6 +15,7 @@ public class RequestMapping {
   private HashMap<String, Object> fieldsMapping = new HashMap<>();
   private Boolean noUseIdForIndex = false;
   private Boolean enableExtraQuery;
+  private int retryOnUpdateConflict = 0;
 
   // TODO 17/10/16 implement
   private HashMap<String, Object> upsert = new HashMap<>();
@@ -66,13 +68,22 @@ public class RequestMapping {
     this.noUseIdForIndex = noUseIdForIndex;
   }
 
-  public RequestMapping setEnableExtraQuery(Boolean enableExtraQuery) {
+  public void setEnableExtraQuery(Boolean enableExtraQuery) {
     this.enableExtraQuery = enableExtraQuery;
-    return this;
   }
 
   public boolean getEnableExtraQuery() {
     return enableExtraQuery;
   }
 
+  public int getRetryOnUpdateConflict() {
+    return retryOnUpdateConflict;
+  }
+
+  public void setRetryOnUpdateConflict(int retryOnUpdateConflict) {
+    if (retryOnUpdateConflict < 0) {
+      throw new InvalidConfigException("retry-on-update-conflict is set a invalid value: "+ retryOnUpdateConflict);
+    }
+    this.retryOnUpdateConflict = retryOnUpdateConflict;
+  }
 }

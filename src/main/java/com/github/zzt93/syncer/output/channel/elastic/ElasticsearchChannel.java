@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.output.channel.elastic;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
@@ -52,9 +51,6 @@ public class ElasticsearchChannel implements BufferedChannel {
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) {
-    if (event.getType() == EventType.DELETE_ROWS) {
-      return false;
-    }
     Object builder = esRequestMapper.map(event);
     if (builder instanceof WriteRequestBuilder) {
       boolean addRes = batchBuffer.add((WriteRequestBuilder) builder);
@@ -137,6 +133,7 @@ public class ElasticsearchChannel implements BufferedChannel {
 
   private void buildRequest(WriteRequestBuilder[] aim) {
     logger.info("Sending a batch of Elasticsearch: {}", Arrays.toString(aim));
+    // TODO 17/10/26 BulkProcessor
     BulkRequestBuilder bulkRequest = client.prepareBulk();
     for (WriteRequestBuilder builder : aim) {
       if (builder instanceof IndexRequestBuilder) {
@@ -159,7 +156,7 @@ public class ElasticsearchChannel implements BufferedChannel {
         }
       }
       throw new ElasticsearchBulkException(
-          "Bulk indexing has failures. Use ElasticsearchBulkException.getFailedDocuments() for detailed messages ["
+          "Bulk request has failures. Use ElasticsearchBulkException.getFailedDocuments() for detailed messages ["
               + failedDocuments + "]",
           failedDocuments);
     }

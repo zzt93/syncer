@@ -76,13 +76,14 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
               .filter(getFilter(data))
               .script(getScript(data));
         }
-        return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data));
+        return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
+            .setRetryOnConflict(requestMapping.getRetryOnUpdateConflict());
     }
     throw new IllegalArgumentException("Invalid row event type");
   }
 
   private String eval(String expr, StandardEvaluationContext context) {
-   return parser
+    return parser
         .parseExpression(expr)
         .getValue(context, String.class);
   }
