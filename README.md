@@ -42,7 +42,6 @@ other fields except primary key in delete event
 ## TODO
 - Support set parent of ES
 - Remember start file/position of binlog
-- Two instance connect to same mysql server bug (sid, cid, serverid)
 
 ## Pipeline Config
 
