@@ -16,6 +16,7 @@ import org.springframework.util.Assert;
  * @author zzt
  */
 public class FullRowUpdateImageMapper implements RowUpdateImageMapper {
+
   private final Logger logger = LoggerFactory.getLogger(FullRowUpdateImageMapper.class);
 
   private final BitSet includedColumns;
@@ -40,14 +41,22 @@ public class FullRowUpdateImageMapper implements RowUpdateImageMapper {
         "before and after row image are not same length");
     // only 'full' now
     for (int i = 0; i < after.length; i++) {
-      if (primaryKeys.contains(i) && before[i] != after[i]) {
-        logger.warn("Update id of table, some output channel may not support");
+      if (after[i] == null && before[i] == null) {
+        continue;
+      } else if (after[i] == null) {
+        map.put(i, null);
+        if (primaryKeys.contains(i)) {
+          logger.warn("Updating id of table, some output channel may not support");
+        }
+        continue;
+      }
+
+      if (primaryKeys.contains(i) && !after[i].equals(before[i])) {
+        logger.warn("Updating id of table, some output channel may not support");
         // use primary key before update
-        // use i+1 because the index of mysql column is count from 1
-        map.put(i + 1, before[i]);
-      } else if (before[i] != after[i]) {
-        // use i+1 because the index of mysql column is count from 1
-        map.put(i + 1, after[i]);
+        map.put(i, before[i]);
+      } else if (!after[i].equals(before[i])) {
+        map.put(i, after[i]);
       } else {
         logger.debug("Ignore value{} of table{}", after[i], table);
       }

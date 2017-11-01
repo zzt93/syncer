@@ -48,7 +48,7 @@ public class ESQueryMapper implements Mapper<ExtraQueryES, Map<String, Object>> 
     SearchHit hit = hits.getAt(0);
     Map<String, Object> res = new HashMap<>();
     for (int i = 0; i < target.length; i++) {
-      res.put(extraQueryES.getCol(i), hit.getField(target[i]));
+      res.put(extraQueryES.getCol(i), hit.getSource().get(target[i]));
     }
     return res;
   }

@@ -25,7 +25,7 @@ public class DeleteRowsEvent extends RowsEvent {
       HashMap<Integer, Object> map = new HashMap<>();
       for (int i = 0; i < row.length; i++) {
         if (includedColumns.get(i)) {
-          map.put(i + 1, row[i]);
+          map.put(i, row[i]);
         }
       }
       addRow(map);

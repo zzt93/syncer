@@ -26,7 +26,7 @@ public class TableMeta {
     primaryKeys.add(position);
   }
 
-  public List<Integer> getIndex() {
+  public List<Integer> getInterestedColIndex() {
     return Collections.unmodifiableList(index);
   }
 

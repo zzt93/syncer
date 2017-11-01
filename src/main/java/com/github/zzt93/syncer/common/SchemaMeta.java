@@ -82,7 +82,8 @@ public class SchemaMeta {
             TableMeta tableMeta = new TableMeta();
             try (ResultSet primaryKeys = metaData.getPrimaryKeys(tableSchema, "", tableName)) {
               if (primaryKeys.next()) {
-                int ordinalPosition = primaryKeys.getInt("KEY_SEQ");
+                // use - 1 because the index of mysql column is count from 1
+                int ordinalPosition = primaryKeys.getInt("KEY_SEQ") - 1;
                 String columnName = primaryKeys.getString("COLUMN_NAME");
                 if (!tableRow.contains(columnName)) {
                   logger.warn("Not config primary key as interested column, adding it anyway");
@@ -102,7 +103,8 @@ public class SchemaMeta {
                 if (!tableRow.contains(columnName)) {
                   continue;
                 }
-                int ordinalPosition = columnResultSet.getInt("ORDINAL_POSITION");
+                // use - 1 because the index of mysql column is count from 1
+                int ordinalPosition = columnResultSet.getInt("ORDINAL_POSITION") - 1;
                 tableMeta.addNameIndex(columnName, ordinalPosition);
               }
             }

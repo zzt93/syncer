@@ -24,7 +24,7 @@ public class RowFilter implements InputFilter {
     TableMapEventData data = rowsEvent.getTableMap();
     TableMeta table = schemaMeta.findTable(data.getDatabase(), data.getTable());
     Assert.notNull(table, "[Assertion Failure] fail to find the name: " + data.getDatabase() + data.getTable());
-    boolean filtered = rowsEvent.filterData(table.getIndex());
+    boolean filtered = rowsEvent.filterData(table.getInterestedColIndex());
     return filtered ? FilterRes.ACCEPT : FilterRes.DENY;
   }
 }

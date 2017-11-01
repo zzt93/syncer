@@ -40,12 +40,12 @@ public abstract class RowsEvent {
     rows.add(row);
   }
 
-  public boolean filterData(List<Integer> index) {
+  public boolean filterData(List<Integer> interested) {
     Assert.isTrue(!rows.isEmpty(), "Assertion Failure: no row to filter");
     List<HashMap<Integer, Object>> tmp = new ArrayList<>();
     for (HashMap<Integer, Object> row : rows) {
       HashMap<Integer, Object> map = new HashMap<>();
-      for (Integer integer : index) {
+      for (Integer integer : interested) {
         if (row.containsKey(integer)) {
           map.put(integer, row.get(integer));
         }
