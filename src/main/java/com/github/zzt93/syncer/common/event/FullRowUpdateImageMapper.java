@@ -51,14 +51,14 @@ public class FullRowUpdateImageMapper implements RowUpdateImageMapper {
         continue;
       }
 
-      if (primaryKeys.contains(i) && !after[i].equals(before[i])) {
-        logger.warn("Updating id of table, some output channel may not support");
+      if (primaryKeys.contains(i))  {
+        if (!after[i].equals(before[i])) {
+          logger.warn("Updating id of table, some output channel may not support");
+        }
         // use primary key before update
         map.put(i, before[i]);
-      } else if (!after[i].equals(before[i])) {
-        map.put(i, after[i]);
       } else {
-        logger.debug("Ignore value{} of table{}", after[i], table);
+        map.put(i, after[i]);
       }
     }
     return map;

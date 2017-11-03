@@ -111,7 +111,7 @@ public class SyncData {
       records.put(newKey, records.get(oldKey));
       records.remove(oldKey);
     } else {
-      logger.warn("No such record name (maybe filtered out) (): {} in {}.{}", oldKey, schema, table);
+      logger.warn("No such record name (maybe filtered out): {} in {}.{}", oldKey, schema, table);
     }
   }
 
