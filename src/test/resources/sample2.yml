@@ -48,16 +48,16 @@ pipeline:
 
   filter:
     - switcher:
-        switch: "#{table}"
+        switch: "table"
         case: # support default branch
-          "affair": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_AFFAIR'}", "#{renameColumn('xx', 'yy')}" ]
-          "file": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_FILE'}", "#{addRow('type', '0')}"]
-          "folder": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_FILE'}", "#{addRow('type', '1')}"]
-    - statement: [ "#{#tags = row['tags']}", "#{updateColumn('tags', new java.util.ArrayList())}", "#{removeColumns('id', 'xid')}"]
+          "affair": ["#suffix = '-' + row['id']","#type = 'INDEX_AFFAIR'", "renameColumn('xx', 'yy')" ]
+          "file": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '0')"]
+          "folder": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '1')"]
+    - statement: [ "#tags = row['tags']", "updateColumn('tags', new java.util.ArrayList())", "removeColumns('id', 'xid')"]
     - foreach:
         var: "tag"
-        in: "#{#tags?.split('\n')}"
-        statement: ["#{#map = new java.util.HashMap()}", "#{#map.put('des', #tag)}", "#{row.get('tags').add(#map)}"]
+        in: "#tags?.split('\n')"
+        statement: ["#map = new java.util.HashMap()", "#map.put('des', #tag)", "row.get('tags').add(#map)"]
 
 
 # filter result class: com.github.zzt93.syncer.common.SyncData
@@ -88,17 +88,17 @@ pipeline:
         user: elastic-user # optional if not enable security
         password-file: es-password # optional if not enable security
       document-mapping: # mapping from input data to document json
-        index: "#{table}-#{extra['suffix']}" # default #{schema}
-        type: "#{table}" # default #{table}
-        document-id: "#{id}" # default #{id}
-        fields-mapper: # rest row.* => row.*
+        index: "table + #suffix" # default schema
+        type: "table" # default table
+        document-id: "id" # default id
+        fields-mapping: # rest row.* => row.*
           "row": "row.*.flatten"
 
     http:
       connection:
         address: 192.168.1.100
         port: 9700
-      json-mapper:
+      json-mapping:
         "data": "row.*"
-        "type": "#{extra['type']}"
+        "type": "extra['type']"
 
