@@ -48,17 +48,24 @@ pipeline:
 
   filter:
     - switcher:
-        condition: "#{table}"
+        switch: "table"
         case: # support default branch
-          "affair": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_AFFAIR'}", "#{renameColumn('xx', 'yy')}" ]
-          "file": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_FILE'}", "#{addRow('type', '0')}"]
-          "folder": ["#{#suffix = '-' + row['id']}","#{#type = 'INDEX_FILE'}", "#{addRow('type', '1')}"]
-    - statement: [ "#{#tags = row['tags']}", "#{updateColumn('tags', new java.util.ArrayList())}", "#{removeColumns('id', 'xid')}"]
+          "affair": ["#suffix = '-' + row['id']","#type = 'INDEX_AFFAIR'", "renameColumn('xx', 'yy')" ]
+          "file": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '0')"]
+          "folder": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '1')"]
+    - statement: [ "#tags = row['tags']", "updateColumn('tags', new java.util.ArrayList())", "removeColumns('id', 'xid')"]
     - foreach:
         var: "tag"
-        in: "#{#tags?.split('\n')}"
-        statement: ["#{#map = new java.util.HashMap()}", "#{#map.put('des', #tag)}", "#{row.get('tags').add(#map)}"]
-
+        in: "#tags?.split('\n')"
+        statement: ["#map = new java.util.HashMap()", "#map.put('des', #tag)", "row.get('tags').add(#map)"]
+    - if:
+        condition: "table == 'affair'"
+        if-body:
+          clone:
+            copyValue: [row]
+            new: ["table = 'role'", "row['id']"]
+        else-body:
+          drop: {}
 
 # filter result class: com.github.zzt93.syncer.common.SyncData
 #{
@@ -86,11 +93,11 @@ pipeline:
       connection:
         address: 192.168.1.100
         port: 9700
-      json-mapper:
+      json-mapping:
         "data":
-          "parentId": "#{row['parent_id']}"
-          "superId": "#{row['superid']}"
-          "allianceId": "#{row['id']}"
+          "parentId": "row['parent_id']"
+          "superId": "row['superid']"
+          "allianceId": "row['id']"
           "row.*": "row.*.flatten"
-        "type": "#{extra['type']}"
+        "type": "extra['type']"
 

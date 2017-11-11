@@ -6,12 +6,16 @@ import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.springframework.util.Assert;
 
 /**
- * <a href="https://dev.mysql.com/doc/internals/en/binlog-row-image.html">binlog row image format</a>
+ * <a href="https://dev.mysql.com/doc/internals/en/binlog-row-image.html">binlog row image
+ * format</a>
+ *
  * @author zzt
  */
 public abstract class RowsEvent {
@@ -19,10 +23,13 @@ public abstract class RowsEvent {
   private final Event tableMap;
   private final Map<Integer, String> indexToName;
   private List<HashMap<Integer, Object>> rows = new ArrayList<>();
+  private Set<Integer> primaryKeys;
 
-  public RowsEvent(Event tableMap, Map<Integer, String> indexToName) {
+  public RowsEvent(Event tableMap, Map<Integer, String> indexToName,
+      Set<Integer> primaryKeys) {
     this.tableMap = tableMap;
     this.indexToName = indexToName;
+    this.primaryKeys = primaryKeys;
   }
 
   public TableMapEventData getTableMap() {
@@ -33,12 +40,12 @@ public abstract class RowsEvent {
     rows.add(row);
   }
 
-  public boolean filterData(List<Integer> index) {
-    Assert.isTrue(!rows.isEmpty(), "Assertion Failure: no row");
+  public boolean filterData(List<Integer> interested) {
+    Assert.isTrue(!rows.isEmpty(), "Assertion Failure: no row to filter");
     List<HashMap<Integer, Object>> tmp = new ArrayList<>();
     for (HashMap<Integer, Object> row : rows) {
       HashMap<Integer, Object> map = new HashMap<>();
-      for (Integer integer : index) {
+      for (Integer integer : interested) {
         if (row.containsKey(integer)) {
           map.put(integer, row.get(integer));
         }
@@ -63,5 +70,11 @@ public abstract class RowsEvent {
     return res;
   }
 
-  public abstract EventType type();
+  public String getPrimaryKey() {
+    Iterator<Integer> iterator = primaryKeys.iterator();
+    Integer key = iterator.next();
+    return indexToName.get(key);
+  }
+
+  public abstract EventType operationType();
 }

@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.input.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
+import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.SchemaMeta;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.util.FileUtil;
@@ -17,6 +18,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,6 +29,7 @@ import org.springframework.util.StringUtils;
  */
 public class MasterConnector implements Runnable {
 
+  private final static Random random = new Random();
   private final String remote;
   private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
   private BinaryLogClient client;
@@ -38,10 +41,13 @@ public class MasterConnector implements Runnable {
     if (StringUtils.isEmpty(password)) {
       throw new InvalidPasswordException(password);
     }
+    // TODO 17/10/17 remember last binlog file and position, restore from file/db
     client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
     client.setEventDeserializer(SyncDeserializer.defaultDeserialzer());
+    client.setServerId(random.nextInt(Integer.MAX_VALUE));
+    client.setSSLMode(SSLMode.DISABLED);
 
     List<InputFilter> filters = new ArrayList<>();
     SchemaMeta schemaMeta = null;

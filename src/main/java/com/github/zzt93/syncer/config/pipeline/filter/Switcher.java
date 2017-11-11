@@ -10,15 +10,15 @@ import java.util.Map;
 public class Switcher {
 
   public static final String DEFAULT = "default";
-  private String condition;
+  private String Switch;
   private Map<String, List<String>> Case = new HashMap<>();
 
-  public String getCondition() {
-    return condition;
+  public String getSwitch() {
+    return Switch;
   }
 
-  public void setCondition(String condition) {
-    this.condition = condition;
+  public void setSwitch(String aSwitch) {
+    this.Switch = aSwitch;
   }
 
   public Map<String, List<String>> getCase() {

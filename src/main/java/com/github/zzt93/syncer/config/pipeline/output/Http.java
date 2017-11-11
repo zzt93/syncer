@@ -14,12 +14,12 @@ import java.util.HashMap;
 public class Http implements OutputChannelConfig {
 
   private HttpConnection connection;
-  private HashMap<String, Object> jsonMapper = new HashMap<>();
+  private HashMap<String, Object> jsonMapping = new HashMap<>();
   private PipelineBatch batch = new PipelineBatch();
 
   public Http() {
     // default value of json mapper
-    jsonMapper.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
+    jsonMapping.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
   }
 
   public HttpConnection getConnection() {
@@ -30,15 +30,15 @@ public class Http implements OutputChannelConfig {
     this.connection = connection;
   }
 
-  public HashMap<String, Object> getJsonMapper() {
-    if (jsonMapper.size() > 1 && jsonMapper.containsKey(JsonMapper.FAKE_KEY)) {
-      jsonMapper.remove(JsonMapper.FAKE_KEY);
+  public HashMap<String, Object> getJsonMapping() {
+    if (jsonMapping.size() > 1 && jsonMapping.containsKey(JsonMapper.FAKE_KEY)) {
+      jsonMapping.remove(JsonMapper.FAKE_KEY);
     }
-    return jsonMapper;
+    return jsonMapping;
   }
 
-  public void setJsonMapper(HashMap<String, Object> jsonMapper) {
-    this.jsonMapper = jsonMapper;
+  public void setJsonMapping(HashMap<String, Object> jsonMapping) {
+    this.jsonMapping = jsonMapping;
   }
 
   public PipelineBatch getBatch() {
@@ -52,7 +52,7 @@ public class Http implements OutputChannelConfig {
   @Override
   public OutputChannel toChannel() {
     if (connection.valid()) {
-      return new HttpChannel(connection, Collections.unmodifiableMap(getJsonMapper()));
+      return new HttpChannel(connection, Collections.unmodifiableMap(getJsonMapping()));
     }
     throw new IllegalArgumentException();
   }

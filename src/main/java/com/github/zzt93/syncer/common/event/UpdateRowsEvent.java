@@ -10,9 +10,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 
 /**
  * Created by zzt on 9/14/17. <p> <h3> <a href="https://dev.mysql.com/doc/internals/en/event-data-for-specific-event-types.html">The
@@ -26,37 +23,21 @@ import org.springframework.util.Assert;
  */
 public class UpdateRowsEvent extends RowsEvent {
 
-  private final Logger logger = LoggerFactory.getLogger(UpdateRowsEvent.class);
-
   public UpdateRowsEvent(Event tableMap, UpdateRowsEventData updateRowsEventData,
       Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
-    super(tableMap, indexToName);
+    super(tableMap, indexToName, primaryKeys);
     BitSet includedColumns = updateRowsEventData.getIncludedColumns();
+    // TODO 17/10/10 may support different binlog row image, only 'full' now
+    RowUpdateImageMapper mapper = new FullRowUpdateImageMapper(tableMap, indexToName, primaryKeys, includedColumns);
     List<Entry<Serializable[], Serializable[]>> rows = updateRowsEventData.getRows();
     for (Entry<Serializable[], Serializable[]> row : rows) {
-      HashMap<Integer, Object> map = new HashMap<>();
-      Serializable[] before = row.getKey();
-      Serializable[] after = row.getValue();
-      // TODO 17/10/10 may support different binlog row image, only 'full' now
-      Assert.isTrue(before.length == after.length && after.length == includedColumns.length(),
-          "before and after row image are not same length");
-      // only 'full' now
-      for (int i = 0; i < after.length; i++) {
-        if (primaryKeys.contains(i) && before[i] != after[i]) {
-          logger.warn("Update id of table, some output channel may not support");
-          // use primary key before update
-          map.put(i + 1, before[i]);
-        } else if (includedColumns.get(i)) {
-          // column index start from 1, so +1 here
-          map.put(i + 1, after[i]);
-        }
-      }
+      HashMap<Integer, Object> map = mapper.map(row);
       addRow(map);
     }
   }
 
   @Override
-  public EventType type() {
+  public EventType operationType() {
     return EventType.UPDATE_ROWS;
   }
 }

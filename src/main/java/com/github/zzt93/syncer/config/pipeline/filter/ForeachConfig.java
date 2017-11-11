@@ -5,7 +5,7 @@ import java.util.List;
 /**
  * @author zzt
  */
-public class Foreach {
+public class ForeachConfig {
 
   private String var;
   private String in;

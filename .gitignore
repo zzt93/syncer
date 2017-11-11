@@ -29,3 +29,5 @@ pipeline.yml
 !.gitignore
 mvnw
 mvnw.cmd
+*.log
+*.out

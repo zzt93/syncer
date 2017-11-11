@@ -13,18 +13,20 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class Statement implements ExprFilter {
 
   private final SpelExpressionParser parser;
-  private final Actions actions;
+  private final FilterActions filterActions;
 
   public Statement(SpelExpressionParser parser, List<String> statement) {
     this.parser = parser;
-    this.actions = new Actions(statement);
+    this.filterActions = new FilterActions(statement);
   }
 
-  @ThreadSafe(safe = {Actions.class, SpelExpressionParser.class})
+  @ThreadSafe(safe = {FilterActions.class, SpelExpressionParser.class})
   @Override
-  public FilterRes decide(SyncData e) {
-    StandardEvaluationContext context = e.getContext();
-    actions.execute(parser, context);
-    return FilterRes.ACCEPT;
+  public Void decide(List<SyncData> dataList) {
+    for (SyncData syncData : dataList) {
+      StandardEvaluationContext context = syncData.getContext();
+      filterActions.execute(parser, context);
+    }
+    return null;
   }
 }
