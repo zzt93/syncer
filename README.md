@@ -23,11 +23,7 @@
 
 - MySQL config
   - binlog_format: row
-  - binlog_row_image: full<sup>[2](#full_row_image)</sup>
-
-<a name="full_row_image">[2]</a>: Even though the row image is full, 
-we will ignore unchanged column in update event and
-other fields except primary key in delete event
+  - binlog_row_image: full
 
 - Not support composite primary key
 - Not support update primary key
@@ -42,6 +38,9 @@ other fields except primary key in delete event
 ## TODO
 - Support set parent of ES
 - Remember start file/position of binlog
+- Row image format support?
+  - Add must appeared field restriction -- now only primary key
+  - Opt: keep only changed field in update event & primary key in delete event -- include must appear field
 
 ## Pipeline Config
 
@@ -66,7 +65,7 @@ MySQL master binlog
  
 ## Run
 ```
-java -jar syncer.jar --pipeline=/absolute/path/to/sample.yml
+java -jar syncer.jar --pipelineConfig=/absolute/path/to/sample.yml
 ```
 
 ## Implementation
