@@ -4,6 +4,8 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
 import org.junit.Test;
+import org.springframework.expression.EvaluationException;
+import org.springframework.expression.TypeLocator;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -15,7 +17,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class SpringELTest {
 
   private final SpelExpressionParser parser = new SpelExpressionParser();
-
+  public static int a = 1;
   private static class Tmp {
 
     private int a;
@@ -89,5 +91,22 @@ public class SpringELTest {
     ArrayList<Integer> list = parser.parseExpression("o.?[true]").getValue(context,
         ArrayList.class);
     System.out.println(list);
+  }
+
+  @Test
+  public void qualifier() throws Exception {
+
+    StandardEvaluationContext context = new StandardEvaluationContext();
+    context.setTypeLocator(typeName -> {
+      try {
+        return Class.forName("com.github.zzt93.syncer.util." + typeName);
+      } catch (ClassNotFoundException e) {
+        throw new IllegalArgumentException(e);
+      }
+    });
+    Class testClass = parser.parseExpression("T(SpringELTest)").getValue(context, Class.class);
+    System.out.println(testClass);
+    Integer value = parser.parseExpression("T(SpringELTest).a").getValue(context, Integer.class);
+    System.out.println(value);
   }
 }
