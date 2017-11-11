@@ -18,7 +18,7 @@ public class DeleteRowsEvent extends RowsEvent {
   public DeleteRowsEvent(Event tableMap, DeleteRowsEventData deleteRowsEventData,
       Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
     super(tableMap, indexToName, primaryKeys);
-    // TODO 17/10/25 only keep id
+    // TODO 17/10/25 only keep non-null field: id, partition key
     BitSet includedColumns = deleteRowsEventData.getIncludedColumns();
     List<Serializable[]> rows = deleteRowsEventData.getRows();
     for (Serializable[] row : rows) {
