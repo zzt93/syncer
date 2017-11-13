@@ -41,6 +41,7 @@
 - Row image format support?
   - Add must appeared field restriction -- now only primary key
   - Opt: keep only changed field in update event & primary key in delete event -- include must appear field
+- Join by query mysql?
 
 ## Pipeline Config
 
