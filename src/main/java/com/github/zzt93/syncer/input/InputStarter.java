@@ -8,6 +8,7 @@ import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.input.connect.MasterConnector;
+import com.github.zzt93.syncer.input.connect.PositionHook;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -26,11 +27,15 @@ public class InputStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
   private final BlockingQueue<SyncData> queue;
   private final Logger logger = LoggerFactory.getLogger(InputStarter.class);
   private final Set<MysqlMaster> mysqlMasters;
+  private final SyncerInput input;
 
-  private InputStarter(PipelineInput pipelineInputConfig, SyncerInput input, BlockingQueue<SyncData> queue) {
+  private InputStarter(PipelineInput pipelineInputConfig, SyncerInput input,
+      BlockingQueue<SyncData> queue) {
     this.queue = queue;
     mysqlMasters = fromPipelineConfig(pipelineInputConfig);
-    service = Executors.newFixedThreadPool(input.getWorker(), new NamedThreadFactory("syncer-input"));
+    service = Executors
+        .newFixedThreadPool(input.getWorker(), new NamedThreadFactory("syncer-input"));
+    this.input = input;
   }
 
   public static InputStarter getInstance(PipelineInput pipelineInputConfig, SyncerInput input,
@@ -46,7 +51,9 @@ public class InputStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
     for (MysqlMaster mysqlMaster : mysqlMasters) {
       try {
         MasterConnector masterConnector = new MasterConnector(mysqlMaster.getConnection(),
-            mysqlMaster.getSchema(), queue);
+            mysqlMaster.getSchema(), queue, input.getMysqlMasters());
+        Runtime.getRuntime().addShutdownHook(
+            new Thread(new PositionHook(masterConnector)));
         service.submit(masterConnector);
       } catch (IOException | SchemaUnavailableException e) {
         logger.error("Fail to connect to mysql endpoint: {}", mysqlMaster);
