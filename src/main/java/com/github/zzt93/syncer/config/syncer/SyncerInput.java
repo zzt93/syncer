@@ -12,9 +12,8 @@ public class SyncerInput {
     return mysqlMasters;
   }
 
-  public SyncerInput setMysqlMasters(SyncerMysql mysqlMasters) {
+  public void setMysqlMasters(SyncerMysql mysqlMasters) {
     this.mysqlMasters = mysqlMasters;
-    return this;
   }
 
   public int getWorker() {

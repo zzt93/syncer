@@ -50,8 +50,15 @@ public class MasterConnector implements Runnable {
     }
 
     String connectorIdentifier = connection.getAddress() + ":" + connection.getPort();
-    connectorMetaPath = Paths.get(mysqlMastersMeta.getLastRunMetaPath(), connectorIdentifier);
+    connectorMetaPath = Paths.get(mysqlMastersMeta.getLastRunMetadataDir(), connectorIdentifier);
 
+    configLogClient(connection, password);
+    configEventListener(connection, schema, queue);
+
+    remote = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
+  }
+
+  private void configLogClient(MysqlConnection connection, String password) throws IOException {
     client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
@@ -69,7 +76,10 @@ public class MasterConnector implements Runnable {
         logger.error("Invalid last run meta file, is it crash? Take it as fresh run");
       }
     }
+  }
 
+  private void configEventListener(MysqlConnection connection, Schema schema,
+      BlockingQueue<SyncData> queue) throws SchemaUnavailableException {
     List<InputFilter> filters = new ArrayList<>();
     SchemaMeta schemaMeta = null;
     if (schema != null) {
@@ -83,9 +93,6 @@ public class MasterConnector implements Runnable {
     }
     client.registerEventListener(
         new SyncListener(new InputStart(schemaMeta), filters, new InputEnd(), queue));
-
-    remote = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
-
   }
 
   Path connectorMetaPath() {

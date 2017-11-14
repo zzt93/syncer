@@ -2,7 +2,7 @@ syncer:
   input:
     worker: 4
     mysql-masters:
-      last_run_metadata_path: ./meta/.last_position/
+      last_run_metadata_dir: /tmp/syncer/meta/.last_position/
 
   filter:
     worker: 2
