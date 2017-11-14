@@ -4,6 +4,7 @@ import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.SchemaMeta;
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NetworkUtil;
 import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
@@ -95,11 +96,14 @@ public class MasterConnector implements Runnable {
         new SyncListener(new InputStart(schemaMeta), filters, new InputEnd(), queue));
   }
 
+  @ThreadSafe(des = "final field is thread safe: it is fixed before hook thread start")
   Path connectorMetaPath() {
     return connectorMetaPath;
   }
 
+  @ThreadSafe(sharedBy = {"syncer-input","shutdown hook"}, toCheck = {BinaryLogClient.class})
   List<String> connectorMeta() {
+    // TODO 17/11/14 wait for PR: get them both
     return Lists.newArrayList(client.getBinlogFilename(), "" + client.getBinlogPosition());
   }
 
@@ -109,6 +113,7 @@ public class MasterConnector implements Runnable {
     Thread.currentThread().setName(remote);
     for (int i = 0; i < 3; i++) {
       try {
+        // this method is blocked
         client.connect();
       } catch (IOException e) {
         logger.error("Fail to connect to master", e);

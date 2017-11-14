@@ -52,6 +52,7 @@ public class InputStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
       try {
         MasterConnector masterConnector = new MasterConnector(mysqlMaster.getConnection(),
             mysqlMaster.getSchema(), queue, input.getMysqlMasters());
+        // final field in master connector is thread safe: it is fixed before thread start
         Runtime.getRuntime().addShutdownHook(
             new Thread(new PositionHook(masterConnector)));
         service.submit(masterConnector);

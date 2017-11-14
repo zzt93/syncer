@@ -14,6 +14,8 @@ public @interface ThreadSafe {
 
   String des() default "";
 
+  String[] sharedBy() default {};
+
   Class[] safe() default {};
 
   Class[] toCheck() default {};
