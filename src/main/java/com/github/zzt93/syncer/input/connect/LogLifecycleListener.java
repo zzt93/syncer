@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.input.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
+import com.github.shyiko.mysql.binlog.network.ServerException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,6 +20,13 @@ public class LogLifecycleListener implements BinaryLogClient.LifecycleListener {
   @Override
   public void onCommunicationFailure(BinaryLogClient client, Exception ex) {
     logger.error("Communication failure", ex);
+    if (binlogDeprecated(ex)) {
+      throw new InvalidBinlogException(ex, client.getBinlogFilename(), client.getBinlogPosition());
+    }
+  }
+
+  private boolean binlogDeprecated(Exception ex) {
+    return ex instanceof ServerException && ((ServerException) ex).getErrorCode() == 1236;
   }
 
   @Override

@@ -37,10 +37,11 @@ import org.springframework.util.StringUtils;
 public class MasterConnector implements Runnable {
 
   private final static Random random = new Random();
-  private final String remote;
+  private final String connectorIdentifier;
   private final Path connectorMetaPath;
   private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
   private BinaryLogClient client;
+  private SyncListener eventListener;
 
   public MasterConnector(MysqlConnection connection, Schema schema,
       BlockingQueue<SyncData> queue, SyncerMysql mysqlMastersMeta)
@@ -50,13 +51,11 @@ public class MasterConnector implements Runnable {
       throw new InvalidPasswordException(password);
     }
 
-    String connectorIdentifier = connection.getAddress() + ":" + connection.getPort();
+    connectorIdentifier = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
     connectorMetaPath = Paths.get(mysqlMastersMeta.getLastRunMetadataDir(), connectorIdentifier);
 
     configLogClient(connection, password);
     configEventListener(connection, schema, queue);
-
-    remote = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
   }
 
   private void configLogClient(MysqlConnection connection, String password) throws IOException {
@@ -92,8 +91,8 @@ public class MasterConnector implements Runnable {
         throw new SchemaUnavailableException(e);
       }
     }
-    client.registerEventListener(
-        new SyncListener(new InputStart(schemaMeta), filters, new InputEnd(), queue));
+    eventListener = new SyncListener(new InputStart(schemaMeta), filters, new InputEnd(), queue);
+    client.registerEventListener(eventListener);
   }
 
   @ThreadSafe(des = "final field is thread safe: it is fixed before hook thread start")
@@ -101,20 +100,24 @@ public class MasterConnector implements Runnable {
     return connectorMetaPath;
   }
 
-  @ThreadSafe(sharedBy = {"syncer-input","shutdown hook"}, toCheck = {BinaryLogClient.class})
+  @ThreadSafe(sharedBy = {"syncer-input", "shutdown hook"})
   List<String> connectorMeta() {
-    // TODO 17/11/14 wait for PR: get them both
+    // TODO 17/11/14 get them by one method
     return Lists.newArrayList(client.getBinlogFilename(), "" + client.getBinlogPosition());
   }
 
 
   @Override
   public void run() {
-    Thread.currentThread().setName(remote);
-    for (int i = 0; i < 3; i++) {
+    Thread.currentThread().setName(connectorIdentifier);
+    for (int i = 0; i < 5; i++) {
       try {
         // this method is blocked
         client.connect();
+      } catch (InvalidBinlogException e) {
+        logger.warn("Invalid binlog file info, reconnect to older binlog", e);
+        i = 0;
+        client.setBinlogFilename("");
       } catch (IOException e) {
         logger.error("Fail to connect to master", e);
       }

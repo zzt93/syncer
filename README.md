@@ -83,3 +83,10 @@ java -jar syncer.jar --pipelineConfig=/absolute/path/to/sample.yml
   - For list and map field, has different behavior:
     - list: `list = getList(); list.clear(); list.add(xxx); setList(list);`
     - map: `map = getMap(); map.add(xxx); setMap(map);`
+
+### Output Module
+
+#### Json Mapper
+- For now, mapping document value using `toString()`: {@link XContentBuilder#unknownValue}
+  - java.sql.Timestamp format: 'yyyy-MM-dd HH:mm:ss.SSS'. For now, if you need other format, you have to format it to string by yourself
+  - Maybe change to jackson
