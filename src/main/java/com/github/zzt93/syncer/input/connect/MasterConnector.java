@@ -27,6 +27,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -41,7 +42,7 @@ public class MasterConnector implements Runnable {
   private final Path connectorMetaPath;
   private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
   private BinaryLogClient client;
-  private SyncListener eventListener;
+  private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
   public MasterConnector(MysqlConnection connection, Schema schema,
       BlockingQueue<SyncData> queue, SyncerMysql mysqlMastersMeta)
@@ -91,8 +92,11 @@ public class MasterConnector implements Runnable {
         throw new SchemaUnavailableException(e);
       }
     }
-    eventListener = new SyncListener(new InputStart(schemaMeta), filters, new InputEnd(), queue);
+    SyncListener eventListener = new SyncListener(new InputStart(schemaMeta), filters,
+        new InputEnd(), queue);
     client.registerEventListener(eventListener);
+    client.registerEventListener((event) -> binlogInfo
+        .set(new BinlogInfo(client.getBinlogFilename(), client.getBinlogPosition())));
   }
 
   @ThreadSafe(des = "final field is thread safe: it is fixed before hook thread start")
@@ -100,10 +104,10 @@ public class MasterConnector implements Runnable {
     return connectorMetaPath;
   }
 
-  @ThreadSafe(sharedBy = {"syncer-input", "shutdown hook"})
+  @ThreadSafe(sharedBy = {"syncer-input: connect()", "shutdown hook"})
   List<String> connectorMeta() {
-    // TODO 17/11/14 get them by one method
-    return Lists.newArrayList(client.getBinlogFilename(), "" + client.getBinlogPosition());
+    BinlogInfo binlogInfo = this.binlogInfo.get();
+    return Lists.newArrayList(binlogInfo.getBinlogFilename(), "" + binlogInfo.getBinlogPosition());
   }
 
 

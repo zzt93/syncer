@@ -8,16 +8,16 @@ public class BinlogInfo {
   private final String binlogFilename;
   private final long binlogPosition;
 
-  public BinlogInfo(String binlogFilename, long binlogPosition) {
+  BinlogInfo(String binlogFilename, long binlogPosition) {
     this.binlogFilename = binlogFilename;
     this.binlogPosition = binlogPosition;
   }
 
-  public String getBinlogFilename() {
+  String getBinlogFilename() {
     return binlogFilename;
   }
 
-  public long getBinlogPosition() {
+  long getBinlogPosition() {
     return binlogPosition;
   }
 }
