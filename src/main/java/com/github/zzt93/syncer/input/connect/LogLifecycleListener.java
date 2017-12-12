@@ -36,6 +36,6 @@ public class LogLifecycleListener implements BinaryLogClient.LifecycleListener {
 
   @Override
   public void onDisconnect(BinaryLogClient client) {
-    logger.info("Disconnect {}@{}", client.getBinlogFilename(), client.getBinlogPosition());
+    logger.warn("Disconnect {}@{}", client.getBinlogFilename(), client.getBinlogPosition());
   }
 }
