@@ -24,7 +24,7 @@ nbdist/
 .nb-gradle/
 
 *password*
-pipeline.yml
+pipeline*.yml
 .*
 !.gitignore
 mvnw
