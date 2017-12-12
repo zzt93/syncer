@@ -1,0 +1,12 @@
+spring.application.name: syncer
+
+spring:
+  main:
+    web-application-type: none
+
+logging:
+  level: debug
+
+spring:
+  profiles:
+    active: ${ACTIVE_PROFILE:dev}
