@@ -49,8 +49,7 @@ public class InputStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
             mysqlMaster.getSchema(), queue);
         service.submit(masterConnector);
       } catch (IOException | SchemaUnavailableException e) {
-        logger.error("Fail to connect to mysql endpoint: {}", mysqlMaster);
-        logger.error("", e);
+        logger.error("Fail to connect to mysql endpoint: {}", mysqlMaster, e);
       }
     }
   }

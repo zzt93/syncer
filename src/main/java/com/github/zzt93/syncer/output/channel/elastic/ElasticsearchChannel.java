@@ -91,7 +91,7 @@ public class ElasticsearchChannel implements BufferedChannel {
 
       @Override
       public void onFailure(Exception e) {
-        logger.error("Fail to update/delete by query", e);
+        logger.error("Fail to update/delete by query: {}", builder.request(), e);
       }
     });
   }
