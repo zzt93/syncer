@@ -35,9 +35,9 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
   }
 
   private PropertySource<?> loadYaml(String name) {
-    Resource path = new ClassPathResource(name);
+    Resource path = new FileSystemResource(name);
     if (!path.exists()) {
-      path = new FileSystemResource(name);
+      path = new ClassPathResource(name);
       if (!path.exists()) {
         throw new IllegalArgumentException(
             "Syncer config file is not on classpath and it is not a absolute path file, fail to find it: " + name);

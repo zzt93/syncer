@@ -2,10 +2,7 @@ package com.github.zzt93.syncer.util;
 
 import java.util.ArrayList;
 import java.util.Iterator;
-import java.util.List;
 import org.junit.Test;
-import org.springframework.expression.EvaluationException;
-import org.springframework.expression.TypeLocator;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
