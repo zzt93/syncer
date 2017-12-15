@@ -9,8 +9,10 @@ import com.github.zzt93.syncer.output.OutputStarter;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingQueue;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
+import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchAutoConfiguration;
 import org.springframework.boot.autoconfigure.data.elasticsearch.ElasticsearchDataAutoConfiguration;
@@ -25,7 +27,10 @@ public class SyncerApplication implements CommandLineRunner {
   private SyncerConfig syncerConfig;
 
   public static void main(String[] args) {
-    SpringApplication.run(SyncerApplication.class, args);
+    SpringApplication application = new SpringApplication(SyncerApplication.class);
+    application.setWebApplicationType(WebApplicationType.NONE);
+    application.setBannerMode(Banner.Mode.OFF);
+    application.run(args);
   }
 
   @Override
