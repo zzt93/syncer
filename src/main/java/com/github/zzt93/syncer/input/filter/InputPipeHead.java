@@ -2,8 +2,8 @@ package com.github.zzt93.syncer.input.filter;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
+import com.github.zzt93.syncer.common.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.common.Filter;
-import com.github.zzt93.syncer.common.SchemaMeta;
 import com.github.zzt93.syncer.common.TableMeta;
 import com.github.zzt93.syncer.common.event.DeleteRowsEvent;
 import com.github.zzt93.syncer.common.event.RowsEvent;
@@ -13,18 +13,18 @@ import com.github.zzt93.syncer.common.event.WriteRowsEvent;
 /**
  * @author zzt
  */
-public class InputStart implements Filter<Event[], RowsEvent> {
+public class InputPipeHead implements Filter<Event[], RowsEvent> {
 
-  private final SchemaMeta schemaMeta;
+  private final ConnectionSchemaMeta connectionSchemaMeta;
 
-  public InputStart(SchemaMeta schemaMeta) {
-    this.schemaMeta = schemaMeta;
+  public InputPipeHead(ConnectionSchemaMeta connectionSchemaMeta) {
+    this.connectionSchemaMeta = connectionSchemaMeta;
   }
 
   @Override
   public RowsEvent decide(Event... e) {
     TableMapEventData event = e[0].getData();
-    TableMeta table = schemaMeta.findTable(event.getDatabase(), event.getTable());
+    TableMeta table = connectionSchemaMeta.findTable(event.getDatabase(), event.getTable());
     if (table == null) {
       return null;
     }
