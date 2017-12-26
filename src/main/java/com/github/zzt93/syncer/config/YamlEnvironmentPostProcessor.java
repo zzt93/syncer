@@ -17,16 +17,19 @@ import org.springframework.stereotype.Component;
 @Component
 public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
 
+  private static final String PIPELINE_CONFIG = "pipelineConfig";
+  private static final String CONFIG = "config";
   private final YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
 
   @Override
   public void postProcessEnvironment(ConfigurableEnvironment environment,
       SpringApplication application) {
-    String pipelineName = environment.getProperty("pipelineConfig");
+    String pipelineName = environment.getProperty(PIPELINE_CONFIG);
     if (pipelineName == null) {
-      throw new IllegalArgumentException("No pipeline config file specified, try '--pipelineConfig=sample.yml'");
+      throw new IllegalArgumentException("No pipeline config file specified, try '--" + PIPELINE_CONFIG
+          + "=sample.yml'");
     }
-    String configFile = environment.getProperty("config");
+    String configFile = environment.getProperty(CONFIG);
     if (configFile == null) {
       configFile = "config.yml";
     }

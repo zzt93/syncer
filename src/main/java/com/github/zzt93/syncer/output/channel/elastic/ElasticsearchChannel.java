@@ -7,11 +7,11 @@ import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
 import com.github.zzt93.syncer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.output.channel.BufferedChannel;
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.elasticsearch.action.ActionListener;
@@ -21,6 +21,7 @@ import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.support.WriteRequestBuilder;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
@@ -85,8 +86,9 @@ public class ElasticsearchChannel implements BufferedChannel {
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
-        logger.info("Update/Delete by query: update {} or delete {} documents",
-            bulkByScrollResponse.getUpdated(), bulkByScrollResponse.getDeleted());
+        logger.info("Update/Delete by query {}: update {} or delete {} documents",
+            builder.request(), bulkByScrollResponse.getUpdated(),
+            bulkByScrollResponse.getDeleted());
       }
 
       @Override
@@ -132,19 +134,37 @@ public class ElasticsearchChannel implements BufferedChannel {
   }
 
   private void buildRequest(WriteRequestBuilder[] aim) {
-    logger.info("Sending a batch of Elasticsearch: {}", Arrays.toString(aim));
+    StringJoiner joiner = new StringJoiner(",", "[", "]");
     // TODO 17/10/26 BulkProcessor
     BulkRequestBuilder bulkRequest = client.prepareBulk();
     for (WriteRequestBuilder builder : aim) {
       if (builder instanceof IndexRequestBuilder) {
+        joiner.add(builder.request().toString());
         bulkRequest.add(((IndexRequestBuilder) builder));
       } else if (builder instanceof UpdateRequestBuilder) {
+        joiner.add(toString(((UpdateRequestBuilder) builder).request()));
         bulkRequest.add(((UpdateRequestBuilder) builder));
       } else if (builder instanceof DeleteRequestBuilder) {
+        joiner.add(builder.request().toString());
         bulkRequest.add(((DeleteRequestBuilder) builder));
       }
     }
+    logger.info("Sending a batch of Elasticsearch: {}", joiner);
     checkForBulkUpdateFailure(bulkRequest.execute().actionGet());
+  }
+
+  private String toString(UpdateRequest request) {
+    String res = "update {[" + request.index() + "][" + request.type() + "][" + request.id() + "]";
+    if (request.doc() != null) {
+      res += (", doc[" + request.doc() + "]");
+    }
+    if (request.script() != null) {
+      res += (", script[" + request.script() + "]");
+    }
+    if (request.upsertRequest() != null) {
+      res += (", upsert" + request.upsertRequest() + "]");
+    }
+    return res;
   }
 
   private void checkForBulkUpdateFailure(BulkResponse bulkResponse) {
@@ -152,12 +172,10 @@ public class ElasticsearchChannel implements BufferedChannel {
       Map<String, String> failedDocuments = new HashMap<>();
       for (BulkItemResponse item : bulkResponse.getItems()) {
         if (item.isFailed()) {
-          failedDocuments.put(item.getId(), item.getFailureMessage());
+          failedDocuments.put(item.getId(), item.getFailure().toString());
         }
       }
-      throw new ElasticsearchBulkException(
-          "Bulk request has failures. Use ElasticsearchBulkException.getFailedDocuments() for detailed messages ["
-              + failedDocuments + "]",
+      throw new ElasticsearchBulkException("Bulk request has failures: [" + failedDocuments + "]",
           failedDocuments);
     }
   }

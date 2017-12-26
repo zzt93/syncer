@@ -53,7 +53,6 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     String index = eval(requestMapping.getIndex(), context);
     String type = eval(requestMapping.getType(), context);
     String id = eval(requestMapping.getDocumentId(), context);
-    logger.info("Sending to: index {}, type {}, id {}", index, type, id);
     switch (data.getType()) {
       case WRITE_ROWS:
         if (requestMapping.getNoUseIdForIndex()) {
