@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.input.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
-import com.github.zzt93.syncer.common.SchemaMeta;
+import com.github.zzt93.syncer.common.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FileUtil;
@@ -14,7 +14,7 @@ import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.config.syncer.SyncerMysql;
 import com.github.zzt93.syncer.input.filter.InputEnd;
 import com.github.zzt93.syncer.input.filter.InputFilter;
-import com.github.zzt93.syncer.input.filter.InputStart;
+import com.github.zzt93.syncer.input.filter.InputPipeHead;
 import com.github.zzt93.syncer.input.filter.RowFilter;
 import com.google.common.collect.Lists;
 import java.io.IOException;
@@ -44,7 +44,7 @@ public class MasterConnector implements Runnable {
   private BinaryLogClient client;
   private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
-  public MasterConnector(MysqlConnection connection, Schema schema,
+  public MasterConnector(MysqlConnection connection, List<Schema> schema,
       BlockingQueue<SyncData> queue, SyncerMysql mysqlMastersMeta)
       throws IOException, SchemaUnavailableException {
     String password = FileUtil.readAll(connection.getPasswordFile());
@@ -79,20 +79,19 @@ public class MasterConnector implements Runnable {
     }
   }
 
-  private void configEventListener(MysqlConnection connection, Schema schema,
+  private void configEventListener(MysqlConnection connection, List<Schema> schemas,
       BlockingQueue<SyncData> queue) throws SchemaUnavailableException {
     List<InputFilter> filters = new ArrayList<>();
-    SchemaMeta schemaMeta = null;
-    if (schema != null) {
-      try {
-        schemaMeta = new SchemaMeta.MetaDataBuilder(connection, schema).build();
-        filters.add(new RowFilter(schemaMeta));
-      } catch (SQLException e) {
-        logger.error("Fail to connect to master to retrieve schema metadata", e);
-        throw new SchemaUnavailableException(e);
-      }
+    ConnectionSchemaMeta connectionSchemaMeta;
+    assert !schemas.isEmpty();
+    try {
+      connectionSchemaMeta = new ConnectionSchemaMeta.MetaDataBuilder(connection, schemas).build();
+      filters.add(new RowFilter(connectionSchemaMeta));
+    } catch (SQLException e) {
+      logger.error("Fail to connect to master to retrieve schema metadata", e);
+      throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new InputStart(schemaMeta), filters,
+    SyncListener eventListener = new SyncListener(new InputPipeHead(connectionSchemaMeta), filters,
         new InputEnd(), queue);
     client.registerEventListener(eventListener);
     client.registerEventListener((event) -> binlogInfo
@@ -121,7 +120,8 @@ public class MasterConnector implements Runnable {
       } catch (InvalidBinlogException e) {
         logger.warn("Invalid binlog file info, reconnect to older binlog", e);
         i = 0;
-        client.setBinlogFilename("");
+//        client.setBinlogFilename(""); not fetch oldest log
+        client.setBinlogFilename(null);
       } catch (IOException e) {
         logger.error("Fail to connect to master", e);
       }

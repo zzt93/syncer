@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.pipeline.input;
 
 import com.github.zzt93.syncer.common.util.RegexUtil;
+import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -47,19 +48,23 @@ public class Schema {
 
   /**
    * If {@link #name} is a regex pattern, connect to default database; <p></p> Otherwise, connect to
-   * that database.
+   * that specific database.
    *
    * @return the database name used in jdbc connection string
    */
   public String getConnectionName() {
-    if (namePattern == null) {
+    if (!hasNamePattern()) {
       return name;
     }
-    return "";
+    return MysqlConnection.DEFAULT_DB;
   }
 
   public Pattern getNamePattern() {
     return namePattern;
+  }
+
+  public boolean hasNamePattern() {
+    return namePattern != null;
   }
 
   @Override

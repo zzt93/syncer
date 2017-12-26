@@ -7,34 +7,42 @@ pipeline:
           port: 1234
           user: root
           password-file: password
-        schema:
-          name: "*"
-          tables:
+        schemas:
+          - name: "test_*"
+            tables:
             - name: affair
               row-name: [id, name] # default id is not null, other can be null
             - name: file
               row-name: [id, name, uploader]
             - name: folder
               row-name: [id, name, uploader]
+          - name: "simple"
+            tables:
+            - name: test
+              row-name: [id, test]
 
       - connection:
-          address: 192.168.1.100
-          port: 1235
+          address: 192.168.1.200
+          port: 1234
           user: root
           password-file: password
-        schema:
-          name: "*"
-          tables:
+        schemas:
+          - name: "test_*"
+            tables:
             - name: affair
-              row-name: [id, name]
+              row-name: [id, name] # default id is not null, other can be null
             - name: file
               row-name: [id, name, uploader]
             - name: folder
               row-name: [id, name, uploader]
+          - name: "simple"
+            tables:
+            - name: test
+              row-name: [id, test]
 
 # input result class: com.github.zzt93.syncer.common.SyncData
 #{
-#  schema: xxx
+#  schemas: xxx
 #  table: xxx
 #  id: xid
 #  row: {
@@ -62,7 +70,7 @@ pipeline:
 
 # filter result class: com.github.zzt93.syncer.common.SyncData
 #{
-#  schema: xxx
+#  schemas: xxx
 #  table: xxx
 #  id: xid
 #  row: {

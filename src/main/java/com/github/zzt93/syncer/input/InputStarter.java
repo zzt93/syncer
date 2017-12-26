@@ -49,9 +49,13 @@ public class InputStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
   public void start() throws IOException {
     logger.info("Start connecting to input source {}", mysqlMasters);
     for (MysqlMaster mysqlMaster : mysqlMasters) {
+      if (mysqlMaster.getSchemas().isEmpty()) {
+        logger.warn("No schema specified, ignore this connection {}", mysqlMaster.getConnection());
+        continue;
+      }
       try {
         MasterConnector masterConnector = new MasterConnector(mysqlMaster.getConnection(),
-            mysqlMaster.getSchema(), queue, input.getMysqlMasters());
+            mysqlMaster.getSchemas(), queue, input.getMysqlMasters());
         // final field in master connector is thread safe: it is fixed before thread start
         Runtime.getRuntime().addShutdownHook(
             new Thread(new PositionHook(masterConnector)));

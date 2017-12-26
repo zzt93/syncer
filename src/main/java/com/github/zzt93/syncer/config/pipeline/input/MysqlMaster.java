@@ -1,6 +1,8 @@
 package com.github.zzt93.syncer.config.pipeline.input;
 
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author zzt
@@ -8,7 +10,7 @@ import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 public class MysqlMaster {
 
   private MysqlConnection connection;
-  private Schema schema;
+  private List<Schema> schemas = new ArrayList<>();
 
   public MysqlConnection getConnection() {
     return connection;
@@ -18,12 +20,13 @@ public class MysqlMaster {
     this.connection = connection;
   }
 
-  public Schema getSchema() {
-    return schema;
+  public List<Schema> getSchemas() {
+    return schemas;
   }
 
-  public void setSchema(Schema schema) {
-    this.schema = schema;
+  public MysqlMaster setSchemas(List<Schema> schemas) {
+    this.schemas = schemas;
+    return this;
   }
 
   @Override
@@ -49,7 +52,7 @@ public class MysqlMaster {
   public String toString() {
     return "MysqlMaster{" +
         "connection=" + connection +
-        ", schema=" + schema +
+        ", schemas=" + schemas +
         '}';
   }
 
