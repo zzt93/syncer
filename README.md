@@ -4,8 +4,13 @@
 
 ### Input
 
-- Table name filter, support regex
+- Schema filter, support regex
+- Table name filter
 - Interested column filter
+
+#### Notice:
+
+- If an event match multiple schema & table, we will use the first match to filter/output
 
 ### Output
 - Elasticsearch

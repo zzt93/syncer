@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.common.util;
 
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 
@@ -8,7 +9,13 @@ import java.util.regex.PatternSyntaxException;
  */
 public class RegexUtil {
 
+  private static Pattern pattern = Pattern.compile("[.*+?\\^]");
+
   public static Pattern getRegex(String input) {
+    Matcher matcher = pattern.matcher(input);
+    if (!matcher.find()) {
+      return null;
+    }
     try {
       return Pattern.compile(input);
     } catch (PatternSyntaxException e) {
