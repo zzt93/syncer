@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
 import com.github.zzt93.syncer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.output.channel.BufferedChannel;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -153,8 +154,11 @@ public class ElasticsearchChannel implements BufferedChannel {
     checkForBulkUpdateFailure(bulkRequest.execute().actionGet());
   }
 
-  private String toString(UpdateRequest request) {
+  public static String toString(UpdateRequest request) {
     String res = "update {[" + request.index() + "][" + request.type() + "][" + request.id() + "]";
+    if (request.docAsUpsert()) {
+      res += (", doc_as_upsert[" + request.docAsUpsert() + "]");
+    }
     if (request.doc() != null) {
       res += (", doc[" + request.doc() + "]");
     }
@@ -162,9 +166,18 @@ public class ElasticsearchChannel implements BufferedChannel {
       res += (", script[" + request.script() + "]");
     }
     if (request.upsertRequest() != null) {
-      res += (", upsert" + request.upsertRequest() + "]");
+      res += (", upsert[" + request.upsertRequest() + "]");
     }
-    return res;
+    if (request.scriptedUpsert()) {
+      res += (", scripted_upsert[" + request.scriptedUpsert() + "]");
+    }
+    if (request.detectNoop()) {
+      res += (", detect_noop[" + request.detectNoop() + "]");
+    }
+    if (request.fields() != null) {
+      res += (", fields[" + Arrays.toString(request.fields()) + "]");
+    }
+    return res + "}";
   }
 
   private void checkForBulkUpdateFailure(BulkResponse bulkResponse) {

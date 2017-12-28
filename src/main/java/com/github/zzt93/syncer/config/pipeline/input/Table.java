@@ -51,4 +51,12 @@ public class Table {
   public int hashCode() {
     return name.hashCode();
   }
+
+  @Override
+  public String toString() {
+    return "Table{" +
+        "name='" + name + '\'' +
+        ", rowName=" + rowName +
+        '}';
+  }
 }

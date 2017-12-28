@@ -46,7 +46,7 @@ public class HttpChannel implements OutputChannel {
   public boolean output(SyncData event) {
     // TODO 17/9/22 add batch worker
     HashMap<String, Object> res = mapper.map(event);
-    logger.debug("Mapping result: {}", res);
+    logger.debug("Mapping table row {} to {}", event.getRecords(), res);
     switch (event.getType()) {
       case UPDATE_ROWS:
         return execute(res, POST).is2xxSuccessful();
