@@ -29,7 +29,7 @@ public class Clone implements ExprFilter {
   public Void decide(List<SyncData> dataList) {
     LinkedList<SyncData> list = new LinkedList<>();
     for (SyncData src : dataList) {
-      SyncData clone = new SyncData();
+      SyncData clone = new SyncData(src.getEventId());
       for (String s : copyValue) {
         Object value = parser.parseExpression(s).getValue(src.getContext());
         parser.parseExpression(s).setValue(clone.getContext(), value);

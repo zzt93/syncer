@@ -8,6 +8,6 @@ public class MysqlConnection extends Connection {
   public static final String DEFAULT_DB = "";
 
   public String toConnectionUrl(String schema) {
-    return "jdbc:mysql://" + super.toConnectionUrl(null) + "/" + schema;
+    return "jdbc:mysql://" + super.toConnectionUrl(null) + "/" + schema + "?autoReconnect=true&useSSL=false";
   }
 }

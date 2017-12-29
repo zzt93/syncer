@@ -44,8 +44,8 @@ public class ConnectionSchemaMeta {
 
     public MetaDataBuilder(MysqlConnection connection, List<Schema> schema) {
       this.interested = schema;
-      String useName = getSchemaName(schema);
-      dataSource = new DriverManagerDataSource(connection.toConnectionUrl(useName),
+      String calculatedSchemaName = getSchemaName(schema);
+      dataSource = new DriverManagerDataSource(connection.toConnectionUrl(calculatedSchemaName),
           connection.getUser(), connection.getPassword());
     }
 
@@ -74,6 +74,7 @@ public class ConnectionSchemaMeta {
       }
       try {
         DatabaseMetaData metaData = connection.getMetaData();
+        // TODO 17/12/29 test schemaPattern
         try (ResultSet tableResultSet = metaData
             .getTables(null, null, "%", new String[]{"TABLE"})) {
           while (!finished(schemaMeta, aim) && tableResultSet.next()) {

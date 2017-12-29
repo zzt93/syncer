@@ -13,6 +13,7 @@ import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * @author zzt
@@ -36,7 +37,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
 
   @Override
   public void onEvent(Event event) {
-    logger.debug("Receive binlog event: {}", event.toString());
+    logger.trace("Receive binlog event: {}", event.toString());
     EventType eventType = event.getHeader().getEventType();
     switch (eventType) {
       case TABLE_MAP:
@@ -49,6 +50,8 @@ public class SyncListener implements BinaryLogClient.EventListener {
         if (aim == null) { // not interested in this database+table
           return;
         }
+        MDC.put(RowsEvent.EID, aim.getEventId());
+        logger.debug("Receive binlog event: {}", aim.toString());
         for (InputFilter filter : filters) {
           if (filter.decide(aim) != FilterRes.ACCEPT) { // not interested in unrelated rows
             // discard: not add to queue
@@ -64,5 +67,6 @@ public class SyncListener implements BinaryLogClient.EventListener {
         last = null;
         break;
     }
+    MDC.remove(RowsEvent.EID);
   }
 }

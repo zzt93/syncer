@@ -15,6 +15,8 @@ import org.springframework.util.Assert;
  */
 public class SyncData {
 
+  private final String eventId;
+
   private final Logger logger = LoggerFactory.getLogger(SyncData.class);
 
   private EventType type;
@@ -35,8 +37,9 @@ public class SyncData {
   private SyncByQueryES syncByQuery = new SyncByQueryES();
 
 
-  public SyncData(TableMapEventData tableMap, String primaryKey,
+  public SyncData(String eventId, TableMapEventData tableMap, String primaryKey,
       HashMap<String, Object> row, EventType type) {
+    this.eventId = eventId;
     this.type = type;
     action = type.toString();
     Object key = row.get(primaryKey);
@@ -49,7 +52,8 @@ public class SyncData {
     context = new StandardEvaluationContext(this);
   }
 
-  public SyncData() {
+  public SyncData(String eventId) {
+    this.eventId = eventId;
     context = new StandardEvaluationContext(this);
   }
 
@@ -152,6 +156,10 @@ public class SyncData {
   public Object getRecordValue(String key) {
     Assert.isTrue(records.containsKey(key), records.toString() + "[No such record]: " + key);
     return records.get(key);
+  }
+
+  public String getEventId() {
+    return eventId;
   }
 
   public HashMap<String, Object> getSyncBy() {

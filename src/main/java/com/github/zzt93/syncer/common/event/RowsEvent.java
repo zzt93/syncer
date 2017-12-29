@@ -20,13 +20,17 @@ import org.springframework.util.Assert;
  */
 public abstract class RowsEvent {
 
+  public static final String EID = "eid";
+  private final String eventId;
+
   private final Event tableMap;
   private final Map<Integer, String> indexToName;
   private List<HashMap<Integer, Object>> rows = new ArrayList<>();
   private Set<Integer> primaryKeys;
 
-  public RowsEvent(Event tableMap, Map<Integer, String> indexToName,
+  public RowsEvent(String eventId, Event tableMap, Map<Integer, String> indexToName,
       Set<Integer> primaryKeys) {
+    this.eventId = eventId;
     this.tableMap = tableMap;
     this.indexToName = indexToName;
     this.primaryKeys = primaryKeys;
@@ -74,6 +78,20 @@ public abstract class RowsEvent {
     Iterator<Integer> iterator = primaryKeys.iterator();
     Integer key = iterator.next();
     return indexToName.get(key);
+  }
+
+  public String getEventId() {
+    return eventId;
+  }
+
+  @Override
+  public String toString() {
+    return "RowsEvent{" +
+        "tableMap=" + tableMap +
+        ", indexToName=" + indexToName +
+        ", rows=" + rows +
+        ", primaryKeys=" + primaryKeys +
+        '}';
   }
 
   public abstract EventType operationType();

@@ -9,7 +9,7 @@ import com.github.zzt93.syncer.output.batch.BatchJob;
 import com.github.zzt93.syncer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.output.channel.OutputChannel;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
@@ -27,7 +27,7 @@ public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel
   private final int worker;
 
   private OutputStarter(PipelineOutput pipelineOutput, SyncerOutput module,
-      BlockingQueue<SyncData> fromFilter) throws Exception {
+      BlockingDeque<SyncData> fromFilter) throws Exception {
     workerAssert(module.getWorker());
     workerAssert(module.getBatch().getWorker());
 
@@ -51,7 +51,7 @@ public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel
   }
 
   public static OutputStarter getInstance(PipelineOutput pipelineOutput, SyncerOutput syncer,
-      BlockingQueue<SyncData> fromFilter) throws Exception {
+      BlockingDeque<SyncData> fromFilter) throws Exception {
     if (instance == null) {
       instance = new OutputStarter(pipelineOutput, syncer, fromFilter);
     }

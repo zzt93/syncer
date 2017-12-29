@@ -16,9 +16,9 @@ import java.util.Set;
 public class WriteRowsEvent extends RowsEvent {
 
 
-  public WriteRowsEvent(Event tableMap, WriteRowsEventData writeRowsEventData,
+  public WriteRowsEvent(String eventId, Event tableMap, WriteRowsEventData writeRowsEventData,
       Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
-    super(tableMap, indexToName, primaryKeys);
+    super(eventId, tableMap, indexToName, primaryKeys);
     BitSet includedColumns = writeRowsEventData.getIncludedColumns();
     List<Serializable[]> rows = writeRowsEventData.getRows();
     for (Serializable[] row : rows) {

@@ -1,12 +1,14 @@
 package com.github.zzt93.syncer.filter;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.event.RowsEvent;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * @author zzt
@@ -32,6 +34,7 @@ public class FilterJob implements Callable<Void> {
       try {
         list.clear();
         SyncData poll = fromInput.take();
+        MDC.put(RowsEvent.EID, poll.getEventId());
         list.add(poll);
         for (ExprFilter filter : filters) {
           filter.decide(list);

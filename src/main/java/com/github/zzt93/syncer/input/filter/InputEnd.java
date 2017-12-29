@@ -16,7 +16,7 @@ public class InputEnd implements Filter<RowsEvent, SyncData[]> {
     List<HashMap<String, Object>> rows = e.getRows();
     SyncData[] res = new SyncData[rows.size()];
     for (int i = 0; i < res.length; i++) {
-      res[i] = new SyncData(e.getTableMap(), e.getPrimaryKey(), rows.get(i), e.operationType());
+      res[i] = new SyncData(e.getEventId(), e.getTableMap(), e.getPrimaryKey(), rows.get(i), e.operationType());
     }
     return res;
   }

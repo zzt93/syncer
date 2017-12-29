@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.ThreadSafe;
+import com.github.zzt93.syncer.common.event.RowsEvent;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
@@ -29,6 +30,7 @@ import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * @author zzt
@@ -59,7 +61,7 @@ public class ElasticsearchChannel implements BufferedChannel {
       flushIfReachSizeLimit();
       return addRes;
     } else {
-      bulkByScrollRequest((AbstractBulkByScrollRequestBuilder) builder);
+      bulkByScrollRequest(event.getEventId(), (AbstractBulkByScrollRequestBuilder) builder);
     }
     return true;
   }
@@ -73,7 +75,7 @@ public class ElasticsearchChannel implements BufferedChannel {
           if (builder instanceof WriteRequestBuilder) {
             return ((WriteRequestBuilder) builder);
           }
-          bulkByScrollRequest((AbstractBulkByScrollRequestBuilder) builder);
+          bulkByScrollRequest(data.getEventId(), (AbstractBulkByScrollRequestBuilder) builder);
           return null;
         })
         .filter(Objects::isNull)
@@ -83,10 +85,11 @@ public class ElasticsearchChannel implements BufferedChannel {
     return addRes;
   }
 
-  private void bulkByScrollRequest(AbstractBulkByScrollRequestBuilder builder) {
+  private void bulkByScrollRequest(String eventId, AbstractBulkByScrollRequestBuilder builder) {
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
+        MDC.put(RowsEvent.EID, eventId);
         logger.info("Update/Delete by query {}: update {} or delete {} documents",
             builder.request(), bulkByScrollResponse.getUpdated(),
             bulkByScrollResponse.getDeleted());
@@ -94,6 +97,7 @@ public class ElasticsearchChannel implements BufferedChannel {
 
       @Override
       public void onFailure(Exception e) {
+        MDC.put(RowsEvent.EID, eventId);
         logger.error("Fail to update/delete by query: {}", builder.request(), e);
       }
     });

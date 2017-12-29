@@ -23,9 +23,9 @@ import java.util.Set;
  */
 public class UpdateRowsEvent extends RowsEvent {
 
-  public UpdateRowsEvent(Event tableMap, UpdateRowsEventData updateRowsEventData,
+  public UpdateRowsEvent(String eventId, Event tableMap, UpdateRowsEventData updateRowsEventData,
       Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
-    super(tableMap, indexToName, primaryKeys);
+    super(eventId, tableMap, indexToName, primaryKeys);
     BitSet includedColumns = updateRowsEventData.getIncludedColumns();
     // TODO 17/10/10 may support different binlog row image, only 'full' now
     RowUpdateImageMapper mapper = new FullRowUpdateImageMapper(tableMap, indexToName, primaryKeys, includedColumns);

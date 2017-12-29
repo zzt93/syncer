@@ -6,8 +6,8 @@ import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.filter.FilterStarter;
 import com.github.zzt93.syncer.input.InputStarter;
 import com.github.zzt93.syncer.output.OutputStarter;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.LinkedBlockingDeque;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
@@ -35,8 +35,8 @@ public class SyncerApplication implements CommandLineRunner {
 
   @Override
   public void run(String... strings) throws Exception {
-    BlockingQueue<SyncData> inputFilter = new LinkedBlockingQueue<>();
-    BlockingQueue<SyncData> filterOutput = new LinkedBlockingQueue<>();
+    BlockingDeque<SyncData> inputFilter = new LinkedBlockingDeque<>();
+    BlockingDeque<SyncData> filterOutput = new LinkedBlockingDeque<>();
     InputStarter.getInstance(pipelineConfig.getInput(), syncerConfig.getInput(), inputFilter).start();
     FilterStarter.getInstance(pipelineConfig.getFilter(), syncerConfig.getFilter(), inputFilter, filterOutput).start();
     OutputStarter.getInstance(pipelineConfig.getOutput(), syncerConfig.getOutput(), filterOutput).start();
