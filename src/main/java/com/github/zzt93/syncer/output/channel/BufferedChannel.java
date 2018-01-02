@@ -16,4 +16,8 @@ public interface BufferedChannel extends OutputChannel {
 
   @ThreadSafe
   void flush();
+
+  @ThreadSafe
+  void flushIfReachSizeLimit();
+
 }

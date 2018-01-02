@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.output.channel.elastic.ElasticsearchChannel;
 
@@ -41,8 +42,8 @@ public class Elasticsearch implements OutputChannelConfig {
   @Override
   public OutputChannel toChannel() throws Exception {
     if (connection.valid()) {
-      return new ElasticsearchChannel(connection, requestMapping,  batch);
+      return new ElasticsearchChannel(connection, requestMapping, batch);
     }
-    throw new IllegalArgumentException();
+    throw new InvalidConfigException("Invalid connection configuration: " + connection);
   }
 }

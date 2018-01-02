@@ -11,6 +11,7 @@ public class PipelineOutput {
 
   private Elasticsearch elasticsearch;
   private Http http;
+  private MySQL mySQL;
 
   public Elasticsearch getElasticsearch() {
     return elasticsearch;
@@ -28,6 +29,15 @@ public class PipelineOutput {
     this.http = http;
   }
 
+  public MySQL getMySQL() {
+    return mySQL;
+  }
+
+  public PipelineOutput setMySQL(MySQL mySQL) {
+    this.mySQL = mySQL;
+    return this;
+  }
+
   public List<OutputChannel> toOutputChannels() throws Exception {
     List<OutputChannel> res = new ArrayList<>();
     if (elasticsearch != null) {
@@ -35,6 +45,9 @@ public class PipelineOutput {
     }
     if (http != null) {
       res.add(http.toChannel());
+    }
+    if (mySQL != null) {
+      res.add(mySQL.toChannel());
     }
     return res;
   }

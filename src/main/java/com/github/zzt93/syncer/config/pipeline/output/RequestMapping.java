@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.output.mapper.JsonMapper;
+import com.github.zzt93.syncer.output.mapper.KVMapper;
 import java.util.HashMap;
 
 /**
@@ -22,7 +22,7 @@ public class RequestMapping {
 
   public RequestMapping() {
     // default value of mapper
-    fieldsMapping.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
+    fieldsMapping.put(KVMapper.FAKE_KEY, KVMapper.ROW_FLATTEN);
   }
 
   public String getIndex() {
@@ -50,8 +50,8 @@ public class RequestMapping {
   }
 
   public HashMap<String, Object> getFieldsMapping() {
-    if (fieldsMapping.size() > 1 && fieldsMapping.containsKey(JsonMapper.FAKE_KEY)) {
-      fieldsMapping.remove(JsonMapper.FAKE_KEY);
+    if (fieldsMapping.size() > 1 && fieldsMapping.containsKey(KVMapper.FAKE_KEY)) {
+      fieldsMapping.remove(KVMapper.FAKE_KEY);
     }
     return fieldsMapping;
   }

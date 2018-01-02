@@ -6,7 +6,7 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
-import com.github.zzt93.syncer.output.mapper.JsonMapper;
+import com.github.zzt93.syncer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.output.mapper.Mapper;
 import java.util.Collections;
 import java.util.HashMap;
@@ -31,7 +31,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private final RequestMapping requestMapping;
   private final TransportClient client;
   private final SpelExpressionParser parser;
-  private final JsonMapper requestBodyMapper;
+  private final KVMapper requestBodyMapper;
 
   public ESRequestMapper(TransportClient client, RequestMapping requestMapping) {
     this.requestMapping = requestMapping;
@@ -43,7 +43,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     } else {
       esQueryMapper = null;
     }
-    requestBodyMapper = new JsonMapper(requestMapping.getFieldsMapping(), esQueryMapper);
+    requestBodyMapper = new KVMapper(requestMapping.getFieldsMapping(), esQueryMapper);
   }
 
   @ThreadSafe(safe = {SpelExpressionParser.class, RequestMapping.class, TransportClient.class})
@@ -79,7 +79,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
         return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
             .setRetryOnConflict(requestMapping.getRetryOnUpdateConflict());
     }
-    throw new IllegalArgumentException("Invalid row event type");
+    throw new IllegalArgumentException("Unsupported row event type: " + data);
   }
 
   private String eval(String expr, StandardEvaluationContext context) {
@@ -91,7 +91,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private Script getScript(SyncData data) {
     HashMap<String, Object> update = data.getRecords();
     StringBuilder code = new StringBuilder();
-    StandardEvaluationContext context = data.getContext();
+//    StandardEvaluationContext context = data.getContext();
     for (String col : update.keySet()) {
       String expr = update.get(col).toString();
       code.append("ctx._source.").append(col).append(" = \"").append(expr).append("\";");
@@ -102,7 +102,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private QueryBuilder getFilter(SyncData data) {
     BoolQueryBuilder builder = boolQuery();
     HashMap<String, Object> syncBy = data.getSyncBy();
-    StandardEvaluationContext context = data.getContext();
+//    StandardEvaluationContext context = data.getContext();
     for (String s : syncBy.keySet()) {
       String expr = syncBy.get(s).toString();
       builder.filter(termQuery(s, expr));

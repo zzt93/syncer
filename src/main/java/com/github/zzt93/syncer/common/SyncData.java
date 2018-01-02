@@ -281,4 +281,19 @@ public class SyncData {
     }
   }
 
+  @Override
+  public String toString() {
+    return "SyncData{" +
+        "eventId='" + eventId + '\'' +
+        ", type=" + type +
+        ", action='" + action + '\'' +
+        ", records=" + records +
+        ", extra=" + extra +
+        ", context=" + context +
+        ", schema='" + schema + '\'' +
+        ", table='" + table + '\'' +
+        ", id='" + id + '\'' +
+        ", syncByQuery=" + syncByQuery +
+        '}';
+  }
 }

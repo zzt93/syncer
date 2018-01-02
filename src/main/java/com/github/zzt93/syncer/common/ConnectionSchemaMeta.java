@@ -68,13 +68,12 @@ public class ConnectionSchemaMeta {
 
     private void build(SchemaMeta schemaMeta, Schema aim) throws SQLException {
       Connection connection = dataSource.getConnection();
-      // make it to get all databases
       if (aim.hasNamePattern()) {
+        // make it to get all databases
         ((JDBC4Connection) connection).setNullCatalogMeansCurrent(false);
       }
       try {
         DatabaseMetaData metaData = connection.getMetaData();
-        // TODO 17/12/29 test schemaPattern
         try (ResultSet tableResultSet = metaData
             .getTables(null, null, "%", new String[]{"TABLE"})) {
           while (!finished(schemaMeta, aim) && tableResultSet.next()) {

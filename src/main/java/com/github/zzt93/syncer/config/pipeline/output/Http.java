@@ -4,7 +4,7 @@ package com.github.zzt93.syncer.config.pipeline.output;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
 import com.github.zzt93.syncer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.output.channel.http.HttpChannel;
-import com.github.zzt93.syncer.output.mapper.JsonMapper;
+import com.github.zzt93.syncer.output.mapper.KVMapper;
 import java.util.Collections;
 import java.util.HashMap;
 
@@ -19,7 +19,7 @@ public class Http implements OutputChannelConfig {
 
   public Http() {
     // default value of json mapper
-    jsonMapping.put(JsonMapper.FAKE_KEY, JsonMapper.ROW_FLATTEN);
+    jsonMapping.put(KVMapper.FAKE_KEY, KVMapper.ROW_FLATTEN);
   }
 
   public HttpConnection getConnection() {
@@ -31,8 +31,8 @@ public class Http implements OutputChannelConfig {
   }
 
   public HashMap<String, Object> getJsonMapping() {
-    if (jsonMapping.size() > 1 && jsonMapping.containsKey(JsonMapper.FAKE_KEY)) {
-      jsonMapping.remove(JsonMapper.FAKE_KEY);
+    if (jsonMapping.size() > 1 && jsonMapping.containsKey(KVMapper.FAKE_KEY)) {
+      jsonMapping.remove(KVMapper.FAKE_KEY);
     }
     return jsonMapping;
   }

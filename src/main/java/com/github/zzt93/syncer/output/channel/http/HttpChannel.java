@@ -7,7 +7,7 @@ import static org.springframework.http.HttpMethod.PUT;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
 import com.github.zzt93.syncer.output.channel.OutputChannel;
-import com.github.zzt93.syncer.output.mapper.JsonMapper;
+import com.github.zzt93.syncer.output.mapper.KVMapper;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -28,12 +28,12 @@ public class HttpChannel implements OutputChannel {
   private final Logger logger = LoggerFactory.getLogger(HttpChannel.class);
   private final RestTemplate restTemplate;
   private final String connection;
-  private final JsonMapper mapper;
+  private final KVMapper mapper;
 
   public HttpChannel(HttpConnection connection, Map<String, Object> jsonMapper) {
     this.restTemplate = new RestTemplate();
     this.connection = connection.toConnectionUrl(null);
-    this.mapper = new JsonMapper(jsonMapper);
+    this.mapper = new KVMapper(jsonMapper);
   }
 
   /**

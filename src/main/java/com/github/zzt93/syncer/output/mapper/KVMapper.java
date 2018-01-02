@@ -12,24 +12,24 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 /**
  * @author zzt
  */
-public class JsonMapper implements Mapper<SyncData, HashMap<String, Object>> {
+public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
 
   public static final String ROW_ALL = "records.*";
   public static final String ROW_FLATTEN = "records.*.flatten";
   public static final String EXTRA_ALL = "extra.*";
   public static final String EXTRA_FLATTEN = "extra.*.flatten";
   public static final String FAKE_KEY = "any.Key";
-  private final Logger logger = LoggerFactory.getLogger(JsonMapper.class);
+  private final Logger logger = LoggerFactory.getLogger(KVMapper.class);
   private final SpelExpressionParser parser = new SpelExpressionParser();
   private final Map<String, Object> mapping;
   private final ESQueryMapper queryMapper;
 
-  public JsonMapper(Map<String, Object> mapping) {
+  public KVMapper(Map<String, Object> mapping) {
     this.mapping = mapping;
     queryMapper = null;
   }
 
-  public JsonMapper(HashMap<String, Object> mapping, ESQueryMapper esQueryMapper) {
+  public KVMapper(HashMap<String, Object> mapping, ESQueryMapper esQueryMapper) {
     this.mapping = mapping;
     this.queryMapper = esQueryMapper;
   }
