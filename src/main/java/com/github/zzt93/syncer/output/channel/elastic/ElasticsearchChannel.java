@@ -20,8 +20,11 @@ import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.delete.DeleteRequestBuilder;
+import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.index.IndexRequestBuilder;
+import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
@@ -50,6 +53,32 @@ public class ElasticsearchChannel implements BufferedChannel {
     this.batchBuffer = new BatchBuffer<>(batch, WriteRequestBuilder.class);
     this.batch = batch;
     this.esRequestMapper = new ESRequestMapper(client, requestMapping);
+  }
+
+  public static String toString(UpdateRequest request) {
+    String res = "update {[" + request.index() + "][" + request.type() + "][" + request.id() + "]";
+    if (request.docAsUpsert()) {
+      res += (", doc_as_upsert[" + request.docAsUpsert() + "]");
+    }
+    if (request.doc() != null) {
+      res += (", doc[" + request.doc() + "]");
+    }
+    if (request.script() != null) {
+      res += (", script[" + request.script() + "]");
+    }
+    if (request.upsertRequest() != null) {
+      res += (", upsert[" + request.upsertRequest() + "]");
+    }
+    if (request.scriptedUpsert()) {
+      res += (", scripted_upsert[" + request.scriptedUpsert() + "]");
+    }
+    if (request.detectNoop()) {
+      res += (", detect_noop[" + request.detectNoop() + "]");
+    }
+    if (request.fields() != null) {
+      res += (", fields[" + Arrays.toString(request.fields()) + "]");
+    }
+    return res + "}";
   }
 
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
@@ -120,21 +149,55 @@ public class ElasticsearchChannel implements BufferedChannel {
     return batch.getDelayTimeUnit();
   }
 
-
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
   public void flush() {
     WriteRequestBuilder[] aim = batchBuffer.flush();
     if (aim != null && aim.length != 0) {
-      buildRequest(aim);
+      try {
+        buildRequest(aim);
+      } catch (ElasticsearchBulkException e) {
+        retryFailedDoc(aim, e);
+      }
+    }
+  }
+
+  private void retryFailedDoc(WriteRequestBuilder[] aim, ElasticsearchBulkException e) {
+    Map<String, String> failedDocuments = e.getFailedDocuments();
+    for (WriteRequestBuilder builder : aim) {
+      WriteRequest request = builder.request();
+      if (request instanceof IndexRequest) {
+        String id = ((IndexRequest) request).id();
+        if (failedDocuments.containsKey(id)) {
+          logger.debug("Retry request: {}", request);
+          batchBuffer.add(builder);
+        }
+      } else if (request instanceof UpdateRequest) {
+        String id = ((UpdateRequest) request).id();
+        if (failedDocuments.containsKey(id)) {
+          logger.debug("Retry request: {}", toString((UpdateRequest) request));
+          batchBuffer.add(builder);
+        }
+      } else if (request instanceof DeleteRequest) {
+        String id = ((DeleteRequest) request).id();
+        if (failedDocuments.containsKey(id)) {
+          logger.debug("Retry request: {}", request);
+          batchBuffer.add(builder);
+        }
+      }
     }
   }
 
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
-  private void flushIfReachSizeLimit() {
+  @Override
+  public void flushIfReachSizeLimit() {
     WriteRequestBuilder[] aim = batchBuffer.flushIfReachSizeLimit();
     if (aim != null && aim.length != 0) {
-      buildRequest(aim);
+      try {
+        buildRequest(aim);
+      } catch (ElasticsearchBulkException e) {
+        retryFailedDoc(aim, e);
+      }
     }
   }
 
@@ -156,32 +219,6 @@ public class ElasticsearchChannel implements BufferedChannel {
     }
     logger.info("Sending a batch of Elasticsearch: {}", joiner);
     checkForBulkUpdateFailure(bulkRequest.execute().actionGet());
-  }
-
-  public static String toString(UpdateRequest request) {
-    String res = "update {[" + request.index() + "][" + request.type() + "][" + request.id() + "]";
-    if (request.docAsUpsert()) {
-      res += (", doc_as_upsert[" + request.docAsUpsert() + "]");
-    }
-    if (request.doc() != null) {
-      res += (", doc[" + request.doc() + "]");
-    }
-    if (request.script() != null) {
-      res += (", script[" + request.script() + "]");
-    }
-    if (request.upsertRequest() != null) {
-      res += (", upsert[" + request.upsertRequest() + "]");
-    }
-    if (request.scriptedUpsert()) {
-      res += (", scripted_upsert[" + request.scriptedUpsert() + "]");
-    }
-    if (request.detectNoop()) {
-      res += (", detect_noop[" + request.detectNoop() + "]");
-    }
-    if (request.fields() != null) {
-      res += (", fields[" + Arrays.toString(request.fields()) + "]");
-    }
-    return res + "}";
   }
 
   private void checkForBulkUpdateFailure(BulkResponse bulkResponse) {

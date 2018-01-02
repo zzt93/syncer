@@ -15,4 +15,8 @@ public class ElasticsearchBulkException extends RuntimeException {
     super(msg);
     this.failedDocuments = failedDocuments;
   }
+
+  public Map<String, String> getFailedDocuments() {
+    return failedDocuments;
+  }
 }
