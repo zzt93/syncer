@@ -39,12 +39,13 @@ public class JdbcMapper implements Mapper<SyncData, String> {
     String table = eval(rowMapping.getTable(), context);
     String id = eval(rowMapping.getId(), context);
     HashMap<String, Object> map = kvMapper.map(data);
+    logger.debug("Convert SyncData to {}", map);
     switch (data.getType()) {
       case WRITE_ROWS:
         data.addRecord("id", id);
-        String[] strings = join(map);
+        String[] entry = join(map);
         return ParameterReplace
-            .orderedParam(INSERT_INTO_VALUES, schema, table, strings[0], strings[1]);
+            .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1]);
       case DELETE_ROWS:
         return ParameterReplace.orderedParam(DELETE_FROM_WHERE_ID, schema, table, id);
       case UPDATE_ROWS:

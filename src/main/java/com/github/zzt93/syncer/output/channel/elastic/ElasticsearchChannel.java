@@ -170,19 +170,19 @@ public class ElasticsearchChannel implements BufferedChannel {
         String id = ((IndexRequest) request).id();
         if (failedDocuments.containsKey(id)) {
           logger.debug("Retry request: {}", request);
-          batchBuffer.add(builder);
+          batchBuffer.addFirst(builder);
         }
       } else if (request instanceof UpdateRequest) {
         String id = ((UpdateRequest) request).id();
         if (failedDocuments.containsKey(id)) {
           logger.debug("Retry request: {}", toString((UpdateRequest) request));
-          batchBuffer.add(builder);
+          batchBuffer.addFirst(builder);
         }
       } else if (request instanceof DeleteRequest) {
         String id = ((DeleteRequest) request).id();
         if (failedDocuments.containsKey(id)) {
           logger.debug("Retry request: {}", request);
-          batchBuffer.add(builder);
+          batchBuffer.addFirst(builder);
         }
       }
     }

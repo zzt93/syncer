@@ -29,6 +29,11 @@ public class BatchBuffer<T> {
     return true;
   }
 
+  public void addFirst(T data) {
+    deque.addFirst(data);
+    estimateSize.incrementAndGet();
+  }
+
   public boolean addAll(List<T> data) {
     boolean res = deque.addAll(data);
     estimateSize.addAndGet(data.size());

@@ -99,6 +99,7 @@ public class MySQLChannel implements BufferedChannel {
       try {
         jdbcTemplate.batchUpdate(sqls);
       } catch (DataAccessException e) {
+        // TODO 18/1/3 retry
         logger.error("{}", Arrays.toString(sqls), e);
       }
     }
@@ -112,6 +113,7 @@ public class MySQLChannel implements BufferedChannel {
       try {
         jdbcTemplate.batchUpdate(sqls);
       } catch (DataAccessException e) {
+        // TODO 18/1/3 retry
         logger.error("{}", Arrays.toString(sqls), e);
       }
     }
