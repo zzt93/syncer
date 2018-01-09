@@ -5,15 +5,10 @@ import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.Configuration;
 
 /**
  * @author zzt
  */
-//@PropertySource("classpath:syncer.properties") // not work with yml file!
-@Configuration
-@ConfigurationProperties
 public class PipelineConfig {
 
   private PipelineInput input;

@@ -2,9 +2,9 @@ package com.github.zzt93.syncer.config.pipeline.output;
 
 
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
-import com.github.zzt93.syncer.output.channel.OutputChannel;
-import com.github.zzt93.syncer.output.channel.http.HttpChannel;
-import com.github.zzt93.syncer.output.mapper.KVMapper;
+import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.consumer.output.channel.http.HttpChannel;
+import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import java.util.Collections;
 import java.util.HashMap;
 

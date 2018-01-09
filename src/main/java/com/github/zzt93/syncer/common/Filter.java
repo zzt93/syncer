@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.common;
 
 
-import com.github.zzt93.syncer.filter.FilterJob;
-import com.github.zzt93.syncer.input.connect.MasterConnector;
+import com.github.zzt93.syncer.consumer.filter.FilterJob;
+import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>

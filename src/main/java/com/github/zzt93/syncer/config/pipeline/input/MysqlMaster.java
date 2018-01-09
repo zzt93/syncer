@@ -24,9 +24,8 @@ public class MysqlMaster {
     return schemas;
   }
 
-  public MysqlMaster setSchemas(List<Schema> schemas) {
+  public void setSchemas(List<Schema> schemas) {
     this.schemas = schemas;
-    return this;
   }
 
   @Override

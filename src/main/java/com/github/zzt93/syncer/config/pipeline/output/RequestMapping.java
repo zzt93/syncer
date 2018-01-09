@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.output.mapper.KVMapper;
+import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import java.util.HashMap;
 
 /**
@@ -13,8 +13,8 @@ public class RequestMapping {
   private String type = "table";
   private String documentId = "id";
   private HashMap<String, Object> fieldsMapping = new HashMap<>();
-  private Boolean noUseIdForIndex = false;
-  private Boolean enableExtraQuery;
+  private boolean noUseIdForIndex = false;
+  private boolean enableExtraQuery = false;
   private int retryOnUpdateConflict = 0;
 
   // TODO 17/10/16 implement
@@ -60,15 +60,15 @@ public class RequestMapping {
     this.fieldsMapping = fieldsMapping;
   }
 
-  public Boolean getNoUseIdForIndex() {
+  public boolean getNoUseIdForIndex() {
     return noUseIdForIndex;
   }
 
-  public void setNoUseIdForIndex(Boolean noUseIdForIndex) {
+  public void setNoUseIdForIndex(boolean noUseIdForIndex) {
     this.noUseIdForIndex = noUseIdForIndex;
   }
 
-  public void setEnableExtraQuery(Boolean enableExtraQuery) {
+  public void setEnableExtraQuery(boolean enableExtraQuery) {
     this.enableExtraQuery = enableExtraQuery;
   }
 

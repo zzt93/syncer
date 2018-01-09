@@ -1,11 +1,11 @@
 package com.github.zzt93.syncer.config.pipeline.filter;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.filter.impl.Clone;
-import com.github.zzt93.syncer.filter.impl.Drop;
-import com.github.zzt93.syncer.filter.impl.Dup;
-import com.github.zzt93.syncer.filter.impl.IfBodyAction;
-import com.github.zzt93.syncer.filter.impl.Statement;
+import com.github.zzt93.syncer.consumer.filter.impl.Clone;
+import com.github.zzt93.syncer.consumer.filter.impl.Drop;
+import com.github.zzt93.syncer.consumer.filter.impl.Dup;
+import com.github.zzt93.syncer.consumer.filter.impl.IfBodyAction;
+import com.github.zzt93.syncer.consumer.filter.impl.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -88,7 +88,7 @@ public class IfConfig {
     }
   }
 
-  private static class IfStatement {
+  public static class IfStatement {
 
     private CloneConfig clone;
     private DupConfig dup;

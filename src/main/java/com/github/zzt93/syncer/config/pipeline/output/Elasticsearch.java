@@ -2,8 +2,8 @@ package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.output.channel.OutputChannel;
-import com.github.zzt93.syncer.output.channel.elastic.ElasticsearchChannel;
+import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 
 /**
  * @author zzt

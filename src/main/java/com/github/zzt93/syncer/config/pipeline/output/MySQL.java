@@ -2,8 +2,8 @@ package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
-import com.github.zzt93.syncer.output.channel.OutputChannel;
-import com.github.zzt93.syncer.output.channel.jdbc.MySQLChannel;
+import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.consumer.output.channel.jdbc.MySQLChannel;
 
 /**
  * @author zzt
@@ -18,28 +18,25 @@ public class MySQL implements OutputChannelConfig {
     return connection;
   }
 
-  public MySQL setConnection(
+  public void setConnection(
       MysqlConnection connection) {
     this.connection = connection;
-    return this;
   }
 
   public PipelineBatch getBatch() {
     return batch;
   }
 
-  public MySQL setBatch(PipelineBatch batch) {
+  public void setBatch(PipelineBatch batch) {
     this.batch = batch;
-    return this;
   }
 
   public RowMapping getRowMapping() {
     return rowMapping;
   }
 
-  public MySQL setRowMapping(RowMapping rowMapping) {
+  public void setRowMapping(RowMapping rowMapping) {
     this.rowMapping = rowMapping;
-    return this;
   }
 
   @Override

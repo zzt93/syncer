@@ -1,11 +1,15 @@
 package com.github.zzt93.syncer;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
+import com.github.zzt93.syncer.config.pipeline.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
-import com.github.zzt93.syncer.filter.FilterStarter;
-import com.github.zzt93.syncer.input.InputStarter;
-import com.github.zzt93.syncer.output.OutputStarter;
+import com.github.zzt93.syncer.consumer.filter.FilterStarter;
+import com.github.zzt93.syncer.consumer.output.OutputStarter;
+import com.github.zzt93.syncer.producer.ProducerStarter;
+import com.github.zzt93.syncer.producer.input.InputStarter;
+import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.LinkedBlockingDeque;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,9 +25,13 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 public class SyncerApplication implements CommandLineRunner {
 
   @Autowired
-  private PipelineConfig pipelineConfig;
+  private YamlEnvironmentPostProcessor yamlEnvProcessor;
+  @Autowired
+  private ProducerConfig producerConfig;
   @Autowired
   private SyncerConfig syncerConfig;
+  @Autowired
+  private ConsumerRegistry consumerRegistry;
 
   public static void main(String[] args) {
     SpringApplication application = new SpringApplication(SyncerApplication.class);
@@ -34,11 +42,14 @@ public class SyncerApplication implements CommandLineRunner {
 
   @Override
   public void run(String... strings) throws Exception {
-    BlockingDeque<SyncData> inputFilter = new LinkedBlockingDeque<>();
-    BlockingDeque<SyncData> filterOutput = new LinkedBlockingDeque<>();
-    InputStarter.getInstance(pipelineConfig.getInput(), syncerConfig.getInput(), inputFilter).start();
-    FilterStarter.getInstance(pipelineConfig.getFilter(), syncerConfig.getFilter(), inputFilter, filterOutput).start();
-    OutputStarter.getInstance(pipelineConfig.getOutput(), syncerConfig.getOutput(), filterOutput).start();
+    for (PipelineConfig pipelineConfig : yamlEnvProcessor.getConfigs()) {
+      BlockingDeque<SyncData> inputFilter = new LinkedBlockingDeque<>();
+      BlockingDeque<SyncData> filterOutput = new LinkedBlockingDeque<>();
+      new InputStarter(pipelineConfig.getInput(), syncerConfig.getInput(), inputFilter).start();
+      new FilterStarter(pipelineConfig.getFilter(), syncerConfig.getFilter(), inputFilter, filterOutput).start();
+      new OutputStarter(pipelineConfig.getOutput(), syncerConfig.getOutput(), filterOutput).start();
+    }
+    ProducerStarter.getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry).start();
   }
 
 }

@@ -17,35 +17,31 @@ public class RowMapping {
     return schema;
   }
 
-  public RowMapping setSchema(String schema) {
+  public void setSchema(String schema) {
     this.schema = schema;
-    return this;
   }
 
   public String getTable() {
     return table;
   }
 
-  public RowMapping setTable(String table) {
+  public void setTable(String table) {
     this.table = table;
-    return this;
   }
 
   public String getId() {
     return id;
   }
 
-  public RowMapping setId(String id) {
+  public void setId(String id) {
     this.id = id;
-    return this;
   }
 
   public HashMap<String, Object> getRows() {
     return rows;
   }
 
-  public RowMapping setRows(HashMap<String, Object> rows) {
+  public void setRows(HashMap<String, Object> rows) {
     this.rows = rows;
-    return this;
   }
 }
