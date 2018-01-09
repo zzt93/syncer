@@ -14,4 +14,5 @@ public class MysqlConnection extends Connection {
   public String toConnectionUrl() {
     return toConnectionUrl(DEFAULT_DB);
   }
+
 }

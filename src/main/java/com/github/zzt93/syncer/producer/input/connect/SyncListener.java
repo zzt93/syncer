@@ -6,12 +6,11 @@ import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.event.RowsEvent;
+import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.dispatch.InputEnd;
 import com.github.zzt93.syncer.producer.input.filter.InputFilter;
 import com.github.zzt93.syncer.producer.input.filter.InputPipeHead;
-import com.github.zzt93.syncer.producer.output.OutputSink;
 import java.util.List;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -25,20 +24,19 @@ public class SyncListener implements BinaryLogClient.EventListener {
   private final InputPipeHead start;
   private final InputEnd end;
   private final Logger logger = LoggerFactory.getLogger(SyncListener.class);
-  private final Set<OutputSink> sinks;
+  private final Dispatcher dispatcher;
   private Event last;
 
   public SyncListener(InputPipeHead inputPipeHead, List<InputFilter> filters, InputEnd inputEnd,
-      Set<OutputSink> outputSinks) {
+      Dispatcher dispatcher) {
     this.filters = filters;
     start = inputPipeHead;
     end = inputEnd;
-    sinks = outputSinks;
+    this.dispatcher = dispatcher;
   }
 
   @Override
   public void onEvent(Event event) {
-    logger.trace("Receive binlog event: {}", event.toString());
     EventType eventType = event.getHeader().getEventType();
     switch (eventType) {
       case TABLE_MAP:
@@ -60,14 +58,14 @@ public class SyncListener implements BinaryLogClient.EventListener {
           }
         }
         SyncData[] syncDatas = end.decide(aim);
-        for (SyncData syncData : syncDatas) {
-          if (!sinks(syncData)) {
-            logger.error("Fail to put data to 'filter' processor, space unavailable");
-          }
+        if (!dispatcher.dispatch(syncDatas)) {
+          logger.error("Fail to put data to 'filter' processor, space unavailable");
         }
         last = null;
+        MDC.remove(RowsEvent.EID);
         break;
+      default:
+        logger.trace("Receive binlog event: {}", event.toString());
     }
-    MDC.remove(RowsEvent.EID);
   }
 }

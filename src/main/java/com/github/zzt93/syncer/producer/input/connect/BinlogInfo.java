@@ -8,16 +8,16 @@ public class BinlogInfo implements Comparable<BinlogInfo> {
   private final String binlogFilename;
   private final long binlogPosition;
 
-  BinlogInfo(String binlogFilename, long binlogPosition) {
+  public BinlogInfo(String binlogFilename, long binlogPosition) {
     this.binlogFilename = binlogFilename;
     this.binlogPosition = binlogPosition;
   }
 
-  String getBinlogFilename() {
+  public String getBinlogFilename() {
     return binlogFilename;
   }
 
-  long getBinlogPosition() {
+  public long getBinlogPosition() {
     return binlogPosition;
   }
 

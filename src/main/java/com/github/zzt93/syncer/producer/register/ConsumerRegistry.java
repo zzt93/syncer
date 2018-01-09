@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.producer.register;
 
+import com.github.zzt93.syncer.config.pipeline.common.Connection;
+import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.OutputSink;
@@ -10,9 +12,10 @@ import java.util.Set;
  */
 public interface ConsumerRegistry {
 
-  boolean register(InputSource source);
+  boolean register(Connection connection,
+      InputSource source);
 
-  BinlogInfo votedBinlogInfo();
+  BinlogInfo votedBinlogInfo(Connection connection);
 
-  Set<OutputSink> output();
+  Set<OutputSink> outputSink(MysqlConnection connection);
 }

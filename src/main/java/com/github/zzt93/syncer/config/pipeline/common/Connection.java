@@ -1,6 +1,8 @@
 package com.github.zzt93.syncer.config.pipeline.common;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
+import com.github.zzt93.syncer.common.util.NetworkUtil;
+import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,6 +96,10 @@ public class Connection {
 
   public boolean valid() {
     return address != null && port > 0 && port < 65536;
+  }
+
+  public String connectionIdentifier() throws UnknownHostException {
+    return NetworkUtil.toIp(getAddress()) + ":" + getPort();
   }
 
   public String toConnectionUrl(String path) {

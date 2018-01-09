@@ -8,7 +8,7 @@ import java.util.List;
 /**
  * @author zzt
  */
-public interface InputSource extends Comparable<InputSource> {
+public interface InputSource extends Hashable {
 
   /**
    * register input and output

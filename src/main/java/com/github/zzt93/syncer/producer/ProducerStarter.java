@@ -6,9 +6,8 @@ import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
-import com.github.zzt93.syncer.producer.input.InputStarter;
+import com.github.zzt93.syncer.consumer.input.InputStarter;
 import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
-import com.github.zzt93.syncer.producer.input.connect.PositionHook;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.util.Set;
@@ -49,7 +48,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MysqlMaster>>
   public void start() throws IOException {
     logger.info("Start connecting to input source {}", mysqlMasters);
     if (mysqlMasters.size() > 1) {
-      logger.warn("Connect to multiple masters, may affect performance");
+      logger.warn("Connect to multiple masters, not suggested usage");
     }
     for (MysqlMaster mysqlMaster : mysqlMasters) {
       if (mysqlMaster.getSchemas().isEmpty()) {
@@ -59,9 +58,6 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MysqlMaster>>
       try {
         MasterConnector masterConnector = new MasterConnector(mysqlMaster.getConnection(),
             mysqlMaster.getSchemas(), consumerRegistry);
-        // final field in master connector is thread safe: it is fixed before thread start
-        Runtime.getRuntime().addShutdownHook(
-            new Thread(new PositionHook(masterConnector)));
         service.submit(masterConnector);
       } catch (IOException | SchemaUnavailableException e) {
         logger.error("Fail to connect to mysql endpoint: {}", mysqlMaster, e);

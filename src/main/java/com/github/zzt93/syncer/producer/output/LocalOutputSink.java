@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.producer.output;
 
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.consumer.InputSource;
+import java.util.List;
 
 /**
  * @author zzt
@@ -25,8 +26,8 @@ public class LocalOutputSink implements OutputSink {
   }
 
   @Override
-  public String clientId() {
-    return inputSource.clientId();
+  public List<String> accept() {
+    return null;
   }
 
 }

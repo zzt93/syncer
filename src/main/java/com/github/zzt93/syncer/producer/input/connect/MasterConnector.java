@@ -3,20 +3,20 @@ package com.github.zzt93.syncer.producer.input.connect;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.ConnectionSchemaMeta;
-import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NetworkUtil;
 import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.dispatch.InputEnd;
 import com.github.zzt93.syncer.producer.dispatch.RowFilter;
 import com.github.zzt93.syncer.producer.input.filter.InputFilter;
 import com.github.zzt93.syncer.producer.input.filter.InputPipeHead;
+import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.collect.Lists;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
@@ -59,7 +59,7 @@ public class MasterConnector implements Runnable {
     client.setEventDeserializer(SyncDeserializer.defaultDeserialzer());
     client.setServerId(random.nextInt(Integer.MAX_VALUE));
     client.setSSLMode(SSLMode.DISABLED);
-    BinlogInfo binlogInfo = registry.votedBinlogInfo();
+    BinlogInfo binlogInfo = registry.votedBinlogInfo(connection);
     if (!binlogInfo.isEmpty()) {
       client.setBinlogFilename(binlogInfo.getBinlogFilename());
       client.setBinlogPosition(binlogInfo.getBinlogPosition());
@@ -82,23 +82,12 @@ public class MasterConnector implements Runnable {
       throw new SchemaUnavailableException(e);
     }
     SyncListener eventListener = new SyncListener(new InputPipeHead(connectionSchemaMeta), filters,
-        new InputEnd(), registry.output());
+        new InputEnd(), new Dispatcher(registry.outputSink(connection)));
     client.registerEventListener(eventListener);
+    // TODO 18/1/9 remove
     client.registerEventListener((event) -> binlogInfo
         .set(new BinlogInfo(client.getBinlogFilename(), client.getBinlogPosition())));
   }
-
-  @ThreadSafe(des = "final field is thread safe: it is fixed before hook thread start")
-  Path connectorMetaPath() {
-    return connectorMetaPath;
-  }
-
-  @ThreadSafe(sharedBy = {"syncer-input: connect()", "shutdown hook"})
-  List<String> connectorMeta() {
-    BinlogInfo binlogInfo = this.binlogInfo.get();
-    return Lists.newArrayList(binlogInfo.getBinlogFilename(), "" + binlogInfo.getBinlogPosition());
-  }
-
 
   @Override
   public void run() {

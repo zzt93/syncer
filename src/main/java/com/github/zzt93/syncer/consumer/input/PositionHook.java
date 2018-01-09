@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.input.connect;
+package com.github.zzt93.syncer.consumer.input;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -13,18 +13,18 @@ import org.slf4j.LoggerFactory;
  */
 public class PositionHook implements Runnable {
 
-  private final MasterConnector masterConnector;
   private final Path lastRunMetaPath;
   private Logger logger = LoggerFactory.getLogger(PositionHook.class);
+  private final Ack ack;
 
-  public PositionHook(MasterConnector masterConnector) {
-    this.masterConnector = masterConnector;
-    lastRunMetaPath = masterConnector.connectorMetaPath();
+  public PositionHook(Registrant registrant, Ack ack) {
+    lastRunMetaPath = registrant.connectorMetaPath();
+    this.ack = ack;
   }
 
   @Override
   public void run() {
-    List<String> lines = masterConnector.connectorMeta();
+    List<String> lines = ack.connectorMeta();
     if (lines.get(0) == null) {
       logger.info("master connector not connected to any binlog file, no info recorded");
       return;
