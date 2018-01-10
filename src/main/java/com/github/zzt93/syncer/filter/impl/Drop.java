@@ -7,11 +7,16 @@ import java.util.List;
 /**
  * @author zzt
  */
-public class Drop implements ExprFilter {
+public class Drop implements ExprFilter, IfBodyAction {
 
   @Override
   public Void decide(List<SyncData> e) {
     e.clear();
     return null;
+  }
+
+  @Override
+  public Object execute(SyncData data) {
+    return FilterRes.DENY;
   }
 }

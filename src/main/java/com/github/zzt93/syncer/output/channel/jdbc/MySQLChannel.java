@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.output.RowMapping;
 import com.github.zzt93.syncer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.output.channel.BufferedChannel;
 import com.mysql.jdbc.Driver;
+import java.sql.BatchUpdateException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -34,7 +35,7 @@ public class MySQLChannel implements BufferedChannel {
       PipelineBatch batch) {
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
     batchBuffer = new BatchBuffer<>(batch, String.class);
-    jdbcMapper = new JdbcMapper(rowMapping);
+    jdbcMapper = new JdbcMapper(rowMapping, jdbcTemplate);
     this.batch = batch;
   }
 
@@ -99,7 +100,11 @@ public class MySQLChannel implements BufferedChannel {
       try {
         jdbcTemplate.batchUpdate(sqls);
       } catch (DataAccessException e) {
-        // TODO 18/1/3 retry
+        Throwable cause = e.getCause();
+        if (cause instanceof BatchUpdateException) {
+          BatchUpdateException batch = (BatchUpdateException) cause;
+          // TODO 18/1/10 retry
+        }
         logger.error("{}", Arrays.toString(sqls), e);
       }
     }

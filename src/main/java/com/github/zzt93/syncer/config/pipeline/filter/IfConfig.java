@@ -1,7 +1,11 @@
 package com.github.zzt93.syncer.config.pipeline.filter;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.filter.impl.Clone;
+import com.github.zzt93.syncer.filter.impl.Drop;
+import com.github.zzt93.syncer.filter.impl.Dup;
 import com.github.zzt93.syncer.filter.impl.IfBodyAction;
+import com.github.zzt93.syncer.filter.impl.Statement;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -51,11 +55,17 @@ public class IfConfig {
     List<IfBodyAction> res = new ArrayList<>();
     for (IfStatement statement : body) {
       if (statement.getClone() != null) {
-        res.add(new IfBodyAction(parser, statement.getClone()));
+        try {
+          res.add(new Clone(parser, statement.getClone()));
+        } catch (NoSuchFieldException e) {
+          throw new InvalidConfigException("Unknown field of `SyncData` to clone", e);
+        }
       } else if (statement.getDrop() != null) {
-        res.add(new IfBodyAction(statement.getDrop()));
+        res.add(new Drop());
       } else if (statement.getStatement() != null) {
-        res.add(new IfBodyAction(parser, statement.getStatement()));
+        res.add(new Statement(parser, statement.getStatement()));
+      } else if (statement.getDup() != null) {
+        res.add(new Dup(parser, statement.getDup()));
       }
     }
     return res;
@@ -81,6 +91,7 @@ public class IfConfig {
   private static class IfStatement {
 
     private CloneConfig clone;
+    private DupConfig dup;
     private List<String> statement;
     private Map drop;
 
@@ -106,6 +117,14 @@ public class IfConfig {
 
     public void setDrop(Map drop) {
       this.drop = drop;
+    }
+
+    public DupConfig getDup() {
+      return dup;
+    }
+
+    public void setDup(DupConfig dup) {
+      this.dup = dup;
     }
   }
 

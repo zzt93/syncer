@@ -10,7 +10,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 /**
  * @author zzt
  */
-public class Statement implements ExprFilter {
+public class Statement implements ExprFilter, IfBodyAction {
 
   private final SpelExpressionParser parser;
   private final FilterActions filterActions;
@@ -28,5 +28,11 @@ public class Statement implements ExprFilter {
       filterActions.execute(parser, context);
     }
     return null;
+  }
+
+  @Override
+  public Object execute(SyncData data) {
+    filterActions.execute(parser, data.getContext());
+    return FilterRes.ACCEPT;
   }
 }

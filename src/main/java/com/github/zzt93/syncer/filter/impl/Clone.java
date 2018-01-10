@@ -10,7 +10,7 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 /**
  * @author zzt
  */
-public class Clone implements ExprFilter {
+public class Clone implements ExprFilter, IfBodyAction {
 
   private final FilterActions newObjAction;
   private final FilterActions oldObjAction;
@@ -29,17 +29,26 @@ public class Clone implements ExprFilter {
   public Void decide(List<SyncData> dataList) {
     LinkedList<SyncData> list = new LinkedList<>();
     for (SyncData src : dataList) {
-      SyncData clone = new SyncData(src.getEventId());
-      for (String s : copyValue) {
-        Object value = parser.parseExpression(s).getValue(src.getContext());
-        parser.parseExpression(s).setValue(clone.getContext(), value);
-      }
-      newObjAction.execute(parser, clone.getContext());
-      oldObjAction.execute(parser, src.getContext());
+      SyncData clone = clone(src);
       list.add(clone);
     }
     dataList.addAll(list);
     return null;
   }
 
+  private SyncData clone(SyncData src) {
+    SyncData clone = new SyncData(src.getEventId());
+    for (String s : copyValue) {
+      Object value = parser.parseExpression(s).getValue(src.getContext());
+      parser.parseExpression(s).setValue(clone.getContext(), value);
+    }
+    newObjAction.execute(parser, clone.getContext());
+    oldObjAction.execute(parser, src.getContext());
+    return clone;
+  }
+
+  @Override
+  public Object execute(SyncData data) {
+    return clone(data);
+  }
 }

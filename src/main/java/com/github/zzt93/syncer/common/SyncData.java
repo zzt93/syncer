@@ -2,8 +2,6 @@ package com.github.zzt93.syncer.common;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
-import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import java.util.Arrays;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -103,11 +101,12 @@ public class SyncData {
     extra.put(key, value);
   }
 
-  public void addRecord(String key, Object value) {
+  public SyncData addRecord(String key, Object value) {
     if (value == null) {
       logger.warn("Adding column({}) with null, discarded", key);
     }
     records.put(key, value);
+    return this;
   }
 
   public void renameRecord(String oldKey, String newKey) {
@@ -170,6 +169,8 @@ public class SyncData {
     return syncByQuery.isSyncWithoutId();
   }
 
+  /*--------------------*/
+
   /**
    * update/delete by query
    */
@@ -177,108 +178,8 @@ public class SyncData {
     return syncByQuery;
   }
 
-  public ExtraQueryES extraQuery(String indexName, String typeName) {
-    return new ExtraQueryES(this).setIndexName(indexName).setTypeName(typeName);
-  }
-
-  /**
-   * ----------- update/delete by query -----------
-   */
-  static class SyncByQueryES {
-
-    private static final Logger logger = LoggerFactory.getLogger(SyncByQueryES.class);
-
-    private final HashMap<String, Object> syncBy = new HashMap<>();
-
-    public SyncByQueryES filter(String syncWithCol, Object value) {
-      syncBy.put(syncWithCol, value);
-      return this;
-    }
-
-    boolean isSyncWithoutId() {
-      return !syncBy.isEmpty();
-    }
-
-    HashMap<String, Object> getSyncBy() {
-      return syncBy;
-    }
-
-  }
-
-  /**
-   * ----------- add separated query before index ------------
-   */
-  public static class ExtraQueryES {
-
-    private static final Logger logger = LoggerFactory.getLogger(ExtraQueryES.class);
-    private final HashMap<String, Object> queryBy = new HashMap<>();
-    private final SyncData data;
-    private String queryId;
-    private String indexName;
-    private String typeName;
-    private String[] target;
-    private String[] cols;
-
-    private ExtraQueryES(SyncData data) {
-      this.data = data;
-    }
-
-    public String getTypeName() {
-      return typeName;
-    }
-
-    ExtraQueryES setTypeName(String typeName) {
-      this.typeName = typeName;
-      return this;
-    }
-
-    public ExtraQueryES filter(String field, Object value) {
-      queryBy.put(field, value);
-      return this;
-    }
-
-    public ExtraQueryES select(String... field) {
-      target = field;
-      return this;
-    }
-
-    public ExtraQueryES addRecord(String... cols) {
-      if (cols.length != target.length) {
-        throw new InvalidConfigException("Column length is not same as query select result");
-      }
-      this.cols = cols;
-      for (String col : cols) {
-        data.getRecords().put(col, this);
-      }
-      return this;
-    }
-
-    public String getIndexName() {
-      return indexName;
-    }
-
-    ExtraQueryES setIndexName(String indexName) {
-      this.indexName = indexName;
-      return this;
-    }
-
-    public HashMap<String, Object> getQueryBy() {
-      return queryBy;
-    }
-
-    public String[] getTarget() {
-      return target;
-    }
-
-    public String getCol(int i) {
-      return cols[i];
-    }
-
-    @Override
-    public String toString() {
-      return "ExtraQueryES{select " + Arrays.toString(target) + " as " + Arrays.toString(cols)
-          + " from " + indexName + "." + typeName + " where " + queryBy +"}";
-    }
+  public ExtraQuery extraQuery(String indexName, String typeName) {
+    return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
   }
 
   @Override

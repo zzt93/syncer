@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.output.mapper;
 
+import com.github.zzt93.syncer.common.ExtraQuery;
 import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.common.SyncData.ExtraQueryES;
-import com.github.zzt93.syncer.output.channel.elastic.ESQueryMapper;
+import com.github.zzt93.syncer.output.channel.ExtraQueryMapper;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -22,16 +22,16 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
   private final Logger logger = LoggerFactory.getLogger(KVMapper.class);
   private final SpelExpressionParser parser = new SpelExpressionParser();
   private final Map<String, Object> mapping;
-  private final ESQueryMapper queryMapper;
+  private final ExtraQueryMapper queryMapper;
 
   public KVMapper(Map<String, Object> mapping) {
     this.mapping = mapping;
     queryMapper = null;
   }
 
-  public KVMapper(HashMap<String, Object> mapping, ESQueryMapper esQueryMapper) {
+  public KVMapper(HashMap<String, Object> mapping, ExtraQueryMapper extraQueryMapper) {
     this.mapping = mapping;
-    this.queryMapper = esQueryMapper;
+    this.queryMapper = extraQueryMapper;
   }
 
   public HashMap<String, Object> map(SyncData data) {
@@ -74,10 +74,10 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
             }
             break;
         }
-      } else if (value instanceof ExtraQueryES) {
+      } else if (value instanceof ExtraQuery) {
         if (queryMapper != null) {
           if (!queryResult.containsKey(key)) {
-            queryResult.putAll(queryMapper.map((ExtraQueryES) value));
+            queryResult.putAll(queryMapper.map((ExtraQuery) value));
           }
           if(!queryResult.containsKey(key)) {
             logger.warn("Fail to query record {} by {}", key, value);

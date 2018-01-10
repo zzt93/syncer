@@ -12,6 +12,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @author zzt
@@ -19,17 +20,17 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class JdbcMapper implements Mapper<SyncData, String> {
 
   private static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3)";
-  private static final String DELETE_FROM_WHERE_ID = "delete from `?0`.`?1` where id = `?2`";
-  private static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = `?2`";
+  private static final String DELETE_FROM_WHERE_ID = "delete from `?0`.`?1` where id = ?2";
+  private static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = ?2";
   private final Logger logger = LoggerFactory.getLogger(JdbcMapper.class);
   private final KVMapper kvMapper;
   private final RowMapping rowMapping;
   private final SpelExpressionParser parser;
 
-  public JdbcMapper(RowMapping rowMapping) {
+  public JdbcMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
     this.rowMapping = rowMapping;
     parser = new SpelExpressionParser();
-    kvMapper = new KVMapper(rowMapping.getRows());
+    kvMapper = new KVMapper(rowMapping.getRows(), new JDBCQueryMapper(jdbcTemplate));
   }
 
   @Override

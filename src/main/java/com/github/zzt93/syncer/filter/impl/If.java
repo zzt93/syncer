@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.common.Filter;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.filter.IfConfig;
 import com.github.zzt93.syncer.filter.ExprFilter;
+import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
@@ -53,6 +54,8 @@ public class If implements ExprFilter {
           }
         } else if (res instanceof SyncData) { // Clone SyncData
           list.add((SyncData) res);
+        } else if (res instanceof List) {
+          list.addAll((Collection<? extends SyncData>) res);
         }
       }
     }

@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.output.channel.elastic;
 
-import com.github.zzt93.syncer.common.SyncData.ExtraQueryES;
-import com.github.zzt93.syncer.output.mapper.Mapper;
+import com.github.zzt93.syncer.common.ExtraQuery;
+import com.github.zzt93.syncer.output.channel.ExtraQueryMapper;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
@@ -19,7 +19,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class ESQueryMapper implements Mapper<ExtraQueryES, Map<String, Object>> {
+public class ESQueryMapper implements ExtraQueryMapper {
 
   private final TransportClient client;
   private final Logger logger = LoggerFactory.getLogger(ESQueryMapper.class);
@@ -29,26 +29,26 @@ public class ESQueryMapper implements Mapper<ExtraQueryES, Map<String, Object>> 
   }
 
   @Override
-  public Map<String, Object> map(ExtraQueryES extraQueryES) {
-    String[] target = extraQueryES.getTarget();
-    SearchResponse response = client.prepareSearch(extraQueryES.getIndexName())
-        .setTypes(extraQueryES.getTypeName())
+  public Map<String, Object> map(ExtraQuery extraQuery) {
+    String[] target = extraQuery.getTarget();
+    SearchResponse response = client.prepareSearch(extraQuery.getIndexName())
+        .setTypes(extraQuery.getTypeName())
         .setSearchType(SearchType.DEFAULT)
         .setFetchSource(target, null)
-        .setQuery(getFilter(extraQueryES.getQueryBy()))
+        .setQuery(getFilter(extraQuery.getQueryBy()))
         .execute()
         .actionGet();
     SearchHits hits = response.getHits();
     if (hits.totalHits > 1) {
       logger.warn("Multiple query results exists, only use the first");
     } else if (hits.totalHits == 0) {
-      logger.warn("Fail to find any match by " + extraQueryES);
+      logger.warn("Fail to find any match by " + extraQuery);
       return Collections.emptyMap();
     }
     SearchHit hit = hits.getAt(0);
     Map<String, Object> res = new HashMap<>();
     for (int i = 0; i < target.length; i++) {
-      res.put(extraQueryES.getCol(i), hit.getSource().get(target[i]));
+      res.put(extraQuery.getCol(i), hit.getSource().get(target[i]));
     }
     return res;
   }
