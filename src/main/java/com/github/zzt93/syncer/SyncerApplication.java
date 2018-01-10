@@ -45,7 +45,7 @@ public class SyncerApplication implements CommandLineRunner {
     for (PipelineConfig pipelineConfig : yamlEnvProcessor.getConfigs()) {
       BlockingDeque<SyncData> inputFilter = new LinkedBlockingDeque<>();
       BlockingDeque<SyncData> filterOutput = new LinkedBlockingDeque<>();
-      new InputStarter(pipelineConfig.getInput(), syncerConfig.getInput()).start();
+      new InputStarter(pipelineConfig.getInput(), syncerConfig.getInput(), consumerRegistry).start();
       new FilterStarter(pipelineConfig.getFilter(), syncerConfig.getFilter(), inputFilter, filterOutput).start();
       new OutputStarter(pipelineConfig.getOutput(), syncerConfig.getOutput(), filterOutput).start();
     }

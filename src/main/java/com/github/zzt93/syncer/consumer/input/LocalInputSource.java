@@ -19,15 +19,23 @@ public class LocalInputSource implements InputSource {
 
   private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
 
-  private ConsumerRegistry consumerRegistry;
+  private final ConsumerRegistry consumerRegistry;
 
-  private List<Schema> schemas;
-  private MysqlConnection connection;
-  private BinlogInfo binlogInfo;
-  private String clientId;
+  private final List<Schema> schemas;
+  private final MysqlConnection connection;
+  private final BinlogInfo binlogInfo;
+  private final String clientId;
 
-  public LocalInputSource(List<Schema> schemas) throws IOException {
+  public LocalInputSource(
+      ConsumerRegistry consumerRegistry,
+      List<Schema> schemas,
+      MysqlConnection connection,
+      BinlogInfo binlogInfo, String clientId) throws IOException {
+    this.consumerRegistry = consumerRegistry;
     this.schemas = schemas;
+    this.connection = connection;
+    this.binlogInfo = binlogInfo;
+    this.clientId = clientId;
   }
 
   @Override
@@ -47,7 +55,7 @@ public class LocalInputSource implements InputSource {
 
   @Override
   public String clientId() {
-    return null;
+    return clientId;
   }
 
   @Override

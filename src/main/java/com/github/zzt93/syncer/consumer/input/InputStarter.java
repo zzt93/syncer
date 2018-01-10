@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
+import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
@@ -23,15 +24,17 @@ public class InputStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
   private Registrant registrant;
   private Ack ack;
 
-  public InputStarter(PipelineInput pipelineInputConfig, SyncerInput input)
+  public InputStarter(PipelineInput pipelineInput, SyncerInput input,
+      ConsumerRegistry consumerRegistry)
       throws IOException {
-    mysqlMasters = fromPipelineConfig(pipelineInputConfig);
+    mysqlMasters = fromPipelineConfig(pipelineInput);
     service = Executors
         .newFixedThreadPool(input.getWorker(), new NamedThreadFactory("syncer-input"));
 
-    for (MysqlMaster mysqlMaster : pipelineInputConfig.getMysqlMasterSet()) {
+    int i = 0;
+    for (MysqlMaster mysqlMaster : pipelineInput.getMysqlMasterSet()) {
       String identifier = mysqlMaster.getConnection().connectionIdentifier();
-      registrant = new Registrant(input.getMysqlMasters(), identifier);
+      registrant = new Registrant(consumerRegistry, input.getMysqlMasters(), identifier, mysqlMaster, "" + i++);
       ack = new Ack();
     }
 

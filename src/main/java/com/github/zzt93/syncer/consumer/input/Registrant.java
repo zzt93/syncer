@@ -1,8 +1,10 @@
 package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.common.ThreadSafe;
+import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.syncer.SyncerMysql;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
+import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -21,7 +23,9 @@ public class Registrant implements Callable<Boolean> {
   private static final Logger logger = LoggerFactory.getLogger(Registrant.class);
   private final Path connectorMetaPath;
 
-  public Registrant(SyncerMysql syncerMysql, String identifier) throws IOException {
+  public Registrant(ConsumerRegistry consumerRegistry,
+      SyncerMysql syncerMysql, String identifier,
+      MysqlMaster mysqlMaster, String clientId) throws IOException {
     connectorMetaPath = Paths
         .get(syncerMysql.getLastRunMetadataDir(), identifier, "");
     if (!Files.exists(connectorMetaPath)) {
@@ -30,8 +34,12 @@ public class Registrant implements Callable<Boolean> {
       List<String> lines = Files.readAllLines(connectorMetaPath, StandardCharsets.UTF_8);
       if (lines.size() == 2) {
         BinlogInfo binlogInfo = new BinlogInfo(lines.get(0), Long.parseLong(lines.get(1)));
+        LocalInputSource inputSource = new LocalInputSource(consumerRegistry,
+            mysqlMaster.getSchemas(),
+            mysqlMaster.getConnection(), binlogInfo, clientId);
       }
     }
+//    consumerRegistry.register()
   }
 
   @ThreadSafe(des = "final field is thread safe: it is fixed before hook thread start")

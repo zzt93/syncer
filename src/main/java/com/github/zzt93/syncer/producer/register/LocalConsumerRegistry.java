@@ -19,9 +19,9 @@ import org.springframework.stereotype.Component;
  * @author zzt
  */
 @Component
-public class ConsumerRegistryImpl implements ConsumerRegistry {
+public class LocalConsumerRegistry implements ConsumerRegistry {
 
-  private Logger logger = LoggerFactory.getLogger(ConsumerRegistryImpl.class);
+  private Logger logger = LoggerFactory.getLogger(LocalConsumerRegistry.class);
 
   private ConcurrentHashMap<Connection, BinlogInfo> olderBinlog = new ConcurrentHashMap<>();
   private ConcurrentHashMap<Connection, Boolean> voted = new ConcurrentHashMap<>();
