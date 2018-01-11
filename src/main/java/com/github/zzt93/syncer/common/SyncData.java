@@ -33,6 +33,7 @@ public class SyncData {
   private String id;
 
   private SyncByQueryES syncByQuery = new SyncByQueryES();
+  private boolean hasExtra = false;
 
 
   public SyncData(String eventId, TableMapEventData tableMap, String primaryKey,
@@ -179,7 +180,15 @@ public class SyncData {
   }
 
   public ExtraQuery extraQuery(String indexName, String typeName) {
+    if (hasExtra) {
+      logger.warn("Multiple extraQuery, not support");
+    }
+    hasExtra = true;
     return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
+  }
+
+  public boolean hasExtra() {
+    return hasExtra;
   }
 
   @Override

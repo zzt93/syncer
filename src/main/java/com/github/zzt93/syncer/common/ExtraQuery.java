@@ -7,7 +7,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ----------- add separated query before index ------------
+ * ----------- add separated query before index/insert ------------
  */
 public class ExtraQuery {
 
@@ -17,8 +17,8 @@ public class ExtraQuery {
   private String queryId;
   private String indexName;
   private String typeName;
-  private String[] target;
-  private String[] cols;
+  private String[] select;
+  private String[] as;
 
   ExtraQuery(SyncData data) {
     this.data = data;
@@ -39,15 +39,15 @@ public class ExtraQuery {
   }
 
   public ExtraQuery select(String... field) {
-    target = field;
+    select = field;
     return this;
   }
 
   public ExtraQuery addRecord(String... cols) {
-    if (cols.length != target.length) {
+    if (cols.length != select.length) {
       throw new InvalidConfigException("Column length is not same as query select result");
     }
-    this.cols = cols;
+    this.as = cols;
     for (String col : cols) {
       data.getRecords().put(col, this);
     }
@@ -67,17 +67,17 @@ public class ExtraQuery {
     return queryBy;
   }
 
-  public String[] getTarget() {
-    return target;
+  public String[] getSelect() {
+    return select;
   }
 
-  public String getCol(int i) {
-    return cols[i];
+  public String getAs(int i) {
+    return as[i];
   }
 
   @Override
   public String toString() {
-    return "ExtraQuery{select " + Arrays.toString(target) + " as " + Arrays.toString(cols)
+    return "ExtraQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
         + " from " + indexName + "." + typeName + " where " + queryBy +"}";
   }
 }

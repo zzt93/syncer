@@ -30,11 +30,11 @@ public class ESQueryMapper implements ExtraQueryMapper {
 
   @Override
   public Map<String, Object> map(ExtraQuery extraQuery) {
-    String[] target = extraQuery.getTarget();
+    String[] select = extraQuery.getSelect();
     SearchResponse response = client.prepareSearch(extraQuery.getIndexName())
         .setTypes(extraQuery.getTypeName())
         .setSearchType(SearchType.DEFAULT)
-        .setFetchSource(target, null)
+        .setFetchSource(select, null)
         .setQuery(getFilter(extraQuery.getQueryBy()))
         .execute()
         .actionGet();
@@ -47,8 +47,8 @@ public class ESQueryMapper implements ExtraQueryMapper {
     }
     SearchHit hit = hits.getAt(0);
     Map<String, Object> res = new HashMap<>();
-    for (int i = 0; i < target.length; i++) {
-      res.put(extraQuery.getCol(i), hit.getSource().get(target[i]));
+    for (int i = 0; i < select.length; i++) {
+      res.put(extraQuery.getAs(i), hit.getSource().get(select[i]));
     }
     return res;
   }

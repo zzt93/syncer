@@ -15,20 +15,21 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /**
  * @author zzt
  */
-public class JDBCQueryMapper implements ExtraQueryMapper {
+@Deprecated
+public class JdbcExtraQueryMapper implements ExtraQueryMapper {
 
   private static final String SELECT_3_FROM_0_1_WHERE_ID_2 = "select ?3 from `?0`.`?1` where ?2";
-  private final Logger logger = LoggerFactory.getLogger(JDBCQueryMapper.class);
+  private final Logger logger = LoggerFactory.getLogger(JdbcExtraQueryMapper.class);
   private final JdbcTemplate template;
 
-  public JDBCQueryMapper(JdbcTemplate jdbcTemplate) {
+  public JdbcExtraQueryMapper(JdbcTemplate jdbcTemplate) {
     template = jdbcTemplate;
   }
 
   @Override
   public Map<String, Object> map(ExtraQuery extraQuery) {
-    String[] target = extraQuery.getTarget();
-    String select = Arrays.toString(extraQuery.getTarget());
+    String[] target = extraQuery.getSelect();
+    String select = Arrays.toString(extraQuery.getSelect());
     String sql = ParameterReplace.orderedParam(SELECT_3_FROM_0_1_WHERE_ID_2,
         extraQuery.getIndexName(), extraQuery.getTypeName(), extraQuery.getQueryBy().toString(),
         select);
@@ -42,7 +43,7 @@ public class JDBCQueryMapper implements ExtraQueryMapper {
     Map<String, Object> hit = maps.get(0);
     Map<String, Object> res = new HashMap<>();
     for (int i = 0; i < target.length; i++) {
-      res.put(extraQuery.getCol(i), hit.get(target[i]));
+      res.put(extraQuery.getAs(i), hit.get(target[i]));
     }
     return res;
   }
