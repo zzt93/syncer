@@ -33,6 +33,7 @@ public class Dup implements ExprFilter, IfBodyAction {
         parser.parseExpression(s).setValue(clone.getContext(), value);
       }
       filterActions.execute(parser, clone.getContext());
+      res.add(clone);
     }
     return res;
   }

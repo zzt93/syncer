@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.output.mapper.KVMapper;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
+import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -17,8 +18,11 @@ import org.springframework.util.Assert;
 /**
  * @author zzt
  */
-public class NestedSQLMapper extends JdbcMapper {
+public class NestedSQLMapper extends SQLMapper {
 
+  /**
+   * <a href="https://www.w3schools.com/sql/sql_insert_into_select.asp">insert into select</a>
+   */
   private static final String INSERT_INTO_SELECT = "insert into `?0`.`?1` (?2) (?3)";
   private final Logger logger = LoggerFactory.getLogger(NestedSQLMapper.class);
   private final KVMapper kvMapper;
@@ -32,7 +36,7 @@ public class NestedSQLMapper extends JdbcMapper {
     kvMapper = new KVMapper(rowMapping.getRows(), new JdbcNestedQueryMapper());
   }
 
-  private static String[] join(HashMap<String, Object> map) {
+  private String[] join(HashMap<String, Object> map) {
     StringJoiner keys = new StringJoiner(",");
     ParameterizedString parameterizedString = null;
     HashMap<String, String> tmp = new HashMap<>();
@@ -42,7 +46,10 @@ public class NestedSQLMapper extends JdbcMapper {
       if (value instanceof ParameterizedString && value != parameterizedString) {
         parameterizedString = (ParameterizedString) value;
       } else {
-        tmp.put(entry.getKey(), entry.getValue().toString());
+        if (value instanceof String) {
+          value  = "'" + StringEscapeUtils.escapeSql(value.toString()) + "''";
+        }
+        tmp.put(entry.getKey(), value.toString());
       }
     }
     Assert.notNull(parameterizedString, "[Impossible to be null]");

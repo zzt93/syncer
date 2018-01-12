@@ -13,7 +13,7 @@ import org.springframework.context.annotation.Configuration;
  */
 //@PropertySource("classpath:syncer.properties") // not work with yml file!
 @Configuration
-@ConfigurationProperties(prefix = "pipeline")
+@ConfigurationProperties
 public class PipelineConfig {
 
   private PipelineInput input;

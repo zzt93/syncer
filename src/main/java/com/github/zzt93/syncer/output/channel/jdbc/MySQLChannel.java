@@ -7,7 +7,6 @@ import com.github.zzt93.syncer.config.pipeline.output.RowMapping;
 import com.github.zzt93.syncer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.output.channel.BufferedChannel;
 import com.mysql.jdbc.Driver;
-import java.sql.BatchUpdateException;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -18,6 +17,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.dao.DataAccessException;
+import org.springframework.jdbc.UncategorizedSQLException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -29,13 +29,13 @@ public class MySQLChannel implements BufferedChannel {
   private final BatchBuffer<String> batchBuffer;
   private final PipelineBatch batch;
   private final JdbcTemplate jdbcTemplate;
-  private final JdbcMapper jdbcMapper;
+  private final SQLMapper sqlMapper;
 
   public MySQLChannel(MysqlConnection connection, RowMapping rowMapping,
       PipelineBatch batch) {
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
     batchBuffer = new BatchBuffer<>(batch, String.class);
-    jdbcMapper = new JdbcMapper(rowMapping, jdbcTemplate);
+    sqlMapper = new NestedSQLMapper(rowMapping, jdbcTemplate);
     this.batch = batch;
   }
 
@@ -60,7 +60,7 @@ public class MySQLChannel implements BufferedChannel {
 
   @Override
   public boolean output(SyncData event) {
-    String sql = jdbcMapper.map(event);
+    String sql = sqlMapper.map(event);
     logger.debug("Convert event to sql: {}", sql);
     boolean add = batchBuffer.add(sql);
     flushIfReachSizeLimit();
@@ -69,7 +69,7 @@ public class MySQLChannel implements BufferedChannel {
 
   @Override
   public boolean output(List<SyncData> batch) {
-    List<String> sqls = batch.stream().map(jdbcMapper::map).collect(Collectors.toList());
+    List<String> sqls = batch.stream().map(sqlMapper::map).collect(Collectors.toList());
     boolean add = batchBuffer.addAll(sqls);
     flushIfReachSizeLimit();
     return add;
@@ -100,10 +100,9 @@ public class MySQLChannel implements BufferedChannel {
       try {
         jdbcTemplate.batchUpdate(sqls);
       } catch (DataAccessException e) {
-        Throwable cause = e.getCause();
-        if (cause instanceof BatchUpdateException) {
-          BatchUpdateException batch = (BatchUpdateException) cause;
-          // TODO 18/1/10 retry
+        if (e instanceof UncategorizedSQLException) {
+          String sql = ((UncategorizedSQLException) e).getSql();
+          batchBuffer.addFirst(sql);
         }
         logger.error("{}", Arrays.toString(sqls), e);
       }

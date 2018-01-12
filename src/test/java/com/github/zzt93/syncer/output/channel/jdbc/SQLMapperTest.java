@@ -7,7 +7,7 @@ import org.junit.Test;
 /**
  * @author zzt
  */
-public class JdbcMapperTest {
+public class SQLMapperTest {
 
   @Test
   public void replacePlaceholders() throws Exception {
