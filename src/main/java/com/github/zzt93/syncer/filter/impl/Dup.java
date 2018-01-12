@@ -27,13 +27,13 @@ public class Dup implements ExprFilter, IfBodyAction {
   public Object execute(SyncData src) {
     LinkedList<SyncData> res = new LinkedList<>();
     for (FilterActions filterActions : newObjAction) {
-      SyncData clone = new SyncData(src.getEventId());
+      SyncData dup = new SyncData(src);
       for (String s : copyValue) {
         Object value = parser.parseExpression(s).getValue(src.getContext());
-        parser.parseExpression(s).setValue(clone.getContext(), value);
+        parser.parseExpression(s).setValue(dup.getContext(), value);
       }
-      filterActions.execute(parser, clone.getContext());
-      res.add(clone);
+      filterActions.execute(parser, dup.getContext());
+      res.add(dup);
     }
     return res;
   }

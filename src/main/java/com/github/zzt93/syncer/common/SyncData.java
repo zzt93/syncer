@@ -13,27 +13,25 @@ import org.springframework.util.Assert;
  */
 public class SyncData {
 
-  private final String eventId;
-
   private final Logger logger = LoggerFactory.getLogger(SyncData.class);
 
-  private EventType type;
-  private String action;
+  private final String eventId;
+  private final EventType type;
+  private final String action;
+  private SyncByQueryES syncByQuery = new SyncByQueryES();
+  private boolean hasExtra = false;
+  private final StandardEvaluationContext context;
   /*
    * The following is data field
    */
   private final HashMap<String, Object> records = new HashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
-  private final StandardEvaluationContext context;
   private String schema;
   private String table;
   /**
    * table primary key
    */
-  private String id;
-
-  private SyncByQueryES syncByQuery = new SyncByQueryES();
-  private boolean hasExtra = false;
+  private Object id;
 
 
   public SyncData(String eventId, TableMapEventData tableMap, String primaryKey,
@@ -43,7 +41,9 @@ public class SyncData {
     action = type.toString();
     Object key = row.get(primaryKey);
     if (key != null) {
-      id = key.toString();
+      id = key;
+    } else {
+      logger.warn("{} without primary key", type);
     }
     schema = tableMap.getDatabase();
     table = tableMap.getTable();
@@ -51,26 +51,18 @@ public class SyncData {
     context = new StandardEvaluationContext(this);
   }
 
-  public SyncData(String eventId) {
-    this.eventId = eventId;
+  public SyncData(SyncData syncData) {
+    this.eventId = syncData.eventId;
     context = new StandardEvaluationContext(this);
+    type = syncData.type;
+    action = type.toString();
   }
 
-  public SyncData setType(EventType type) {
-    this.type = type;
-    return this;
-  }
-
-  public SyncData setAction(String action) {
-    this.action = action;
-    return this;
-  }
-
-  public String getId() {
+  public Object getId() {
     return id;
   }
 
-  public void setId(String id) {
+  public void setId(Object id) {
     this.id = id;
   }
 
@@ -115,7 +107,7 @@ public class SyncData {
       records.put(newKey, records.get(oldKey));
       records.remove(oldKey);
     } else {
-      logger.warn("No such record name (maybe filtered out): {} in {}.{}", oldKey, schema, table);
+      logger.warn("No such record name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, schema, table);
     }
   }
 

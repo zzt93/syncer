@@ -74,9 +74,14 @@ public class SQLMapper implements Mapper<SyncData, String> {
       case UPDATE_ROWS:
         StringJoiner kv = new StringJoiner(",");
         for (Entry<String, Object> entry : map.entrySet()) {
-          String tmp = "" + entry.getKey() + "='" +
-              StringEscapeUtils.escapeSql(entry.getValue().toString()) + "'";
-          kv.add(tmp);
+          Object value = entry.getValue();
+          if (value instanceof String) {
+            String tmp = "" + entry.getKey() + "='" +
+                StringEscapeUtils.escapeSql(value.toString()) + "'";
+            kv.add(tmp);
+          } else {
+            kv.add("" + entry.getKey() + "=" + entry.getValue());
+          }
         }
         return new String[]{kv.toString()};
     }
