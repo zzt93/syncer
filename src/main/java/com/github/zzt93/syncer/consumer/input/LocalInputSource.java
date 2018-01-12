@@ -1,13 +1,13 @@
 package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
-import java.io.IOException;
 import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -30,7 +30,7 @@ public class LocalInputSource implements InputSource {
       ConsumerRegistry consumerRegistry,
       List<Schema> schemas,
       MysqlConnection connection,
-      BinlogInfo binlogInfo, String clientId) throws IOException {
+      BinlogInfo binlogInfo, String clientId) {
     this.consumerRegistry = consumerRegistry;
     this.schemas = schemas;
     this.connection = connection;
@@ -41,6 +41,11 @@ public class LocalInputSource implements InputSource {
   @Override
   public boolean register() {
     return consumerRegistry.register(connection, this);
+  }
+
+  @Override
+  public Connection getRemoteConnection() {
+    return connection;
   }
 
   @Override

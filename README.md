@@ -47,6 +47,7 @@
   - Add must appeared field restriction -- now only primary key
   - Opt: keep only changed field in update event & primary key in delete event -- include must appear field
 - Join by query mysql?
+- MongoDB oplog?
 
 ## Pipeline Config
 

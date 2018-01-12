@@ -51,7 +51,8 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     Resource path = FileUtil.getResource(fileName);
     Yaml yaml = new Yaml();
     try (InputStream in = path.getInputStream()) {
-      // TODO 18/1/5 convert key to camel case & handle environment variable
+      // TODO 18/1/5 convert key to camel case & handle environment variable & add prefix (`pipeline:`)
+//      CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, "key-name")
       return yaml.loadAs(in, PipelineConfig.class);
     } catch (IOException e) {
       logger.error("Fail to load/parse yml file", e);

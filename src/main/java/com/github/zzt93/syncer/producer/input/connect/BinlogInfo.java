@@ -8,6 +8,12 @@ public class BinlogInfo implements Comparable<BinlogInfo> {
   private final String binlogFilename;
   private final long binlogPosition;
 
+  public BinlogInfo() {
+    // TODO 18/1/12 default/empty
+    binlogFilename = "mysql-bin.0";
+    binlogPosition = 0;
+  }
+
   public BinlogInfo(String binlogFilename, long binlogPosition) {
     this.binlogFilename = binlogFilename;
     this.binlogPosition = binlogPosition;

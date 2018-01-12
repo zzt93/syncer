@@ -42,10 +42,11 @@ public class SyncerApplication implements CommandLineRunner {
 
   @Override
   public void run(String... strings) throws Exception {
+    int consumerId = 0;
     for (PipelineConfig pipelineConfig : yamlEnvProcessor.getConfigs()) {
       BlockingDeque<SyncData> inputFilter = new LinkedBlockingDeque<>();
       BlockingDeque<SyncData> filterOutput = new LinkedBlockingDeque<>();
-      new InputStarter(pipelineConfig.getInput(), syncerConfig.getInput(), consumerRegistry).start();
+      new InputStarter(pipelineConfig.getInput(), syncerConfig.getInput(), consumerRegistry, consumerId++).start();
       new FilterStarter(pipelineConfig.getFilter(), syncerConfig.getFilter(), inputFilter, filterOutput).start();
       new OutputStarter(pipelineConfig.getOutput(), syncerConfig.getOutput(), filterOutput).start();
     }
