@@ -4,9 +4,11 @@ import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
+import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,6 +44,10 @@ public class InputStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
     } else {
       logger.warn("Fail to register");
     }
+  }
+
+  public List<InputSource> getInputSources() {
+    return registrant.getInputSources();
   }
 
   @Override

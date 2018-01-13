@@ -12,7 +12,6 @@ import java.nio.file.Paths;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,9 +22,11 @@ public class Ack {
   private static final Logger logger = LoggerFactory.getLogger(Ack.class);
 
   private final String metaDir;
+  @ThreadSafe(sharedBy = {"main", "shutdown hook"}, des = "it is fixed before hook thread start")
   private final Map<String, Path> connectorMetaPath = new HashMap<>();
+  @ThreadSafe(sharedBy = {"main", "shutdown hook"})
+  private final HashMap<String, BinlogInfo> binlogInfos = new HashMap<>();
   private final String clientId;
-  private final ConcurrentHashMap<String, BinlogInfo> binlogInfos = new ConcurrentHashMap<>();
 
 
   public Ack(String clientId, SyncerMysql syncerMysql) {
@@ -33,13 +34,11 @@ public class Ack {
     this.metaDir = syncerMysql.getLastRunMetadataDir();
   }
 
-  @ThreadSafe(sharedBy = {"syncer-input: connect()", "shutdown hook"})
   List<String> connectorMeta(String identifier) {
     BinlogInfo binlogInfo = this.binlogInfos.get(identifier);
     return Lists.newArrayList(binlogInfo.getBinlogFilename(), "" + binlogInfo.getBinlogPosition());
   }
 
-  @ThreadSafe(des = "final field is thread safe: it is fixed before hook thread start")
   Map<String, Path> connectorMetaPath() {
     return connectorMetaPath;
   }

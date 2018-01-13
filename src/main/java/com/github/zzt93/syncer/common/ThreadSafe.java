@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * @author zzt
  */
-@Target({ElementType.METHOD, ElementType.TYPE})
+@Target({ElementType.METHOD, ElementType.TYPE, ElementType.FIELD})
 @Retention(RetentionPolicy.SOURCE)
 public @interface ThreadSafe {
 

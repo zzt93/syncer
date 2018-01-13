@@ -1,14 +1,13 @@
 package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.common.event.RowsEvent;
+import com.github.zzt93.syncer.consumer.InputSource;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 
 /**
  * @author zzt
@@ -16,11 +15,11 @@ import org.slf4j.MDC;
 public class FilterJob implements Callable<Void> {
 
   private final Logger logger = LoggerFactory.getLogger(FilterJob.class);
-  private final BlockingQueue<SyncData> fromInput;
+  private final List<InputSource> fromInput;
   private final BlockingQueue<SyncData> toOutput;
   private final List<ExprFilter> filters;
 
-  public FilterJob(BlockingQueue<SyncData> fromInput, BlockingQueue<SyncData> toOutput,
+  public FilterJob(List<InputSource> fromInput, BlockingQueue<SyncData> toOutput,
       List<ExprFilter> filters) {
     this.fromInput = fromInput;
     this.toOutput = toOutput;
@@ -33,9 +32,10 @@ public class FilterJob implements Callable<Void> {
     while (!Thread.interrupted()) {
       try {
         list.clear();
-        SyncData poll = fromInput.take();
-        MDC.put(RowsEvent.EID, poll.getEventId());
-        list.add(poll);
+//        SyncData poll = fromInput.take();
+//        // TODO 18/1/12 replace with template method to add MDC
+//        MDC.put(RowsEvent.EID, poll.getEventId());
+//        list.add(poll);
         for (ExprFilter filter : filters) {
           filter.decide(list);
         }

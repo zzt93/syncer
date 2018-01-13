@@ -35,4 +35,8 @@ public class Registrant {
         mysqlMaster.getConnection(), binlogInfo, clientId);
     inputSources.add(inputSource);
   }
+
+  public List<InputSource> getInputSources() {
+    return inputSources;
+  }
 }
