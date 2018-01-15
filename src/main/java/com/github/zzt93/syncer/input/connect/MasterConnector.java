@@ -113,7 +113,8 @@ public class MasterConnector implements Runnable {
   @Override
   public void run() {
     Thread.currentThread().setName(connectorIdentifier);
-    for (int i = 0; i < 5; i++) {
+    int retry = 5;
+    for (int i = 0; i < retry; i++) {
       try {
         // this method is blocked
         client.connect();
@@ -125,6 +126,7 @@ public class MasterConnector implements Runnable {
       } catch (IOException e) {
         logger.error("Fail to connect to master", e);
       }
+      logger.warn("Re-connect to master, left retry time: {}", retry-i-1);
     }
     logger.error("Max try exceeds, fail to connect");
   }
