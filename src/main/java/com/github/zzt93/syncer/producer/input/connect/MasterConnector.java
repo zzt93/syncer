@@ -15,7 +15,6 @@ import com.github.zzt93.syncer.producer.dispatch.RowFilter;
 import com.github.zzt93.syncer.producer.input.filter.InputFilter;
 import com.github.zzt93.syncer.producer.input.filter.InputPipeHead;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
-import com.google.common.collect.Lists;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;

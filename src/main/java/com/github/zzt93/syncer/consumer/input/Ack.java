@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.input;
 
+import com.github.zzt93.syncer.common.NotThreadSafe;
 import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.config.syncer.SyncerMysql;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
@@ -22,9 +23,9 @@ public class Ack {
   private static final Logger logger = LoggerFactory.getLogger(Ack.class);
 
   private final String metaDir;
-  @ThreadSafe(sharedBy = {"main", "shutdown hook"}, des = "it is fixed before hook thread start")
+  @ThreadSafe(sharedBy = {"main", "shutdown hook"}, des = "it is fixed before shutdown hook thread start")
   private final Map<String, Path> connectorMetaPath = new HashMap<>();
-  @ThreadSafe(sharedBy = {"main", "shutdown hook"})
+  @ThreadSafe(sharedBy = {"main", "shutdown hook"}, des = "it is fixed before shutdown hook thread start")
   private final HashMap<String, BinlogInfo> binlogInfos = new HashMap<>();
   private final String clientId;
 
@@ -43,6 +44,7 @@ public class Ack {
     return connectorMetaPath;
   }
 
+  @NotThreadSafe
   BinlogInfo addDatasource(String identifier) {
     Path path = Paths.get(metaDir, clientId, identifier);
     connectorMetaPath.put(identifier, path);
