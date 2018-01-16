@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.producer;
 
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
+import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
@@ -51,13 +52,10 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MysqlMaster>>
       logger.warn("Connect to multiple masters, not suggested usage");
     }
     for (MysqlMaster mysqlMaster : mysqlMasters) {
-      if (mysqlMaster.getSchemas().isEmpty()) {
-        logger.warn("No schema specified, ignore this connection {}", mysqlMaster.getConnection());
-        continue;
-      }
+      MysqlConnection connection = mysqlMaster.getConnection();
       try {
-        MasterConnector masterConnector = new MasterConnector(mysqlMaster.getConnection(),
-            mysqlMaster.getSchemas(), consumerRegistry);
+        // TODO 18/1/15 skip connection without schemas
+        MasterConnector masterConnector = new MasterConnector(connection, consumerRegistry);
         service.submit(masterConnector);
       } catch (IOException | SchemaUnavailableException e) {
         logger.error("Fail to connect to mysql endpoint: {}", mysqlMaster, e);

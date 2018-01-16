@@ -1,24 +1,20 @@
 package com.github.zzt93.syncer.common.event;
 
-import com.github.shyiko.mysql.binlog.event.Event;
-import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by zzt on 9/14/17. <p> <h3></h3>
  */
-public class WriteRowsEvent extends RowsEvent {
+public class WriteRowsEvent  {
 
 
-  public WriteRowsEvent(String eventId, Event tableMap, WriteRowsEventData writeRowsEventData,
-      Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
-    super(eventId, tableMap, indexToName, primaryKeys);
+  public static List<HashMap<Integer, Object>> getIndexedRows(WriteRowsEventData writeRowsEventData){
+    List<HashMap<Integer, Object>> res = new ArrayList<>();
     BitSet includedColumns = writeRowsEventData.getIncludedColumns();
     List<Serializable[]> rows = writeRowsEventData.getRows();
     for (Serializable[] row : rows) {
@@ -28,12 +24,9 @@ public class WriteRowsEvent extends RowsEvent {
           map.put(i, row[i]);
         }
       }
-      addRow(map);
+      res.add(map);
     }
+    return res;
   }
 
-  @Override
-  public EventType operationType() {
-    return EventType.WRITE_ROWS;
-  }
 }

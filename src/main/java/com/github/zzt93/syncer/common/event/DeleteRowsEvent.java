@@ -1,26 +1,23 @@
 package com.github.zzt93.syncer.common.event;
 
 import com.github.shyiko.mysql.binlog.event.DeleteRowsEventData;
-import com.github.shyiko.mysql.binlog.event.Event;
-import com.github.shyiko.mysql.binlog.event.EventType;
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by zzt on 9/14/17. <p> <h3></h3>
  */
-public class DeleteRowsEvent extends RowsEvent {
+public class DeleteRowsEvent {
 
-  public DeleteRowsEvent(String eventId, Event tableMap, DeleteRowsEventData deleteRowsEventData,
-      Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
-    super(eventId, tableMap, indexToName, primaryKeys);
-    // TODO 17/10/25 only keep non-null field: id, partition key
+  static List<HashMap<Integer, Object>> getIndexedRows(
+      DeleteRowsEventData deleteRowsEventData) {
+    List<HashMap<Integer, Object>> res = new ArrayList<>();
     BitSet includedColumns = deleteRowsEventData.getIncludedColumns();
     List<Serializable[]> rows = deleteRowsEventData.getRows();
+    // TODO 17/10/25 only keep non-null field: id, partition key
     for (Serializable[] row : rows) {
       HashMap<Integer, Object> map = new HashMap<>();
       for (int i = 0; i < row.length; i++) {
@@ -28,13 +25,9 @@ public class DeleteRowsEvent extends RowsEvent {
           map.put(i, row[i]);
         }
       }
-      addRow(map);
+      res.add(map);
     }
+    return res;
   }
 
-
-  @Override
-  public EventType operationType() {
-    return EventType.DELETE_ROWS;
-  }
 }

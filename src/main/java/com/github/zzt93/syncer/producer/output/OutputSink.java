@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.producer.output;
 
 import com.github.zzt93.syncer.common.SyncData;
-import java.util.List;
+import com.github.zzt93.syncer.consumer.InputSource;
 
 /**
  * @author zzt
@@ -23,5 +23,7 @@ public interface OutputSink {
    */
   boolean output(SyncData[] data);
 
-  List<String> accept();
+  InputSource remote();
+
+  String toString();
 }

@@ -7,8 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
-import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
-import java.util.List;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -19,28 +18,19 @@ public class LocalInputSource implements InputSource {
 
   private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
 
-  private final ConsumerRegistry consumerRegistry;
-
-  private final List<Schema> schemas;
+  private final Set<Schema> schemas;
   private final MysqlConnection connection;
   private final BinlogInfo binlogInfo;
   private final String clientId;
 
   public LocalInputSource(
-      ConsumerRegistry consumerRegistry,
-      List<Schema> schemas,
+      Set<Schema> schemas,
       MysqlConnection connection,
       BinlogInfo binlogInfo, String clientId) {
-    this.consumerRegistry = consumerRegistry;
     this.schemas = schemas;
     this.connection = connection;
     this.binlogInfo = binlogInfo;
     this.clientId = clientId;
-  }
-
-  @Override
-  public boolean register() {
-    return consumerRegistry.register(connection, this);
   }
 
   @Override
@@ -54,7 +44,7 @@ public class LocalInputSource implements InputSource {
   }
 
   @Override
-  public List<Schema> getSchemas() {
+  public Set<Schema> getSchemas() {
     return schemas;
   }
 
@@ -90,5 +80,15 @@ public class LocalInputSource implements InputSource {
   @Override
   public int hashCode() {
     return clientId.hashCode();
+  }
+
+  @Override
+  public String toString() {
+    return "LocalInputSource{" +
+        "schemas=" + schemas +
+        ", connection=" + connection +
+        ", binlogInfo=" + binlogInfo +
+        ", clientId='" + clientId + '\'' +
+        '}';
   }
 }

@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.producer.output;
 
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.consumer.InputSource;
-import java.util.List;
 
 /**
  * @author zzt
@@ -22,12 +21,22 @@ public class LocalOutputSink implements OutputSink {
 
   @Override
   public boolean output(SyncData[] data) {
+    for (SyncData datum : data) {
+// TODO 18/1/15 deep copy
+    }
     return inputSource.input(data);
   }
 
   @Override
-  public List<String> accept() {
-    return null;
+  public InputSource remote() {
+    return inputSource;
   }
 
+
+  @Override
+  public String toString() {
+    return "LocalOutputSink{" +
+        "inputSource=" + inputSource +
+        '}';
+  }
 }

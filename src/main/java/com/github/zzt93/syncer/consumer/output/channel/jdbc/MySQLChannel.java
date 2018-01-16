@@ -97,15 +97,19 @@ public class MySQLChannel implements BufferedChannel {
     String[] sqls = batchBuffer.flush();
     if (sqls.length != 0) {
       logger.debug("Flush batch of {}", Arrays.toString(sqls));
-      try {
-        jdbcTemplate.batchUpdate(sqls);
-      } catch (DataAccessException e) {
-        if (e instanceof UncategorizedSQLException) {
-          String sql = ((UncategorizedSQLException) e).getSql();
-          batchBuffer.addFirst(sql);
-        }
-        logger.error("{}", Arrays.toString(sqls), e);
+      batchAndRetry(sqls);
+    }
+  }
+
+  private void batchAndRetry(String[] sqls) {
+    try {
+      jdbcTemplate.batchUpdate(sqls);
+    } catch (DataAccessException e) {
+      if (e instanceof UncategorizedSQLException) {
+        String sql = ((UncategorizedSQLException) e).getSql();
+        batchBuffer.addFirst(sql);
       }
+      logger.error("{}", Arrays.toString(sqls), e);
     }
   }
 
@@ -114,12 +118,7 @@ public class MySQLChannel implements BufferedChannel {
     String[] sqls = batchBuffer.flushIfReachSizeLimit();
     if (sqls != null) {
       logger.debug("Flush when reach size limit, send batch of {}", Arrays.toString(sqls));
-      try {
-        jdbcTemplate.batchUpdate(sqls);
-      } catch (DataAccessException e) {
-        // TODO 18/1/3 retry
-        logger.error("{}", Arrays.toString(sqls), e);
-      }
+      batchAndRetry(sqls);
     }
   }
 }

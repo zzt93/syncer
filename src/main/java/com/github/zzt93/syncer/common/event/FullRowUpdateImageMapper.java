@@ -1,11 +1,8 @@
 package com.github.zzt93.syncer.common.event;
 
-import com.github.shyiko.mysql.binlog.event.Event;
-import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import java.io.Serializable;
 import java.util.BitSet;
 import java.util.HashMap;
-import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Set;
 import org.slf4j.Logger;
@@ -21,13 +18,9 @@ public class FullRowUpdateImageMapper implements RowUpdateImageMapper {
 
   private final BitSet includedColumns;
   private final Set<Integer> primaryKeys;
-  private final String table;
 
-  public FullRowUpdateImageMapper(Event tableMap,
-      Map<Integer, String> indexToName, Set<Integer> primaryKeys,
+  FullRowUpdateImageMapper(Set<Integer> primaryKeys,
       BitSet includedColumns) {
-    TableMapEventData data = tableMap.getData();
-    this.table = data.getTable();
     this.primaryKeys = primaryKeys;
     this.includedColumns = includedColumns;
   }

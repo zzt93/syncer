@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.input.filter;
+package com.github.zzt93.syncer.producer.dispatch;
 
 import com.github.zzt93.syncer.common.Filter;
 import com.github.zzt93.syncer.common.Filter.FilterRes;

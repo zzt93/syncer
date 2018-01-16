@@ -30,8 +30,8 @@ public class Registrant {
   }
 
   void addDatasource(MysqlMaster mysqlMaster, BinlogInfo binlogInfo) {
-    LocalInputSource inputSource = new LocalInputSource(consumerRegistry,
-        mysqlMaster.getSchemas(),
+    LocalInputSource inputSource = new LocalInputSource(
+        mysqlMaster.getSchemaSet(),
         mysqlMaster.getConnection(), binlogInfo, clientId);
     inputSources.add(inputSource);
   }

@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.config.pipeline.input;
 
 import com.github.zzt93.syncer.common.util.RegexUtil;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.consumer.Hashable;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -13,7 +14,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class Schema {
+public class Schema implements Hashable {
 
   private final Logger logger = LoggerFactory.getLogger(Schema.class);
 
@@ -80,5 +81,24 @@ public class Schema {
       return nameToRows.getOrDefault((tableName), null);
     }
     return null;
+  }
+
+  @Override
+  public boolean equals(Object o) {
+    if (this == o) {
+      return true;
+    }
+    if (o == null || getClass() != o.getClass()) {
+      return false;
+    }
+
+    Schema schema = (Schema) o;
+
+    return name != null ? name.equals(schema.name) : schema.name == null;
+  }
+
+  @Override
+  public int hashCode() {
+    return name != null ? name.hashCode() : 0;
   }
 }

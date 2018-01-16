@@ -10,16 +10,13 @@ import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
-import com.github.zzt93.syncer.producer.dispatch.InputEnd;
-import com.github.zzt93.syncer.producer.dispatch.RowFilter;
-import com.github.zzt93.syncer.producer.input.filter.InputFilter;
-import com.github.zzt93.syncer.producer.input.filter.InputPipeHead;
+import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.IdentityHashMap;
 import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,7 +33,7 @@ public class MasterConnector implements Runnable {
   private BinaryLogClient client;
   private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
-  public MasterConnector(MysqlConnection connection, List<Schema> schema,
+  public MasterConnector(MysqlConnection connection,
       ConsumerRegistry registry)
       throws IOException, SchemaUnavailableException {
     String password = FileUtil.readAll(connection.getPasswordFile());
@@ -47,7 +44,7 @@ public class MasterConnector implements Runnable {
     connectorIdentifier = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
 
     configLogClient(connection, password, registry);
-    configEventListener(connection, schema, registry);
+    configEventListener(connection, registry);
   }
 
   private void configLogClient(MysqlConnection connection, String password,
@@ -68,20 +65,18 @@ public class MasterConnector implements Runnable {
 
   }
 
-  private void configEventListener(MysqlConnection connection, List<Schema> schemas,
-      ConsumerRegistry registry) throws SchemaUnavailableException {
-    List<InputFilter> filters = new ArrayList<>();
-    ConnectionSchemaMeta connectionSchemaMeta;
-    assert !schemas.isEmpty();
+  private void configEventListener(MysqlConnection connection, ConsumerRegistry registry)
+      throws SchemaUnavailableException {
+    IdentityHashMap<Set<Schema>, OutputSink> schemaOutputSinkMap = registry.outputSink(connection);
+    IdentityHashMap<ConnectionSchemaMeta, OutputSink> sinkHashMap;
     try {
-      connectionSchemaMeta = new ConnectionSchemaMeta.MetaDataBuilder(connection, schemas).build();
-      filters.add(new RowFilter(connectionSchemaMeta));
+      sinkHashMap = new ConnectionSchemaMeta.MetaDataBuilder(connection, schemaOutputSinkMap)
+          .build();
     } catch (SQLException e) {
       logger.error("Fail to connect to master to retrieve schema metadata", e);
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new InputPipeHead(connectionSchemaMeta), filters,
-        new InputEnd(), new Dispatcher(registry.outputSink(connection)));
+    SyncListener eventListener = new SyncListener(new Dispatcher(sinkHashMap));
     client.registerEventListener(eventListener);
     // TODO 18/1/9 remove
     client.registerEventListener((event) -> binlogInfo

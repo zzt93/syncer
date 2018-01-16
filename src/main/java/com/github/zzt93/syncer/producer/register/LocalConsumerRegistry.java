@@ -2,13 +2,14 @@ package com.github.zzt93.syncer.producer.register;
 
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.LocalOutputSink;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
-import java.util.HashSet;
+import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import org.slf4j.Logger;
@@ -59,12 +60,13 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   }
 
   @Override
-  public Set<OutputSink> outputSink(MysqlConnection connection) {
+  public IdentityHashMap<Set<Schema>, OutputSink> outputSink(MysqlConnection connection) {
     Preconditions.checkState(inputSources.containsKey(connection), "no input source registered");
     Preconditions.checkState(voted.containsKey(connection), "should invoke votedBinlogInfo first");
-    Set<OutputSink> res = new HashSet<>();
+    IdentityHashMap<Set<Schema>, OutputSink> res = new IdentityHashMap<>();
+    // TODO 18/1/15 may reuse but not new
     for (InputSource inputSource : inputSources.get(connection)) {
-      res.add(new LocalOutputSink(inputSource));
+      res.put(inputSource.getSchemas(), new LocalOutputSink(inputSource));
     }
     return res;
   }

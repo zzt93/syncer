@@ -9,7 +9,8 @@ import java.util.regex.PatternSyntaxException;
  */
 public class RegexUtil {
 
-  private static Pattern pattern = Pattern.compile("[.*+?\\^]");
+  private static Pattern pattern = Pattern.compile("[.*+?^]");
+  private static Pattern env = Pattern.compile("\\$\\{([^}]+)}");
 
   public static Pattern getRegex(String input) {
     Matcher matcher = pattern.matcher(input);
@@ -21,5 +22,9 @@ public class RegexUtil {
     } catch (PatternSyntaxException e) {
       return null;
     }
+  }
+
+  public static Pattern env() {
+    return env;
   }
 }
