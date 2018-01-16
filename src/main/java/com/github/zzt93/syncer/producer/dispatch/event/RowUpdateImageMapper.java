@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common.event;
+package com.github.zzt93.syncer.producer.dispatch.event;
 
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import java.io.Serializable;

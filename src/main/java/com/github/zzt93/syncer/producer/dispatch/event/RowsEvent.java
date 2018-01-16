@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common.event;
+package com.github.zzt93.syncer.producer.dispatch.event;
 
 
 import com.github.shyiko.mysql.binlog.event.DeleteRowsEventData;
@@ -21,8 +21,6 @@ import org.springframework.util.Assert;
  * @author zzt
  */
 public abstract class RowsEvent {
-
-  public static final String EID = "eid";
 
   public static boolean filterData(List<HashMap<Integer, Object>> indexedRow,
       List<Integer> interested) {

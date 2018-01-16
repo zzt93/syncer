@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
+import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.common.ThreadSafe;
-import com.github.zzt93.syncer.common.event.RowsEvent;
+import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
@@ -118,7 +118,7 @@ public class ElasticsearchChannel implements BufferedChannel {
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
-        MDC.put(RowsEvent.EID, eventId);
+        MDC.put(IdGenerator.EID, eventId);
         logger.info("Update/Delete by query {}: update {} or delete {} documents",
             builder.request(), bulkByScrollResponse.getUpdated(),
             bulkByScrollResponse.getDeleted());
@@ -126,7 +126,7 @@ public class ElasticsearchChannel implements BufferedChannel {
 
       @Override
       public void onFailure(Exception e) {
-        MDC.put(RowsEvent.EID, eventId);
+        MDC.put(IdGenerator.EID, eventId);
         logger.error("Fail to update/delete by query: {}", builder.request(), e);
       }
     });

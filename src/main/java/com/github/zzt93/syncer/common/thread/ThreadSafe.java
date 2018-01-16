@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.common.thread;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

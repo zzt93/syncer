@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel;
 
-import com.github.zzt93.syncer.common.ThreadSafe;
+import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import java.util.concurrent.TimeUnit;
 
 /**

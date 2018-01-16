@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.output;
 
+import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.common.event.RowsEvent;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
@@ -30,7 +30,7 @@ public class OutputJob implements Callable<Void> {
       SyncData poll = null;
       try {
         poll = queue.take();
-        MDC.put(RowsEvent.EID, poll.getEventId());
+        MDC.put(IdGenerator.EID, poll.getEventId());
         for (OutputChannel channel : channels) {
           if (!channel.output(poll)) {
             logger.warn("Fail to write to channel {}", channel);

@@ -21,9 +21,6 @@ public class LocalOutputSink implements OutputSink {
 
   @Override
   public boolean output(SyncData[] data) {
-    for (SyncData datum : data) {
-// TODO 18/1/15 deep copy
-    }
     return inputSource.input(data);
   }
 

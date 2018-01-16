@@ -1,5 +1,6 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.producer.input.meta;
 
+import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
 

@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.batch;
 
-import com.github.zzt93.syncer.common.ThreadSafe;
+import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import java.lang.reflect.Array;
 import java.util.ArrayList;

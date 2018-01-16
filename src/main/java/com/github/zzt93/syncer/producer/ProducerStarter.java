@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
-import com.github.zzt93.syncer.consumer.input.InputStarter;
+import com.github.zzt93.syncer.consumer.input.RegistrationStarter;
 import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 public class ProducerStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
 
   private static ProducerStarter starter;
-  private final Logger logger = LoggerFactory.getLogger(InputStarter.class);
+  private final Logger logger = LoggerFactory.getLogger(RegistrationStarter.class);
   private final Set<MysqlMaster> mysqlMasters;
   private final ExecutorService service;
   private final ConsumerRegistry consumerRegistry;

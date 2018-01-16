@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.input;
 
-import com.github.zzt93.syncer.common.NotThreadSafe;
-import com.github.zzt93.syncer.common.ThreadSafe;
+import com.github.zzt93.syncer.common.thread.NotThreadSafe;
+import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.syncer.SyncerMysql;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import com.google.common.collect.Lists;

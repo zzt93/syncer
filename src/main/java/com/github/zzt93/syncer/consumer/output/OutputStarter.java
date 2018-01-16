@@ -8,19 +8,18 @@ import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.consumer.output.batch.BatchJob;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import org.springframework.util.Assert;
 
 /**
  * @author zzt
  */
 public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel>> {
 
-  private static OutputStarter instance;
   private final OutputJob outputJob;
   private final ExecutorService service;
   private final ScheduledExecutorService batchService;
@@ -28,8 +27,8 @@ public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel
 
   public OutputStarter(PipelineOutput pipelineOutput, SyncerOutput module,
       BlockingDeque<SyncData> fromFilter) throws Exception {
-    workerAssert(module.getWorker());
-    workerAssert(module.getBatch().getWorker());
+    workerCheck(module.getWorker());
+    workerCheck(module.getBatch().getWorker());
 
     service = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-output"));
@@ -50,17 +49,9 @@ public class OutputStarter implements Starter<PipelineOutput, List<OutputChannel
     worker = module.getWorker();
   }
 
-  public static OutputStarter getInstance(PipelineOutput pipelineOutput, SyncerOutput syncer,
-      BlockingDeque<SyncData> fromFilter) throws Exception {
-    if (instance == null) {
-      instance = new OutputStarter(pipelineOutput, syncer, fromFilter);
-    }
-    return instance;
-  }
-
-  private void workerAssert(int worker) {
-    Assert.isTrue(worker <= 8, "Too many worker thread");
-    Assert.isTrue(worker > 0, "Too few worker thread");
+  private void workerCheck(int worker) {
+    Preconditions.checkArgument(worker <= 8, "Too many worker thread");
+    Preconditions.checkArgument(worker > 0, "Too few worker thread");
   }
 
   public void start() throws InterruptedException {

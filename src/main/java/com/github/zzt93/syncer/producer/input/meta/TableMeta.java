@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.producer.input.meta;
 
 import java.util.ArrayList;
 import java.util.Collections;

@@ -1,11 +1,9 @@
 package com.github.zzt93.syncer.producer.dispatch;
 
 import com.github.shyiko.mysql.binlog.event.Event;
-import com.github.zzt93.syncer.common.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
-import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.common.event.IdGenerator;
-import com.github.zzt93.syncer.common.event.RowsEvent;
+import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.producer.input.meta.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
@@ -29,19 +27,14 @@ public class Dispatcher {
 
   public boolean dispatch(Event... events) {
     String eventId = IdGenerator.fromEvent(events[1]);
-    MDC.put(RowsEvent.EID, eventId);
+    MDC.put(IdGenerator.EID, eventId);
     boolean res = true;
     for (FilterChain filterChain : filterChains) {
       FilterRes decide = filterChain.decide(events);
       res = res && FilterRes.ACCEPT == decide;
     }
-    MDC.remove(RowsEvent.EID);
+    MDC.remove(IdGenerator.EID);
     return res;
-  }
-
-  private String fromSyncData(SyncData syncData) {
-    // TODO 18/1/9
-    return syncData.getTable();
   }
 
 }

@@ -7,7 +7,9 @@ import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
+import java.util.Arrays;
 import java.util.Set;
+import java.util.concurrent.BlockingDeque;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -16,6 +18,7 @@ import org.slf4j.LoggerFactory;
  */
 public class LocalInputSource implements InputSource {
 
+  private final BlockingDeque<SyncData> filterInput;
   private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
 
   private final Set<Schema> schemas;
@@ -26,11 +29,13 @@ public class LocalInputSource implements InputSource {
   public LocalInputSource(
       Set<Schema> schemas,
       MysqlConnection connection,
-      BinlogInfo binlogInfo, String clientId) {
+      BinlogInfo binlogInfo, String clientId,
+      BlockingDeque<SyncData> filterInput) {
     this.schemas = schemas;
     this.connection = connection;
     this.binlogInfo = binlogInfo;
     this.clientId = clientId;
+    this.filterInput = filterInput;
   }
 
   @Override
@@ -55,12 +60,12 @@ public class LocalInputSource implements InputSource {
 
   @Override
   public boolean input(SyncData data) {
-    return false;
+    return filterInput.add(data);
   }
 
   @Override
   public boolean input(SyncData[] data) {
-    return false;
+    return filterInput.addAll(Arrays.asList(data));
   }
 
   @Override

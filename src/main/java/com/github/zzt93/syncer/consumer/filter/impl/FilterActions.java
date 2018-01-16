@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
-import com.github.zzt93.syncer.common.ThreadSafe;
 import com.github.zzt93.syncer.common.expr.Expression;
+import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;

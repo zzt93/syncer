@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common.event;
+package com.github.zzt93.syncer.producer.dispatch.event;
 
 import java.io.Serializable;
 import java.util.BitSet;

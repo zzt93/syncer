@@ -3,12 +3,12 @@ package com.github.zzt93.syncer.producer.dispatch;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
-import com.github.zzt93.syncer.common.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.common.Filter;
+import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.SyncData;
-import com.github.zzt93.syncer.common.TableMeta;
-import com.github.zzt93.syncer.common.event.IdGenerator;
-import com.github.zzt93.syncer.common.event.RowsEvent;
+import com.github.zzt93.syncer.producer.dispatch.event.RowsEvent;
+import com.github.zzt93.syncer.producer.input.meta.ConnectionSchemaMeta;
+import com.github.zzt93.syncer.producer.input.meta.TableMeta;
 import java.util.HashMap;
 import java.util.List;
 
