@@ -76,9 +76,8 @@ public class MasterConnector implements Runnable {
       logger.error("Fail to connect to master to retrieve schema metadata", e);
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new Dispatcher(sinkHashMap));
+    SyncListener eventListener = new SyncListener(new Dispatcher(sinkHashMap, binlogInfo));
     client.registerEventListener(eventListener);
-    // TODO 18/1/9 remove
     client.registerEventListener((event) -> binlogInfo
         .set(new BinlogInfo(client.getBinlogFilename(), client.getBinlogPosition())));
   }

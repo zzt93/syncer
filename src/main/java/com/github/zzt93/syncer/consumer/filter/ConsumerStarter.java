@@ -11,6 +11,7 @@ import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.If;
 import com.github.zzt93.syncer.consumer.filter.impl.Statement;
 import com.github.zzt93.syncer.consumer.filter.impl.Switch;
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.google.common.base.Preconditions;
@@ -30,24 +31,24 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   private FilterJob filterJob;
   private int worker;
 
-  public ConsumerStarter(List<FilterConfig> pipeline,
+  public ConsumerStarter(Ack ack, List<FilterConfig> pipeline,
       SyncerFilter filter, BlockingDeque<SyncData> fromInput,
       PipelineOutput output,
       SyncerOutput syncerConfigOutput) throws Exception {
     List<ExprFilter> filterJobs = fromPipelineConfig(pipeline);
     List<OutputChannel> outputChannels = new OutputStarter(output, syncerConfigOutput)
         .getOutputChannels();
-    filterModuleInit(filter, filterJobs, fromInput, outputChannels);
+    filterModuleInit(ack, filter, filterJobs, fromInput, outputChannels);
   }
 
-  private void filterModuleInit(SyncerFilter module, List<ExprFilter> filters,
+  private void filterModuleInit(Ack ack, SyncerFilter module, List<ExprFilter> filters,
       BlockingDeque<SyncData> fromInput, List<OutputChannel> outputChannels) {
     Preconditions.checkArgument(module.getWorker() <= 8, "Too many worker thread");
     Preconditions.checkArgument(module.getWorker() > 0, "Too few worker thread");
     service = Executors
-        .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter"));
+        .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter-output"));
 
-    filterJob = new FilterJob(fromInput, outputChannels, filters);
+    filterJob = new FilterJob(ack, fromInput, outputChannels, filters);
     worker = module.getWorker();
   }
 

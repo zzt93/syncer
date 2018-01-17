@@ -13,7 +13,7 @@ public interface Filter<S, T> {
   /**
    * Should be thread safe
    *
-   * @see FilterJob#call()
+   * @see FilterJob#run()
    * @see MasterConnector#run()
    */
   @ThreadSafe

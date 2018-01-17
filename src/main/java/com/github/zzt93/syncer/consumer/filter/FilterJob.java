@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,12 +20,14 @@ public class FilterJob implements Runnable {
   private final BlockingDeque<SyncData> fromInput;
   private final List<OutputChannel> outputChannels;
   private final List<ExprFilter> filters;
+  private final Ack ack;
 
-  public FilterJob(BlockingDeque<SyncData> fromInput, List<OutputChannel> outputChannels,
+  public FilterJob(Ack ack, BlockingDeque<SyncData> fromInput, List<OutputChannel> outputChannels,
       List<ExprFilter> filters) {
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
     this.filters = filters;
+    this.ack = ack;
   }
 
   @Override
@@ -36,6 +39,8 @@ public class FilterJob implements Runnable {
         list.clear();
         poll = fromInput.take();
         MDC.put(IdGenerator.EID, poll.getEventId());
+        ack.append(poll.getSource(), poll.getDataId());
+
         list.add(poll);
         for (ExprFilter filter : filters) {
           filter.decide(list);

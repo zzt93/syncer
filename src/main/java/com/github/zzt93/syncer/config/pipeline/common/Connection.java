@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.common.util.NetworkUtil;
 import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.Assert;
 
 /**
  * @author zzt
@@ -18,13 +19,16 @@ public class Connection {
   private String user;
   private String passwordFile;
   private String password;
+  private String identifier;
+  private String ip;
 
   public String getAddress() {
     return address;
   }
 
-  public void setAddress(String address) {
+  public void setAddress(String address) throws UnknownHostException {
     this.address = address;
+    ip = NetworkUtil.toIp(getAddress());
   }
 
   public int getPort() {
@@ -98,8 +102,14 @@ public class Connection {
     return address != null && port > 0 && port < 65536;
   }
 
-  public String connectionIdentifier() throws UnknownHostException {
-    return NetworkUtil.toIp(getAddress()) + ":" + getPort();
+  public String initIdentifier() {
+    identifier = ip + ":" + getPort();
+    return identifier;
+  }
+
+  public String connectionIdentifier() {
+    Assert.notNull(identifier, "[should invoke initIdentifier() first]");
+    return identifier;
   }
 
   public String toConnectionUrl(String path) {

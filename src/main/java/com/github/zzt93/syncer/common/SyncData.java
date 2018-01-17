@@ -17,13 +17,18 @@ public class SyncData {
 
   private static class Meta {
     private final String eventId;
+    private final String dataId;
     private final EventType type;
     private final String action;
     private final StandardEvaluationContext context;
+    private final int ordinal;
     private boolean hasExtra = false;
+    private String connectionIdentifier;
 
-    public Meta(String eventId, EventType type, StandardEvaluationContext context) {
+    Meta(String eventId, int ordinal, EventType type, StandardEvaluationContext context) {
       this.eventId = eventId;
+      dataId = IdGenerator.fromEventId(eventId, ordinal);
+      this.ordinal = ordinal;
       this.type = type;
       this.action = type.toString();
       this.context = context;
@@ -45,9 +50,9 @@ public class SyncData {
   private Object id;
 
 
-  public SyncData(String eventId, TableMapEventData tableMap, String primaryKey,
+  public SyncData(String eventId, int ordinal, TableMapEventData tableMap, String primaryKey,
       HashMap<String, Object> row, EventType type) {
-    inner = new Meta(eventId, type, new StandardEvaluationContext(this));
+    inner = new Meta(eventId, ordinal, type, new StandardEvaluationContext(this));
 
     Object key = row.get(primaryKey);
     if (key != null) {
@@ -61,7 +66,8 @@ public class SyncData {
   }
 
   public SyncData(SyncData syncData) {
-    inner = new Meta(syncData.getEventId(), syncData.getType(), new StandardEvaluationContext(this));
+    inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, syncData.getType(),
+        new StandardEvaluationContext(this));
   }
 
   public Object getId() {
@@ -158,6 +164,19 @@ public class SyncData {
 
   public String getEventId() {
     return inner.eventId;
+  }
+
+  public String getDataId() {
+    return inner.dataId;
+  }
+
+  public SyncData setSource(String identifier) {
+    inner.connectionIdentifier = identifier;
+    return this;
+  }
+
+  public String getSource() {
+    return inner.connectionIdentifier;
   }
 
   public HashMap<String, Object> getSyncBy() {

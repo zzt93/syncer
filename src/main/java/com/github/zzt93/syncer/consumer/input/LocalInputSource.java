@@ -7,7 +7,8 @@ import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
-import java.util.Arrays;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import org.slf4j.Logger;
@@ -60,12 +61,17 @@ public class LocalInputSource implements InputSource {
 
   @Override
   public boolean input(SyncData data) {
+    data.setSource(connection.connectionIdentifier());
     return filterInput.add(data);
   }
 
   @Override
   public boolean input(SyncData[] data) {
-    return filterInput.addAll(Arrays.asList(data));
+    List<SyncData> res = new ArrayList<>(data.length);
+    for (SyncData datum : data) {
+      res.add(datum.setSource(connection.connectionIdentifier()));
+    }
+    return filterInput.addAll(res);
   }
 
   @Override

@@ -10,7 +10,7 @@ public class BinlogInfo implements Comparable<BinlogInfo> {
 
   public BinlogInfo() {
     // TODO 18/1/12 default/empty
-    binlogFilename = "mysql-bin.0";
+    binlogFilename = "mysql-bin."+Integer.MAX_VALUE;
     binlogPosition = 0;
   }
 

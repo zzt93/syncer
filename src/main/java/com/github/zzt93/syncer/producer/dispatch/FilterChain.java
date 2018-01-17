@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.producer.dispatch;
 
 import com.github.shyiko.mysql.binlog.event.Event;
-import com.github.zzt93.syncer.common.Filter;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.producer.input.meta.ConnectionSchemaMeta;
@@ -13,7 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class FilterChain implements Filter<Event[], FilterRes> {
+public class FilterChain {
 
   private final Logger logger = LoggerFactory.getLogger(FilterChain.class);
   private final InputPipeHead start;
@@ -24,10 +23,9 @@ public class FilterChain implements Filter<Event[], FilterRes> {
     this.outputSink = outputSink;
   }
 
-  @Override
-  public FilterRes decide(Event[] events) {
+  public FilterRes decide(String eventId, Event[] events) {
     logger.debug("Receive binlog event: {}", Arrays.toString(events));
-    SyncData[] aim = start.decide(events[0], events[1]);
+    SyncData[] aim = start.decide(eventId, events[0], events[1]);
     if (aim == null) { // not interested in this database+table
       return FilterRes.DENY;
     }
