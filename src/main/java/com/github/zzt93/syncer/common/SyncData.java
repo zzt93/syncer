@@ -15,12 +15,23 @@ public class SyncData {
 
   private final Logger logger = LoggerFactory.getLogger(SyncData.class);
 
-  private final String eventId;
-  private final EventType type;
-  private final String action;
+  private static class Meta {
+    private final String eventId;
+    private final EventType type;
+    private final String action;
+    private final StandardEvaluationContext context;
+    private boolean hasExtra = false;
+
+    public Meta(String eventId, EventType type, StandardEvaluationContext context) {
+      this.eventId = eventId;
+      this.type = type;
+      this.action = type.toString();
+      this.context = context;
+    }
+  }
   private SyncByQueryES syncByQuery = new SyncByQueryES();
-  private boolean hasExtra = false;
-  private final StandardEvaluationContext context;
+
+  private final Meta inner;
   /*
    * The following is data field
    */
@@ -36,9 +47,8 @@ public class SyncData {
 
   public SyncData(String eventId, TableMapEventData tableMap, String primaryKey,
       HashMap<String, Object> row, EventType type) {
-    this.eventId = eventId;
-    this.type = type;
-    action = type.toString();
+    inner = new Meta(eventId, type, new StandardEvaluationContext(this));
+
     Object key = row.get(primaryKey);
     if (key != null) {
       id = key;
@@ -48,14 +58,10 @@ public class SyncData {
     schema = tableMap.getDatabase();
     table = tableMap.getTable();
     records.putAll(row);
-    context = new StandardEvaluationContext(this);
   }
 
   public SyncData(SyncData syncData) {
-    this.eventId = syncData.eventId;
-    context = new StandardEvaluationContext(this);
-    type = syncData.type;
-    action = type.toString();
+    inner = new Meta(syncData.getEventId(), syncData.getType(), new StandardEvaluationContext(this));
   }
 
   public Object getId() {
@@ -71,7 +77,7 @@ public class SyncData {
   }
 
   public String getAction() {
-    return action;
+    return inner.action;
   }
 
   public void setTable(String table) {
@@ -87,7 +93,7 @@ public class SyncData {
   }
 
   public EventType getType() {
-    return type;
+    return inner.type;
   }
 
   public void addExtra(String key, Object value) {
@@ -134,7 +140,7 @@ public class SyncData {
   }
 
   public StandardEvaluationContext getContext() {
-    return context;
+    return inner.context;
   }
 
   public HashMap<String, Object> getRecords() {
@@ -151,7 +157,7 @@ public class SyncData {
   }
 
   public String getEventId() {
-    return eventId;
+    return inner.eventId;
   }
 
   public HashMap<String, Object> getSyncBy() {
@@ -172,26 +178,26 @@ public class SyncData {
   }
 
   public ExtraQuery extraQuery(String indexName, String typeName) {
-    if (hasExtra) {
+    if (inner.hasExtra) {
       logger.warn("Multiple extraQuery, not support");
     }
-    hasExtra = true;
+    inner.hasExtra = true;
     return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
   }
 
   public boolean hasExtra() {
-    return hasExtra;
+    return inner.hasExtra;
   }
 
   @Override
   public String toString() {
     return "SyncData{" +
-        "eventId='" + eventId + '\'' +
-        ", type=" + type +
-        ", action='" + action + '\'' +
+        "eventId='" + inner.eventId + '\'' +
+        ", type=" + inner.type +
+        ", action='" + inner.action + '\'' +
         ", records=" + records +
         ", extra=" + extra +
-        ", context=" + context +
+        ", context=" + inner.context +
         ", schema='" + schema + '\'' +
         ", table='" + table + '\'' +
         ", id='" + id + '\'' +

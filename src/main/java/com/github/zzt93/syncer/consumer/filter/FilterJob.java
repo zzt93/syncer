@@ -31,19 +31,26 @@ public class FilterJob implements Runnable {
   public void run() {
     LinkedList<SyncData> list = new LinkedList<>();
     while (!Thread.interrupted()) {
+      SyncData poll;
       try {
         list.clear();
-        SyncData poll = fromInput.take();
+        poll = fromInput.take();
         MDC.put(IdGenerator.EID, poll.getEventId());
         list.add(poll);
         for (ExprFilter filter : filters) {
           filter.decide(list);
         }
       } catch (Exception e) {
-        logger.debug("Filter job failed", e);
+        logger.error("Filter job failed", e);
+        continue;
       }
       for (OutputChannel outputChannel : outputChannels) {
-//        outputChannel.output()
+        try {
+          // TODO 18/1/17 may block, change?
+          outputChannel.output(poll);
+        } catch (Exception e) {
+          logger.error("Output job failed", e);
+        }
       }
     }
   }
