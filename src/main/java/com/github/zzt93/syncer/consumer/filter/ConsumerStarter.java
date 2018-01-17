@@ -4,16 +4,19 @@ import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.SyncerFilter;
+import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.If;
 import com.github.zzt93.syncer.consumer.filter.impl.Statement;
 import com.github.zzt93.syncer.consumer.filter.impl.Switch;
+import com.github.zzt93.syncer.consumer.output.OutputStarter;
+import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -21,27 +24,30 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 /**
  * @author zzt
  */
-public class FilterStarter implements Starter<List<FilterConfig>, List<ExprFilter>> {
+public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFilter>> {
 
   private ExecutorService service;
   private FilterJob filterJob;
   private int worker;
 
-  public FilterStarter(List<FilterConfig> pipeline,
+  public ConsumerStarter(List<FilterConfig> pipeline,
       SyncerFilter filter, BlockingDeque<SyncData> fromInput,
-      BlockingQueue<SyncData> toOutput) {
+      PipelineOutput output,
+      SyncerOutput syncerConfigOutput) throws Exception {
     List<ExprFilter> filterJobs = fromPipelineConfig(pipeline);
-    filterModuleInit(filter, filterJobs, fromInput, toOutput);
+    List<OutputChannel> outputChannels = new OutputStarter(output, syncerConfigOutput)
+        .getOutputChannels();
+    filterModuleInit(filter, filterJobs, fromInput, outputChannels);
   }
 
   private void filterModuleInit(SyncerFilter module, List<ExprFilter> filters,
-      BlockingDeque<SyncData> fromInput, BlockingQueue<SyncData> toOutput) {
+      BlockingDeque<SyncData> fromInput, List<OutputChannel> outputChannels) {
     Preconditions.checkArgument(module.getWorker() <= 8, "Too many worker thread");
     Preconditions.checkArgument(module.getWorker() > 0, "Too few worker thread");
     service = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter"));
 
-    filterJob = new FilterJob(fromInput, toOutput, filters);
+    filterJob = new FilterJob(fromInput, outputChannels, filters);
     worker = module.getWorker();
   }
 

@@ -5,9 +5,8 @@ import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.pipeline.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
-import com.github.zzt93.syncer.consumer.filter.FilterStarter;
+import com.github.zzt93.syncer.consumer.filter.ConsumerStarter;
 import com.github.zzt93.syncer.consumer.input.RegistrationStarter;
-import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.util.concurrent.BlockingDeque;
@@ -45,11 +44,10 @@ public class SyncerApplication implements CommandLineRunner {
     int consumerId = 0;
     for (PipelineConfig pipelineConfig : yamlEnvProcessor.getConfigs()) {
       BlockingDeque<SyncData> filterInput = new LinkedBlockingDeque<>();
-      BlockingDeque<SyncData> filterOutput = new LinkedBlockingDeque<>();
       new RegistrationStarter(pipelineConfig.getInput(),
           syncerConfig.getInput(), consumerRegistry, consumerId++, filterInput).start();
-      new FilterStarter(pipelineConfig.getFilter(), syncerConfig.getFilter(), filterInput, filterOutput).start();
-      new OutputStarter(pipelineConfig.getOutput(), syncerConfig.getOutput(), filterOutput).start();
+      new ConsumerStarter(pipelineConfig.getFilter(), syncerConfig.getFilter(), filterInput,
+          pipelineConfig.getOutput(), syncerConfig.getOutput()).start();
     }
     ProducerStarter.getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry).start();
   }
