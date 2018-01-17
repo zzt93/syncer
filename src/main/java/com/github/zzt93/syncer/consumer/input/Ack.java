@@ -100,4 +100,7 @@ public class Ack {
     }
   }
 
+  public void flush() {
+    ackMap.values().forEach(FileBasedSet::flush);
+  }
 }

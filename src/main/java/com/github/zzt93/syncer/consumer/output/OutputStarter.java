@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.consumer.output;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.SyncerOutput;
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchJob;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
@@ -19,7 +20,8 @@ public class OutputStarter {
 
   private final List<OutputChannel> outputChannels;
 
-  public OutputStarter(PipelineOutput pipelineOutput, SyncerOutput module) throws Exception {
+  public OutputStarter(PipelineOutput pipelineOutput, SyncerOutput module,
+      Ack ack) throws Exception {
     workerCheck(module.getWorker());
     workerCheck(module.getBatch().getWorker());
 
@@ -27,7 +29,7 @@ public class OutputStarter {
         .newScheduledThreadPool(module.getBatch().getWorker(),
             new NamedThreadFactory("syncer-batch"));
 
-    outputChannels = pipelineOutput.toOutputChannels();
+    outputChannels = pipelineOutput.toOutputChannels(ack);
     for (OutputChannel outputChannel : outputChannels) {
       if (outputChannel instanceof BufferedChannel) {
         BufferedChannel bufferedChannel = (BufferedChannel) outputChannel;

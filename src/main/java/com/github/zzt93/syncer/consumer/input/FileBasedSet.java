@@ -23,15 +23,15 @@ import org.slf4j.LoggerFactory;
 @ThreadSafe
 public class FileBasedSet<T extends Comparable<T>> {
 
-  private static final int _1M = 1048576;
+  private static final int _1K = 1024;
   private final MappedByteBuffer file;
   private final ConcurrentSkipListSet<T> set = new ConcurrentSkipListSet<>();
   private final Logger logger = LoggerFactory.getLogger(FileBasedSet.class);
 
   public FileBasedSet(Path path) throws IOException {
     try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet
-        .of(StandardOpenOption.WRITE, StandardOpenOption.TRUNCATE_EXISTING))) {
-      file = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, _1M);
+        .of(StandardOpenOption.WRITE))) {
+      file = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, _1K);
     }
   }
 
@@ -44,13 +44,12 @@ public class FileBasedSet<T extends Comparable<T>> {
   }
 
   public void flush() {
+    T first = set.first();
     file.clear();
-    for (T t : set) {
-      try {
-        file.put(t.toString().getBytes("utf-8"));
-      } catch (UnsupportedEncodingException ignore) {
-        logger.error("Impossible", ignore);
-      }
+    try {
+      file.put(first.toString().getBytes("utf-8"));
+    } catch (UnsupportedEncodingException ignore) {
+      logger.error("Impossible", ignore);
     }
     file.force();
   }

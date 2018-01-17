@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import java.util.Arrays;
@@ -45,14 +46,16 @@ public class ElasticsearchChannel implements BufferedChannel {
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final TransportClient client;
   private final PipelineBatch batch;
+  private final Ack ack;
 
   public ElasticsearchChannel(ElasticsearchConnection connection, RequestMapping requestMapping,
-      PipelineBatch batch)
+      PipelineBatch batch, Ack ack)
       throws Exception {
     client = connection.transportClient();
     this.batchBuffer = new BatchBuffer<>(batch, WriteRequestBuilder.class);
     this.batch = batch;
     this.esRequestMapper = new ESRequestMapper(client, requestMapping);
+    this.ack = ack;
   }
 
   public static String toString(UpdateRequest request) {

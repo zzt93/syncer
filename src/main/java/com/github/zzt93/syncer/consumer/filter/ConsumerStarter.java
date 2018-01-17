@@ -36,7 +36,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
       PipelineOutput output,
       SyncerOutput syncerConfigOutput) throws Exception {
     List<ExprFilter> filterJobs = fromPipelineConfig(pipeline);
-    List<OutputChannel> outputChannels = new OutputStarter(output, syncerConfigOutput)
+    List<OutputChannel> outputChannels = new OutputStarter(output, syncerConfigOutput, ack)
         .getOutputChannels();
     filterModuleInit(ack, filter, filterJobs, fromInput, outputChannels);
   }

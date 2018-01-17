@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 
 /**
@@ -7,6 +8,6 @@ import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
  */
 public interface OutputChannelConfig {
 
-  OutputChannel toChannel() throws Exception;
+  OutputChannel toChannel(Ack ack) throws Exception;
 
 }

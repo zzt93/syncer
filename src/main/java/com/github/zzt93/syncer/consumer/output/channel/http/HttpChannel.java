@@ -6,6 +6,7 @@ import static org.springframework.http.HttpMethod.PUT;
 
 import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import java.util.HashMap;
@@ -29,8 +30,11 @@ public class HttpChannel implements OutputChannel {
   private final RestTemplate restTemplate;
   private final String connection;
   private final KVMapper mapper;
+  private final Ack ack;
 
-  public HttpChannel(HttpConnection connection, Map<String, Object> jsonMapper) {
+  public HttpChannel(HttpConnection connection, Map<String, Object> jsonMapper,
+      Ack ack) {
+    this.ack = ack;
     this.restTemplate = new RestTemplate();
     this.connection = connection.toConnectionUrl(null);
     this.mapper = new KVMapper(jsonMapper);

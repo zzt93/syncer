@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.common.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.RowMapping;
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.mysql.jdbc.Driver;
@@ -30,13 +31,15 @@ public class MySQLChannel implements BufferedChannel {
   private final PipelineBatch batch;
   private final JdbcTemplate jdbcTemplate;
   private final SQLMapper sqlMapper;
+  private final Ack ack;
 
   public MySQLChannel(MysqlConnection connection, RowMapping rowMapping,
-      PipelineBatch batch) {
+      PipelineBatch batch, Ack ack) {
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
     batchBuffer = new BatchBuffer<>(batch, String.class);
     sqlMapper = new NestedSQLMapper(rowMapping, jdbcTemplate);
     this.batch = batch;
+    this.ack = ack;
   }
 
   private DataSource dataSource(MysqlConnection connection, String className) {

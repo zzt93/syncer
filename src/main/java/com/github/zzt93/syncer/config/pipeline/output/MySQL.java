@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.consumer.output.channel.jdbc.MySQLChannel;
 
@@ -40,9 +41,9 @@ public class MySQL implements OutputChannelConfig {
   }
 
   @Override
-  public OutputChannel toChannel() throws Exception {
+  public OutputChannel toChannel(Ack ack) throws Exception {
     if (connection.valid()) {
-      return new MySQLChannel(connection, rowMapping, batch);
+      return new MySQLChannel(connection, rowMapping, batch, ack);
     }
     throw new InvalidConfigException("Invalid connection configuration: " + connection);
   }

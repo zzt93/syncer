@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
+import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import java.util.ArrayList;
 import java.util.List;
@@ -37,16 +38,16 @@ public class PipelineOutput {
     this.mysql = mysql;
   }
 
-  public List<OutputChannel> toOutputChannels() throws Exception {
+  public List<OutputChannel> toOutputChannels(Ack ack) throws Exception {
     List<OutputChannel> res = new ArrayList<>();
     if (elasticsearch != null) {
-      res.add(elasticsearch.toChannel());
+      res.add(elasticsearch.toChannel(ack));
     }
     if (http != null) {
-      res.add(http.toChannel());
+      res.add(http.toChannel(ack));
     }
     if (mysql != null) {
-      res.add(mysql.toChannel());
+      res.add(mysql.toChannel(ack));
     }
     return res;
   }

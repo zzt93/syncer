@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
@@ -12,6 +13,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -51,8 +55,10 @@ public class RegistrationStarter implements Starter<PipelineInput, Set<MysqlMast
   }
 
   public void start() throws IOException {
+    ScheduledExecutorService scheduled = Executors
+        .newScheduledThreadPool(1, new NamedThreadFactory("syncer-ack"));
     if (registrant.register()) {
-      Runtime.getRuntime().addShutdownHook(new Thread(new PositionHook(ack)));
+      scheduled.scheduleAtFixedRate(new PositionFlusher(ack), 0, 100, TimeUnit.MILLISECONDS);
     } else {
       logger.warn("Fail to register");
     }
