@@ -168,7 +168,8 @@ public class ElasticsearchChannel implements BufferedChannel {
         if (wrapper.count() < batch.getMaxRetry()) {
           batchBuffer.addFirst(wrapper);
         } else {
-          logger.error("Max retry exceed, discard or abort");
+          // TODO 18/1/18 fail log
+          logger.error("Max retry exceed, write to fail.log");
         }
       } else {
         ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());

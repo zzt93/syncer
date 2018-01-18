@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.config.pipeline.filter;
 
 import com.google.common.collect.Lists;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -23,7 +22,6 @@ public class CloneConfig {
 
   public void setCopyValue(List<String> copyValue) {
     this.copyValue = copyValue;
-    copyValue.addAll(Arrays.asList("action", "type"));
   }
 
   public List<String> getNew() {

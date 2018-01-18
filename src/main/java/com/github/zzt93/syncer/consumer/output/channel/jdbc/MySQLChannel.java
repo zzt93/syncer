@@ -110,6 +110,9 @@ public class MySQLChannel implements BufferedChannel {
           if (updateCounts[i] == Statement.EXECUTE_FAILED) {
             if (sqls[i].count() < batch.getMaxRetry()) {
               batchBuffer.addFirst(sqls[i]);
+            } else {
+              // TODO 18/1/18 fail log
+              logger.error("Max retry exceed, write to fail.log");
             }
           } else {
             ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
