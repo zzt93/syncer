@@ -10,7 +10,7 @@ import org.springframework.util.Assert;
 /**
  * @author zzt
  */
-public class Connection {
+public class Connection implements Comparable<Connection> {
 
   private static final Logger logger = LoggerFactory.getLogger(Connection.class);
 
@@ -56,7 +56,9 @@ public class Connection {
     try {
       this.password = FileUtil.readAll(passwordFile);
     } catch (Exception e) {
-      logger.error("Fail to read password file from classpath, you may consider using absolute path", e);
+      logger
+          .error("Fail to read password file from classpath, you may consider using absolute path",
+              e);
     }
   }
 
@@ -75,15 +77,12 @@ public class Connection {
 
     Connection that = (Connection) o;
 
-    if (port != that.port) {
-      return false;
-    }
-    return address.equals(that.address);
+    return port == that.port && ip.equals(that.ip);
   }
 
   @Override
   public int hashCode() {
-    int result = address.hashCode();
+    int result = ip.hashCode();
     result = 31 * result + port;
     return result;
   }
@@ -114,5 +113,11 @@ public class Connection {
 
   public String toConnectionUrl(String path) {
     return getAddress() + ":" + getPort();
+  }
+
+  @Override
+  public int compareTo(Connection o) {
+    int compare = ip.compareTo(o.ip);
+    return compare != 0 ? compare : Integer.compare(port, o.port);
   }
 }

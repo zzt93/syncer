@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.producer.register;
 
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
@@ -19,5 +18,5 @@ public interface ConsumerRegistry {
 
   BinlogInfo votedBinlogInfo(Connection connection);
 
-  IdentityHashMap<Set<Schema>, OutputSink> outputSink(MysqlConnection connection);
+  IdentityHashMap<Set<Schema>, OutputSink> outputSink(Connection connection);
 }

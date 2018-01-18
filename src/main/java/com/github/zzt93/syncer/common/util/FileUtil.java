@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.common.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
@@ -15,6 +16,11 @@ public class FileUtil {
   public static String readAll(String resourceName) throws IOException {
     return FileCopyUtils
         .copyToString(new InputStreamReader(getResource(resourceName).getInputStream()));
+  }
+
+  public static String readAll(InputStream inputStream) throws IOException {
+    return FileCopyUtils
+        .copyToString(new InputStreamReader(inputStream));
   }
 
   public static Resource getResource(String fileName) {

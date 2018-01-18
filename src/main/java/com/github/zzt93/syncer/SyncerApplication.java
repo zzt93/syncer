@@ -25,8 +25,6 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 public class SyncerApplication implements CommandLineRunner {
 
   @Autowired
-  private YamlEnvironmentPostProcessor yamlEnvProcessor;
-  @Autowired
   private ProducerConfig producerConfig;
   @Autowired
   private SyncerConfig syncerConfig;
@@ -43,7 +41,7 @@ public class SyncerApplication implements CommandLineRunner {
   @Override
   public void run(String... strings) throws Exception {
     int consumerId = 0;
-    for (PipelineConfig pipelineConfig : yamlEnvProcessor.getConfigs()) {
+    for (PipelineConfig pipelineConfig : YamlEnvironmentPostProcessor.getConfigs()) {
       BlockingDeque<SyncData> filterInput = new LinkedBlockingDeque<>();
       RegistrationStarter registrationStarter = new RegistrationStarter(pipelineConfig.getInput(),
           syncerConfig.getInput(), consumerRegistry, consumerId++, filterInput);
