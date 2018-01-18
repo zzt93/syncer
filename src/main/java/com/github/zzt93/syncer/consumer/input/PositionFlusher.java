@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.input;
 
+import com.github.zzt93.syncer.consumer.ack.Ack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

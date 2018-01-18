@@ -21,6 +21,8 @@ public class PipelineBatch {
    */
   private int delay = 100;
 
+  private int maxRetry = 5;
+
   public int getSize() {
     return size;
   }
@@ -47,6 +49,14 @@ public class PipelineBatch {
       throw exception;
     }
     this.delay = delay;
+  }
+
+  public int getMaxRetry() {
+    return maxRetry;
+  }
+
+  public void setMaxRetry(int maxRetry) {
+    this.maxRetry = maxRetry;
   }
 
   public TimeUnit getDelayTimeUnit() {

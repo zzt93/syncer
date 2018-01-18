@@ -1,10 +1,11 @@
-package com.github.zzt93.syncer.consumer.input;
+package com.github.zzt93.syncer.consumer.ack;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
+import java.nio.channels.FileChannel.MapMode;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -29,9 +30,10 @@ public class FileBasedSet<T extends Comparable<T>> {
   private final Logger logger = LoggerFactory.getLogger(FileBasedSet.class);
 
   public FileBasedSet(Path path) throws IOException {
+    Files.createDirectories(path.getParent());
     try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet
-        .of(StandardOpenOption.WRITE))) {
-      file = fileChannel.map(FileChannel.MapMode.READ_WRITE, 0, _1K);
+        .of(StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE))) {
+      file = fileChannel.map(MapMode.READ_WRITE, 0, _1K);
     }
   }
 
@@ -44,6 +46,9 @@ public class FileBasedSet<T extends Comparable<T>> {
   }
 
   public void flush() {
+    if (set.isEmpty()) {
+      return;
+    }
     T first = set.first();
     file.clear();
     try {

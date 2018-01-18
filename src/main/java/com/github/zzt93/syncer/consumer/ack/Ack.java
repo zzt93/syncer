@@ -1,10 +1,10 @@
-package com.github.zzt93.syncer.consumer.input;
+package com.github.zzt93.syncer.consumer.ack;
 
+import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.syncer.SyncerMysql;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -50,18 +50,26 @@ public class Ack {
     } else {
       try {
         binlogInfo = recoverBinlogInfo(path, binlogInfo);
-        ackMap.put(identifier, new FileBasedSet<>(path));
       } catch (IOException ignored) {
         logger.error("Impossible to run to here", ignored);
       }
+    }
+    try {
+      ackMap.put(identifier, new FileBasedSet<>(path));
+    } catch (IOException e) {
+      logger.error("Fail to create file {}", path);
     }
     return binlogInfo;
   }
 
   private BinlogInfo recoverBinlogInfo(Path path, BinlogInfo binlogInfo) throws IOException {
-    List<String> lines = Files.readAllLines(path, StandardCharsets.UTF_8);
-    if (lines.size() > 0) {
-      binlogInfo = new BinlogInfo(lines.get(0), Long.parseLong(lines.get(1)));
+    byte[] bytes = Files.readAllBytes(path);
+    if (bytes.length > 0) {
+      try {
+        binlogInfo = IdGenerator.fromDataId(new String(bytes, "utf-8"));
+      } catch (Exception e) {
+        logger.warn("Meta file in {} crashed, take as fresh run", path);
+      }
     } else {
       logger.warn("Meta file in {} crashed, take as fresh run", path);
     }

@@ -26,6 +26,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MysqlMaster>>
   private final Set<MysqlMaster> mysqlMasters;
   private final ExecutorService service;
   private final ConsumerRegistry consumerRegistry;
+  private final int maxRetry;
 
   private ProducerStarter(PipelineInput input,
       SyncerInput syncerConfigInput, ConsumerRegistry consumerRegistry) {
@@ -34,6 +35,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MysqlMaster>>
         .newFixedThreadPool(syncerConfigInput.getWorker(),
             new NamedThreadFactory("syncer-producer"));
     this.consumerRegistry = consumerRegistry;
+    maxRetry = syncerConfigInput.getMaxRetry();
   }
 
   public static ProducerStarter getInstance(PipelineInput input, SyncerInput syncerConfigInput,
@@ -54,7 +56,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MysqlMaster>>
       MysqlConnection connection = mysqlMaster.getConnection();
       try {
         // TODO 18/1/15 skip connection without schemas
-        MasterConnector masterConnector = new MasterConnector(connection, consumerRegistry);
+        MasterConnector masterConnector = new MasterConnector(connection, consumerRegistry, maxRetry);
         service.submit(masterConnector);
       } catch (IOException | SchemaUnavailableException e) {
         logger.error("Fail to connect to mysql endpoint: {}", mysqlMaster, e);

@@ -6,11 +6,10 @@ import static org.springframework.http.HttpMethod.PUT;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
-import com.github.zzt93.syncer.consumer.input.Ack;
+import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -66,11 +65,6 @@ public class HttpChannel implements OutputChannel {
   private HttpStatus execute(HashMap<String, Object> res, HttpMethod method) {
     return restTemplate.exchange(connection, method, new HttpEntity<Map>(res), Object.class)
         .getStatusCode();
-  }
-
-  @Override
-  public boolean output(List<SyncData> batch) {
-    return false;
   }
 
   @Override

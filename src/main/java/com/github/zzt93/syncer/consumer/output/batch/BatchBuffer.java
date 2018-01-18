@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.output.batch;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.consumer.ack.Retryable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,7 +12,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 /**
  * @author zzt
  */
-public class BatchBuffer<T> {
+public class BatchBuffer<T extends Retryable> {
 
   private final int limit;
   private final ConcurrentLinkedDeque<T> deque = new ConcurrentLinkedDeque<>();
@@ -24,17 +25,20 @@ public class BatchBuffer<T> {
   }
 
   public boolean add(T data) {
+    data.inc();
     deque.addLast(data);
     estimateSize.incrementAndGet();
     return true;
   }
 
   public void addFirst(T data) {
+    data.inc();
     deque.addFirst(data);
     estimateSize.incrementAndGet();
   }
 
   public boolean addAll(List<T> data) {
+    data.forEach(T::inc);
     boolean res = deque.addAll(data);
     estimateSize.addAndGet(data.size());
     return res;

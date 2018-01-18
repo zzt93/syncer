@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.consumer.input.Ack;
+import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import java.util.LinkedList;
 import java.util.List;

@@ -78,7 +78,7 @@ public class ConnectionSchemaMeta {
     private IdentityHashMap<Set<Schema>, List<SchemaMeta>> build(Map<Set<Schema>, OutputSink> aims)
         throws SQLException {
       Connection connection = dataSource.getConnection();
-      if (!calculatedSchemaName.equals(MysqlConnection.DEFAULT_DB)) {
+      if (calculatedSchemaName.equals(MysqlConnection.DEFAULT_DB)) {
         // make it to get all databases
         ((JDBC4Connection) connection).setNullCatalogMeansCurrent(false);
       }
@@ -105,6 +105,7 @@ public class ConnectionSchemaMeta {
         count += aim.size();
       }
 
+      IdentityHashMap<Schema, SchemaMeta> metaHashMap = new IdentityHashMap<>();
       while (count > nowCount && tableResultSet.next()) {
         String tableSchema = tableResultSet.getString("TABLE_CAT");
         String tableName = tableResultSet.getString("TABLE_NAME");
@@ -116,14 +117,26 @@ public class ConnectionSchemaMeta {
               continue;
             }
             TableMeta tableMeta = new TableMeta();
+            // TODO 18/1/18 may opt to get all columns then use
             setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
             setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta);
-            SchemaMeta schemaMeta = new SchemaMeta(aim.getName(), aim.getNamePattern());
+            // TODO 18/1/18 menkor_dev* vs menkor*
+            boolean contain = metaHashMap.containsKey(aim);
+            SchemaMeta schemaMeta = metaHashMap.computeIfAbsent(aim, k -> new SchemaMeta(aim.getName(), aim.getNamePattern()));
             schemaMeta.addTableMeta(tableName, tableMeta);
-            schemaMetas.add(schemaMeta);
+            if (!contain) {
+              schemaMetas.add(schemaMeta);
+            }
           }
           nowCount += schemaMetas.size();
-          res.put(set, schemaMetas);
+          res.compute(set, (k, v) -> {
+            if (v == null) {
+              return schemaMetas;
+            } else {
+              v.addAll(schemaMetas);
+              return v;
+            }
+          });
         }
       }
       return res;

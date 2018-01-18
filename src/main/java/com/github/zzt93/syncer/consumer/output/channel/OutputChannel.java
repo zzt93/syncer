@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.consumer.output.channel;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
-import java.util.List;
 
 /**
  * @author zzt
@@ -17,9 +16,6 @@ public interface OutputChannel {
    */
   @ThreadSafe
   boolean output(SyncData event);
-
-  @ThreadSafe
-  boolean output(List<SyncData> batch);
 
   String des();
 

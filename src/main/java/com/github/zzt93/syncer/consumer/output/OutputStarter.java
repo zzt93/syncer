@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.output;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.SyncerOutput;
-import com.github.zzt93.syncer.consumer.input.Ack;
+import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchJob;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;

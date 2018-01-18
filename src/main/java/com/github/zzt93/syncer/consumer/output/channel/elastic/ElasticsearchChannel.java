@@ -7,17 +7,14 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
-import com.github.zzt93.syncer.consumer.input.Ack;
+import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import java.util.Arrays;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -100,25 +97,6 @@ public class ElasticsearchChannel implements BufferedChannel {
     return true;
   }
 
-  @Override
-  public boolean output(List<SyncData> batch) {
-    List<SyncWrapper> collect = batch
-        .stream()
-        .map(data -> {
-          Object builder = esRequestMapper.map(data);
-          if (builder instanceof WriteRequestBuilder) {
-            return new SyncWrapper<>(data, (WriteRequestBuilder) builder);
-          }
-          bulkByScrollRequest(data, (AbstractBulkByScrollRequestBuilder) builder);
-          return null;
-        })
-        .filter(Objects::isNull)
-        .collect(Collectors.toList());
-    boolean addRes = batchBuffer.addAll(collect);
-    flushIfReachSizeLimit();
-    return addRes;
-  }
-
   private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder) {
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
@@ -174,30 +152,26 @@ public class ElasticsearchChannel implements BufferedChannel {
     for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
       WriteRequestBuilder builder = wrapper.getData();
       WriteRequest request = builder.request();
+      String id, reqStr = null;
       if (request instanceof IndexRequest) {
-        String id = ((IndexRequest) request).id();
-        if (failedDocuments.containsKey(id)) {
-          logger.debug("Retry request: {}", request);
-          batchBuffer.addFirst(wrapper);
-        } else {
-          ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
-        }
+        id = ((IndexRequest) request).id();
       } else if (request instanceof UpdateRequest) {
-        String id = ((UpdateRequest) request).id();
-        if (failedDocuments.containsKey(id)) {
-          logger.debug("Retry request: {}", toString((UpdateRequest) request));
-          batchBuffer.addFirst(wrapper);
-        } else {
-          ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
-        }
+        id = ((UpdateRequest) request).id();
+        reqStr = toString((UpdateRequest) request);
       } else if (request instanceof DeleteRequest) {
-        String id = ((DeleteRequest) request).id();
-        if (failedDocuments.containsKey(id)) {
-          logger.debug("Retry request: {}", request);
+        id = ((DeleteRequest) request).id();
+      } else {
+        throw new IllegalStateException("Impossible: " + request);
+      }
+      if (failedDocuments.containsKey(id)) {
+        logger.info("Retry request: {}", reqStr == null ? request : reqStr);
+        if (wrapper.count() < batch.getMaxRetry()) {
           batchBuffer.addFirst(wrapper);
         } else {
-          ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+          logger.error("Max retry exceed, discard or abort");
         }
+      } else {
+        ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
       }
     }
   }

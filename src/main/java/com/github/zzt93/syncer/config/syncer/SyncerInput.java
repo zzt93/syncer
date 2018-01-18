@@ -6,6 +6,7 @@ package com.github.zzt93.syncer.config.syncer;
 public class SyncerInput {
 
   private int worker;
+  private int maxRetry;
   private SyncerMysql mysqlMasters;
 
   public SyncerMysql getMysqlMasters() {
@@ -22,5 +23,13 @@ public class SyncerInput {
 
   public void setWorker(int worker) {
     this.worker = worker;
+  }
+
+  public int getMaxRetry() {
+    return maxRetry;
+  }
+
+  public void setMaxRetry(int maxRetry) {
+    this.maxRetry = maxRetry;
   }
 }

@@ -29,13 +29,15 @@ public class MasterConnector implements Runnable {
 
   private final static Random random = new Random();
   private final String connectorIdentifier;
+  private final int maxRetry;
   private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
   private BinaryLogClient client;
   private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
   public MasterConnector(MysqlConnection connection,
-      ConsumerRegistry registry)
+      ConsumerRegistry registry, int maxRetry)
       throws IOException, SchemaUnavailableException {
+    this.maxRetry = maxRetry;
     String password = FileUtil.readAll(connection.getPasswordFile());
     if (StringUtils.isEmpty(password)) {
       throw new InvalidPasswordException(password);
@@ -85,8 +87,7 @@ public class MasterConnector implements Runnable {
   @Override
   public void run() {
     Thread.currentThread().setName(connectorIdentifier);
-    int retry = 5;
-    for (int i = 0; i < retry; i++) {
+    for (int i = 0; i < maxRetry; i++) {
       try {
         // this method is blocked
         client.connect();
@@ -96,9 +97,9 @@ public class MasterConnector implements Runnable {
 //        client.setBinlogFilename(""); not fetch oldest log
         client.setBinlogFilename(null);
       } catch (IOException e) {
-        logger.error("Fail to connect to master", e);
+        logger.error("Fail to connect to master. Reconnect to master, left retry time: {}",
+            maxRetry - i - 1, e);
       }
-      logger.warn("Re-connect to master, left retry time: {}", retry-i-1);
     }
     logger.error("Max try exceeds, fail to connect");
   }

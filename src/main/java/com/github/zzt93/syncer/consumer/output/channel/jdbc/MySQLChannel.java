@@ -5,16 +5,14 @@ import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.RowMapping;
-import com.github.zzt93.syncer.consumer.input.Ack;
+import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.mysql.jdbc.Driver;
 import java.sql.BatchUpdateException;
 import java.sql.Statement;
 import java.util.Arrays;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.slf4j.Logger;
@@ -75,15 +73,6 @@ public class MySQLChannel implements BufferedChannel {
   }
 
   @Override
-  public boolean output(List<SyncData> batch) {
-    List<SyncWrapper> sqls = batch.stream().map(
-        event -> new SyncWrapper<>(event, sqlMapper.map(event))).collect(Collectors.toList());
-    boolean add = batchBuffer.addAll(sqls);
-    flushIfReachSizeLimit();
-    return add;
-  }
-
-  @Override
   public String des() {
     return "MySQLChannel{" +
         "jdbcTemplate=" + jdbcTemplate +
@@ -111,15 +100,17 @@ public class MySQLChannel implements BufferedChannel {
 
   private void batchAndRetry(SyncWrapper<String>[] sqls) {
     try {
-      Stream<String> rStream = Arrays.stream(sqls).map(SyncWrapper::getData);
-      jdbcTemplate.batchUpdate(rStream.toArray(String[]::new));
+      Stream<String> stringStream = Arrays.stream(sqls).map(SyncWrapper::getData);
+      jdbcTemplate.batchUpdate(stringStream.toArray(String[]::new));
     } catch (DataAccessException e) {
       Throwable cause = e.getCause();
       if (cause instanceof BatchUpdateException) {
         int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
         for (int i = 0; i < updateCounts.length; i++) {
           if (updateCounts[i] == Statement.EXECUTE_FAILED) {
-            batchBuffer.addFirst(sqls[i]);
+            if (sqls[i].count() < batch.getMaxRetry()) {
+              batchBuffer.addFirst(sqls[i]);
+            }
           } else {
             ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
           }
