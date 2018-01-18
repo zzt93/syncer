@@ -4,7 +4,7 @@ import static org.springframework.http.HttpMethod.DELETE;
 import static org.springframework.http.HttpMethod.POST;
 import static org.springframework.http.HttpMethod.PUT;
 
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
 import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;

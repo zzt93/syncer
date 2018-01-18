@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.producer.dispatch;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.producer.input.meta.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import java.util.Arrays;

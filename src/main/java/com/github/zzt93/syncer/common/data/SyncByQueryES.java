@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.common.data;
 
 import java.util.HashMap;
 import org.slf4j.Logger;

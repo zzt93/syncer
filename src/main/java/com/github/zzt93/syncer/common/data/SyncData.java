@@ -1,7 +1,8 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.common.data;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
+import com.github.zzt93.syncer.common.IdGenerator;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -170,12 +171,12 @@ public class SyncData {
     return inner.dataId;
   }
 
-  public SyncData setSource(String identifier) {
+  public SyncData setSourceIdentifier(String identifier) {
     inner.connectionIdentifier = identifier;
     return this;
   }
 
-  public String getSource() {
+  public String getSourceIdentifier() {
     return inner.connectionIdentifier;
   }
 

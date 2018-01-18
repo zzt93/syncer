@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.Filter;
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.filter.IfConfig;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
 import java.util.Collection;

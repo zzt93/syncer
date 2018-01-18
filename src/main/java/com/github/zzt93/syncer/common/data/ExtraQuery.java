@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common;
+package com.github.zzt93.syncer.common.data;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import java.util.Arrays;

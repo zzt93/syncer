@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.input;
 
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;

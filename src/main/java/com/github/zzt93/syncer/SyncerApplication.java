@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer;
 
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.pipeline.ProducerConfig;

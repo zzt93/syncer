@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.common.IdGenerator;
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.input.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import java.util.LinkedList;
@@ -39,7 +39,7 @@ public class FilterJob implements Runnable {
         list.clear();
         poll = fromInput.take();
         MDC.put(IdGenerator.EID, poll.getEventId());
-        ack.append(poll.getSource(), poll.getDataId());
+        ack.append(poll.getSourceIdentifier(), poll.getDataId());
 
         list.add(poll);
         for (ExprFilter filter : filters) {

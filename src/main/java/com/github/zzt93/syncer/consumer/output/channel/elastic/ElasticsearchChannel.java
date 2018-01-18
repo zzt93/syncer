@@ -1,7 +1,8 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.IdGenerator;
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
@@ -41,7 +42,7 @@ import org.slf4j.MDC;
  */
 public class ElasticsearchChannel implements BufferedChannel {
 
-  private final BatchBuffer<WriteRequestBuilder> batchBuffer;
+  private final BatchBuffer<SyncWrapper> batchBuffer;
   private final ESRequestMapper esRequestMapper;
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final TransportClient client;
@@ -52,7 +53,7 @@ public class ElasticsearchChannel implements BufferedChannel {
       PipelineBatch batch, Ack ack)
       throws Exception {
     client = connection.transportClient();
-    this.batchBuffer = new BatchBuffer<>(batch, WriteRequestBuilder.class);
+    this.batchBuffer = new BatchBuffer<>(batch, SyncWrapper.class);
     this.batch = batch;
     this.esRequestMapper = new ESRequestMapper(client, requestMapping);
     this.ack = ack;
@@ -89,25 +90,26 @@ public class ElasticsearchChannel implements BufferedChannel {
   public boolean output(SyncData event) {
     Object builder = esRequestMapper.map(event);
     if (builder instanceof WriteRequestBuilder) {
-      boolean addRes = batchBuffer.add((WriteRequestBuilder) builder);
+      boolean addRes = batchBuffer.add(
+          new SyncWrapper<>(event, (WriteRequestBuilder) builder));
       flushIfReachSizeLimit();
       return addRes;
     } else {
-      bulkByScrollRequest(event.getEventId(), (AbstractBulkByScrollRequestBuilder) builder);
+      bulkByScrollRequest(event, (AbstractBulkByScrollRequestBuilder) builder);
     }
     return true;
   }
 
   @Override
   public boolean output(List<SyncData> batch) {
-    List<WriteRequestBuilder> collect = batch
+    List<SyncWrapper> collect = batch
         .stream()
         .map(data -> {
           Object builder = esRequestMapper.map(data);
           if (builder instanceof WriteRequestBuilder) {
-            return ((WriteRequestBuilder) builder);
+            return new SyncWrapper<>(data, (WriteRequestBuilder) builder);
           }
-          bulkByScrollRequest(data.getEventId(), (AbstractBulkByScrollRequestBuilder) builder);
+          bulkByScrollRequest(data, (AbstractBulkByScrollRequestBuilder) builder);
           return null;
         })
         .filter(Objects::isNull)
@@ -117,19 +119,20 @@ public class ElasticsearchChannel implements BufferedChannel {
     return addRes;
   }
 
-  private void bulkByScrollRequest(String eventId, AbstractBulkByScrollRequestBuilder builder) {
+  private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder) {
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
-        MDC.put(IdGenerator.EID, eventId);
+        MDC.put(IdGenerator.EID, data.getEventId());
         logger.info("Update/Delete by query {}: update {} or delete {} documents",
             builder.request(), bulkByScrollResponse.getUpdated(),
             bulkByScrollResponse.getDeleted());
+        ack.remove(data.getSourceIdentifier(), data.getDataId());
       }
 
       @Override
       public void onFailure(Exception e) {
-        MDC.put(IdGenerator.EID, eventId);
+        MDC.put(IdGenerator.EID, data.getEventId());
         logger.error("Fail to update/delete by query: {}", builder.request(), e);
       }
     });
@@ -155,37 +158,45 @@ public class ElasticsearchChannel implements BufferedChannel {
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
   public void flush() {
-    WriteRequestBuilder[] aim = batchBuffer.flush();
-    if (aim != null && aim.length != 0) {
-      try {
-        buildRequest(aim);
-      } catch (ElasticsearchBulkException e) {
-        retryFailedDoc(aim, e);
-      }
+    SyncWrapper<WriteRequestBuilder>[] aim = batchBuffer.flush();
+    buildAndSend(aim);
+  }
+
+  private void ackSuccess(SyncWrapper<WriteRequestBuilder>[] aim) {
+    for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
+      ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
     }
   }
 
-  private void retryFailedDoc(WriteRequestBuilder[] aim, ElasticsearchBulkException e) {
+  private void retryFailedDoc(SyncWrapper<WriteRequestBuilder>[] aim,
+      ElasticsearchBulkException e) {
     Map<String, String> failedDocuments = e.getFailedDocuments();
-    for (WriteRequestBuilder builder : aim) {
+    for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
+      WriteRequestBuilder builder = wrapper.getData();
       WriteRequest request = builder.request();
       if (request instanceof IndexRequest) {
         String id = ((IndexRequest) request).id();
         if (failedDocuments.containsKey(id)) {
           logger.debug("Retry request: {}", request);
-          batchBuffer.addFirst(builder);
+          batchBuffer.addFirst(wrapper);
+        } else {
+          ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else if (request instanceof UpdateRequest) {
         String id = ((UpdateRequest) request).id();
         if (failedDocuments.containsKey(id)) {
           logger.debug("Retry request: {}", toString((UpdateRequest) request));
-          batchBuffer.addFirst(builder);
+          batchBuffer.addFirst(wrapper);
+        } else {
+          ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else if (request instanceof DeleteRequest) {
         String id = ((DeleteRequest) request).id();
         if (failedDocuments.containsKey(id)) {
           logger.debug("Retry request: {}", request);
-          batchBuffer.addFirst(builder);
+          batchBuffer.addFirst(wrapper);
+        } else {
+          ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       }
     }
@@ -194,21 +205,27 @@ public class ElasticsearchChannel implements BufferedChannel {
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
   public void flushIfReachSizeLimit() {
-    WriteRequestBuilder[] aim = batchBuffer.flushIfReachSizeLimit();
+    SyncWrapper<WriteRequestBuilder>[] aim = batchBuffer.flushIfReachSizeLimit();
+    buildAndSend(aim);
+  }
+
+  private void buildAndSend(SyncWrapper<WriteRequestBuilder>[] aim) {
     if (aim != null && aim.length != 0) {
       try {
         buildRequest(aim);
+        ackSuccess(aim);
       } catch (ElasticsearchBulkException e) {
         retryFailedDoc(aim, e);
       }
     }
   }
 
-  private void buildRequest(WriteRequestBuilder[] aim) {
+  private void buildRequest(SyncWrapper<WriteRequestBuilder>[] aim) {
     StringJoiner joiner = new StringJoiner(",", "[", "]");
     // TODO 17/10/26 BulkProcessor
     BulkRequestBuilder bulkRequest = client.prepareBulk();
-    for (WriteRequestBuilder builder : aim) {
+    for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
+      WriteRequestBuilder builder = wrapper.getData();
       if (builder instanceof IndexRequestBuilder) {
         joiner.add(builder.request().toString());
         bulkRequest.add(((IndexRequestBuilder) builder));

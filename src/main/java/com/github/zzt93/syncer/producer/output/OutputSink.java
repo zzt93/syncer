@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.producer.output;
 
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.InputSource;
 
 /**

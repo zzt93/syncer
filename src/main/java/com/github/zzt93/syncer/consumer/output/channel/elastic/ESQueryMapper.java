@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
-import com.github.zzt93.syncer.common.ExtraQuery;
+import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
 import java.util.Collections;
 import java.util.HashMap;

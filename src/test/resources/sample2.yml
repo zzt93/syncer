@@ -40,7 +40,7 @@ pipeline:
             - name: test
               row-name: [id, test]
 
-# input result class: com.github.zzt93.syncer.common.SyncData
+# input result class: com.github.zzt93.syncer.common.data.SyncData
 #{
 #  schemas: xxx
 #  table: xxx
@@ -68,7 +68,7 @@ pipeline:
         statement: ["#map = new java.util.HashMap()", "#map.put('des', #tag)", "row.get('tags').add(#map)"]
 
 
-# filter result class: com.github.zzt93.syncer.common.SyncData
+# filter result class: com.github.zzt93.syncer.common.data.SyncData
 #{
 #  schemas: xxx
 #  table: xxx

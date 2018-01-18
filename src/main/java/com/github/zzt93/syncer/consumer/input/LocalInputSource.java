@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.input;
 
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
@@ -61,7 +61,7 @@ public class LocalInputSource implements InputSource {
 
   @Override
   public boolean input(SyncData data) {
-    data.setSource(connection.connectionIdentifier());
+    data.setSourceIdentifier(connection.connectionIdentifier());
     return filterInput.add(data);
   }
 
@@ -69,7 +69,7 @@ public class LocalInputSource implements InputSource {
   public boolean input(SyncData[] data) {
     List<SyncData> res = new ArrayList<>(data.length);
     for (SyncData datum : data) {
-      res.add(datum.setSource(connection.connectionIdentifier()));
+      res.add(datum.setSourceIdentifier(connection.connectionIdentifier()));
     }
     return filterInput.addAll(res);
   }

@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.Starter;
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;

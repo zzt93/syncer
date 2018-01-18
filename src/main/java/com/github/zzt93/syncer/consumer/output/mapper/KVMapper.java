@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.mapper;
 
-import com.github.zzt93.syncer.common.ExtraQuery;
-import com.github.zzt93.syncer.common.SyncData;
+import com.github.zzt93.syncer.common.data.ExtraQuery;
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
 import java.util.HashMap;
 import java.util.Map;

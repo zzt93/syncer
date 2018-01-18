@@ -36,7 +36,7 @@ pipeline:
             - name: folder
               row-name: [id, name, uploader]
 
-# input result class: com.github.zzt93.syncer.common.SyncData
+# input result class: com.github.zzt93.syncer.common.data.SyncData
 #{
 #  schemas: xxx
 #  table: xxx
@@ -71,7 +71,7 @@ pipeline:
         else-body:
           drop: {}
 
-# filter result class: com.github.zzt93.syncer.common.SyncData
+# filter result class: com.github.zzt93.syncer.common.data.SyncData
 #{
 #  schemas: xxx
 #  table: xxx
