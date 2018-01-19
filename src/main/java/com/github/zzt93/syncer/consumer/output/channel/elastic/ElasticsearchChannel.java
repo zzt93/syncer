@@ -165,7 +165,7 @@ public class ElasticsearchChannel implements BufferedChannel {
       }
       if (failedDocuments.containsKey(id)) {
         logger.info("Retry request: {}", reqStr == null ? request : reqStr);
-        if (wrapper.count() < batch.getMaxRetry()) {
+        if (wrapper.retryCount() < batch.getMaxRetry()) {
           batchBuffer.addFirst(wrapper);
         } else {
           // TODO 18/1/18 fail log

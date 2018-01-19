@@ -10,12 +10,13 @@ import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
 public class IdGenerator {
 
   public static final String EID = "eid";
-  private static final String SEP  = "_";
+  private static final String SEP  = "/";
 
-  public static String fromEvent(Event event, String binlogFileName) {
-    EventHeaderV4 header = event.getHeader();
-    return header.getServerId() + SEP + binlogFileName + SEP + header
-        .getPosition() + SEP + header.getEventType();
+  public static String fromEvent(Event[] event, String binlogFileName) {
+    EventHeaderV4 tableMap = event[0].getHeader();
+    EventHeaderV4 second = event[1].getHeader();
+    return second.getServerId() + SEP + binlogFileName + SEP + tableMap
+        .getPosition() + SEP + second.getEventType();
   }
 
   public static String fromEventId(String eventId, int ordinal) {

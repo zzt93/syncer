@@ -1,7 +1,10 @@
 package com.github.zzt93.syncer.consumer.ack;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
+import com.google.common.primitives.Bytes;
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
@@ -10,6 +13,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
+import java.util.LinkedList;
 import java.util.concurrent.ConcurrentSkipListSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +54,7 @@ public class FileBasedSet<T extends Comparable<T>> {
       return;
     }
     T first = set.first();
+    logger.debug("Flushing ack info {}", first);
     file.clear();
     try {
       file.put(first.toString().getBytes("utf-8"));
@@ -57,6 +62,22 @@ public class FileBasedSet<T extends Comparable<T>> {
       logger.error("Impossible", ignore);
     }
     file.force();
+  }
+
+  public static byte[] readData(Path path) throws IOException {
+    LinkedList<Integer> bytes = new LinkedList<>();
+    try (BufferedReader br = new BufferedReader(
+        new InputStreamReader(Files.newInputStream(path)))) {
+      int ch;
+      while ((ch = br.read()) != -1) {
+        if (ch == 0) {
+          break;
+        } else {
+          bytes.add(ch);
+        }
+      }
+    }
+    return Bytes.toArray(bytes);
   }
 
 }

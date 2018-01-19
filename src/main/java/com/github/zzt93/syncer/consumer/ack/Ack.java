@@ -63,7 +63,7 @@ public class Ack {
   }
 
   private BinlogInfo recoverBinlogInfo(Path path, BinlogInfo binlogInfo) throws IOException {
-    byte[] bytes = Files.readAllBytes(path);
+    byte[] bytes = FileBasedSet.readData(path);
     if (bytes.length > 0) {
       try {
         binlogInfo = IdGenerator.fromDataId(new String(bytes, "utf-8"));

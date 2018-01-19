@@ -108,7 +108,7 @@ public class MySQLChannel implements BufferedChannel {
         int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
         for (int i = 0; i < updateCounts.length; i++) {
           if (updateCounts[i] == Statement.EXECUTE_FAILED) {
-            if (sqls[i].count() < batch.getMaxRetry()) {
+            if (sqls[i].retryCount() < batch.getMaxRetry()) {
               batchBuffer.addFirst(sqls[i]);
             } else {
               // TODO 18/1/18 fail log

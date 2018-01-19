@@ -18,7 +18,6 @@ public class PositionFlusher implements Runnable {
 
   @Override
   public void run() {
-    logger.debug("Flushing ack info");
     try {
       ack.flush();
     } catch (Exception e) {

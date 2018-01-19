@@ -31,7 +31,7 @@ public class Dispatcher {
   }
 
   public boolean dispatch(Event... events) {
-    String eventId = IdGenerator.fromEvent(events[1], binlogInfo.get().getBinlogFilename());
+    String eventId = IdGenerator.fromEvent(events, binlogInfo.get().getBinlogFilename());
     MDC.put(IdGenerator.EID, eventId);
     boolean res = true;
     for (FilterChain filterChain : filterChains) {

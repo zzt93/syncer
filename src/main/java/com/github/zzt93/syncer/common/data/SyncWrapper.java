@@ -10,7 +10,7 @@ public class SyncWrapper<T> implements Retryable {
   private final String syncDataId;
   private final String sourceId;
   private final T data;
-  private int count = 0;
+  private int retryCount = 0;
 
   public SyncWrapper(SyncData event, T data) {
     this.syncDataId = event.getDataId();
@@ -32,11 +32,21 @@ public class SyncWrapper<T> implements Retryable {
 
   @Override
   public void inc() {
-    count++;
+    retryCount++;
   }
 
   @Override
-  public int count() {
-    return count;
+  public int retryCount() {
+    return retryCount;
+  }
+
+  @Override
+  public String toString() {
+    return "SyncWrapper{" +
+        "sourceId='" + sourceId + '\'' +
+        ", syncDataId='" + syncDataId + '\'' +
+        ", retryCount=" + retryCount +
+        ", data=" + data +
+        '}';
   }
 }

@@ -7,6 +7,6 @@ public interface Retryable {
 
   void inc();
 
-  int count();
+  int retryCount();
 
 }
