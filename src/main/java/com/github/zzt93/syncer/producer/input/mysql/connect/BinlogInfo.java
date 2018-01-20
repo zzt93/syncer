@@ -1,9 +1,11 @@
-package com.github.zzt93.syncer.producer.input.connect;
+package com.github.zzt93.syncer.producer.input.mysql.connect;
+
+import com.github.zzt93.syncer.common.data.SyncInitMeta;
 
 /**
  * @author zzt
  */
-public class BinlogInfo implements Comparable<BinlogInfo> {
+public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
 
   private final String binlogFilename;
   private final long binlogPosition;

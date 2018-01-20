@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.input.connect;
+package com.github.zzt93.syncer.producer.input.mysql.connect;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;

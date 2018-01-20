@@ -5,8 +5,8 @@ import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.producer.dispatch.event.RowsEvent;
-import com.github.zzt93.syncer.producer.input.meta.ConnectionSchemaMeta;
-import com.github.zzt93.syncer.producer.input.meta.TableMeta;
+import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
+import com.github.zzt93.syncer.producer.input.mysql.meta.TableMeta;
 import java.util.HashMap;
 import java.util.List;
 

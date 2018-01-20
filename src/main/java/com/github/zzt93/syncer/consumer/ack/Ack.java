@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.ack;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.syncer.SyncerMysql;
-import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

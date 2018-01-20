@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.common;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
-import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 
 /**
  * @author zzt

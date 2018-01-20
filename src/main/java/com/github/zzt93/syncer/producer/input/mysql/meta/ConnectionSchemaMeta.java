@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.input.meta;
+package com.github.zzt93.syncer.producer.input.mysql.meta;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;

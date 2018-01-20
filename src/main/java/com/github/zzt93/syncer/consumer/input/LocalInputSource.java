@@ -1,42 +1,36 @@
 package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
-import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
-import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
  */
-public class LocalInputSource implements InputSource {
+public abstract class LocalInputSource implements InputSource {
 
   private final BlockingDeque<SyncData> filterInput;
-  private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
 
   private final Set<Schema> schemas;
-  private final MysqlConnection connection;
-  private final BinlogInfo binlogInfo;
+  private final Connection connection;
+  private final SyncInitMeta syncInitMeta;
   private final String clientId;
 
   public LocalInputSource(
-      Set<Schema> schemas,
-      MysqlConnection connection,
-      BinlogInfo binlogInfo, String clientId,
-      BlockingDeque<SyncData> filterInput) {
+      String clientId, Connection connection, Set<Schema> schemas,
+      SyncInitMeta syncInitMeta,
+      BlockingDeque<SyncData> input) {
     this.schemas = schemas;
     this.connection = connection;
-    this.binlogInfo = binlogInfo;
+    this.syncInitMeta = syncInitMeta;
     this.clientId = clientId;
-    this.filterInput = filterInput;
+    this.filterInput = input;
   }
 
   @Override
@@ -45,9 +39,7 @@ public class LocalInputSource implements InputSource {
   }
 
   @Override
-  public BinlogInfo getBinlogInfo() {
-    return binlogInfo;
-  }
+  public abstract SyncInitMeta getSyncInitMeta();
 
   @Override
   public Set<Schema> getSchemas() {
@@ -98,7 +90,7 @@ public class LocalInputSource implements InputSource {
     return "LocalInputSource{" +
         "schemas=" + schemas +
         ", connection=" + connection +
-        ", binlogInfo=" + binlogInfo +
+        ", syncInitMeta=" + syncInitMeta +
         ", clientId='" + clientId + '\'' +
         '}';
   }

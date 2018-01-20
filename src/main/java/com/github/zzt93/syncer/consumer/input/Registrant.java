@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.input;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.consumer.InputSource;
-import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,10 +34,10 @@ public class Registrant {
     return res;
   }
 
-  void addDatasource(MysqlMaster mysqlMaster, BinlogInfo binlogInfo) {
-    LocalInputSource inputSource = new LocalInputSource(
-        mysqlMaster.getSchemaSet(),
-        mysqlMaster.getConnection(), binlogInfo, clientId, filterInput);
+  void addMySQLDatasource(MysqlMaster mysqlMaster, BinlogInfo syncInitMeta) {
+    LocalInputSource inputSource = new MySQLLocalInputSource(
+        clientId, mysqlMaster.getConnection(), mysqlMaster.getSchemaSet(),
+        syncInitMeta, filterInput);
     inputSources.add(inputSource);
   }
 

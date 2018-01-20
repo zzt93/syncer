@@ -1,12 +1,16 @@
 package com.github.zzt93.syncer.producer.register;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
-import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
+import com.github.zzt93.syncer.consumer.input.MongoInputSource;
+import com.github.zzt93.syncer.consumer.input.MySQLInputSource;
+import com.github.zzt93.syncer.producer.input.mongo.DocId;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.LocalOutputSink;
 import com.github.zzt93.syncer.producer.output.OutputSink;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import java.util.IdentityHashMap;
 import java.util.Set;
@@ -25,6 +29,7 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   private Logger logger = LoggerFactory.getLogger(LocalConsumerRegistry.class);
 
   private ConcurrentHashMap<Connection, BinlogInfo> olderBinlog = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<Connection, DocId> smallerId = new ConcurrentHashMap<>();
   private ConcurrentSkipListSet<Connection> voted = new ConcurrentSkipListSet<>();
   private ConcurrentHashMap<Connection, Set<InputSource>> inputSources = new ConcurrentHashMap<>();
 
@@ -35,8 +40,15 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
       logger.warn("Output sink is already started, fail to register");
       return false;
     }
-    olderBinlog.compute(connection, (k, v) -> v == null ? source.getBinlogInfo() :
-        v.compareTo(source.getBinlogInfo()) <= 0 ? v : source.getBinlogInfo());
+    if (source instanceof MySQLInputSource) {
+      BinlogInfo syncInitMeta = ((MySQLInputSource) source).getSyncInitMeta();
+      olderBinlog.compute(connection, (k, v) -> v == null ? syncInitMeta :
+          v.compareTo(syncInitMeta) <= 0 ? v : syncInitMeta);
+    } else if (source instanceof MongoInputSource) {
+      DocId syncInitMeta = ((MongoInputSource) source).getSyncInitMeta();
+      smallerId.compute(connection, (k, v) -> v == null ? syncInitMeta :
+          v.compareTo(syncInitMeta) <= 0 ? v : syncInitMeta);
+    }
     final boolean[] add = new boolean[1];
     inputSources.compute(connection, (k, v) -> {
       if (v == null) {
@@ -55,15 +67,22 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
 
   @Override
   public BinlogInfo votedBinlogInfo(Connection connection) {
-    Preconditions.checkState(olderBinlog.containsKey(connection), "no input source registered");
+    checkState(olderBinlog.containsKey(connection), "no input source registered");
     voted.add(connection);
     return olderBinlog.get(connection);
   }
 
   @Override
+  public DocId votedMongoId(Connection connection) {
+    checkState(smallerId.containsKey(connection), "no input source registered");
+    voted.add(connection);
+    return smallerId.get(connection);
+  }
+
+  @Override
   public IdentityHashMap<Set<Schema>, OutputSink> outputSink(Connection connection) {
-    Preconditions.checkState(inputSources.containsKey(connection), "no input source registered");
-    Preconditions.checkState(voted.contains(connection), "should invoke votedBinlogInfo first");
+    checkState(inputSources.containsKey(connection), "no input source registered");
+    checkState(voted.contains(connection), "should invoke votedBinlogInfo first");
     IdentityHashMap<Set<Schema>, OutputSink> res = new IdentityHashMap<>();
     // TODO 18/1/15 may reuse but not new
     for (InputSource inputSource : inputSources.get(connection)) {

@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
-import com.github.zzt93.syncer.producer.input.connect.BinlogInfo;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.util.HashMap;
@@ -43,7 +43,7 @@ public class RegistrationStarter implements Starter<PipelineInput, Set<MysqlMast
     for (MysqlMaster mysqlMaster : pipelineInput.getMysqlMasterSet()) {
       String identifier = mysqlMaster.getConnection().initIdentifier();
       BinlogInfo binlogInfo = id2Binlog.get(identifier);
-      registrant.addDatasource(mysqlMaster, binlogInfo);
+      registrant.addMySQLDatasource(mysqlMaster, binlogInfo);
     }
   }
 

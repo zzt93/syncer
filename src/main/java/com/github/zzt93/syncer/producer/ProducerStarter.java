@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException
 import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
-import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
+import com.github.zzt93.syncer.producer.input.mysql.connect.MasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.util.Set;

@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.common;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.consumer.filter.FilterJob;
-import com.github.zzt93.syncer.producer.input.connect.MasterConnector;
+import com.github.zzt93.syncer.producer.input.mysql.connect.MasterConnector;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>

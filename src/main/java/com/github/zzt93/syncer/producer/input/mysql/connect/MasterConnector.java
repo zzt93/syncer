@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.input.connect;
+package com.github.zzt93.syncer.producer.input.mysql.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
@@ -9,7 +9,7 @@ import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
-import com.github.zzt93.syncer.producer.input.meta.ConnectionSchemaMeta;
+import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
