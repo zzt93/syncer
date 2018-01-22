@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
+import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
@@ -62,10 +63,10 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
         MasterConnector masterConnector = null;
         switch (masterSource.getSourceType()) {
           case MYSQL:
-            masterConnector = new MysqlMasterConnector((MysqlConnection) connection, consumerRegistry, maxRetry);
+            masterConnector = new MysqlMasterConnector(new MysqlConnection(connection), consumerRegistry, maxRetry);
             break;
           case MONGO:
-            masterConnector =  new MongoMasterConnector(connection, consumerRegistry, maxRetry);
+            masterConnector = new MongoMasterConnector(new MongoConnection(connection), consumerRegistry, maxRetry);
             break;
         }
         service.submit(masterConnector);

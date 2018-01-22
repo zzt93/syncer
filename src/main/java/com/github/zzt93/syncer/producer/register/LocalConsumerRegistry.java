@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.consumer.input.MongoInputSource;
 import com.github.zzt93.syncer.consumer.input.MySQLInputSource;
-import com.github.zzt93.syncer.producer.input.mongo.DocId;
+import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.LocalOutputSink;
 import com.github.zzt93.syncer.producer.output.OutputSink;
@@ -29,7 +29,7 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   private Logger logger = LoggerFactory.getLogger(LocalConsumerRegistry.class);
 
   private ConcurrentHashMap<Connection, BinlogInfo> olderBinlog = new ConcurrentHashMap<>();
-  private ConcurrentHashMap<Connection, DocId> smallerId = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<Connection, DocTimestamp> smallerId = new ConcurrentHashMap<>();
   private ConcurrentSkipListSet<Connection> voted = new ConcurrentSkipListSet<>();
   private ConcurrentHashMap<Connection, Set<InputSource>> inputSources = new ConcurrentHashMap<>();
 
@@ -45,7 +45,7 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
       olderBinlog.compute(connection, (k, v) -> v == null ? syncInitMeta :
           v.compareTo(syncInitMeta) <= 0 ? v : syncInitMeta);
     } else if (source instanceof MongoInputSource) {
-      DocId syncInitMeta = ((MongoInputSource) source).getSyncInitMeta();
+      DocTimestamp syncInitMeta = ((MongoInputSource) source).getSyncInitMeta();
       smallerId.compute(connection, (k, v) -> v == null ? syncInitMeta :
           v.compareTo(syncInitMeta) <= 0 ? v : syncInitMeta);
     }
@@ -73,7 +73,7 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   }
 
   @Override
-  public DocId votedMongoId(Connection connection) {
+  public DocTimestamp votedMongoId(Connection connection) {
     checkState(smallerId.containsKey(connection), "no input source registered");
     voted.add(connection);
     return smallerId.get(connection);

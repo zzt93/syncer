@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
 import com.github.zzt93.syncer.consumer.InputSource;
-import com.github.zzt93.syncer.producer.input.mongo.DocId;
+import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Preconditions;
@@ -43,9 +43,9 @@ public class Registrant {
     LocalInputSource inputSource = null;
     switch (sourceType) {
       case MONGO:
-        Preconditions.checkState(syncInitMeta instanceof DocId);
+        Preconditions.checkState(syncInitMeta instanceof DocTimestamp);
         inputSource = new MongoLocalInputSource(clientId,masterSource.getConnection(),masterSource.getSchemaSet(),
-            (DocId) syncInitMeta,filterInput);
+            (DocTimestamp) syncInitMeta,filterInput);
         break;
       case MYSQL:
         Preconditions.checkState(syncInitMeta instanceof BinlogInfo);

@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.producer.register;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
-import com.github.zzt93.syncer.producer.input.mongo.DocId;
+import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import java.util.IdentityHashMap;
@@ -18,7 +18,7 @@ public interface ConsumerRegistry {
 
   BinlogInfo votedBinlogInfo(Connection connection);
 
-  DocId votedMongoId(Connection connection);
+  DocTimestamp votedMongoId(Connection connection);
 
   IdentityHashMap<Set<Schema>, OutputSink> outputSink(Connection connection);
 }
