@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class SyncerMysql {
+public class SyncerMeta {
 
-  private Logger logger = LoggerFactory.getLogger(SyncerMysql.class);
+  private Logger logger = LoggerFactory.getLogger(SyncerMeta.class);
   private String lastRunMetadataDir = ".";
 
   public String getLastRunMetadataDir() {

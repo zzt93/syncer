@@ -7,8 +7,21 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
  */
 public class DocId implements SyncInitMeta<DocId> {
 
+  private final String dataId;
+
+  public DocId(String data) {
+    dataId = data;
+  }
+
   @Override
   public int compareTo(DocId o) {
-    return 0;
+    return dataId.compareTo(o.dataId);
+  }
+
+  @Override
+  public String toString() {
+    return "DocId{" +
+        "dataId='" + dataId + '\'' +
+        '}';
   }
 }

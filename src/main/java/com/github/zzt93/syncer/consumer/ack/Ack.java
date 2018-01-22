@@ -1,17 +1,19 @@
 package com.github.zzt93.syncer.consumer.ack;
 
 import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
-import com.github.zzt93.syncer.config.syncer.SyncerMysql;
-import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
+import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
+import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
+import com.github.zzt93.syncer.config.syncer.SyncerMeta;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,29 +29,33 @@ public class Ack {
   private Map<String, FileBasedSet<String>> ackMap = new HashMap<>();
   private final String clientId;
 
-  public static Ack build(String clientId, SyncerMysql syncerMysql, List<String> idList,
-      HashMap<String, BinlogInfo> idBinlog) {
-    Ack ack = new Ack(clientId, syncerMysql);
-    for (String id : idList) {
-      idBinlog.put(id, ack.addDatasource(id));
+  public static Ack build(String clientId, SyncerMeta syncerMeta, Set<MasterSource> masterSources,
+      HashMap<String, SyncInitMeta> id2SyncInitMeta) {
+    Ack ack = new Ack(clientId, syncerMeta);
+    for (MasterSource masterSource : masterSources) {
+      String id = masterSource.getConnection().connectionIdentifier();
+      SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getSourceType());
+      if (initMeta != null) {
+        id2SyncInitMeta.put(id, initMeta);
+      }
     }
     ack.ackMap = Collections.unmodifiableMap(ack.ackMap);
     return ack;
   }
 
-  private Ack(String clientId, SyncerMysql syncerMysql) {
+  private Ack(String clientId, SyncerMeta syncerMeta) {
     this.clientId = clientId;
-    this.metaDir = syncerMysql.getLastRunMetadataDir();
+    this.metaDir = syncerMeta.getLastRunMetadataDir();
   }
 
-  private BinlogInfo addDatasource(String identifier) {
+  private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {
     Path path = Paths.get(metaDir, clientId, identifier);
-    BinlogInfo binlogInfo = new BinlogInfo();
+    SyncInitMeta syncMeta = null;
     if (!Files.exists(path)) {
       logger.info("Last run meta file not exists, fresh run");
     } else {
       try {
-        binlogInfo = recoverBinlogInfo(path, binlogInfo);
+        syncMeta = recoverBinlogInfo(path, sourceType);
       } catch (IOException ignored) {
         logger.error("Impossible to run to here", ignored);
       }
@@ -59,21 +65,31 @@ public class Ack {
     } catch (IOException e) {
       logger.error("Fail to create file {}", path);
     }
-    return binlogInfo;
+    return syncMeta;
   }
 
-  private BinlogInfo recoverBinlogInfo(Path path, BinlogInfo binlogInfo) throws IOException {
+  private SyncInitMeta recoverBinlogInfo(Path path,
+      MasterSourceType sourceType) throws IOException {
     byte[] bytes = FileBasedSet.readData(path);
+    SyncInitMeta syncInitMeta = null;
     if (bytes.length > 0) {
       try {
-        binlogInfo = IdGenerator.fromDataId(new String(bytes, "utf-8"));
+        String data = new String(bytes, "utf-8");
+        switch (sourceType) {
+          case MYSQL:
+            syncInitMeta = IdGenerator.fromDataId(data);
+            break;
+          case MONGO:
+            syncInitMeta = IdGenerator.fromDocId(data);
+            break;
+        }
       } catch (Exception e) {
         logger.warn("Meta file in {} crashed, take as fresh run", path);
       }
     } else {
       logger.warn("Meta file in {} crashed, take as fresh run", path);
     }
-    return binlogInfo;
+    return syncInitMeta;
   }
 
   public void append(String identifier, String dataId) {

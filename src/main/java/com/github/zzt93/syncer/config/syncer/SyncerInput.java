@@ -7,14 +7,14 @@ public class SyncerInput {
 
   private int worker;
   private int maxRetry;
-  private SyncerMysql mysqlMasters;
+  private SyncerMeta inputMeta;
 
-  public SyncerMysql getMysqlMasters() {
-    return mysqlMasters;
+  public SyncerMeta getInputMeta() {
+    return inputMeta;
   }
 
-  public void setMysqlMasters(SyncerMysql mysqlMasters) {
-    this.mysqlMasters = mysqlMasters;
+  public void setInputMeta(SyncerMeta inputMeta) {
+    this.inputMeta = inputMeta;
   }
 
   public int getWorker() {

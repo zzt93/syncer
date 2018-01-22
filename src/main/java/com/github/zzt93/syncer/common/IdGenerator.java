@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.common;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
+import com.github.zzt93.syncer.producer.input.mongo.DocId;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 
 /**
@@ -31,4 +32,7 @@ public class IdGenerator {
     throw new IllegalArgumentException(dataId);
   }
 
+  public static DocId fromDocId(String data) {
+    return new DocId(data);
+  }
 }

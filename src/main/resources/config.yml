@@ -2,8 +2,8 @@ syncer:
   input:
     worker: 4
     max-retry: 5
-    mysql-masters:
-      last_run_metadata_dir: /tmp/syncer/meta/.last_position/
+    input-meta:
+      last-run-metadata-dir: /tmp/syncer/meta/.last_position/
 
   filter:
     worker: 2

@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.input;
 
-import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -11,19 +11,20 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class MysqlMaster {
+public class MasterSource {
 
-  private Logger logger = LoggerFactory.getLogger(MysqlMaster.class);
+  private final Logger logger = LoggerFactory.getLogger(MasterSource.class);
 
-  private MysqlConnection connection;
+  private MasterSourceType sourceType = MasterSourceType.MYSQL;
+  private Connection connection;
   private List<Schema> schemas = new ArrayList<>();
-  private Set<Schema> schemaSet = new HashSet<>();
+  private final Set<Schema> schemaSet = new HashSet<>();
 
-  public MysqlConnection getConnection() {
+  public Connection getConnection() {
     return connection;
   }
 
-  public void setConnection(MysqlConnection connection) {
+  public void setConnection(Connection connection) {
     this.connection = connection;
   }
 
@@ -43,6 +44,14 @@ public class MysqlMaster {
     }
   }
 
+  public MasterSourceType getSourceType() {
+    return sourceType;
+  }
+
+  public void setSourceType(MasterSourceType sourceType) {
+    this.sourceType = sourceType;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -52,7 +61,7 @@ public class MysqlMaster {
       return false;
     }
 
-    MysqlMaster that = (MysqlMaster) o;
+    MasterSource that = (MasterSource) o;
 
     return connection.equals(that.connection);
   }
@@ -64,7 +73,7 @@ public class MysqlMaster {
 
   @Override
   public String toString() {
-    return "MysqlMaster{" +
+    return "MasterSource{" +
         "connection=" + connection +
         ", schemas=" + schemas +
         '}';

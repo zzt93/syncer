@@ -3,12 +3,12 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.util.FileUtil;
-import com.github.zzt93.syncer.common.util.NetworkUtil;
 import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
+import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
@@ -25,16 +25,16 @@ import org.springframework.util.StringUtils;
 /**
  * @author zzt
  */
-public class MasterConnector implements Runnable {
+public class MysqlMasterConnector implements MasterConnector {
 
   private final static Random random = new Random();
   private final String connectorIdentifier;
   private final int maxRetry;
-  private Logger logger = LoggerFactory.getLogger(MasterConnector.class);
+  private Logger logger = LoggerFactory.getLogger(MysqlMasterConnector.class);
   private BinaryLogClient client;
   private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
-  public MasterConnector(MysqlConnection connection,
+  public MysqlMasterConnector(MysqlConnection connection,
       ConsumerRegistry registry, int maxRetry)
       throws IOException, SchemaUnavailableException {
     this.maxRetry = maxRetry;
@@ -43,7 +43,7 @@ public class MasterConnector implements Runnable {
       throw new InvalidPasswordException(password);
     }
 
-    connectorIdentifier = NetworkUtil.toIp(connection.getAddress()) + ":" + connection.getPort();
+    connectorIdentifier = connection.initIdentifier();
 
     configLogClient(connection, password, registry);
     configEventListener(connection, registry);

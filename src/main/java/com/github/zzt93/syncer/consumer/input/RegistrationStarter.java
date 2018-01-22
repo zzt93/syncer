@@ -2,29 +2,27 @@ package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
-import com.github.zzt93.syncer.config.pipeline.input.MysqlMaster;
+import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
-import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
  */
-public class RegistrationStarter implements Starter<PipelineInput, Set<MysqlMaster>> {
+public class RegistrationStarter implements Starter<PipelineInput, Set<MasterSource>> {
 
   private final Logger logger = LoggerFactory.getLogger(RegistrationStarter.class);
   private Registrant registrant;
@@ -35,15 +33,13 @@ public class RegistrationStarter implements Starter<PipelineInput, Set<MysqlMast
       BlockingDeque<SyncData> filterInput)  {
     String clientId = getClientId(consumerId);
     registrant = new Registrant(clientId, consumerRegistry, filterInput);
-    List<String> idList = pipelineInput.getMysqlMasterSet().stream()
-        .map(mysqlMaster -> mysqlMaster.getConnection().initIdentifier()).collect(
-            Collectors.toList());
-    HashMap<String, BinlogInfo> id2Binlog = new HashMap<>();
-    ack = Ack.build(clientId, input.getMysqlMasters(), idList, id2Binlog);
-    for (MysqlMaster mysqlMaster : pipelineInput.getMysqlMasterSet()) {
-      String identifier = mysqlMaster.getConnection().initIdentifier();
-      BinlogInfo binlogInfo = id2Binlog.get(identifier);
-      registrant.addMySQLDatasource(mysqlMaster, binlogInfo);
+    HashMap<String, SyncInitMeta> id2SyncInitMeta = new HashMap<>();
+    Set<MasterSource> masterSet = pipelineInput.getMasterSet();
+    ack = Ack.build(clientId, input.getInputMeta(), masterSet, id2SyncInitMeta);
+    for (MasterSource masterSource : masterSet) {
+      String identifier = masterSource.getConnection().initIdentifier();
+      SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
+      registrant.addDatasource(masterSource, syncInitMeta, masterSource.getSourceType());
     }
   }
 
@@ -66,7 +62,7 @@ public class RegistrationStarter implements Starter<PipelineInput, Set<MysqlMast
   }
 
   @Override
-  public Set<MysqlMaster> fromPipelineConfig(PipelineInput pipelineInput) {
-    return pipelineInput.getMysqlMasterSet();
+  public Set<MasterSource> fromPipelineConfig(PipelineInput pipelineInput) {
+    return pipelineInput.getMasterSet();
   }
 }

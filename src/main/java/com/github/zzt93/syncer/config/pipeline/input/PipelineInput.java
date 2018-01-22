@@ -15,23 +15,23 @@ public class PipelineInput {
 
   private Logger logger = LoggerFactory.getLogger(PipelineInput.class);
 
-  private List<MysqlMaster> mysqlMasters = new ArrayList<>();
-  private Set<MysqlMaster> mysqlMasterSet = new HashSet<>();
+  private List<MasterSource> masters = new ArrayList<>();
+  private Set<MasterSource> masterSet = new HashSet<>();
 
-  public List<MysqlMaster> getMysqlMasters() {
-    return mysqlMasters;
+  public List<MasterSource> getMasters() {
+    return masters;
   }
 
-  public void setMysqlMasters(List<MysqlMaster> mysqlMasters) {
-    this.mysqlMasters = mysqlMasters;
-    mysqlMasterSet.addAll(mysqlMasters);
-    if (mysqlMasterSet.size() < mysqlMasters.size()) {
+  public void setMasters(List<MasterSource> masters) {
+    this.masters = masters;
+    masterSet.addAll(masters);
+    if (masterSet.size() < masters.size()) {
       logger.warn("Duplicate mysql master connection endpoint");
     }
   }
 
-  public Set<MysqlMaster> getMysqlMasterSet() {
-    return mysqlMasterSet;
+  public Set<MasterSource> getMasterSet() {
+    return masterSet;
   }
 
 }
