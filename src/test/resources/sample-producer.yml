@@ -1,0 +1,15 @@
+
+input:
+  masters:
+    - connection:
+        address: localhost
+        port: 3308
+        user: root
+        passwordFile: password
+
+    - connection:
+        address: localhost
+        port: 27017
+
+
+

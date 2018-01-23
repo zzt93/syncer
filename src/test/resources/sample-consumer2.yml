@@ -1,0 +1,110 @@
+input:
+  masters:
+    - connection:
+        address: 192.168.1.100
+        port: 1234
+        user: root
+        passwordFile: password
+      schemas:
+        - name: "test_*"
+          tables:
+          - name: affair
+            rowName: [id, name] # default id is not null, other can be null
+          - name: file
+            rowName: [id, name, uploader]
+          - name: folder
+            rowName: [id, name, uploader]
+        - name: "simple"
+          tables:
+          - name: test
+            rowName: [id, test]
+
+    - connection:
+        address: 192.168.1.200
+        port: 1234
+        user: root
+        password-file: password
+      schemas:
+        - name: "test_*"
+          tables:
+          - name: affair
+            rowName: [id, name] # default id is not null, other can be null
+          - name: file
+            rowName: [id, name, uploader]
+          - name: folder
+            rowName: [id, name, uploader]
+        - name: "simple"
+          tables:
+          - name: test
+            rowName: [id, test]
+
+# input result class: com.github.zzt93.syncer.common.data.SyncData
+#{
+#  schemas: xxx
+#  table: xxx
+#  id: xid
+#  row: {
+#    id: xid
+#    ...
+#  }
+#  extra: {
+#    ...
+#  }
+#}
+
+filter:
+  - switcher:
+      switch: "table"
+      case: # support default branch
+        "affair": ["#suffix = '-' + row['id']","#type = 'INDEX_AFFAIR'", "renameColumn('xx', 'yy')" ]
+        "file": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '0')"]
+        "folder": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '1')"]
+  - statement: [ "#tags = row['tags']", "updateColumn('tags', new java.util.ArrayList())", "removeColumns('id', 'xid')"]
+  - foreach:
+      var: "tag"
+      in: "#tags?.split('\n')"
+      statement: ["#map = new java.util.HashMap()", "#map.put('des', #tag)", "row.get('tags').add(#map)"]
+
+
+# filter result class: com.github.zzt93.syncer.common.data.SyncData
+#{
+#  schemas: xxx
+#  table: xxx
+#  id: xid
+#  row: {
+#    id: xid
+#    ...
+#  }
+#  extra: {
+#    ...
+#  }
+#}
+
+# Special expression
+# "row.*"
+# "row.*.flatten"
+# "extra.*"
+# "extra.*.flatten"
+
+output:
+  elasticsearch:
+    connection:
+      clusterName: elasticsearch
+      clusterNodes: ["192.168.1.100:9300"]
+      user: elastic-user # optional if not enable security
+      passwordFile: es-password # optional if not enable security
+    documentMapping: # mapping from input data to document json
+      index: "table + #suffix" # default schema
+      type: "table" # default table
+      documentId: "id" # default id
+      fieldsMapping: # rest row.* => row.*
+        "row": "row.*.flatten"
+
+  http:
+    connection:
+      address: 192.168.1.100
+      port: 9700
+    jsonMapping:
+      "data": "row.*"
+      "type": "extra['type']"
+
