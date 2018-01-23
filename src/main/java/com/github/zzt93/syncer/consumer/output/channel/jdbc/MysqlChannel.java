@@ -25,16 +25,16 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /**
  * @author zzt
  */
-public class MySQLChannel implements BufferedChannel {
+public class MysqlChannel implements BufferedChannel {
 
-  private final Logger logger = LoggerFactory.getLogger(MySQLChannel.class);
+  private final Logger logger = LoggerFactory.getLogger(MysqlChannel.class);
   private final BatchBuffer<SyncWrapper> batchBuffer;
   private final PipelineBatch batch;
   private final JdbcTemplate jdbcTemplate;
   private final SQLMapper sqlMapper;
   private final Ack ack;
 
-  public MySQLChannel(MysqlConnection connection, RowMapping rowMapping,
+  public MysqlChannel(MysqlConnection connection, RowMapping rowMapping,
       PipelineBatch batch, Ack ack) {
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
     batchBuffer = new BatchBuffer<>(batch, SyncWrapper.class);
@@ -74,7 +74,7 @@ public class MySQLChannel implements BufferedChannel {
 
   @Override
   public String des() {
-    return "MySQLChannel{" +
+    return "MysqlChannel{" +
         "jdbcTemplate=" + jdbcTemplate +
         '}';
   }

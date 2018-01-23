@@ -6,7 +6,7 @@ import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.consumer.input.MongoInputSource;
-import com.github.zzt93.syncer.consumer.input.MySQLInputSource;
+import com.github.zzt93.syncer.consumer.input.MysqlInputSource;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.LocalOutputSink;
@@ -40,8 +40,8 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
       logger.warn("Output sink is already started, fail to register");
       return false;
     }
-    if (source instanceof MySQLInputSource) {
-      BinlogInfo syncInitMeta = ((MySQLInputSource) source).getSyncInitMeta();
+    if (source instanceof MysqlInputSource) {
+      BinlogInfo syncInitMeta = ((MysqlInputSource) source).getSyncInitMeta();
       olderBinlog.compute(connection, (k, v) -> v == null ? syncInitMeta :
           v.compareTo(syncInitMeta) <= 0 ? v : syncInitMeta);
     } else if (source instanceof MongoInputSource) {

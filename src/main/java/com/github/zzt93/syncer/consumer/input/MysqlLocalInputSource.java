@@ -10,11 +10,11 @@ import java.util.concurrent.BlockingDeque;
 /**
  * @author zzt
  */
-public class MySQLLocalInputSource extends LocalInputSource implements MySQLInputSource {
+public class MysqlLocalInputSource extends LocalInputSource implements MysqlInputSource {
 
   private final BinlogInfo syncInitMeta;
 
-  public MySQLLocalInputSource(String clientId,
+  public MysqlLocalInputSource(String clientId,
       Connection connection,
       Set<Schema> schemas,
       BinlogInfo syncInitMeta,

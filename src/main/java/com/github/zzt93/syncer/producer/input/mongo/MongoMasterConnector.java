@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.config.pipeline.input.Table;
+import com.github.zzt93.syncer.producer.dispatch.MongoDispatcher;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
@@ -25,17 +26,21 @@ import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import org.bson.Document;
 import org.bson.types.BSONTimestamp;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 /**
  * @author zzt
  */
 public class MongoMasterConnector implements MasterConnector {
+  private final Logger logger = LoggerFactory.getLogger(MongoMasterConnector.class);
 
   private final String identifier;
   private final int maxRetry;
   private final AtomicReference<DocTimestamp> docTimestamp = new AtomicReference<>();
   private MongoCursor<Document> cursor;
+  private MongoDispatcher mongoDispatcher;
 
 
   public MongoMasterConnector(MongoConnection connection, ConsumerRegistry registry,
@@ -55,6 +60,7 @@ public class MongoMasterConnector implements MasterConnector {
   private void configDispatch(MongoConnection connection, ConsumerRegistry registry) {
     IdentityHashMap<Set<Schema>, OutputSink> schemaSinkMap = registry
         .outputSink(connection);
+    mongoDispatcher = new MongoDispatcher(schemaSinkMap);
   }
 
   private void configCursor(MongoConnection connection, ConsumerRegistry registry) {
@@ -71,11 +77,12 @@ public class MongoMasterConnector implements MasterConnector {
         //.append("fromMigrate", new BasicDBObject("$exists", "false"))
         ;
 
-    // Is this needed for capped collections?
-    BasicDBObject sort = new BasicDBObject("$natural", 1);
+    // no need for capped collections:
+    // perform a find() on a capped collection with no ordering specified,
+    // MongoDB guarantees that the ordering of results is the same as the insertion order.
+//    BasicDBObject sort = new BasicDBObject("$natural", 1);
 
     this.cursor = coll.find(query)
-        .sort(sort)
         .cursorType(CursorType.TailableAwait)
         .oplogReplay(true)
         .iterator();
@@ -99,17 +106,17 @@ public class MongoMasterConnector implements MasterConnector {
   public void run() {
     Thread.currentThread().setName(identifier);
     for (int i = 0; i < maxRetry; i++) {
-      while (true) {
+      while (!Thread.interrupted()) {
         while (cursor.hasNext()) {
           Document d = cursor.next();
-          // dispatch
+          mongoDispatcher.dispatch(d);
           docTimestamp.set(new DocTimestamp((BSONTimestamp) d.get("ts")));
         }
 
         try {
           Thread.sleep(1000);
-        } catch (InterruptedException e) {
-
+        } catch (InterruptedException ignored) {
+          logger.error("", ignored);
         }
       }
     }

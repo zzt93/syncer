@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
-import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
+import com.github.zzt93.syncer.producer.dispatch.MysqlDispatcher;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.producer.output.OutputSink;
@@ -78,7 +78,7 @@ public class MysqlMasterConnector implements MasterConnector {
       logger.error("Fail to connect to master to retrieve schema metadata", e);
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new Dispatcher(sinkHashMap, binlogInfo));
+    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkHashMap, binlogInfo));
     client.registerEventListener(eventListener);
     client.registerEventListener((event) -> binlogInfo
         .set(new BinlogInfo(client.getBinlogFilename(), client.getBinlogPosition())));

@@ -12,7 +12,7 @@ public class PipelineOutput {
 
   private Elasticsearch elasticsearch;
   private Http http;
-  private MySQL mysql;
+  private Mysql mysql;
 
   public Elasticsearch getElasticsearch() {
     return elasticsearch;
@@ -30,11 +30,11 @@ public class PipelineOutput {
     this.http = http;
   }
 
-  public MySQL getMysql() {
+  public Mysql getMysql() {
     return mysql;
   }
 
-  public void setMysql(MySQL mysql) {
+  public void setMysql(Mysql mysql) {
     this.mysql = mysql;
   }
 

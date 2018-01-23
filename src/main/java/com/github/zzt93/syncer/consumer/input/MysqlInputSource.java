@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 /**
  * @author zzt
  */
-public interface MySQLInputSource {
+public interface MysqlInputSource {
 
   BinlogInfo getSyncInitMeta();
 

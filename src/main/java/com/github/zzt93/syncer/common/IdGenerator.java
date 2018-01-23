@@ -39,11 +39,11 @@ public class IdGenerator {
     return timestamp.getTime() + SEP + timestamp.getInc();
   }
 
-  public static DocTimestamp fromDocId(String data) {
-    String[] split = data.split(SEP);
-    if (split.length == 2) {
+  public static DocTimestamp fromMongoDataId(String dataId) {
+    String[] split = dataId.split(SEP);
+    if (split.length == 3) {
       return new DocTimestamp(new BSONTimestamp(Integer.parseInt(split[0]), Integer.parseInt(split[1])));
     }
-    throw new IllegalArgumentException(data);
+    throw new IllegalArgumentException(dataId);
   }
 }

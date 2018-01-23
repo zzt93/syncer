@@ -1,9 +1,9 @@
 package com.github.zzt93.syncer.common.data;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
-import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.common.IdGenerator;
 import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -51,8 +51,8 @@ public class SyncData {
   private Object id;
 
 
-  public SyncData(String eventId, int ordinal, TableMapEventData tableMap, String primaryKey,
-      HashMap<String, Object> row, EventType type) {
+  public SyncData(String eventId, int ordinal, String database, String table, String primaryKey,
+      Map<String, Object> row, EventType type) {
     inner = new Meta(eventId, ordinal, type, new StandardEvaluationContext(this));
 
     Object key = row.get(primaryKey);
@@ -61,8 +61,8 @@ public class SyncData {
     } else {
       logger.warn("{} without primary key", type);
     }
-    schema = tableMap.getDatabase();
-    table = tableMap.getTable();
+    schema = database;
+    this.table = table;
     records.putAll(row);
   }
 

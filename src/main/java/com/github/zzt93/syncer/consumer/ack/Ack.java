@@ -80,7 +80,7 @@ public class Ack {
             syncInitMeta = IdGenerator.fromDataId(data);
             break;
           case MONGO:
-            syncInitMeta = IdGenerator.fromDocId(data);
+            syncInitMeta = IdGenerator.fromMongoDataId(data);
             break;
         }
       } catch (Exception e) {

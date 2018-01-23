@@ -49,7 +49,7 @@ public class Registrant {
         break;
       case MYSQL:
         Preconditions.checkState(syncInitMeta instanceof BinlogInfo);
-        inputSource = new MySQLLocalInputSource(
+        inputSource = new MysqlLocalInputSource(
             clientId, masterSource.getConnection(), masterSource.getSchemaSet(),
             (BinlogInfo) syncInitMeta, filterInput);
     }

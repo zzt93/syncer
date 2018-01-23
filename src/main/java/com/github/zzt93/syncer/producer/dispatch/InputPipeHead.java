@@ -42,7 +42,7 @@ public class InputPipeHead {
     String primaryKey = RowsEvent.getPrimaryKey(table.getIndexToName(), table.getPrimaryKeys());
     SyncData[] res = new SyncData[namedRow.size()];
     for (int i = 0; i < res.length; i++) {
-      res[i] = new SyncData(eventId, i, tableMap, primaryKey,
+      res[i] = new SyncData(eventId, i, tableMap.getDatabase(), tableMap.getTable(), primaryKey,
           namedRow.get(i), eventType);
     }
     return res;

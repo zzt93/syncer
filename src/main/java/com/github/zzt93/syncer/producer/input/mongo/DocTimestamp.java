@@ -5,6 +5,8 @@ import org.bson.types.BSONTimestamp;
 
 /**
  * @author zzt
+ * <a href="https://stackoverflow.com/questions/31057827/is-mongodb-id-objectid-generated-in-an-ascending-order">
+ * Should not use doc _id</a>
  */
 public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
 
