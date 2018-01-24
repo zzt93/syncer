@@ -15,7 +15,7 @@ public class MasterSource {
 
   private final Logger logger = LoggerFactory.getLogger(MasterSource.class);
 
-  private MasterSourceType sourceType = MasterSourceType.MYSQL;
+  private MasterSourceType type = MasterSourceType.MySQL;
   private Connection connection;
   private List<Schema> schemas = new ArrayList<>();
   private final Set<Schema> schemaSet = new HashSet<>();
@@ -44,12 +44,12 @@ public class MasterSource {
     }
   }
 
-  public MasterSourceType getSourceType() {
-    return sourceType;
+  public MasterSourceType getType() {
+    return type;
   }
 
-  public void setSourceType(MasterSourceType sourceType) {
-    this.sourceType = sourceType;
+  public void setType(MasterSourceType type) {
+    this.type = type;
   }
 
   @Override

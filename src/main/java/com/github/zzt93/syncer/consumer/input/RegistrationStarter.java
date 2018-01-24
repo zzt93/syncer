@@ -29,26 +29,21 @@ public class RegistrationStarter implements Starter<PipelineInput, Set<MasterSou
   private Ack ack;
 
   public RegistrationStarter(PipelineInput pipelineInput, SyncerInput input,
-      ConsumerRegistry consumerRegistry, int consumerId,
+      ConsumerRegistry consumerRegistry, String consumerId,
       BlockingDeque<SyncData> filterInput)  {
-    String clientId = getClientId(consumerId);
-    registrant = new Registrant(clientId, consumerRegistry, filterInput);
+    registrant = new Registrant(consumerId, consumerRegistry, filterInput);
     HashMap<String, SyncInitMeta> id2SyncInitMeta = new HashMap<>();
     Set<MasterSource> masterSet = pipelineInput.getMasterSet();
-    ack = Ack.build(clientId, input.getInputMeta(), masterSet, id2SyncInitMeta);
+    ack = Ack.build(consumerId, input.getInputMeta(), masterSet, id2SyncInitMeta);
     for (MasterSource masterSource : masterSet) {
-      String identifier = masterSource.getConnection().initIdentifier();
+      String identifier = masterSource.getConnection().connectionIdentifier();
       SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
-      registrant.addDatasource(masterSource, syncInitMeta, masterSource.getSourceType());
+      registrant.addDatasource(masterSource, syncInitMeta, masterSource.getType());
     }
   }
 
   public Ack getAck() {
     return ack;
-  }
-
-  private String getClientId(int consumerId) {
-    return "" + consumerId;
   }
 
   public void start() throws IOException {

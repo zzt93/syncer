@@ -12,6 +12,9 @@ public class MysqlConnection extends Connection {
 
   public static final String DEFAULT_DB = "";
 
+  public MysqlConnection() {
+  }
+
   public MysqlConnection(Connection connection) {
     try {
       setAddress(connection.getAddress());

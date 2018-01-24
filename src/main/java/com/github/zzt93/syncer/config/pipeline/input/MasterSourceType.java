@@ -5,5 +5,5 @@ package com.github.zzt93.syncer.config.pipeline.input;
  */
 public enum MasterSourceType {
 
-  MYSQL, MONGO
+  MySQL, Mongo
 }

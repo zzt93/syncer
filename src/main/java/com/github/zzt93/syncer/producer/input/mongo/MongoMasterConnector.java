@@ -1,7 +1,5 @@
 package com.github.zzt93.syncer.producer.input.mongo;
 
-import com.github.zzt93.syncer.common.util.FileUtil;
-import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.config.pipeline.input.Table;
@@ -28,7 +26,6 @@ import org.bson.Document;
 import org.bson.types.BSONTimestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
 /**
  * @author zzt
@@ -45,13 +42,8 @@ public class MongoMasterConnector implements MasterConnector {
 
   public MongoMasterConnector(MongoConnection connection, ConsumerRegistry registry,
       int maxRetry) throws IOException {
-    identifier = connection.connectionIdentifier();
+    identifier = connection.initIdentifier();
     this.maxRetry = maxRetry;
-
-    String password = FileUtil.readAll(connection.getPasswordFile());
-    if (StringUtils.isEmpty(password)) {
-      throw new InvalidPasswordException(password);
-    }
 
     configCursor(connection, registry);
     configDispatch(connection, registry);
@@ -72,7 +64,7 @@ public class MongoMasterConnector implements MasterConnector {
     Pattern namespaces = getNamespaces(connection, registry);
     Document query = new Document()
         .append("ts", new BasicDBObject("$gte", docTimestamp.getTimestamp()))
-        .append("ns", new BasicDBObject("$in", namespaces))
+        .append("ns", new BasicDBObject("$regex", namespaces))
         // fromMigrate indicates the operation results from a shard rebalancing.
         //.append("fromMigrate", new BasicDBObject("$exists", "false"))
         ;

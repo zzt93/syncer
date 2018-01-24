@@ -61,11 +61,11 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
       try {
         // TODO 18/1/15 skip connection without schemas
         MasterConnector masterConnector = null;
-        switch (masterSource.getSourceType()) {
-          case MYSQL:
+        switch (masterSource.getType()) {
+          case MySQL:
             masterConnector = new MysqlMasterConnector(new MysqlConnection(connection), consumerRegistry, maxRetry);
             break;
-          case MONGO:
+          case Mongo:
             masterConnector = new MongoMasterConnector(new MongoConnection(connection), consumerRegistry, maxRetry);
             break;
         }

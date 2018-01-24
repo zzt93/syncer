@@ -8,6 +8,7 @@ import org.slf4j.LoggerFactory;
  * @author zzt
  */
 public class MongoConnection extends Connection {
+
   private static final Logger logger = LoggerFactory.getLogger(MongoConnection.class);
 
   public MongoConnection(Connection connection) {
@@ -17,12 +18,21 @@ public class MongoConnection extends Connection {
       logger.error("Impossible", ignored);
     }
     setPort(connection.getPort());
+    if (connection.getUser() == null && connection.getPasswordFile() == null) {
+      return;
+    } else if (connection.getUser() == null || connection.getPasswordFile() == null) {
+      throw new InvalidConfigException("Invalid authentication info" + connection);
+    }
     setUser(connection.getUser());
     setPasswordFile(connection.getPasswordFile());
   }
 
   @Override
   public String toConnectionUrl(String path) {
-    return "mongodb://" + super.toConnectionUrl(null);
+    String s = super.toConnectionUrl(null);
+    if (getUser() != null) {
+      s = getUser() + ":" + getPassword() + "@";
+    }
+    return "mongodb://" + s;
   }
 }

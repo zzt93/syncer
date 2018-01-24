@@ -11,9 +11,18 @@ import java.util.List;
  */
 public class PipelineConfig {
 
+  private String consumerId;
   private PipelineInput input;
   private PipelineOutput output;
   private List<FilterConfig> filter = new ArrayList<>();
+
+  public String getConsumerId() {
+    return consumerId;
+  }
+
+  public void setConsumerId(String consumerId) {
+    this.consumerId = consumerId;
+  }
 
   public PipelineInput getInput() {
     return input;

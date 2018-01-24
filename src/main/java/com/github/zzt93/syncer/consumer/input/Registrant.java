@@ -42,13 +42,13 @@ public class Registrant {
       MasterSourceType sourceType) {
     LocalInputSource inputSource = null;
     switch (sourceType) {
-      case MONGO:
-        Preconditions.checkState(syncInitMeta instanceof DocTimestamp);
+      case Mongo:
+        Preconditions.checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is "+syncInitMeta);
         inputSource = new MongoLocalInputSource(clientId,masterSource.getConnection(),masterSource.getSchemaSet(),
             (DocTimestamp) syncInitMeta,filterInput);
         break;
-      case MYSQL:
-        Preconditions.checkState(syncInitMeta instanceof BinlogInfo);
+      case MySQL:
+        Preconditions.checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is "+syncInitMeta);
         inputSource = new MysqlLocalInputSource(
             clientId, masterSource.getConnection(), masterSource.getSchemaSet(),
             (BinlogInfo) syncInitMeta, filterInput);

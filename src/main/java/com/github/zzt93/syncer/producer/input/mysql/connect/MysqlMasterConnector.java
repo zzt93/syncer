@@ -43,7 +43,7 @@ public class MysqlMasterConnector implements MasterConnector {
       throw new InvalidPasswordException(password);
     }
 
-    connectorIdentifier = connection.initIdentifier();
+    connectorIdentifier = connection.connectionIdentifier();
 
     configLogClient(connection, password, registry);
     configEventListener(connection, registry);

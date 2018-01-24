@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.pipeline.ProducerConfig;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.filter.ConsumerStarter;
@@ -40,11 +41,14 @@ public class SyncerApplication implements CommandLineRunner {
 
   @Override
   public void run(String... strings) throws Exception {
-    int consumerId = 0;
     for (PipelineConfig pipelineConfig : YamlEnvironmentPostProcessor.getConfigs()) {
       BlockingDeque<SyncData> filterInput = new LinkedBlockingDeque<>();
+      String consumerId = pipelineConfig.getConsumerId();
+      if (consumerId == null) {
+        throw new InvalidConfigException("No `consumerId` specified");
+      }
       RegistrationStarter registrationStarter = new RegistrationStarter(pipelineConfig.getInput(),
-          syncerConfig.getInput(), consumerRegistry, consumerId++, filterInput);
+          syncerConfig.getInput(), consumerRegistry, consumerId, filterInput);
       registrationStarter.start();
       Ack ack = registrationStarter.getAck();
       new ConsumerStarter(ack, pipelineConfig.getFilter(), syncerConfig.getFilter(), filterInput,

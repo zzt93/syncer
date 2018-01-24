@@ -4,8 +4,7 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import org.bson.types.BSONTimestamp;
 
 /**
- * @author zzt
- * <a href="https://stackoverflow.com/questions/31057827/is-mongodb-id-objectid-generated-in-an-ascending-order">
+ * @author zzt <a href="https://stackoverflow.com/questions/31057827/is-mongodb-id-objectid-generated-in-an-ascending-order">
  * Should not use doc _id</a>
  */
 public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
@@ -16,12 +15,23 @@ public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
     timestamp = data;
   }
 
+  public DocTimestamp() {
+    timestamp = null;
+  }
+
   public BSONTimestamp getTimestamp() {
     return timestamp;
   }
 
   @Override
   public int compareTo(DocTimestamp o) {
+    if (timestamp == null && o.timestamp == null) {
+      return 0;
+    } else if (timestamp == null) {
+      return -1;
+    } else if (o.timestamp == null) {
+      return 1;
+    }
     return timestamp.compareTo(o.timestamp);
   }
 

@@ -33,8 +33,8 @@ public class Ack {
       HashMap<String, SyncInitMeta> id2SyncInitMeta) {
     Ack ack = new Ack(clientId, syncerMeta);
     for (MasterSource masterSource : masterSources) {
-      String id = masterSource.getConnection().connectionIdentifier();
-      SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getSourceType());
+      String id = masterSource.getConnection().initIdentifier();
+      SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType());
       if (initMeta != null) {
         id2SyncInitMeta.put(id, initMeta);
       }
@@ -50,12 +50,12 @@ public class Ack {
 
   private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {
     Path path = Paths.get(metaDir, clientId, identifier);
-    SyncInitMeta syncMeta = null;
+    SyncInitMeta syncInitMeta = SyncInitMeta.defaultMeta(sourceType);
     if (!Files.exists(path)) {
       logger.info("Last run meta file not exists, fresh run");
     } else {
       try {
-        syncMeta = recoverBinlogInfo(path, sourceType);
+        syncInitMeta = recoverSyncInitMeta(path, sourceType, syncInitMeta);
       } catch (IOException ignored) {
         logger.error("Impossible to run to here", ignored);
       }
@@ -65,21 +65,20 @@ public class Ack {
     } catch (IOException e) {
       logger.error("Fail to create file {}", path);
     }
-    return syncMeta;
+    return syncInitMeta;
   }
 
-  private SyncInitMeta recoverBinlogInfo(Path path,
-      MasterSourceType sourceType) throws IOException {
+  private SyncInitMeta recoverSyncInitMeta(Path path,
+      MasterSourceType sourceType, SyncInitMeta syncInitMeta) throws IOException {
     byte[] bytes = FileBasedSet.readData(path);
-    SyncInitMeta syncInitMeta = null;
     if (bytes.length > 0) {
       try {
         String data = new String(bytes, "utf-8");
         switch (sourceType) {
-          case MYSQL:
+          case MySQL:
             syncInitMeta = IdGenerator.fromDataId(data);
             break;
-          case MONGO:
+          case Mongo:
             syncInitMeta = IdGenerator.fromMongoDataId(data);
             break;
         }
