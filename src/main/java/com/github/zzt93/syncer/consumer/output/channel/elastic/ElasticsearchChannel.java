@@ -28,6 +28,7 @@ import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
@@ -180,6 +181,7 @@ public class ElasticsearchChannel implements BufferedChannel {
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
   public void flushIfReachSizeLimit() {
+    @SuppressWarnings("unchecked")
     SyncWrapper<WriteRequestBuilder>[] aim = batchBuffer.flushIfReachSizeLimit();
     buildAndSend(aim);
   }
@@ -191,6 +193,7 @@ public class ElasticsearchChannel implements BufferedChannel {
         ackSuccess(aim);
       } catch (ElasticsearchBulkException e) {
         retryFailedDoc(aim, e);
+      } catch (IndexNotFoundException e) {
       }
     }
   }

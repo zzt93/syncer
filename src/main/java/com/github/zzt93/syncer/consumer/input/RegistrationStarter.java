@@ -50,7 +50,8 @@ public class RegistrationStarter implements Starter<PipelineInput, Set<MasterSou
     ScheduledExecutorService scheduled = Executors
         .newScheduledThreadPool(1, new NamedThreadFactory("syncer-ack"));
     if (registrant.register()) {
-      scheduled.scheduleAtFixedRate(new PositionFlusher(ack), 0, 100, TimeUnit.MILLISECONDS);
+      // TODO 18/1/24 config?
+      scheduled.scheduleAtFixedRate(new PositionFlusher(ack), 0, 100, TimeUnit.MICROSECONDS);
     } else {
       logger.warn("Fail to register");
     }

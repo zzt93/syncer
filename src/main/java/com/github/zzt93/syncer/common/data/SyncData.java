@@ -26,8 +26,10 @@ public class SyncData {
     private boolean hasExtra = false;
     private String connectionIdentifier;
 
-    Meta(String eventId, int ordinal, EventType type, StandardEvaluationContext context) {
+    Meta(String eventId, int ordinal, EventType type, String connectionIdentifier,
+        StandardEvaluationContext context) {
       this.eventId = eventId;
+      this.connectionIdentifier = connectionIdentifier;
       dataId = IdGenerator.fromEventId(eventId, ordinal);
       this.ordinal = ordinal;
       this.type = type;
@@ -53,7 +55,7 @@ public class SyncData {
 
   public SyncData(String eventId, int ordinal, String database, String table, String primaryKey,
       Map<String, Object> row, EventType type) {
-    inner = new Meta(eventId, ordinal, type, new StandardEvaluationContext(this));
+    inner = new Meta(eventId, ordinal, type, null, new StandardEvaluationContext(this));
 
     Object key = row.get(primaryKey);
     if (key != null) {
@@ -68,7 +70,7 @@ public class SyncData {
 
   public SyncData(SyncData syncData) {
     inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, syncData.getType(),
-        new StandardEvaluationContext(this));
+        syncData.getSourceIdentifier(), new StandardEvaluationContext(this));
   }
 
   public Object getId() {

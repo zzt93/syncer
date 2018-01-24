@@ -101,7 +101,7 @@ public class Ack {
   public void remove(String identifier, String dataId) {
     boolean remove = ackMap.get(identifier).remove(dataId);
     if (!remove) {
-      logger.error("Fail to remote from ack log: {} {}", identifier, dataId);
+      logger.error("Fail to remove from ack log: {} {}", identifier, dataId);
     }
   }
 

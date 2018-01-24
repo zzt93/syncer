@@ -32,7 +32,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
   public SQLMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
     this.rowMapping = rowMapping;
     parser = new SpelExpressionParser();
-    kvMapper = new KVMapper(rowMapping.getRows(), new JdbcExtraQueryMapper(jdbcTemplate));
+    kvMapper = new KVMapper(rowMapping.getRows(), new JdbcNestedQueryMapper());
   }
 
   @Override
@@ -43,6 +43,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
     String id = eval(rowMapping.getId(), context);
     HashMap<String, Object> map = kvMapper.map(data);
     logger.debug("Convert SyncData to {}", map);
+    // TODO 18/1/24 replace with `PreparedStatement`?
     switch (data.getType()) {
       case WRITE_ROWS:
         String[] entry = join(map, data.getType());

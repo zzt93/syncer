@@ -32,7 +32,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
       case UPDATE_ROWS:
       case DELETE_ROWS:
         mysqlDispatcher.dispatch(last, event);
-        last = null;
+//        last = null;
         break;
       default:
         logger.trace("Receive binlog event: {}", event.toString());

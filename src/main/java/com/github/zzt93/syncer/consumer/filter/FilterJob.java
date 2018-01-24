@@ -52,7 +52,7 @@ public class FilterJob implements Runnable {
       for (OutputChannel outputChannel : outputChannels) {
         try {
           // TODO 18/1/17 may block, change?
-          outputChannel.output(poll);
+          list.forEach(outputChannel::output);
         } catch (Exception e) {
           logger.error("Output job failed", e);
         }

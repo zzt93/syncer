@@ -54,7 +54,7 @@ public class FileBasedSet<T extends Comparable<T>> {
       return;
     }
     T first = set.first();
-    logger.debug("Flushing ack info {}", first);
+//    logger.debug("Flushing ack info {}", first);
     file.clear();
     try {
       file.put(first.toString().getBytes("utf-8"));

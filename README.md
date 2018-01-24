@@ -68,6 +68,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - binlog_format: row
   - binlog_row_image: full
 - MongoDB config:
+  - (optional) update `bind_ip` to allow listens for connections from applications on configured addresses.
   - start with enable replication set: `mongod --replSet myapp`
   - init replication set in shell: `rs.initiate()`
 
