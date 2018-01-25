@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.producer.input.mongo;
 
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
-import org.bson.types.BSONTimestamp;
+import org.bson.BsonTimestamp;
 
 /**
  * @author zzt <a href="https://stackoverflow.com/questions/31057827/is-mongodb-id-objectid-generated-in-an-ascending-order">
@@ -9,29 +9,22 @@ import org.bson.types.BSONTimestamp;
  */
 public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
 
-  private final BSONTimestamp timestamp;
+  private final BsonTimestamp timestamp;
 
-  public DocTimestamp(BSONTimestamp data) {
+  public DocTimestamp(BsonTimestamp data) {
     timestamp = data;
   }
 
   public DocTimestamp() {
-    timestamp = null;
+    timestamp = new BsonTimestamp((int) (System.currentTimeMillis() / 1000L), Integer.MAX_VALUE);
   }
 
-  public BSONTimestamp getTimestamp() {
+  public BsonTimestamp getTimestamp() {
     return timestamp;
   }
 
   @Override
   public int compareTo(DocTimestamp o) {
-    if (timestamp == null && o.timestamp == null) {
-      return 0;
-    } else if (timestamp == null) {
-      return -1;
-    } else if (o.timestamp == null) {
-      return 1;
-    }
     return timestamp.compareTo(o.timestamp);
   }
 

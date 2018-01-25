@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.dispatch;
+package com.github.zzt93.syncer.producer.dispatch.mysql;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
@@ -15,11 +15,11 @@ import org.slf4j.LoggerFactory;
 public class FilterChain {
 
   private final Logger logger = LoggerFactory.getLogger(FilterChain.class);
-  private final InputPipeHead start;
+  private final SchemaAndRowFilter start;
   private final OutputSink outputSink;
 
   public FilterChain(ConnectionSchemaMeta connectionSchemaMeta, OutputSink outputSink) {
-    this.start = new InputPipeHead(connectionSchemaMeta);
+    this.start = new SchemaAndRowFilter(connectionSchemaMeta);
     this.outputSink = outputSink;
   }
 

@@ -9,9 +9,11 @@
   - Schema filter, support regex
   - Table name filter
   - Interested column filter
+  - automatic primary key detection and set into `id`
 - MongoDB master source filter:
   - Schema filter, support regex
   - Collection name filter
+  - automatic `_id` detection and set into `id`
 - Remember start file/position of binlog/oplog, and resume from where we leave so as to avoid any data loss
   - More than once: we can ensure the at least once semantics now, so you need to make sure your `SyncData`
   is idempotent and your destination can handle it. Counterexample: a table without primary key definitely
@@ -54,6 +56,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - Join/merge documents from different source when push to ES<sup>[1](#join_in_es)</sup>
     - One to many relationship (parent-child relationship in ES)for document in different index
     - Self referential relationship handle
+  - Default exclude `primary key` of a row/document from the body of ES request
 
 - Http Endpoint
 - MySQL

@@ -4,8 +4,6 @@ spring:
   main:
     web-application-type: none
 
-logging:
-  level: debug
 
 spring:
   profiles:

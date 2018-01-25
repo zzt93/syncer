@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.producer.input.mongo;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.config.pipeline.input.Table;
-import com.github.zzt93.syncer.producer.dispatch.MongoDispatcher;
+import com.github.zzt93.syncer.producer.dispatch.mongo.MongoDispatcher;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
@@ -20,10 +20,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.regex.Pattern;
 import org.bson.Document;
-import org.bson.types.BSONTimestamp;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -35,7 +33,6 @@ public class MongoMasterConnector implements MasterConnector {
 
   private final String identifier;
   private final int maxRetry;
-  private final AtomicReference<DocTimestamp> docTimestamp = new AtomicReference<>();
   private MongoCursor<Document> cursor;
   private MongoDispatcher mongoDispatcher;
 
@@ -101,8 +98,11 @@ public class MongoMasterConnector implements MasterConnector {
       while (!Thread.interrupted()) {
         while (cursor.hasNext()) {
           Document d = cursor.next();
-          mongoDispatcher.dispatch(d);
-          docTimestamp.set(new DocTimestamp((BSONTimestamp) d.get("ts")));
+          try {
+            mongoDispatcher.dispatch(d);
+          } catch (Exception e) {
+            logger.error("Fail to dispatch this doc {}", d);
+          }
         }
 
         try {

@@ -86,6 +86,7 @@ public class ElasticsearchChannel implements BufferedChannel {
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) {
+    event.removePrimaryKey();
     Object builder = esRequestMapper.map(event);
     if (builder instanceof WriteRequestBuilder) {
       boolean addRes = batchBuffer.add(
@@ -170,7 +171,7 @@ public class ElasticsearchChannel implements BufferedChannel {
           batchBuffer.addFirst(wrapper);
         } else {
           // TODO 18/1/18 fail log
-          logger.error("Max retry exceed, write to fail.log");
+          logger.error("Max retry exceed, write to fail.log {}", wrapper, e);
         }
       } else {
         ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
@@ -194,6 +195,7 @@ public class ElasticsearchChannel implements BufferedChannel {
       } catch (ElasticsearchBulkException e) {
         retryFailedDoc(aim, e);
       } catch (IndexNotFoundException e) {
+        // TODO 18/1/24 how to handle
       }
     }
   }

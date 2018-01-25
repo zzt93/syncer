@@ -1,10 +1,12 @@
-package com.github.zzt93.syncer.producer.dispatch;
+package com.github.zzt93.syncer.producer.dispatch.mongo;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.output.OutputSink;
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.IdentityHashMap;
@@ -24,17 +26,17 @@ import org.slf4j.MDC;
 public class MongoDispatcher implements Dispatcher {
 
   private final Logger logger = LoggerFactory.getLogger(MongoDispatcher.class);
-  private final HashMap<String, List<OutputSink>> directOutput = new HashMap<>();
-  private final HashMap<Pattern, OutputSink> regexOutput = new HashMap<>();
+  private final HashMap<String, List<JsonKeyFilter>> directOutput = new HashMap<>();
+  private final HashMap<Pattern, JsonKeyFilter> regexOutput = new HashMap<>();
 
   public MongoDispatcher(IdentityHashMap<Set<Schema>, OutputSink> schemaSinkMap) {
     for (Entry<Set<Schema>, OutputSink> entry : schemaSinkMap.entrySet()) {
       for (Schema schema : entry.getKey()) {
         if (!schema.hasNamePattern()) {
           directOutput.computeIfAbsent(schema.getName(), k -> new ArrayList<>())
-              .add(entry.getValue());
+              .add(new JsonKeyFilter(schema, entry.getValue()));
         } else {
-          regexOutput.put(schema.getNamePattern(), entry.getValue());
+          regexOutput.put(schema.getNamePattern(), new JsonKeyFilter(schema, entry.getValue()));
         }
       }
     }
@@ -52,13 +54,13 @@ public class MongoDispatcher implements Dispatcher {
       return false;
     }
 
-    String db = namespace[0], collection = namespace[1];
+    String db = namespace[0];
     if (directOutput.containsKey(db)) {
-      for (OutputSink outputSink : directOutput.get(db)) {
-        outputSink.output(syncData);
+      for (JsonKeyFilter keyFilter : directOutput.get(db)) {
+        keyFilter.output(syncData);
       }
     } else {
-      for (Entry<Pattern, OutputSink> entry : regexOutput.entrySet()) {
+      for (Entry<Pattern, JsonKeyFilter> entry : regexOutput.entrySet()) {
         if (entry.getKey().matcher(db).find()) {
           entry.getValue().output(syncData);
         } else {
@@ -72,7 +74,7 @@ public class MongoDispatcher implements Dispatcher {
   private SyncData fromDocument(Document document, String eventId, String[] namespace) {
     String op = document.getString("op");
     Map<String, Object> row = new HashMap<>();
-    EventType type = null;
+    EventType type;
     Map obj = (Map) document.get("o");
     switch (op) {
       case "u":
@@ -91,6 +93,7 @@ public class MongoDispatcher implements Dispatcher {
       default:
         return null;
     }
+    Preconditions.checkState(row.containsKey("_id"));
     return new SyncData(eventId, 0, namespace[0], namespace[1], "_id", row, type);
   }
 }

@@ -1,10 +1,10 @@
-package com.github.zzt93.syncer.producer.dispatch;
+package com.github.zzt93.syncer.producer.dispatch.mysql;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.producer.dispatch.event.RowsEvent;
+import com.github.zzt93.syncer.producer.dispatch.mysql.event.RowsEvent;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.producer.input.mysql.meta.TableMeta;
 import java.util.HashMap;
@@ -13,11 +13,11 @@ import java.util.List;
 /**
  * @author zzt
  */
-public class InputPipeHead {
+public class SchemaAndRowFilter {
 
   private final ConnectionSchemaMeta connectionSchemaMeta;
 
-  public InputPipeHead(ConnectionSchemaMeta connectionSchemaMeta) {
+  public SchemaAndRowFilter(ConnectionSchemaMeta connectionSchemaMeta) {
     this.connectionSchemaMeta = connectionSchemaMeta;
   }
 

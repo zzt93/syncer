@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.dispatch.event;
+package com.github.zzt93.syncer.producer.dispatch.mysql.event;
 
 import java.io.Serializable;
 import java.util.BitSet;

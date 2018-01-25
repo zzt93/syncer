@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.dispatch.event;
+package com.github.zzt93.syncer.producer.dispatch.mysql.event;
 
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import java.io.Serializable;

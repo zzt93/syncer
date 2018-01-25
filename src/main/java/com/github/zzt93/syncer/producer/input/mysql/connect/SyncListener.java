@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
-import com.github.zzt93.syncer.producer.dispatch.MysqlDispatcher;
+import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -32,7 +32,6 @@ public class SyncListener implements BinaryLogClient.EventListener {
       case UPDATE_ROWS:
       case DELETE_ROWS:
         mysqlDispatcher.dispatch(last, event);
-//        last = null;
         break;
       default:
         logger.trace("Receive binlog event: {}", event.toString());

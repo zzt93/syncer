@@ -51,13 +51,15 @@ public class SyncData {
    * table primary key
    */
   private Object id;
+  private String primaryKeyName;
 
 
-  public SyncData(String eventId, int ordinal, String database, String table, String primaryKey,
+  public SyncData(String eventId, int ordinal, String database, String table, String primaryKeyName,
       Map<String, Object> row, EventType type) {
     inner = new Meta(eventId, ordinal, type, null, new StandardEvaluationContext(this));
 
-    Object key = row.get(primaryKey);
+    Object key = row.get(primaryKeyName);
+    this.primaryKeyName = primaryKeyName;
     if (key != null) {
       id = key;
     } else {
@@ -128,6 +130,12 @@ public class SyncData {
 
   public void removeRecord(String key) {
     records.remove(key);
+  }
+
+  public void removePrimaryKey() {
+    if (primaryKeyName!=null) {
+      records.remove(primaryKeyName);
+    }
   }
 
   public void removeRecords(String... keys) {

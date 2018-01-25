@@ -1,6 +1,6 @@
-package com.github.zzt93.syncer.producer.dispatch.event;
+package com.github.zzt93.syncer.producer.dispatch.mysql.event;
 
-import com.github.shyiko.mysql.binlog.event.DeleteRowsEventData;
+import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
 import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -10,14 +10,13 @@ import java.util.List;
 /**
  * Created by zzt on 9/14/17. <p> <h3></h3>
  */
-public class DeleteRowsEvent {
+public class WriteRowsEvent  {
 
-  static List<HashMap<Integer, Object>> getIndexedRows(
-      DeleteRowsEventData deleteRowsEventData) {
+
+  public static List<HashMap<Integer, Object>> getIndexedRows(WriteRowsEventData writeRowsEventData){
     List<HashMap<Integer, Object>> res = new ArrayList<>();
-    BitSet includedColumns = deleteRowsEventData.getIncludedColumns();
-    List<Serializable[]> rows = deleteRowsEventData.getRows();
-    // TODO 17/10/25 only keep non-null field: id, partition key
+    BitSet includedColumns = writeRowsEventData.getIncludedColumns();
+    List<Serializable[]> rows = writeRowsEventData.getRows();
     for (Serializable[] row : rows) {
       HashMap<Integer, Object> map = new HashMap<>();
       for (int i = 0; i < row.length; i++) {
