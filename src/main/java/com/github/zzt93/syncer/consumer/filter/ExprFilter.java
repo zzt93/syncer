@@ -6,8 +6,8 @@ import java.util.List;
 
 /**
  * @author zzt
+ * have to use list to handle clone/dup
  */
-// TODO 18/1/10 use list or single? @see IfBodyAction
 public interface ExprFilter extends Filter<List<SyncData>, Void> {
 
 }

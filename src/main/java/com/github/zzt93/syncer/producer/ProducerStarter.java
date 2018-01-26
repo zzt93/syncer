@@ -58,8 +58,10 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
     }
     for (MasterSource masterSource : masterSources) {
       Connection connection = masterSource.getConnection();
+      if (consumerRegistry.outputSink(connection).isEmpty()) {
+        logger.warn("Skip master source {} because no consumer registered", masterSource);
+      }
       try {
-        // TODO 18/1/15 skip connection without schemas
         MasterConnector masterConnector = null;
         switch (masterSource.getType()) {
           case MySQL:

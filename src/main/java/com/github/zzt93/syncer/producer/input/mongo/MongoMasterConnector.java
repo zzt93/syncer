@@ -71,6 +71,7 @@ public class MongoMasterConnector implements MasterConnector {
     // MongoDB guarantees that the ordering of results is the same as the insertion order.
 //    BasicDBObject sort = new BasicDBObject("$natural", 1);
 
+    // TODO 18/1/26 initial export
     this.cursor = coll.find(query)
         .cursorType(CursorType.TailableAwait)
         .oplogReplay(true)
@@ -84,7 +85,7 @@ public class MongoMasterConnector implements MasterConnector {
           List<Table> tables = s.getTables();
           ArrayList<String> res = new ArrayList<>(tables.size());
           for (Table table : tables) {
-            res.add("("+s.getName() + "\\." + table.getName()+")");
+            res.add("(" + s.getName() + "\\." + table.getName()+")");
           }
           return res.stream();
         }).forEach(joiner::add);
@@ -101,10 +102,12 @@ public class MongoMasterConnector implements MasterConnector {
           try {
             mongoDispatcher.dispatch(d);
           } catch (Exception e) {
+            // TODO 18/1/26 how to retry?
             logger.error("Fail to dispatch this doc {}", d);
           }
         }
 
+        logger.error("Fail to connect to remote: {}", identifier);
         try {
           Thread.sleep(1000);
         } catch (InterruptedException ignored) {

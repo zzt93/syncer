@@ -171,7 +171,7 @@ public class ElasticsearchChannel implements BufferedChannel {
           batchBuffer.addFirst(wrapper);
         } else {
           // TODO 18/1/18 fail log
-          logger.error("Max retry exceed, write to fail.log {}", wrapper, e);
+          logger.error("Max retry exceed, write {} to fail.log", wrapper, e);
         }
       } else {
         ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
@@ -195,14 +195,14 @@ public class ElasticsearchChannel implements BufferedChannel {
       } catch (ElasticsearchBulkException e) {
         retryFailedDoc(aim, e);
       } catch (IndexNotFoundException e) {
-        // TODO 18/1/24 how to handle
+
       }
     }
   }
 
   private void buildRequest(SyncWrapper<WriteRequestBuilder>[] aim) {
     StringJoiner joiner = new StringJoiner(",", "[", "]");
-    // TODO 17/10/26 BulkProcessor
+    // BulkProcessor?
     BulkRequestBuilder bulkRequest = client.prepareBulk();
     for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
       WriteRequestBuilder builder = wrapper.getData();

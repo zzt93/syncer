@@ -1,4 +1,6 @@
 syncer:
+  ack:
+    flushPeriod: 100
   input:
     worker: 4
     max-retry: 5
@@ -6,7 +8,7 @@ syncer:
       last-run-metadata-dir: /tmp/syncer/meta/.last_position/
 
   filter:
-    worker: 2
+    worker: 4
 
   output:
     worker: 2

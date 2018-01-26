@@ -17,7 +17,7 @@ public class DeleteRowsEvent {
     List<HashMap<Integer, Object>> res = new ArrayList<>();
     BitSet includedColumns = deleteRowsEventData.getIncludedColumns();
     List<Serializable[]> rows = deleteRowsEventData.getRows();
-    // TODO 17/10/25 only keep non-null field: id, partition key
+    // keep non-null field: id, partition key & foreign key
     for (Serializable[] row : rows) {
       HashMap<Integer, Object> map = new HashMap<>();
       for (int i = 0; i < row.length; i++) {

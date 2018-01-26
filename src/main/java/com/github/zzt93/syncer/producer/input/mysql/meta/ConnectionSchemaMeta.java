@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer.input.mysql.meta;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.mysql.jdbc.JDBC4Connection;
 import java.sql.Connection;
@@ -28,16 +29,26 @@ import org.springframework.jdbc.datasource.DriverManagerDataSource;
  */
 public class ConnectionSchemaMeta {
 
+  private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final List<SchemaMeta> schemaMetas = new ArrayList<>();
 
   public TableMeta findTable(String database, String table) {
+    // test_dev* vs test*: we will use the first that match, order is undefined
+    TableMeta res = null;
+    int count = 0;
     for (SchemaMeta schemaMeta : schemaMetas) {
       TableMeta tableMeta = schemaMeta.findTable(database, table);
       if (tableMeta != null) {
-        return tableMeta;
+        count++;
+      }
+      if (res == null) {
+        res = tableMeta;
       }
     }
-    return null;
+    if (count > 1) {
+      logger.warn("Multiple configured schema match `{}`.`{}`. Check your config", database, table);
+    }
+    return res;
   }
 
   public static class MetaDataBuilder {
@@ -48,7 +59,8 @@ public class ConnectionSchemaMeta {
     private final IdentityHashMap<Set<Schema>, OutputSink> schema;
     private final String calculatedSchemaName;
 
-    public MetaDataBuilder(MysqlConnection connection, IdentityHashMap<Set<Schema>, OutputSink> schema) {
+    public MetaDataBuilder(MysqlConnection connection,
+        IdentityHashMap<Set<Schema>, OutputSink> schema) {
       this.schema = schema;
       Set<String> merged = schema.keySet().stream()
           .flatMap(Set::stream).map(Schema::getConnectionName).collect(Collectors.toSet());
@@ -120,9 +132,9 @@ public class ConnectionSchemaMeta {
             // TODO 18/1/18 may opt to get all columns then use
             setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
             setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta);
-            // TODO 18/1/18 menkor_dev* vs menkor*
             boolean contain = metaHashMap.containsKey(aim);
-            SchemaMeta schemaMeta = metaHashMap.computeIfAbsent(aim, k -> new SchemaMeta(aim.getName(), aim.getNamePattern()));
+            SchemaMeta schemaMeta = metaHashMap
+                .computeIfAbsent(aim, k -> new SchemaMeta(aim.getName(), aim.getNamePattern()));
             schemaMeta.addTableMeta(tableName, tableMeta);
             if (!contain) {
               schemaMetas.add(schemaMeta);

@@ -10,20 +10,20 @@
   - Table name filter
   - Interested column filter
   - automatic primary key detection and set into `id`
+  - If an event match multiple schema & table, use which filter is undefined
 - MongoDB master source filter:
+  - Version: 3.x
   - Schema filter, support regex
   - Collection name filter
   - automatic `_id` detection and set into `id`
+  - If an event match multiple schema & table, we will use the first specific match to filter/output,
+  i.e. the specific schema config will override the regex schema config
 - Remember start file/position of binlog/oplog, and resume from where we leave so as to avoid any data loss
   - More than once: we can ensure the at least once semantics now, so you need to make sure your `SyncData`
   is idempotent and your destination can handle it. Counterexample: a table without primary key definitely
   can't handle it and cause duplicate data soon or later.
 - Multiple consumer can share a common connection to same data source, i.e. MySQL/MongoDB
 
-#### Notice:
-
-- If an event match multiple schema & table, we will use the first specific match to filter/output,
-i.e. the specific schema config will override the regex schema config
 
 ### Filter
 
@@ -51,12 +51,13 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
 
 ### Output
 - Elasticsearch
+  - Version: 5.x
   - Bulk operation
   - Update/Delete documents by `UpdateByQuery` or `DeleteByQuery`
   - Join/merge documents from different source when push to ES<sup>[1](#join_in_es)</sup>
     - One to many relationship (parent-child relationship in ES)for document in different index
     - Self referential relationship handle
-  - Default exclude `primary key` of a row/document from the body of ES request
+  - Default exclude `primary key` of a row/document from the json body of ES request
 
 - Http Endpoint
 - MySQL

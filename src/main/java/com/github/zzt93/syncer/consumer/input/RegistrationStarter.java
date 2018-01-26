@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
+import com.github.zzt93.syncer.config.syncer.SyncerAck;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
@@ -15,7 +16,6 @@ import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,21 +25,24 @@ import org.slf4j.LoggerFactory;
 public class RegistrationStarter implements Starter<PipelineInput, Set<MasterSource>> {
 
   private final Logger logger = LoggerFactory.getLogger(RegistrationStarter.class);
+  private final SyncerAck ackConfig;
   private Registrant registrant;
   private Ack ack;
 
-  public RegistrationStarter(PipelineInput pipelineInput, SyncerInput input,
+  public RegistrationStarter(PipelineInput pipelineInput,
+      SyncerAck ackConfig, SyncerInput input,
       ConsumerRegistry consumerRegistry, String consumerId,
       BlockingDeque<SyncData> filterInput)  {
     registrant = new Registrant(consumerId, consumerRegistry, filterInput);
     HashMap<String, SyncInitMeta> id2SyncInitMeta = new HashMap<>();
     Set<MasterSource> masterSet = pipelineInput.getMasterSet();
-    ack = Ack.build(consumerId, input.getInputMeta(), masterSet, id2SyncInitMeta);
+    this.ack = Ack.build(consumerId, input.getInputMeta(), masterSet, id2SyncInitMeta);
     for (MasterSource masterSource : masterSet) {
       String identifier = masterSource.getConnection().connectionIdentifier();
       SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
       registrant.addDatasource(masterSource, syncInitMeta, masterSource.getType());
     }
+    this.ackConfig = ackConfig;
   }
 
   public Ack getAck() {
@@ -50,8 +53,7 @@ public class RegistrationStarter implements Starter<PipelineInput, Set<MasterSou
     ScheduledExecutorService scheduled = Executors
         .newScheduledThreadPool(1, new NamedThreadFactory("syncer-ack"));
     if (registrant.register()) {
-      // TODO 18/1/24 config?
-      scheduled.scheduleAtFixedRate(new PositionFlusher(ack), 0, 100, TimeUnit.MICROSECONDS);
+      scheduled.scheduleAtFixedRate(new PositionFlusher(ack), 0, ackConfig.getFlushPeriod(), ackConfig.getUnit());
     } else {
       logger.warn("Fail to register");
     }

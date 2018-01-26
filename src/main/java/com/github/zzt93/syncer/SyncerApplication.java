@@ -48,7 +48,7 @@ public class SyncerApplication implements CommandLineRunner {
         throw new InvalidConfigException("No `consumerId` specified");
       }
       RegistrationStarter registrationStarter = new RegistrationStarter(pipelineConfig.getInput(),
-          syncerConfig.getInput(), consumerRegistry, consumerId, filterInput);
+          syncerConfig.getAck(), syncerConfig.getInput(), consumerRegistry, consumerId, filterInput);
       registrationStarter.start();
       Ack ack = registrationStarter.getAck();
       new ConsumerStarter(ack, pipelineConfig.getFilter(), syncerConfig.getFilter(), filterInput,

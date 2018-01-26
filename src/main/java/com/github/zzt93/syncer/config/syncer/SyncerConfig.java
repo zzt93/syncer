@@ -10,9 +10,18 @@ import org.springframework.context.annotation.Configuration;
 @ConfigurationProperties(prefix = "syncer")
 public class SyncerConfig {
 
+  private SyncerAck ack;
   private SyncerInput input;
   private SyncerFilter filter;
   private SyncerOutput output;
+
+  public SyncerAck getAck() {
+    return ack;
+  }
+
+  public void setAck(SyncerAck ack) {
+    this.ack = ack;
+  }
 
   public SyncerInput getInput() {
     return input;
