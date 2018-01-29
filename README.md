@@ -2,6 +2,20 @@
 
 ## Features
 
+### Consistency
+
+#### Consistent mode: 
+  - `strict`: make sure output is successful, otherwise, retry until success
+  - `loose`: try to send to output
+
+#### Consistency Promise
+
+- If network has problem, MySQL master slave protocol?
+- Input module remember where we leave, try to not miss data if syncer shutdown in accident
+- If data is still not send in output channel when input is starting to handle next event, and syncer shutdown?
+- If output channel fail to send to output target, retry until success
+
+
 ### Input
 
 - Support listening to both MySQL & MongoDB
@@ -89,6 +103,13 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
 
 
 ## Producer Data Source Config
+## TODO
+- Support set parent of ES
+- Row image format support?
+  - Add must appeared field restriction -- now only primary key
+  - Opt: keep only changed field in update event & primary key in delete event -- include must appear field
+- Join by query mysql?
+- Make all output channel strict
 
 - MySQL master connection
 - Mongo master connection
