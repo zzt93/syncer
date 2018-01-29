@@ -207,10 +207,26 @@ output:
 ```
 ## Run
 ```
+git clone https://github.com/zzt93/syncer
+mvn package
 java -jar syncer.jar --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
 ```
 
-  
+## Test
+### Stress Test
+- 10G
+- CPU
+- Memory
+- IO
+  - Network
+  - Disk
+- JVM
+  - Thread
+  - Lock contention 
+
+### Used In Production
+- For search data sync
+- For auth data sync
 
 ## TODO
 - Support set parent of ES

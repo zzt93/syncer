@@ -65,12 +65,10 @@ public class NestedSQLMapper extends SQLMapper {
     StandardEvaluationContext context = data.getContext();
     String schema = eval(rowMapping.getSchema(), context);
     String table = eval(rowMapping.getTable(), context);
-    String id = eval(rowMapping.getId(), context);
     HashMap<String, Object> map = kvMapper.map(data);
     logger.debug("Convert SyncData to {}", map);
     switch (data.getType()) {
       case WRITE_ROWS:
-        data.addRecord("id", id);
         String[] entry = join(map);
         return ParameterReplace
             .orderedParam(INSERT_INTO_SELECT, schema, table, entry[0], entry[1]);
