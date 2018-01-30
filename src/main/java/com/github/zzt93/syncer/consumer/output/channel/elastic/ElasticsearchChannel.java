@@ -88,7 +88,7 @@ public class ElasticsearchChannel implements BufferedChannel {
   public boolean output(SyncData event) {
     event.removePrimaryKey();
     Object builder = esRequestMapper.map(event);
-    if (builder instanceof WriteRequestBuilder) {
+    if (buffered(builder)) {
       boolean addRes = batchBuffer.add(
           new SyncWrapper<>(event, (WriteRequestBuilder) builder));
       flushIfReachSizeLimit();
@@ -97,6 +97,10 @@ public class ElasticsearchChannel implements BufferedChannel {
       bulkByScrollRequest(event, (AbstractBulkByScrollRequestBuilder) builder);
     }
     return true;
+  }
+
+  private boolean buffered(Object builder) {
+    return builder instanceof WriteRequestBuilder;
   }
 
   private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder) {
@@ -114,6 +118,7 @@ public class ElasticsearchChannel implements BufferedChannel {
       public void onFailure(Exception e) {
         MDC.put(IdGenerator.EID, data.getEventId());
         logger.error("Fail to update/delete by query: {}", builder.request(), e);
+        // TODO 18/1/29 retry
       }
     });
   }
@@ -142,15 +147,16 @@ public class ElasticsearchChannel implements BufferedChannel {
     buildAndSend(aim);
   }
 
-  private void ackSuccess(SyncWrapper<WriteRequestBuilder>[] aim) {
-    for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
+  @Override
+  public void ackSuccess(SyncWrapper[] aim) {
+    for (SyncWrapper wrapper : aim) {
       ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
     }
   }
 
-  private void retryFailedDoc(SyncWrapper<WriteRequestBuilder>[] aim,
-      ElasticsearchBulkException e) {
-    Map<String, String> failedDocuments = e.getFailedDocuments();
+  @Override
+  public void retryFailed(SyncWrapper[] aim, Exception e) {
+    Map<String, String> failedDocuments = ((ElasticsearchBulkException)e).getFailedDocuments();
     for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
       WriteRequestBuilder builder = wrapper.getData();
       WriteRequest request = builder.request();
@@ -193,7 +199,7 @@ public class ElasticsearchChannel implements BufferedChannel {
         buildRequest(aim);
         ackSuccess(aim);
       } catch (ElasticsearchBulkException e) {
-        retryFailedDoc(aim, e);
+        retryFailed(aim, e);
       } catch (IndexNotFoundException e) {
 
       }
@@ -233,4 +239,5 @@ public class ElasticsearchChannel implements BufferedChannel {
           failedDocuments);
     }
   }
+
 }

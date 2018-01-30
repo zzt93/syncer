@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
 public class SyncerAck {
 
   private int flushPeriod = 100;
-  private TimeUnit unit = TimeUnit.MICROSECONDS;
+  private TimeUnit unit = TimeUnit.MILLISECONDS;
 
   public int getFlushPeriod() {
     return flushPeriod;

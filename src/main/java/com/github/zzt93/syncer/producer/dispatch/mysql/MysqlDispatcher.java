@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.producer.output.OutputSink;
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
@@ -33,7 +34,8 @@ public class MysqlDispatcher implements Dispatcher {
 
   @Override
   public boolean dispatch(Object... data) {
-    Event[] events = ((Event[]) data);
+    Preconditions.checkState(data.length == 2);
+    Event[] events = new Event[]{(Event) data[0], (Event) data[1]};
     String eventId = IdGenerator.fromEvent(events, binlogInfo.get().getBinlogFilename());
     MDC.put(IdGenerator.EID, eventId);
     boolean res = true;

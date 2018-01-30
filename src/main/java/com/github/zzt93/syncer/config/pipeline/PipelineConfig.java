@@ -11,10 +11,19 @@ import java.util.List;
  */
 public class PipelineConfig {
 
+  private String version;
   private String consumerId;
   private PipelineInput input;
   private PipelineOutput output;
   private List<FilterConfig> filter = new ArrayList<>();
+
+  public String getVersion() {
+    return version;
+  }
+
+  public void setVersion(String version) {
+    this.version = version;
+  }
 
   public String getConsumerId() {
     return consumerId;

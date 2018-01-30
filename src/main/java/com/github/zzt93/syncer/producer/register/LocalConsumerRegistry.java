@@ -82,7 +82,6 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   @Override
   public IdentityHashMap<Set<Schema>, OutputSink> outputSink(Connection connection) {
     checkState(inputSources.containsKey(connection), "no input source registered");
-    checkState(voted.contains(connection), "should invoke votedBinlogInfo first");
     IdentityHashMap<Set<Schema>, OutputSink> res = new IdentityHashMap<>();
     // TODO 18/1/15 may reuse but not new
     for (InputSource inputSource : inputSources.get(connection)) {

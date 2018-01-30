@@ -102,23 +102,9 @@ public class MysqlChannel implements BufferedChannel {
     try {
       Stream<String> stringStream = Arrays.stream(sqls).map(SyncWrapper::getData);
       jdbcTemplate.batchUpdate(stringStream.toArray(String[]::new));
+      ackSuccess(sqls);
     } catch (DataAccessException e) {
-      Throwable cause = e.getCause();
-      if (cause instanceof BatchUpdateException) {
-        int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
-        for (int i = 0; i < updateCounts.length; i++) {
-          if (updateCounts[i] == Statement.EXECUTE_FAILED) {
-            if (sqls[i].retryCount() < batch.getMaxRetry()) {
-              batchBuffer.addFirst(sqls[i]);
-            } else {
-              // TODO 18/1/18 fail log
-              logger.error("Max retry exceed, write to fail.log");
-            }
-          } else {
-            ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
-          }
-        }
-      }
+      retryFailed(sqls, e);
       logger.error("{}", Arrays.toString(sqls), e);
     }
   }
@@ -129,6 +115,33 @@ public class MysqlChannel implements BufferedChannel {
     if (sqls != null) {
       logger.debug("Flush when reach size limit, send batch of {}", Arrays.toString(sqls));
       batchAndRetry(sqls);
+    }
+  }
+
+  @Override
+  public void ackSuccess(SyncWrapper[] wrappers) {
+    for (SyncWrapper wrapper : wrappers) {
+      ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+    }
+  }
+
+  @Override
+  public void retryFailed(SyncWrapper[] sqls, Exception e) {
+    Throwable cause = e.getCause();
+    if (cause instanceof BatchUpdateException) {
+      int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
+      for (int i = 0; i < updateCounts.length; i++) {
+        if (updateCounts[i] == Statement.EXECUTE_FAILED) {
+          if (sqls[i].retryCount() < batch.getMaxRetry()) {
+            batchBuffer.addFirst(sqls[i]);
+          } else {
+            // TODO 18/1/18 fail log
+            logger.error("Max retry exceed, write to fail.log");
+          }
+        } else {
+          ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
+        }
+      }
     }
   }
 }

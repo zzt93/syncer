@@ -8,7 +8,7 @@ import java.util.concurrent.TimeUnit;
  *
  * <h3></h3>
  */
-public interface BufferedChannel extends OutputChannel {
+public interface BufferedChannel extends OutputChannel, AckChannel {
 
   long getDelay();
 

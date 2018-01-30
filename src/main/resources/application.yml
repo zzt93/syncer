@@ -8,3 +8,8 @@ spring:
 spring:
   profiles:
     active: ${ACTIVE_PROFILE:dev}
+
+
+---
+
+syncer.version: 1.0
