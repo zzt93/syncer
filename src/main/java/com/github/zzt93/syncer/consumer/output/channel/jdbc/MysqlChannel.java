@@ -3,12 +3,18 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
+import com.github.zzt93.syncer.config.pipeline.output.Mysql;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
-import com.github.zzt93.syncer.config.pipeline.output.RowMapping;
+import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
+import java.io.FileNotFoundException;
+import java.nio.file.Paths;
 import java.sql.BatchUpdateException;
 import java.sql.Statement;
 import java.util.Arrays;
@@ -20,6 +26,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -33,14 +40,24 @@ public class MysqlChannel implements BufferedChannel {
   private final JdbcTemplate jdbcTemplate;
   private final SQLMapper sqlMapper;
   private final Ack ack;
+  private final FailureLog<String> sqlFailureLog;
 
-  public MysqlChannel(MysqlConnection connection, RowMapping rowMapping,
-      PipelineBatch batch, Ack ack) {
+  public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
+    MysqlConnection connection = mysql.getConnection();
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
-    batchBuffer = new BatchBuffer<>(batch, SyncWrapper.class);
-    sqlMapper = new NestedSQLMapper(rowMapping, jdbcTemplate);
-    this.batch = batch;
+    batchBuffer = new BatchBuffer<>(mysql.getBatch(), SyncWrapper.class);
+    sqlMapper = new NestedSQLMapper(mysql.getRowMapping(), jdbcTemplate);
+    this.batch = mysql.getBatch();
     this.ack = ack;
+    FailureLogConfig failureLog = mysql.getFailureLog();
+    try {
+      sqlFailureLog = new FailureLog<>(
+          Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier()),
+          failureLog, new TypeToken<String>() {
+      });
+    } catch (FileNotFoundException e) {
+      throw new IllegalStateException("Impossible", e);
+    }
   }
 
   private DataSource dataSource(MysqlConnection connection, String className) {
@@ -103,6 +120,8 @@ public class MysqlChannel implements BufferedChannel {
       Stream<String> stringStream = Arrays.stream(sqls).map(SyncWrapper::getData);
       jdbcTemplate.batchUpdate(stringStream.toArray(String[]::new));
       ackSuccess(sqls);
+    } catch (DuplicateKeyException e) {
+      // TODO 18/1/31
     } catch (DataAccessException e) {
       retryFailed(sqls, e);
       logger.error("{}", Arrays.toString(sqls), e);
@@ -127,6 +146,7 @@ public class MysqlChannel implements BufferedChannel {
 
   @Override
   public void retryFailed(SyncWrapper[] sqls, Exception e) {
+    // TODO 18/1/31 duplicate key
     Throwable cause = e.getCause();
     if (cause instanceof BatchUpdateException) {
       int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
@@ -135,7 +155,8 @@ public class MysqlChannel implements BufferedChannel {
           if (sqls[i].retryCount() < batch.getMaxRetry()) {
             batchBuffer.addFirst(sqls[i]);
           } else {
-            // TODO 18/1/18 fail log
+            sqlFailureLog.log(sqls[i]);
+            ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
             logger.error("Max retry exceed, write to fail.log");
           }
         } else {

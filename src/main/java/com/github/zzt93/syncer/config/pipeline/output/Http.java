@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.config.pipeline.output;
 
 
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
+import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.http.HttpChannel;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
@@ -16,6 +17,15 @@ public class Http implements OutputChannelConfig {
   private HttpConnection connection;
   private HashMap<String, Object> jsonMapping = new HashMap<>();
   private PipelineBatch batch = new PipelineBatch();
+  private FailureLogConfig failureLog = new FailureLogConfig();
+
+  public FailureLogConfig getFailureLog() {
+    return failureLog;
+  }
+
+  public void setFailureLog(FailureLogConfig failureLog) {
+    this.failureLog = failureLog;
+  }
 
   public Http() {
     // default value of json mapper
@@ -50,7 +60,8 @@ public class Http implements OutputChannelConfig {
   }
 
   @Override
-  public HttpChannel toChannel(Ack ack) {
+  public HttpChannel toChannel(Ack ack,
+      SyncerOutputMeta outputMeta) {
     if (connection.valid()) {
       return new HttpChannel(connection, Collections.unmodifiableMap(getJsonMapping()), ack);
     }

@@ -8,6 +8,7 @@ import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -19,11 +20,11 @@ public class FilterJob implements Runnable {
 
   private final Logger logger = LoggerFactory.getLogger(FilterJob.class);
   private final BlockingDeque<SyncData> fromInput;
-  private final List<OutputChannel> outputChannels;
+  private final CopyOnWriteArrayList<OutputChannel> outputChannels;
   private final List<ExprFilter> filters;
   private final Ack ack;
 
-  public FilterJob(Ack ack, BlockingDeque<SyncData> fromInput, List<OutputChannel> outputChannels,
+  public FilterJob(Ack ack, BlockingDeque<SyncData> fromInput, CopyOnWriteArrayList<OutputChannel> outputChannels,
       List<ExprFilter> filters) {
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
@@ -34,6 +35,7 @@ public class FilterJob implements Runnable {
   @Override
   public void run() {
     LinkedList<SyncData> list = new LinkedList<>();
+    List<OutputChannel> remove = new LinkedList<>();
     while (!Thread.interrupted()) {
       SyncData poll;
       try {
@@ -50,18 +52,22 @@ public class FilterJob implements Runnable {
         logger.error("Filter job failed", e);
         continue;
       }
-      for (OutputChannel outputChannel : outputChannels) {
+      for (OutputChannel outputChannel : this.outputChannels) {
         for (SyncData syncData : list) {
           try {
             outputChannel.output(syncData);
           } catch (FailureException e) {
             fromInput.addFirst(syncData);
-            logger.error("Failure log with too many failed items, aborting", e);
-            throw e;
+            logger.error("Failure log with too many failed items, aborting this output channel", e);
+            remove.add(outputChannel);
           } catch (Exception e) {
             logger.error("Output job failed", e);
           }
         }
+      }
+      if (!remove.isEmpty()) {
+        outputChannels.removeAll(remove);
+        remove.clear();
       }
     }
   }

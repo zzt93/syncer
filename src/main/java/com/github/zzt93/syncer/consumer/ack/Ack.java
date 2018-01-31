@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
-import com.github.zzt93.syncer.config.syncer.SyncerMeta;
+import com.github.zzt93.syncer.config.syncer.SyncerInputMeta;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -29,9 +29,9 @@ public class Ack {
   private Map<String, FileBasedSet<String>> ackMap = new HashMap<>();
   private final String clientId;
 
-  public static Ack build(String clientId, SyncerMeta syncerMeta, Set<MasterSource> masterSources,
+  public static Ack build(String clientId, SyncerInputMeta syncerInputMeta, Set<MasterSource> masterSources,
       HashMap<String, SyncInitMeta> id2SyncInitMeta) {
-    Ack ack = new Ack(clientId, syncerMeta);
+    Ack ack = new Ack(clientId, syncerInputMeta);
     for (MasterSource masterSource : masterSources) {
       String id = masterSource.getConnection().initIdentifier();
       SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType());
@@ -43,9 +43,9 @@ public class Ack {
     return ack;
   }
 
-  private Ack(String clientId, SyncerMeta syncerMeta) {
+  private Ack(String clientId, SyncerInputMeta syncerInputMeta) {
     this.clientId = clientId;
-    this.metaDir = syncerMeta.getLastRunMetadataDir();
+    this.metaDir = syncerInputMeta.getLastRunMetadataDir();
   }
 
   private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {

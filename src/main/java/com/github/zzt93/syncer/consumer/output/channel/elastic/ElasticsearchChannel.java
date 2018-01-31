@@ -5,11 +5,18 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
+import com.github.zzt93.syncer.config.pipeline.output.Elasticsearch;
+import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
-import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
+import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.google.gson.reflect.TypeToken;
+import java.io.FileNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -45,15 +52,30 @@ public class ElasticsearchChannel implements BufferedChannel {
   private final TransportClient client;
   private final PipelineBatch batch;
   private final Ack ack;
+  private final FailureLog<WriteRequestBuilder> requestBuilderFailureLog;
+  private final FailureLog<Object> bulkRequest;
 
-  public ElasticsearchChannel(ElasticsearchConnection connection, RequestMapping requestMapping,
-      PipelineBatch batch, Ack ack)
+  public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
       throws Exception {
+    ElasticsearchConnection connection = elasticsearch.getConnection();
     client = connection.transportClient();
-    this.batchBuffer = new BatchBuffer<>(batch, SyncWrapper.class);
-    this.batch = batch;
-    this.esRequestMapper = new ESRequestMapper(client, requestMapping);
+    this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch(), SyncWrapper.class);
+    this.batch = elasticsearch.getBatch();
+    this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
     this.ack = ack;
+    FailureLogConfig failureLog = elasticsearch.getFailureLog();
+    try {
+      Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
+      requestBuilderFailureLog = new FailureLog<>(
+          Paths.get(path.toString(), "singleRequest"),
+          failureLog, new TypeToken<WriteRequestBuilder>() {
+      });
+      bulkRequest = new FailureLog<>(Paths.get(path.toString(), "bulkRequest"), failureLog,
+          new TypeToken<AbstractBulkByScrollRequestBuilder>() {
+          });
+    } catch (FileNotFoundException e) {
+      throw new IllegalStateException("Impossible", e);
+    }
   }
 
   public static String toString(UpdateRequest request) {
@@ -104,7 +126,8 @@ public class ElasticsearchChannel implements BufferedChannel {
 
   private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder, int count) {
     if (count >= batch.getMaxRetry()) {
-      // TODO 18/1/30 fail log
+      bulkRequest.log(new SyncWrapper<>(data, builder));
+      ack.remove(data.getSourceIdentifier(), data.getDataId());
       return;
     }
     builder.execute(new ActionListener<BulkByScrollResponse>() {
@@ -179,8 +202,9 @@ public class ElasticsearchChannel implements BufferedChannel {
         if (wrapper.retryCount() < batch.getMaxRetry()) {
           batchBuffer.addFirst(wrapper);
         } else {
-          // TODO 18/1/18 fail log
           logger.error("Max retry exceed, write {} to fail.log", wrapper, e);
+          requestBuilderFailureLog.log(wrapper);
+          ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else {
         ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());

@@ -18,6 +18,7 @@ import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -34,9 +35,9 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   public ConsumerStarter(Ack ack, List<FilterConfig> pipeline,
       SyncerFilter filter, BlockingDeque<SyncData> fromInput,
       PipelineOutput output,
-      SyncerOutput syncerConfigOutput) throws Exception {
+      SyncerOutput syncerOutput) throws Exception {
     List<ExprFilter> filterJobs = fromPipelineConfig(pipeline);
-    List<OutputChannel> outputChannels = new OutputStarter(output, syncerConfigOutput, ack)
+    List<OutputChannel> outputChannels = new OutputStarter(output, syncerOutput, ack)
         .getOutputChannels();
     filterModuleInit(ack, filter, filterJobs, fromInput, outputChannels);
   }
@@ -48,7 +49,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     service = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter-output"));
 
-    filterJob = new FilterJob(ack, fromInput, outputChannels, filters);
+    filterJob = new FilterJob(ack, fromInput, new CopyOnWriteArrayList<>(outputChannels), filters);
     worker = module.getWorker();
   }
 

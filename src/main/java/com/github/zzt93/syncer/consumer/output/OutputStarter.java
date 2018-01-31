@@ -29,7 +29,7 @@ public class OutputStarter {
         .newScheduledThreadPool(module.getBatch().getWorker(),
             new NamedThreadFactory("syncer-batch"));
 
-    outputChannels = pipelineOutput.toOutputChannels(ack);
+    outputChannels = pipelineOutput.toOutputChannels(ack, module.getOutputMeta());
     for (OutputChannel outputChannel : outputChannels) {
       if (outputChannel instanceof BufferedChannel) {
         BufferedChannel bufferedChannel = (BufferedChannel) outputChannel;
@@ -45,7 +45,8 @@ public class OutputStarter {
   }
 
   private void workerCheck(int worker) {
-    Preconditions.checkArgument(worker <= 8, "Too many worker thread");
+    Preconditions.checkArgument(worker <= Runtime.getRuntime().availableProcessors() * 2,
+        "Too many worker thread");
     Preconditions.checkArgument(worker > 0, "Too few worker thread");
   }
 

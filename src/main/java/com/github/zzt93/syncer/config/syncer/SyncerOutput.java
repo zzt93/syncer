@@ -7,6 +7,15 @@ public class SyncerOutput {
 
   private int worker;
   private SyncerBatch batch;
+  private SyncerOutputMeta outputMeta;
+
+  public SyncerOutputMeta getOutputMeta() {
+    return outputMeta;
+  }
+
+  public void setOutputMeta(SyncerOutputMeta outputMeta) {
+    this.outputMeta = outputMeta;
+  }
 
   public SyncerBatch getBatch() {
     return batch;

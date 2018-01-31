@@ -7,13 +7,13 @@ public class SyncerInput {
 
   private int worker;
   private int maxRetry;
-  private SyncerMeta inputMeta;
+  private SyncerInputMeta inputMeta;
 
-  public SyncerMeta getInputMeta() {
+  public SyncerInputMeta getInputMeta() {
     return inputMeta;
   }
 
-  public void setInputMeta(SyncerMeta inputMeta) {
+  public void setInputMeta(SyncerInputMeta inputMeta) {
     this.inputMeta = inputMeta;
   }
 

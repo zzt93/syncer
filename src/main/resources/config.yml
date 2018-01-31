@@ -5,7 +5,7 @@ syncer:
     worker: 4
     max-retry: 5
     input-meta:
-      last-run-metadata-dir: /tmp/syncer/meta/.last_position/
+      last-run-metadata-dir: /data/syncer/input/last_position/
 
   filter:
     worker: 4
@@ -14,3 +14,5 @@ syncer:
     worker: 2
     batch:
       worker: 2
+    output-meta:
+      failure-log-dir: /data/syncer/output/failure/

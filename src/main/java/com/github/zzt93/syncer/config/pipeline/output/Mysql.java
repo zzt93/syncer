@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.consumer.output.channel.jdbc.MysqlChannel;
@@ -14,6 +15,15 @@ public class Mysql implements OutputChannelConfig {
   private MysqlConnection connection;
   private RowMapping rowMapping;
   private PipelineBatch batch = new PipelineBatch();
+  private FailureLogConfig failureLog = new FailureLogConfig();
+
+  public FailureLogConfig getFailureLog() {
+    return failureLog;
+  }
+
+  public void setFailureLog(FailureLogConfig failureLog) {
+    this.failureLog = failureLog;
+  }
 
   public MysqlConnection getConnection() {
     return connection;
@@ -41,9 +51,9 @@ public class Mysql implements OutputChannelConfig {
   }
 
   @Override
-  public OutputChannel toChannel(Ack ack) throws Exception {
+  public OutputChannel toChannel(Ack ack, SyncerOutputMeta outputMeta) throws Exception {
     if (connection.valid()) {
-      return new MysqlChannel(connection, rowMapping, batch, ack);
+      return new MysqlChannel(this, outputMeta, ack);
     }
     throw new InvalidConfigException("Invalid connection configuration: " + connection);
   }

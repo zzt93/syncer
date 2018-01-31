@@ -1,8 +1,16 @@
 package com.github.zzt93.syncer.common.util;
 
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.syncer.SyncerInputMeta;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.function.Consumer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.core.io.FileSystemResource;
 import org.springframework.core.io.Resource;
@@ -12,6 +20,7 @@ import org.springframework.util.FileCopyUtils;
  * @author zzt
  */
 public class FileUtil {
+  private static Logger logger = LoggerFactory.getLogger(SyncerInputMeta.class);
 
   public static String readAll(String resourceName) throws IOException {
     return FileCopyUtils
@@ -34,5 +43,29 @@ public class FileUtil {
       }
     }
     return path;
+  }
+
+  public static void createDirIfNotExist(String fullPath) {
+    Path metaDir = Paths.get(fullPath);
+    if (!Files.exists(metaDir)) {
+      logger.info("path[{}] not exists, creating a new one", fullPath);
+      try {
+        Files.createDirectories(metaDir);
+      } catch (IOException e) {
+        logger.error("Fail to create dir, aborting", e);
+        throw new InvalidConfigException(e);
+      }
+    }
+  }
+
+  public static void createFile(Path path, Consumer<IOException> consumer) {
+    if (!Files.exists(path)) {
+      try {
+        createDirIfNotExist(path.getParent().toString());
+        Files.createFile(path);
+      } catch (IOException e) {
+        consumer.accept(e);
+      }
+    }
   }
 }
