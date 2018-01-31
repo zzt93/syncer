@@ -16,7 +16,7 @@ public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
   }
 
   public DocTimestamp() {
-    timestamp = new BsonTimestamp((int) (System.currentTimeMillis() / 1000L), Integer.MAX_VALUE);
+    timestamp = null;
   }
 
   public BsonTimestamp getTimestamp() {
@@ -25,6 +25,13 @@ public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
 
   @Override
   public int compareTo(DocTimestamp o) {
+    if (timestamp == null && o.timestamp == null) {
+      return 0;
+    } else if (timestamp == null) {
+      return 1;
+    } else if (o.timestamp == null) {
+      return -1;
+    }
     return timestamp.compareTo(o.timestamp);
   }
 

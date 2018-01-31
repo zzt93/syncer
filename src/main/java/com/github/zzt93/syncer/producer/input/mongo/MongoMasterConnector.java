@@ -21,6 +21,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
 import java.util.regex.Pattern;
+import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +30,7 @@ import org.slf4j.LoggerFactory;
  * @author zzt
  */
 public class MongoMasterConnector implements MasterConnector {
+
   private final Logger logger = LoggerFactory.getLogger(MongoMasterConnector.class);
 
   private final String identifier;
@@ -60,18 +62,23 @@ public class MongoMasterConnector implements MasterConnector {
     DocTimestamp docTimestamp = registry.votedMongoId(connection);
     Pattern namespaces = getNamespaces(connection, registry);
     Document query = new Document()
-        .append("ts", new BasicDBObject("$gte", docTimestamp.getTimestamp()))
         .append("ns", new BasicDBObject("$regex", namespaces))
-        // fromMigrate indicates the operation results from a shard rebalancing.
+        // fromMigrate indicates the operation results from a shard re-balancing.
         //.append("fromMigrate", new BasicDBObject("$exists", "false"))
         ;
+    if (docTimestamp.getTimestamp() != null) {
+      query.append("ts", new BasicDBObject("$gte", docTimestamp.getTimestamp()));
+    } else {
+      // initial export
+      logger.info("Start with initial export, may cost very long time");
+      query.append("ts", new BasicDBObject("$gt", new BsonTimestamp()));
+    }
 
     // no need for capped collections:
     // perform a find() on a capped collection with no ordering specified,
     // MongoDB guarantees that the ordering of results is the same as the insertion order.
 //    BasicDBObject sort = new BasicDBObject("$natural", 1);
 
-    // TODO 18/1/26 initial export
     this.cursor = coll.find(query)
         .cursorType(CursorType.TailableAwait)
         .oplogReplay(true)
@@ -82,13 +89,13 @@ public class MongoMasterConnector implements MasterConnector {
     StringJoiner joiner = new StringJoiner("|");
     registry.outputSink(connection)
         .keySet().stream().flatMap(Set::stream).flatMap(s -> {
-          List<Table> tables = s.getTables();
-          ArrayList<String> res = new ArrayList<>(tables.size());
-          for (Table table : tables) {
-            res.add("(" + s.getName() + "\\." + table.getName()+")");
-          }
-          return res.stream();
-        }).forEach(joiner::add);
+      List<Table> tables = s.getTables();
+      ArrayList<String> res = new ArrayList<>(tables.size());
+      for (Table table : tables) {
+        res.add("(" + s.getName() + "\\." + table.getName() + ")");
+      }
+      return res.stream();
+    }).forEach(joiner::add);
     return Pattern.compile(joiner.toString());
   }
 

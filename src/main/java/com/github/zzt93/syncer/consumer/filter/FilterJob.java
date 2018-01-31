@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import java.util.LinkedList;
@@ -50,10 +51,16 @@ public class FilterJob implements Runnable {
         continue;
       }
       for (OutputChannel outputChannel : outputChannels) {
-        try {
-          list.forEach(outputChannel::output);
-        } catch (Exception e) {
-          logger.error("Output job failed", e);
+        for (SyncData syncData : list) {
+          try {
+            outputChannel.output(syncData);
+          } catch (FailureException e) {
+            fromInput.addFirst(syncData);
+            logger.error("Failure log with too many failed items, aborting", e);
+            throw e;
+          } catch (Exception e) {
+            logger.error("Output job failed", e);
+          }
         }
       }
     }

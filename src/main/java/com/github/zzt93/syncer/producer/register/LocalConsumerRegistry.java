@@ -48,6 +48,8 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
       DocTimestamp syncInitMeta = ((MongoInputSource) source).getSyncInitMeta();
       smallerId.compute(connection, (k, v) -> v == null ? syncInitMeta :
           v.compareTo(syncInitMeta) <= 0 ? v : syncInitMeta);
+    } else {
+      checkState(false);
     }
     final boolean[] add = new boolean[1];
     inputSources.compute(connection, (k, v) -> {

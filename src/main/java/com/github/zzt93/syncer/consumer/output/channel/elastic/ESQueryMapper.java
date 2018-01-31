@@ -31,13 +31,19 @@ public class ESQueryMapper implements ExtraQueryMapper {
   @Override
   public Map<String, Object> map(ExtraQuery extraQuery) {
     String[] select = extraQuery.getSelect();
-    SearchResponse response = client.prepareSearch(extraQuery.getIndexName())
-        .setTypes(extraQuery.getTypeName())
-        .setSearchType(SearchType.DEFAULT)
-        .setFetchSource(select, null)
-        .setQuery(getFilter(extraQuery.getQueryBy()))
-        .execute()
-        .actionGet();
+    SearchResponse response;
+    try {
+      response = client.prepareSearch(extraQuery.getIndexName())
+          .setTypes(extraQuery.getTypeName())
+          .setSearchType(SearchType.DEFAULT)
+          .setFetchSource(select, null)
+          .setQuery(getFilter(extraQuery.getQueryBy()))
+          .execute()
+          .actionGet();
+    } catch (Exception e) {
+      logger.error("Fail to do the extra query {}", extraQuery, e);
+      return Collections.emptyMap();
+    }
     SearchHits hits = response.getHits();
     if (hits.totalHits > 1) {
       logger.warn("Multiple query results exists, only use the first");

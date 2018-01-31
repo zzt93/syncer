@@ -37,9 +37,9 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
     if (binlogFilename == null && o.binlogFilename == null) {
       return 0;
     } else if (binlogFilename == null) {
-      return -1;
-    } else if (o.binlogFilename == null) {
       return 1;
+    } else if (o.binlogFilename == null) {
+      return -1;
     }
     int seq = Integer.parseInt(binlogFilename.split("\\.")[1]);
     int oSeq = Integer.parseInt(o.binlogFilename.split("\\.")[1]);

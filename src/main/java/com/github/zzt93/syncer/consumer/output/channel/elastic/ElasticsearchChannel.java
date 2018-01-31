@@ -28,7 +28,6 @@ import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
-import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
@@ -94,7 +93,7 @@ public class ElasticsearchChannel implements BufferedChannel {
       flushIfReachSizeLimit();
       return addRes;
     } else {
-      bulkByScrollRequest(event, (AbstractBulkByScrollRequestBuilder) builder);
+      bulkByScrollRequest(event, (AbstractBulkByScrollRequestBuilder) builder, 0);
     }
     return true;
   }
@@ -103,7 +102,11 @@ public class ElasticsearchChannel implements BufferedChannel {
     return builder instanceof WriteRequestBuilder;
   }
 
-  private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder) {
+  private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder, int count) {
+    if (count >= batch.getMaxRetry()) {
+      // TODO 18/1/30 fail log
+      return;
+    }
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
@@ -118,7 +121,7 @@ public class ElasticsearchChannel implements BufferedChannel {
       public void onFailure(Exception e) {
         MDC.put(IdGenerator.EID, data.getEventId());
         logger.error("Fail to update/delete by query: {}", builder.request(), e);
-        // TODO 18/1/29 retry
+        bulkByScrollRequest(data, builder, count + 1);
       }
     });
   }
@@ -200,8 +203,6 @@ public class ElasticsearchChannel implements BufferedChannel {
         ackSuccess(aim);
       } catch (ElasticsearchBulkException e) {
         retryFailed(aim, e);
-      } catch (IndexNotFoundException e) {
-
       }
     }
   }
