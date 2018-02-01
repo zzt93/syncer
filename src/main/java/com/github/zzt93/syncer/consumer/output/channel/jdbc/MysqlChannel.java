@@ -40,7 +40,7 @@ public class MysqlChannel implements BufferedChannel {
   private final JdbcTemplate jdbcTemplate;
   private final SQLMapper sqlMapper;
   private final Ack ack;
-  private final FailureLog<String> sqlFailureLog;
+  private final FailureLog<SyncWrapper<String>> sqlFailureLog;
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
@@ -53,7 +53,7 @@ public class MysqlChannel implements BufferedChannel {
     try {
       sqlFailureLog = new FailureLog<>(
           Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier()),
-          failureLog, new TypeToken<String>() {
+          failureLog, new TypeToken<SyncWrapper<String>>() {
       });
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);

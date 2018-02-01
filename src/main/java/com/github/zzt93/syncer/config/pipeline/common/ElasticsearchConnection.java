@@ -59,6 +59,9 @@ public class ElasticsearchConnection extends Connection {
   }
 
   public void setClusterNodes(List<String> clusterNodes) {
+    if (clusterNodes.isEmpty()) {
+      throw new InvalidConfigException("clusterNodes is empty");
+    }
     this.clusterNodes = clusterNodes;
   }
 
@@ -87,5 +90,10 @@ public class ElasticsearchConnection extends Connection {
   @Override
   public boolean valid() {
     return !StringUtils.isEmpty(clusterName) && !clusterNodes.isEmpty();
+  }
+
+  @Override
+  public String connectionIdentifier() {
+    return clusterNodes.get(0);
   }
 }

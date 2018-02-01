@@ -27,13 +27,10 @@ import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.delete.DeleteRequestBuilder;
 import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.index.IndexRequestBuilder;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -52,8 +49,7 @@ public class ElasticsearchChannel implements BufferedChannel {
   private final TransportClient client;
   private final PipelineBatch batch;
   private final Ack ack;
-  private final FailureLog<WriteRequestBuilder> requestBuilderFailureLog;
-  private final FailureLog<Object> bulkRequest;
+  private final FailureLog<SyncData> singleRequest;
 
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
       throws Exception {
@@ -66,13 +62,9 @@ public class ElasticsearchChannel implements BufferedChannel {
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
     try {
       Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
-      requestBuilderFailureLog = new FailureLog<>(
-          Paths.get(path.toString(), "singleRequest"),
-          failureLog, new TypeToken<WriteRequestBuilder>() {
+      singleRequest = new FailureLog<>(path,
+          failureLog, new TypeToken<SyncData>() {
       });
-      bulkRequest = new FailureLog<>(Paths.get(path.toString(), "bulkRequest"), failureLog,
-          new TypeToken<AbstractBulkByScrollRequestBuilder>() {
-          });
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);
     }
@@ -111,11 +103,11 @@ public class ElasticsearchChannel implements BufferedChannel {
     Object builder = esRequestMapper.map(event);
     if (buffered(builder)) {
       boolean addRes = batchBuffer.add(
-          new SyncWrapper<>(event, (WriteRequestBuilder) builder));
+          new SyncWrapper<>(event, ((WriteRequestBuilder) builder).request()));
       flushIfReachSizeLimit();
       return addRes;
     } else {
-      bulkByScrollRequest(event, (AbstractBulkByScrollRequestBuilder) builder, 0);
+      bulkByScrollRequest(event, ((AbstractBulkByScrollRequestBuilder) builder), 0);
     }
     return true;
   }
@@ -124,9 +116,10 @@ public class ElasticsearchChannel implements BufferedChannel {
     return builder instanceof WriteRequestBuilder;
   }
 
-  private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder, int count) {
+  private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder,
+      int count) {
     if (count >= batch.getMaxRetry()) {
-      bulkRequest.log(new SyncWrapper<>(data, builder));
+      singleRequest.log(data);
       ack.remove(data.getSourceIdentifier(), data.getDataId());
       return;
     }
@@ -169,7 +162,7 @@ public class ElasticsearchChannel implements BufferedChannel {
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
   public void flush() {
-    SyncWrapper<WriteRequestBuilder>[] aim = batchBuffer.flush();
+    SyncWrapper<WriteRequest>[] aim = batchBuffer.flush();
     buildAndSend(aim);
   }
 
@@ -182,10 +175,9 @@ public class ElasticsearchChannel implements BufferedChannel {
 
   @Override
   public void retryFailed(SyncWrapper[] aim, Exception e) {
-    Map<String, String> failedDocuments = ((ElasticsearchBulkException)e).getFailedDocuments();
-    for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
-      WriteRequestBuilder builder = wrapper.getData();
-      WriteRequest request = builder.request();
+    Map<String, String> failedDocuments = ((ElasticsearchBulkException) e).getFailedDocuments();
+    for (SyncWrapper<WriteRequest> wrapper : aim) {
+      WriteRequest request = wrapper.getData();
       String id, reqStr = null;
       if (request instanceof IndexRequest) {
         id = ((IndexRequest) request).id();
@@ -203,7 +195,7 @@ public class ElasticsearchChannel implements BufferedChannel {
           batchBuffer.addFirst(wrapper);
         } else {
           logger.error("Max retry exceed, write {} to fail.log", wrapper, e);
-          requestBuilderFailureLog.log(wrapper);
+          singleRequest.log(wrapper.getEvent());
           ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else {
@@ -216,11 +208,11 @@ public class ElasticsearchChannel implements BufferedChannel {
   @Override
   public void flushIfReachSizeLimit() {
     @SuppressWarnings("unchecked")
-    SyncWrapper<WriteRequestBuilder>[] aim = batchBuffer.flushIfReachSizeLimit();
+    SyncWrapper<WriteRequest>[] aim = batchBuffer.flushIfReachSizeLimit();
     buildAndSend(aim);
   }
 
-  private void buildAndSend(SyncWrapper<WriteRequestBuilder>[] aim) {
+  private void buildAndSend(SyncWrapper<WriteRequest>[] aim) {
     if (aim != null && aim.length != 0) {
       try {
         buildRequest(aim);
@@ -231,21 +223,21 @@ public class ElasticsearchChannel implements BufferedChannel {
     }
   }
 
-  private void buildRequest(SyncWrapper<WriteRequestBuilder>[] aim) {
+  private void buildRequest(SyncWrapper<WriteRequest>[] aim) {
     StringJoiner joiner = new StringJoiner(",", "[", "]");
     // BulkProcessor?
     BulkRequestBuilder bulkRequest = client.prepareBulk();
-    for (SyncWrapper<WriteRequestBuilder> wrapper : aim) {
-      WriteRequestBuilder builder = wrapper.getData();
-      if (builder instanceof IndexRequestBuilder) {
-        joiner.add(builder.request().toString());
-        bulkRequest.add(((IndexRequestBuilder) builder));
-      } else if (builder instanceof UpdateRequestBuilder) {
-        joiner.add(toString(((UpdateRequestBuilder) builder).request()));
-        bulkRequest.add(((UpdateRequestBuilder) builder));
-      } else if (builder instanceof DeleteRequestBuilder) {
-        joiner.add(builder.request().toString());
-        bulkRequest.add(((DeleteRequestBuilder) builder));
+    for (SyncWrapper<WriteRequest> requestWrapper : aim) {
+      WriteRequest request = requestWrapper.getData();
+      if (request instanceof IndexRequest) {
+        joiner.add(request.toString());
+        bulkRequest.add((IndexRequest) request);
+      } else if (request instanceof UpdateRequest) {
+        joiner.add(toString(((UpdateRequest) request)));
+        bulkRequest.add(((UpdateRequest) request));
+      } else if (request instanceof DeleteRequest) {
+        joiner.add(request.toString());
+        bulkRequest.add(((DeleteRequest) request));
       }
     }
     logger.info("Sending a batch of Elasticsearch: {}", joiner);

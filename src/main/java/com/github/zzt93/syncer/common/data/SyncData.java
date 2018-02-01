@@ -14,7 +14,7 @@ import org.springframework.util.Assert;
  */
 public class SyncData {
 
-  private final Logger logger = LoggerFactory.getLogger(SyncData.class);
+  private final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
 
   private static class Meta {
     private final String eventId;

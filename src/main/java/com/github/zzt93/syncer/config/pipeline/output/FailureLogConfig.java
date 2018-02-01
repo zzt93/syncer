@@ -7,7 +7,7 @@ import java.util.concurrent.TimeUnit;
  */
 public class FailureLogConfig {
 
-  private int countLimit = 1000;
+  private int countLimit = 100;
   private int timeLimit = 60;
   private TimeUnit unit = TimeUnit.SECONDS;
 
