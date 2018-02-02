@@ -52,14 +52,18 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
 
   @Override
   public void start() throws IOException {
-    logger.info("Start connecting to input source {}", masterSources);
+    logger.info("Start connecting to master sources {}", masterSources);
     if (masterSources.size() > 1) {
       logger.warn("Connect to multiple masters, not suggested usage");
     }
+
+    Set<Connection> wanted = consumerRegistry.wantedSource();
     for (MasterSource masterSource : masterSources) {
       Connection connection = masterSource.getConnection();
+      wanted.remove(connection);
       if (consumerRegistry.outputSink(connection).isEmpty()) {
         logger.warn("Skip master source {} because no consumer registered", masterSource);
+        continue;
       }
       try {
         MasterConnector masterConnector = null;
@@ -73,8 +77,11 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
         }
         service.submit(masterConnector);
       } catch (IOException | SchemaUnavailableException e) {
-        logger.error("Fail to connect to mysql endpoint: {}", masterSource, e);
+        logger.error("Fail to connect to master source: {}", masterSource, e);
       }
+    }
+    if (!wanted.isEmpty()) {
+      logger.warn("Some consumer wanted source is not configured in `producer` {}", wanted);
     }
   }
 

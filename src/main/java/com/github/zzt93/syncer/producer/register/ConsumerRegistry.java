@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer.register;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
+import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.OutputSink;
@@ -21,4 +22,10 @@ public interface ConsumerRegistry {
   DocTimestamp votedMongoId(Connection connection);
 
   IdentityHashMap<Set<Schema>, OutputSink> outputSink(Connection connection);
+
+  /**
+   * should return a copy of wanted source
+   * @see ProducerStarter#start()
+   */
+  Set<Connection> wantedSource();
 }

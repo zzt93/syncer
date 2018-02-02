@@ -45,7 +45,6 @@ public class SyncData {
    * The following is data field
    */
   private final HashMap<String, Object> records = new HashMap<>();
-  // TODO 18/1/30 keep?
   private final HashMap<String, Object> extra = new HashMap<>();
   private String schema;
   private String table;

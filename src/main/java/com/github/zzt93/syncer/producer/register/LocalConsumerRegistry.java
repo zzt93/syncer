@@ -12,6 +12,7 @@ import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.LocalOutputSink;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.google.common.collect.Sets;
+import java.util.HashSet;
 import java.util.IdentityHashMap;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
@@ -35,7 +36,6 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
 
   @Override
   public boolean register(Connection connection, InputSource source) {
-    // TODO 18/1/9 unused connection
     if (voted.contains(connection)) {
       logger.warn("Output sink is already started, fail to register");
       return false;
@@ -83,13 +83,17 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
 
   @Override
   public IdentityHashMap<Set<Schema>, OutputSink> outputSink(Connection connection) {
-    checkState(inputSources.containsKey(connection), "no input source registered");
     IdentityHashMap<Set<Schema>, OutputSink> res = new IdentityHashMap<>();
     // TODO 18/1/15 may reuse but not new
     for (InputSource inputSource : inputSources.get(connection)) {
       res.put(inputSource.getSchemas(), new LocalOutputSink(inputSource));
     }
     return res;
+  }
+
+  @Override
+  public Set<Connection> wantedSource() {
+    return new HashSet<>(inputSources.keySet());
   }
 
 }
