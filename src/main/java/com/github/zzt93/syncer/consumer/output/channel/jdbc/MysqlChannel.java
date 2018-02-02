@@ -52,7 +52,7 @@ public class MysqlChannel implements BufferedChannel {
     FailureLogConfig failureLog = mysql.getFailureLog();
     try {
       sqlFailureLog = new FailureLog<>(
-          Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier()),
+          Paths.get(outputMeta.getFailureLogDir(), connection.initIdentifier()),
           failureLog, new TypeToken<SyncWrapper<String>>() {
       });
     } catch (FileNotFoundException e) {
@@ -120,8 +120,6 @@ public class MysqlChannel implements BufferedChannel {
       Stream<String> stringStream = Arrays.stream(sqls).map(SyncWrapper::getData);
       jdbcTemplate.batchUpdate(stringStream.toArray(String[]::new));
       ackSuccess(sqls);
-    } catch (DuplicateKeyException e) {
-      // TODO 18/1/31
     } catch (DataAccessException e) {
       retryFailed(sqls, e);
       logger.error("{}", Arrays.toString(sqls), e);
@@ -146,7 +144,6 @@ public class MysqlChannel implements BufferedChannel {
 
   @Override
   public void retryFailed(SyncWrapper[] sqls, Exception e) {
-    // TODO 18/1/31 duplicate key
     Throwable cause = e.getCause();
     if (cause instanceof BatchUpdateException) {
       int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
@@ -155,9 +152,13 @@ public class MysqlChannel implements BufferedChannel {
           if (sqls[i].retryCount() < batch.getMaxRetry()) {
             batchBuffer.addFirst(sqls[i]);
           } else {
-            sqlFailureLog.log(sqls[i]);
             ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
-            logger.error("Max retry exceed, write to fail.log");
+            if (e instanceof DuplicateKeyException) {
+              logger.error("Duplicate key in {}, discarded", sqls[i], e);
+            } else {
+              sqlFailureLog.log(sqls[i]);
+              logger.error("Max retry exceed, write '{}' to fail.log", sqls[i]);
+            }
           }
         } else {
           ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());

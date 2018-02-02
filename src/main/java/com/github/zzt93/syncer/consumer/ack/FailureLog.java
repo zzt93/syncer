@@ -45,6 +45,7 @@ public class FailureLog<T> {
 
   private List<T> recover(Path path) {
     List<T> res = new LinkedList<>();
+    // TODO 18/2/1 fromJson: set root object of StandardEvaluationContext
     return res;
   }
 

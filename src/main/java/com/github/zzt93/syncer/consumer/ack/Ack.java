@@ -101,7 +101,6 @@ public class Ack {
   public void remove(String identifier, String dataId) {
     boolean remove = ackMap.get(identifier).remove(dataId);
     if (!remove) {
-      // TODO 18/1/24 test why fail
       logger.error("Fail to remove from ack log: {} {}", identifier, dataId);
     }
   }

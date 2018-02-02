@@ -15,6 +15,20 @@ public class IdGenerator {
   public static final String EID = "eid";
   private static final String SEP  = "/";
 
+  public enum Offset {
+    DUP(1000), CLONE(2000);
+
+    private final int offset;
+
+    Offset(int offset) {
+      this.offset = offset;
+    }
+
+    public int getOffset() {
+      return offset;
+    }
+  }
+
   public static String fromEvent(Event[] event, String binlogFileName) {
     EventHeaderV4 tableMap = event[0].getHeader();
     EventHeaderV4 second = event[1].getHeader();

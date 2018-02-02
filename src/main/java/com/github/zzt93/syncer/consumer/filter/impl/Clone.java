@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
+import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.filter.CloneConfig;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
@@ -37,7 +38,7 @@ public class Clone implements ExprFilter, IfBodyAction {
   }
 
   private SyncData clone(SyncData src) {
-    SyncData clone = new SyncData(src);
+    SyncData clone = new SyncData(src, Offset.CLONE);
     for (String s : copyValue) {
       Object value = parser.parseExpression(s).getValue(src.getContext());
       parser.parseExpression(s).setValue(clone.getContext(), value);

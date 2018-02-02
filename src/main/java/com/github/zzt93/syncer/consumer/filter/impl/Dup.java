@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
+import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.filter.DupConfig;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
@@ -27,7 +28,7 @@ public class Dup implements ExprFilter, IfBodyAction {
   public Object execute(SyncData src) {
     LinkedList<SyncData> res = new LinkedList<>();
     for (FilterActions filterActions : newObjAction) {
-      SyncData dup = new SyncData(src);
+      SyncData dup = new SyncData(src, Offset.DUP);
       for (String s : copyValue) {
         Object value = parser.parseExpression(s).getValue(src.getContext());
         parser.parseExpression(s).setValue(dup.getContext(), value);

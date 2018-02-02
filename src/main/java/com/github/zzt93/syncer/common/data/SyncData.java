@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.common.data;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -71,8 +72,9 @@ public class SyncData {
     records.putAll(row);
   }
 
-  public SyncData(SyncData syncData) {
-    inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, syncData.getType(),
+  public SyncData(SyncData syncData, Offset offset) {
+    inner = new Meta(syncData.getEventId(), syncData.inner.ordinal + offset.getOffset(),
+        syncData.getType(),
         syncData.getSourceIdentifier(), new StandardEvaluationContext(this));
   }
 
@@ -153,7 +155,7 @@ public class SyncData {
     if (records.containsKey(key)) {
       records.put(key, value);
     } else {
-      logger.warn("No such record name (maybe filtered out): {} in {}.{}", key, schema, table);
+      logger.warn("No such record name (check your config): {} in {}.{}", key, schema, table);
     }
   }
 
