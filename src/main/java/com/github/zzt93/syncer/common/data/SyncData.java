@@ -152,7 +152,11 @@ public class SyncData {
 
   public void updateRecord(String key, Object value) {
     if (records.containsKey(key)) {
-      records.put(key, value);
+      if (value != null) {
+        records.put(key, value);
+      } else {
+        logger.warn("update record[{}] with null", key);
+      }
     } else {
       logger.warn("No such record name (check your config): {} in {}.{}", key, schema, table);
     }

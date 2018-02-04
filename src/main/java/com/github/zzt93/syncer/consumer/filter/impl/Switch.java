@@ -8,14 +8,17 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
  * @author zzt
  */
-public class Switch implements ExprFilter {
+public class Switch implements ExprFilter, IfBodyAction {
 
+  private final Logger logger = LoggerFactory.getLogger(Switch.class);
   private final SpelExpressionParser parser;
   private final SwitchCondition switchCondition;
   private final Map<String, FilterActions> actionsMap;
@@ -30,21 +33,31 @@ public class Switch implements ExprFilter {
 
   /**
    * <a href="https://stackoverflow.com/questions/16775203/is-spelexpression-in-spring-el-thread-safe">
-   *   SpelExpressionParser is thread safe</a>
+   * SpelExpressionParser is thread safe</a>
    */
   @ThreadSafe(safe = {Condition.class, SpelExpressionParser.class, FilterActions.class})
   @Override
   public Void decide(List<SyncData> data) {
     for (SyncData syncData : data) {
-      StandardEvaluationContext context = syncData.getContext();
-      String conditionRes = switchCondition.execute(parser, context);
-      FilterActions filterActions = actionsMap.get(conditionRes);
-      if (filterActions != null) {
-        filterActions.execute(parser, context);
-      } else if (actionsMap.containsKey(Switcher.DEFAULT)) {
-        actionsMap.get(Switcher.DEFAULT).execute(parser, context);
-      }
+      execute(syncData);
     }
     return null;
+  }
+
+  @Override
+  public Object execute(SyncData syncData) {
+    StandardEvaluationContext context = syncData.getContext();
+    String conditionRes = switchCondition.execute(parser, context);
+    if (conditionRes == null) {
+      logger.warn("switch on `null`, skip {}", syncData);
+      return FilterRes.DENY;
+    }
+    FilterActions filterActions = actionsMap.get(conditionRes);
+    if (filterActions != null) {
+      filterActions.execute(parser, context);
+    } else if (actionsMap.containsKey(Switcher.DEFAULT)) {
+      actionsMap.get(Switcher.DEFAULT).execute(parser, context);
+    }
+    return FilterRes.ACCEPT;
   }
 }

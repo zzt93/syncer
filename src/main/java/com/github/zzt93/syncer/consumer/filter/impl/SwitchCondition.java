@@ -19,7 +19,7 @@ public class SwitchCondition implements Expression<String> {
   public String execute(ExpressionParser parser, EvaluationContext context) {
     Object value = parser.parseExpression(condition).getValue(context);
     if (value == null) {
-      return "";
+      return null;
     }
     return value.toString();
   }

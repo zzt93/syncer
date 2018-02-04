@@ -6,6 +6,8 @@ import com.github.zzt93.syncer.consumer.filter.impl.Drop;
 import com.github.zzt93.syncer.consumer.filter.impl.Dup;
 import com.github.zzt93.syncer.consumer.filter.impl.IfBodyAction;
 import com.github.zzt93.syncer.consumer.filter.impl.Statement;
+import com.github.zzt93.syncer.consumer.filter.impl.Switch;
+import com.google.common.base.Preconditions;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -66,6 +68,10 @@ public class IfConfig {
         res.add(new Statement(parser, statement.getStatement()));
       } else if (statement.getDup() != null) {
         res.add(new Dup(parser, statement.getDup()));
+      } else if (statement.getSwitcher() != null) {
+        res.add(new Switch(parser, statement.getSwitcher()));
+      } else {
+        Preconditions.checkState(false);
       }
     }
     return res;
@@ -94,6 +100,15 @@ public class IfConfig {
     private DupConfig dup;
     private List<String> statement;
     private Map drop;
+    private Switcher switcher;
+
+    public Switcher getSwitcher() {
+      return switcher;
+    }
+
+    public void setSwitcher(Switcher switcher) {
+      this.switcher = switcher;
+    }
 
     public CloneConfig getClone() {
       return clone;
