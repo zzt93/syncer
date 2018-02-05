@@ -27,8 +27,9 @@ public class Dup implements ExprFilter, IfBodyAction {
   @Override
   public Object execute(SyncData src) {
     LinkedList<SyncData> res = new LinkedList<>();
-    for (FilterActions filterActions : newObjAction) {
-      SyncData dup = new SyncData(src, Offset.DUP);
+    for (int i = 0; i < newObjAction.size(); i++) {
+      FilterActions filterActions = newObjAction.get(i);
+      SyncData dup = new SyncData(src, Offset.DUP.getOffset() + i);
       for (String s : copyValue) {
         Object value = parser.parseExpression(s).getValue(src.getContext());
         parser.parseExpression(s).setValue(dup.getContext(), value);

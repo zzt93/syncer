@@ -1,7 +1,11 @@
 package com.github.zzt93.syncer.util;
 
+import com.github.zzt93.syncer.common.data.CommonTypeLocator;
+import com.github.zzt93.syncer.common.data.SyncUtil;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.Map;
+import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
@@ -92,7 +96,6 @@ public class SpringELTest {
 
   @Test
   public void qualifier() throws Exception {
-
     StandardEvaluationContext context = new StandardEvaluationContext();
     context.setTypeLocator(typeName -> {
       try {
@@ -102,8 +105,38 @@ public class SpringELTest {
       }
     });
     Class testClass = parser.parseExpression("T(SpringELTest)").getValue(context, Class.class);
-    System.out.println(testClass);
+    Assert.assertEquals(testClass, SpringELTest.class);
     Integer value = parser.parseExpression("T(SpringELTest).a").getValue(context, Integer.class);
-    System.out.println(value);
+    Assert.assertTrue(value == 1);
   }
+
+  @Test
+  public void classVar() throws Exception {
+    StandardEvaluationContext context = new StandardEvaluationContext();
+    Class testClass = parser.parseExpression("T(String[])").getValue(context, Class.class);
+    Assert.assertEquals(testClass, String[].class);
+  }
+
+  @Test
+  public void typeLocator() throws Exception {
+    StandardEvaluationContext context = new StandardEvaluationContext();
+    context.setTypeLocator(new CommonTypeLocator());
+    Class sync = parser.parseExpression("T(SyncUtil)").getValue(context, Class.class);
+    Assert.assertEquals(sync, SyncUtil.class);
+    Class map = parser.parseExpression("T(Map)").getValue(context, Class.class);
+    Assert.assertEquals(map, Map.class);
+  }
+
+  @Test
+  public void syncUtil() throws Exception {
+    StandardEvaluationContext context = new StandardEvaluationContext();
+    context.setTypeLocator(new CommonTypeLocator());
+    context.setVariable("tags", "[\"AC\",\"BD\",\"CE\",\"DF\",\"GG\"]");
+    String[] tags = parser.parseExpression("T(SyncUtil).fromJson(#tags, T(String[]))").getValue(context, String[].class);
+    Object tags2 = parser.parseExpression("T(SyncUtil).fromJson(#tags, T(String[]))").getValue(context);
+    Assert.assertEquals(tags.length, 5);
+    Assert.assertEquals(tags2.getClass(), String[].class);
+    Assert.assertEquals(((String[]) tags2).length, 5);
+  }
+
 }

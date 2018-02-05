@@ -6,14 +6,15 @@ import org.slf4j.LoggerFactory;
 
 /**
  * ----------- update/delete by query -----------
+ * @see InsertByQuery
  */
-public class SyncByQueryES {
+public class SyncByQuery {
 
-  private static final Logger logger = LoggerFactory.getLogger(SyncByQueryES.class);
+  private static final Logger logger = LoggerFactory.getLogger(SyncByQuery.class);
 
   private final HashMap<String, Object> syncBy = new HashMap<>();
 
-  public SyncByQueryES filter(String syncWithCol, Object value) {
+  public SyncByQuery filter(String syncWithCol, Object value) {
     syncBy.put(syncWithCol, value);
     return this;
   }

@@ -38,7 +38,7 @@ public class Clone implements ExprFilter, IfBodyAction {
   }
 
   private SyncData clone(SyncData src) {
-    SyncData clone = new SyncData(src, Offset.CLONE);
+    SyncData clone = new SyncData(src, Offset.CLONE.getOffset());
     for (String s : copyValue) {
       Object value = parser.parseExpression(s).getValue(src.getContext());
       parser.parseExpression(s).setValue(clone.getContext(), value);

@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.common.data;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.IdGenerator;
-import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
@@ -36,9 +35,10 @@ public class SyncData {
       this.type = type;
       this.action = type.toString();
       this.context = context;
+      context.setTypeLocator(new CommonTypeLocator());
     }
   }
-  private SyncByQueryES syncByQuery = new SyncByQueryES();
+  private SyncByQuery syncByQuery = new SyncByQuery();
 
   private final Meta inner;
   /*
@@ -71,8 +71,8 @@ public class SyncData {
     records.putAll(row);
   }
 
-  public SyncData(SyncData syncData, Offset offset) {
-    inner = new Meta(syncData.getEventId(), syncData.inner.ordinal + offset.getOffset(),
+  public SyncData(SyncData syncData, int offset) {
+    inner = new Meta(syncData.getEventId(), offset,
         syncData.getType(),
         syncData.getSourceIdentifier(), new StandardEvaluationContext(this));
   }
@@ -121,13 +121,14 @@ public class SyncData {
     return this;
   }
 
-  public void renameRecord(String oldKey, String newKey) {
+  public SyncData renameRecord(String oldKey, String newKey) {
     if (records.containsKey(oldKey)) {
       records.put(newKey, records.get(oldKey));
       records.remove(oldKey);
     } else {
       logger.warn("No such record name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, schema, table);
     }
+    return this;
   }
 
   public void removeRecord(String key) {
@@ -209,16 +210,16 @@ public class SyncData {
   /**
    * update/delete by query
    */
-  public SyncByQueryES syncByQuery() {
+  public SyncByQuery syncByQuery() {
     return syncByQuery;
   }
 
-  public ExtraQuery extraQuery(String indexName, String typeName) {
+  public InsertByQuery extraQuery(String indexName, String typeName) {
     if (inner.hasExtra) {
       logger.warn("Multiple extraQuery, not support");
     }
     inner.hasExtra = true;
-    return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
+    return new InsertByQuery(this).setIndexName(indexName).setTypeName(typeName);
   }
 
   public boolean hasExtra() {

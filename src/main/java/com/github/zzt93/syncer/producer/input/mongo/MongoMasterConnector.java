@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.producer.input.mongo;
 
+import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.config.pipeline.input.Table;
@@ -20,6 +21,7 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Set;
 import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
@@ -57,6 +59,11 @@ public class MongoMasterConnector implements MasterConnector {
   private void configCursor(MongoConnection connection, ConsumerRegistry registry) {
     MongoClient client = new MongoClient(
         new MongoClientURI(connection.toConnectionUrl(null)));
+    this.cursor = getReplicaCursor(connection, registry, client);
+  }
+
+  private MongoCursor<Document> getReplicaCursor(MongoConnection connection,
+      ConsumerRegistry registry, MongoClient client) {
     MongoDatabase db = client.getDatabase("local");
     MongoCollection<Document> coll = db.getCollection("oplog.rs");
     DocTimestamp docTimestamp = registry.votedMongoId(connection);
@@ -79,7 +86,7 @@ public class MongoMasterConnector implements MasterConnector {
     // MongoDB guarantees that the ordering of results is the same as the insertion order.
 //    BasicDBObject sort = new BasicDBObject("$natural", 1);
 
-    this.cursor = coll.find(query)
+    return coll.find(query)
         .cursorType(CursorType.TailableAwait)
         .oplogReplay(true)
         .iterator();
@@ -102,6 +109,7 @@ public class MongoMasterConnector implements MasterConnector {
   @Override
   public void run() {
     Thread.currentThread().setName(identifier);
+    long sleepInSecond = 1;
     for (int i = 0; i < maxRetry; i++) {
       while (!Thread.interrupted()) {
         while (cursor.hasNext()) {
@@ -114,9 +122,10 @@ public class MongoMasterConnector implements MasterConnector {
           }
         }
 
-        logger.error("Fail to connect to remote: {}", identifier);
+        logger.error("Fail to connect to remote: {}, retry in {} second", identifier, sleepInSecond);
         try {
-          Thread.sleep(1000);
+          sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
+          Thread.sleep(sleepInSecond);
         } catch (InterruptedException ignored) {
           logger.error("", ignored);
         }

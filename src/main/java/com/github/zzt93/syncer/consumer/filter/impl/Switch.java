@@ -38,6 +38,7 @@ public class Switch implements ExprFilter, IfBodyAction {
   @ThreadSafe(safe = {Condition.class, SpelExpressionParser.class, FilterActions.class})
   @Override
   public Void decide(List<SyncData> data) {
+    // TODO 18/2/5 add drop
     for (SyncData syncData : data) {
       execute(syncData);
     }

@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
-import com.github.zzt93.syncer.common.data.ExtraQuery;
+import com.github.zzt93.syncer.common.data.InsertByQuery;
 import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
 import java.util.Collections;
 import java.util.HashMap;
@@ -29,32 +29,32 @@ public class ESQueryMapper implements ExtraQueryMapper {
   }
 
   @Override
-  public Map<String, Object> map(ExtraQuery extraQuery) {
-    String[] select = extraQuery.getSelect();
+  public Map<String, Object> map(InsertByQuery insertByQuery) {
+    String[] select = insertByQuery.getSelect();
     SearchResponse response;
     try {
-      response = client.prepareSearch(extraQuery.getIndexName())
-          .setTypes(extraQuery.getTypeName())
+      response = client.prepareSearch(insertByQuery.getIndexName())
+          .setTypes(insertByQuery.getTypeName())
           .setSearchType(SearchType.DEFAULT)
           .setFetchSource(select, null)
-          .setQuery(getFilter(extraQuery.getQueryBy()))
+          .setQuery(getFilter(insertByQuery.getQueryBy()))
           .execute()
           .actionGet();
     } catch (Exception e) {
-      logger.error("Fail to do the extra query {}", extraQuery, e);
+      logger.error("Fail to do the extra query {}", insertByQuery, e);
       return Collections.emptyMap();
     }
     SearchHits hits = response.getHits();
     if (hits.totalHits > 1) {
       logger.warn("Multiple query results exists, only use the first");
     } else if (hits.totalHits == 0) {
-      logger.warn("Fail to find any match by " + extraQuery);
+      logger.warn("Fail to find any match by " + insertByQuery);
       return Collections.emptyMap();
     }
     SearchHit hit = hits.getAt(0);
     Map<String, Object> res = new HashMap<>();
     for (int i = 0; i < select.length; i++) {
-      res.put(extraQuery.getAs(i), hit.getSource().get(select[i]));
+      res.put(insertByQuery.getAs(i), hit.getSource().get(select[i]));
     }
     return res;
   }

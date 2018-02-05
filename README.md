@@ -55,7 +55,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - `updateRecord(String key, Object value)` 
   - ...
   - `syncByQuery()`
-  - `extraQuery(String schemaName, String tableName)`
+  - `insertByQuery(String schemaName, String tableName)`
 - all data field in `SyncData`:
   - `schema`
   - `table`
@@ -87,7 +87,9 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - binlog_row_image: full
 - MongoDB config:
   - (optional) update `bind_ip` to allow listens for connections from applications on configured addresses.
-  - start with enable replication set: `mongod --replSet myapp`
+  - start with enable replication set: 
+    - `mongod --replSet myapp`
+    - Or use docker: `docker run -d --name mongodb -p 27017:27017 -v /root/mongodb-container/db:/data/db mongo:3.2 mongod --replSet chat`
   - init replication set in shell: `rs.initiate()`
 
 ### Limitation
@@ -127,10 +129,10 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - only execute one case
 - foreach
 - if
-  - clone
+  - clone: clone a new event
   - drop
   - statement: same with outer `statement`
-  - dup
+  - dup: duplicate multiple event
 - all public method in `SyncData`:
   - `addRecord(String key, Object value)` 
   - `renameRecord(String oldKey, String newKey)` 
@@ -141,7 +143,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - ...
   - `syncByQuery()`: update/delete by query, now only support ES
     - `SyncByQueryES`
-  - `extraQuery(String schemaName, String tableName)`: usually work with `clone` & `dup` to convert one event to multiple events
+  - `insertByQuery(String schemaName, String tableName)`: usually work with `clone` & `dup` to convert one event to multiple events
     - `ExtraQuery`
 - all data field in `SyncData`:
   - `schema`: schema/db/index
@@ -202,7 +204,7 @@ filter:
             - ["table='role_permission'", "addRecord('role_id', records['owner_role_id'])
             .addRecord('affair_id', records['root_affair_id'])
             .addRecord('alliance_id', records['id'])",
-            "extraQuery(schema, 'permission_identity').filter('is_super', 1).filter('allianceId', records['id'])
+            "insertByQuery(schema, 'permission_identity').filter('is_super', 1).filter('allianceId', records['id'])
             .select('id').addRecord('identity_id')"]
 
 

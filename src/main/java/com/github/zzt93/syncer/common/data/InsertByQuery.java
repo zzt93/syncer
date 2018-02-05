@@ -7,11 +7,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * ----------- add separated query before index/insert ------------
+ * ----------- index/insert by query ------------
+ * @see SyncByQuery
  */
-public class ExtraQuery {
+public class InsertByQuery {
 
-  private static final Logger logger = LoggerFactory.getLogger(ExtraQuery.class);
+  private static final Logger logger = LoggerFactory.getLogger(InsertByQuery.class);
   private final HashMap<String, Object> queryBy = new HashMap<>();
   private final SyncData data;
   private String queryId;
@@ -20,7 +21,7 @@ public class ExtraQuery {
   private String[] select;
   private String[] as;
 
-  ExtraQuery(SyncData data) {
+  InsertByQuery(SyncData data) {
     this.data = data;
   }
 
@@ -28,22 +29,22 @@ public class ExtraQuery {
     return typeName;
   }
 
-  ExtraQuery setTypeName(String typeName) {
+  InsertByQuery setTypeName(String typeName) {
     this.typeName = typeName;
     return this;
   }
 
-  public ExtraQuery filter(String field, Object value) {
+  public InsertByQuery filter(String field, Object value) {
     queryBy.put(field, value);
     return this;
   }
 
-  public ExtraQuery select(String... field) {
+  public InsertByQuery select(String... field) {
     select = field;
     return this;
   }
 
-  public ExtraQuery addRecord(String... cols) {
+  public InsertByQuery addRecord(String... cols) {
     if (cols.length != select.length) {
       throw new InvalidConfigException("Column length is not same as query select result");
     }
@@ -58,7 +59,7 @@ public class ExtraQuery {
     return indexName;
   }
 
-  ExtraQuery setIndexName(String indexName) {
+  InsertByQuery setIndexName(String indexName) {
     this.indexName = indexName;
     return this;
   }
@@ -77,7 +78,7 @@ public class ExtraQuery {
 
   @Override
   public String toString() {
-    return "ExtraQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
+    return "InsertByQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
         + " from " + indexName + "." + typeName + " where " + queryBy +"}";
   }
 }

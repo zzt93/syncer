@@ -45,11 +45,12 @@ public class FailureLog<T> {
 
   private List<T> recover(Path path) {
     List<T> res = new LinkedList<>();
-    // TODO 18/2/1 fromJson: set root object of StandardEvaluationContext
+    // TODO 18/2/1 fromJson: set root object of StandardEvaluationContext & type locator
     return res;
   }
 
   public boolean log(T data) {
+    // TODO 18/2/5 item timestamp
     itemCount.incrementAndGet();
     try {
       String json = gson.toJson(data, type);

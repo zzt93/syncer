@@ -85,6 +85,7 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   public IdentityHashMap<Set<Schema>, OutputSink> outputSink(Connection connection) {
     IdentityHashMap<Set<Schema>, OutputSink> res = new IdentityHashMap<>();
     // TODO 18/1/15 may reuse but not new
+    if (!inputSources.containsKey(connection)) return res;
     for (InputSource inputSource : inputSources.get(connection)) {
       res.put(inputSource.getSchemas(), new LocalOutputSink(inputSource));
     }
