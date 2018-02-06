@@ -3,11 +3,14 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
+import com.github.zzt93.syncer.common.data.SyncByQuery;
+import com.github.zzt93.syncer.common.data.SyncByQueryES;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
+import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import org.elasticsearch.client.transport.TransportClient;
@@ -89,12 +92,30 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   }
 
   private Script getScript(SyncData data) {
-    HashMap<String, Object> update = data.getRecords();
+    HashMap<String, Object> params = new HashMap<>();
     StringBuilder code = new StringBuilder();
-    for (String col : update.keySet()) {
-      code.append("ctx._source.").append(col).append(" = ").append(col).append(";");
+    makeScript(code, " = params.", ";", data.getRecords(), params);
+    SyncByQuery syncByQuery = data.syncByQuery();
+    if (syncByQuery instanceof SyncByQueryES) {
+      // handle append/remove elements from list/array field
+      makeScript(code, " += params.", ";", ((SyncByQueryES) syncByQuery).getAppend(), params);
+      makeScript(code, ".remove(params.", ");", ((SyncByQueryES) syncByQuery).getRemove(), params);
+    } else {
+      Preconditions.checkState(false, "should be `SyncByQueryES`");
     }
-    return new Script(ScriptType.INLINE, "painless", code.toString(), update);
+    return new Script(ScriptType.INLINE, "painless", code.toString(), params);
+  }
+
+  private void makeScript(StringBuilder code, String op, String endOp, HashMap<String, Object> data,
+      HashMap<String, Object> params) {
+    for (String col : data.keySet()) {
+      code.append("ctx._source.").append(col).append(op).append(col).append(endOp);
+    }
+    int before = params.size();
+    params.putAll(data);
+    if (before + data.size() != params.size()) {
+      logger.warn("Key conflict happens when making script [{}]", code);
+    }
   }
 
   private QueryBuilder getFilter(SyncData data) {

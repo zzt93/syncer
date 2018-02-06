@@ -5,7 +5,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * update/delete by query
+ * update(set field)/delete by query
  * @see InsertByQuery
  */
 public class SyncByQuery {

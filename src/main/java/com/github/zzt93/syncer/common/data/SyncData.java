@@ -30,8 +30,7 @@ public class SyncData {
       this.eventId = eventId;
       this.connectionIdentifier = connectionIdentifier;
       dataId = IdGenerator.fromEventId(eventId, ordinal);
-      this.type = type;
-      this.action = type.toString();
+      setType(type);
       this.context = context;
       context.setTypeLocator(new CommonTypeLocator());
     }
@@ -41,7 +40,7 @@ public class SyncData {
       action = type.toString();
     }
   }
-  private SyncByQuery syncByQuery = new SyncByQuery();
+  private SyncByQuery syncByQuery;
 
   private final Meta inner;
   /*
@@ -72,12 +71,14 @@ public class SyncData {
     schema = database;
     this.table = table;
     records.putAll(row);
+    syncByQuery = new SyncByQueryES(this);
   }
 
   public SyncData(SyncData syncData, int offset) {
     inner = new Meta(syncData.getEventId(), offset,
         syncData.getType(),
         syncData.getSourceIdentifier(), new StandardEvaluationContext(this));
+    syncByQuery = new SyncByQueryES(this);
   }
 
   public Object getId() {
@@ -208,8 +209,6 @@ public class SyncData {
     return syncByQuery.isSyncWithoutId();
   }
 
-  /*--------------------*/
-
   /**
    * update/delete by query
    */
@@ -217,7 +216,7 @@ public class SyncData {
     return syncByQuery;
   }
 
-  public InsertByQuery extraQuery(String indexName, String typeName) {
+  public InsertByQuery insertByQuery(String indexName, String typeName) {
     if (inner.hasExtra) {
       logger.warn("Multiple extraQuery, not support");
     }
