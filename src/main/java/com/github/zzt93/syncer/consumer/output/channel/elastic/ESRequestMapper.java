@@ -8,8 +8,8 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
-import java.util.Collections;
 import java.util.HashMap;
+import java.util.Map.Entry;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -91,21 +91,17 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private Script getScript(SyncData data) {
     HashMap<String, Object> update = data.getRecords();
     StringBuilder code = new StringBuilder();
-//    StandardEvaluationContext context = data.getContext();
     for (String col : update.keySet()) {
-      String expr = update.get(col).toString();
-      code.append("ctx._source.").append(col).append(" = \"").append(expr).append("\";");
+      code.append("ctx._source.").append(col).append(" = ").append(col).append(";");
     }
-    return new Script(ScriptType.INLINE, "painless", code.toString(), Collections.emptyMap());
+    return new Script(ScriptType.INLINE, "painless", code.toString(), update);
   }
 
   private QueryBuilder getFilter(SyncData data) {
     BoolQueryBuilder builder = boolQuery();
     HashMap<String, Object> syncBy = data.getSyncBy();
-//    StandardEvaluationContext context = data.getContext();
-    for (String s : syncBy.keySet()) {
-      String expr = syncBy.get(s).toString();
-      builder.filter(termQuery(s, expr));
+    for (Entry<String, Object> entry : syncBy.entrySet()) {
+      builder.filter(termQuery(entry.getKey(), entry.getValue()));
     }
     return builder;
   }

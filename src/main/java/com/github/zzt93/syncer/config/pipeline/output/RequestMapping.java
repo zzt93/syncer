@@ -17,9 +17,6 @@ public class RequestMapping {
   private boolean enableExtraQuery = false;
   private int retryOnUpdateConflict = 0;
 
-  // TODO 17/10/16 implement
-  private HashMap<String, Object> upsert = new HashMap<>();
-
   public RequestMapping() {
     // default value of mapper
     fieldsMapping.put(KVMapper.FAKE_KEY, KVMapper.ROW_FLATTEN);

@@ -17,47 +17,8 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  */
 public class SpringELTest {
 
-  private final SpelExpressionParser parser = new SpelExpressionParser();
   public static int a = 1;
-  private static class Tmp {
-
-    private int a;
-    private String b;
-    private Object o;
-
-    public Tmp(int a, String b) {
-      this.a = a;
-      this.b = b;
-    }
-
-    public Tmp() {
-
-    }
-
-    public String getB() {
-      return b;
-    }
-
-    public void setB(String b) {
-      this.b = b;
-    }
-
-    public int getA() {
-      return a;
-    }
-
-    public void setA(int a) {
-      this.a = a;
-    }
-
-    public Object getO() {
-      return o;
-    }
-
-    public void setO(Object obj) {
-      o = obj;
-    }
-  }
+  private final SpelExpressionParser parser = new SpelExpressionParser();
 
   @Test
   public void template() {
@@ -132,11 +93,64 @@ public class SpringELTest {
     StandardEvaluationContext context = new StandardEvaluationContext();
     context.setTypeLocator(new CommonTypeLocator());
     context.setVariable("tags", "[\"AC\",\"BD\",\"CE\",\"DF\",\"GG\"]");
-    String[] tags = parser.parseExpression("T(SyncUtil).fromJson(#tags, T(String[]))").getValue(context, String[].class);
-    Object tags2 = parser.parseExpression("T(SyncUtil).fromJson(#tags, T(String[]))").getValue(context);
+    String[] tags = parser.parseExpression("T(SyncUtil).fromJson(#tags, T(String[]))")
+        .getValue(context, String[].class);
+    Object tags2 = parser.parseExpression("T(SyncUtil).fromJson(#tags, T(String[]))")
+        .getValue(context);
     Assert.assertEquals(tags.length, 5);
     Assert.assertEquals(tags2.getClass(), String[].class);
     Assert.assertEquals(((String[]) tags2).length, 5);
   }
 
+  @Test
+  public void projection() throws Exception {
+    StandardEvaluationContext context = new StandardEvaluationContext();
+    context.setTypeLocator(new CommonTypeLocator());
+    context.setVariable("content",
+        "{\"blocks\":[{\"data\":{},\"depth\":0,\"entityRanges\":[],\"inlineStyleRanges\":[],\"key\":\"ummxd\",\"text\":\"Test\",\"type\":\"unstyled\"}],\"entityMap\":{}}");
+    String value = parser
+        .parseExpression("T(SyncUtil).fromJson(#content,T(Map))['blocks'].![text]")
+        .getValue(context, String.class);
+    Assert.assertEquals(value, "Test");
+  }
+
+  private static class Tmp {
+
+    private int a;
+    private String b;
+    private Object o;
+
+    public Tmp(int a, String b) {
+      this.a = a;
+      this.b = b;
+    }
+
+    public Tmp() {
+
+    }
+
+    public String getB() {
+      return b;
+    }
+
+    public void setB(String b) {
+      this.b = b;
+    }
+
+    public int getA() {
+      return a;
+    }
+
+    public void setA(int a) {
+      this.a = a;
+    }
+
+    public Object getO() {
+      return o;
+    }
+
+    public void setO(Object obj) {
+      o = obj;
+    }
+  }
 }

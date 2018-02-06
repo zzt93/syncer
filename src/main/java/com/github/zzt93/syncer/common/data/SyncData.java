@@ -19,10 +19,9 @@ public class SyncData {
   private static class Meta {
     private final String eventId;
     private final String dataId;
-    private final EventType type;
-    private final String action;
+    private EventType type;
+    private String action;
     private final StandardEvaluationContext context;
-    private final int ordinal;
     private boolean hasExtra = false;
     private String connectionIdentifier;
 
@@ -31,11 +30,15 @@ public class SyncData {
       this.eventId = eventId;
       this.connectionIdentifier = connectionIdentifier;
       dataId = IdGenerator.fromEventId(eventId, ordinal);
-      this.ordinal = ordinal;
       this.type = type;
       this.action = type.toString();
       this.context = context;
       context.setTypeLocator(new CommonTypeLocator());
+    }
+
+    private void setType(EventType type) {
+      this.type = type;
+      action = type.toString();
     }
   }
   private SyncByQuery syncByQuery = new SyncByQuery();
@@ -224,6 +227,10 @@ public class SyncData {
 
   public boolean hasExtra() {
     return inner.hasExtra;
+  }
+
+  void setEventType(EventType type) {
+    inner.setType(type);
   }
 
   @Override

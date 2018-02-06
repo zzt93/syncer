@@ -41,7 +41,10 @@ public class Dup implements ExprFilter, IfBodyAction {
   }
 
   @Override
-  public Void decide(List<SyncData> e) {
-    throw new UnsupportedOperationException("Not implemented");
+  public Void decide(List<SyncData> dataList) {
+    for (SyncData syncData : dataList) {
+      execute(syncData);
+    }
+    return null;
   }
 }

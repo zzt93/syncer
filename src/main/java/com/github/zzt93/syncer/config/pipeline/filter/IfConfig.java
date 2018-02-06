@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.filter.impl.Clone;
 import com.github.zzt93.syncer.consumer.filter.impl.Drop;
 import com.github.zzt93.syncer.consumer.filter.impl.Dup;
+import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.IfBodyAction;
 import com.github.zzt93.syncer.consumer.filter.impl.Statement;
 import com.github.zzt93.syncer.consumer.filter.impl.Switch;
@@ -70,6 +71,8 @@ public class IfConfig {
         res.add(new Dup(parser, statement.getDup()));
       } else if (statement.getSwitcher() != null) {
         res.add(new Switch(parser, statement.getSwitcher()));
+      } else if (statement.getForeach() !=null) {
+        res.add(new ForeachFilter(parser, statement.getForeach()));
       } else {
         Preconditions.checkState(false);
       }
@@ -101,6 +104,15 @@ public class IfConfig {
     private List<String> statement;
     private Map drop;
     private Switcher switcher;
+    private ForeachConfig foreach;
+
+    public ForeachConfig getForeach() {
+      return foreach;
+    }
+
+    public void setForeach(ForeachConfig foreach) {
+      this.foreach = foreach;
+    }
 
     public Switcher getSwitcher() {
       return switcher;

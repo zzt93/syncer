@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.common.data;
 
+import java.util.List;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
@@ -22,4 +23,15 @@ public class SyncUtilTest {
     Assert.assertEquals(m.get("b"),"asd");
   }
 
+  @Test
+  public void announcementBlock() throws Exception {
+    Map o = (Map) SyncUtil.fromJson(
+        "{\"blocks\":[{\"data\":{},\"depth\":0,\"entityRanges\":[],\"inlineStyleRanges\":[],\"key\":\"ummxd\",\"text\":\"Test\",\"type\":\"unstyled\"}],\"entityMap\":{}}",
+        Map.class);
+    List<Map> blocks = ((List<Map>) o.get("blocks"));
+    Assert.assertEquals(blocks.size(), 1);
+    Map map = blocks.get(0);
+    String text = (String) map.get("text");
+    Assert.assertEquals(text, "Test");
+  }
 }

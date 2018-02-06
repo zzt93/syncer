@@ -127,12 +127,14 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
 - switcher
   - support `default` case
   - only execute one case
-- foreach
+- foreach: in most cases, you can use [Spring EL's collection projection](https://docs.spring.io/spring/docs/3.0.x/reference/expressions.html) rather than this feature
 - if
   - clone: clone a new event
   - drop
   - statement: same with outer `statement`
   - dup: duplicate multiple event
+  - switch
+  - foreach
 - all public method in `SyncData`:
   - `addRecord(String key, Object value)` 
   - `renameRecord(String oldKey, String newKey)` 
