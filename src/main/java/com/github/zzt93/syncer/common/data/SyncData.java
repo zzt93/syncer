@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
@@ -33,6 +34,7 @@ public class SyncData {
       setType(type);
       this.context = context;
       context.setTypeLocator(new CommonTypeLocator());
+      context.addPropertyAccessor(new MapAccessor());
     }
 
     private void setType(EventType type) {

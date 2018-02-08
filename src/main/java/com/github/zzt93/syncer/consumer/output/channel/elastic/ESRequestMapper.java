@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.common.data.SyncByQuery;
 import com.github.zzt93.syncer.common.data.SyncByQueryES;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
@@ -114,7 +115,8 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     int before = params.size();
     params.putAll(data);
     if (before + data.size() != params.size()) {
-      logger.warn("Key conflict happens when making script [{}]", code);
+      throw new InvalidConfigException("Key conflict happens when making script [" + code + "], "
+          + "check config file about `syncByQuery()` (Notice the `syncByQuery()` will default use all field for 'set' update)");
     }
   }
 

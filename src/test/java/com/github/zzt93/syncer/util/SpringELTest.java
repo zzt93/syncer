@@ -7,6 +7,7 @@ import java.util.Iterator;
 import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -106,6 +107,7 @@ public class SpringELTest {
   public void projection() throws Exception {
     StandardEvaluationContext context = new StandardEvaluationContext();
     context.setTypeLocator(new CommonTypeLocator());
+    context.addPropertyAccessor(new MapAccessor());
     context.setVariable("content",
         "{\"blocks\":[{\"data\":{},\"depth\":0,\"entityRanges\":[],\"inlineStyleRanges\":[],\"key\":\"ummxd\",\"text\":\"Test\",\"type\":\"unstyled\"}],\"entityMap\":{}}");
     String value = parser
