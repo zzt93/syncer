@@ -1,11 +1,16 @@
 package com.github.zzt93.syncer.common.data;
 
+import com.github.zzt93.syncer.consumer.filter.impl.Switch;
 import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
  */
 public class SyncUtil {
+  private static final Logger logger = LoggerFactory.getLogger(Switch.class);
 
   private static final Gson gson = new Gson();
 
@@ -20,7 +25,12 @@ public class SyncUtil {
     if (json == null) {
       return null;
     }
-    return gson.fromJson(json, clazz);
+    try {
+      return gson.fromJson(json, clazz);
+    } catch (JsonSyntaxException e) {
+      logger.error("Fail to parse {} as {}", json, clazz);
+      return null;
+    }
   }
 
 }

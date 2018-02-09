@@ -52,7 +52,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
 
   @Override
   public void start() throws IOException {
-    logger.info("Start connecting to master sources {}", masterSources);
+    logger.info("Start connecting to [{}]", masterSources);
     if (masterSources.size() > 1) {
       logger.warn("Connect to multiple masters, not suggested usage");
     }
@@ -62,7 +62,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
       Connection connection = masterSource.getConnection();
       wanted.remove(connection);
       if (consumerRegistry.outputSink(connection).isEmpty()) {
-        logger.warn("Skip master source {} because no consumer registered", masterSource);
+        logger.warn("Skip {} because no consumer registered", masterSource);
         continue;
       }
       try {
@@ -81,7 +81,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
       }
     }
     if (!wanted.isEmpty()) {
-      logger.warn("Some consumer wanted source is not configured in `producer` {}", wanted);
+      logger.warn("Some consumer wanted source is not configured in `producer`: {}", wanted);
     }
   }
 

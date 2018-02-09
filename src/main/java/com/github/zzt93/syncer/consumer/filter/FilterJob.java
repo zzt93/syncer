@@ -37,23 +37,23 @@ public class FilterJob implements Runnable {
     LinkedList<SyncData> list = new LinkedList<>();
     List<OutputChannel> remove = new LinkedList<>();
     while (!Thread.interrupted()) {
-      SyncData poll;
+      SyncData poll = null;
       try {
         list.clear();
         poll = fromInput.take();
         MDC.put(IdGenerator.EID, poll.getEventId());
-        ack.append(poll.getSourceIdentifier(), poll.getDataId());
 
         list.add(poll);
         for (ExprFilter filter : filters) {
           filter.decide(list);
         }
       } catch (Exception e) {
-        logger.error("Filter job failed", e);
+        logger.error("Filter job failed with {}", poll, e);
         continue;
       }
-      for (OutputChannel outputChannel : this.outputChannels) {
-        for (SyncData syncData : list) {
+      for (SyncData syncData : list) {
+        ack.append(syncData.getSourceIdentifier(), syncData.getDataId());
+        for (OutputChannel outputChannel : this.outputChannels) {
           try {
             outputChannel.output(syncData);
           } catch (FailureException e) {
