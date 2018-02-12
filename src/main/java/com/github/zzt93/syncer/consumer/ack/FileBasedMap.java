@@ -14,7 +14,8 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.LinkedList;
-import java.util.concurrent.ConcurrentSkipListSet;
+import java.util.concurrent.ConcurrentSkipListMap;
+import java.util.concurrent.atomic.AtomicInteger;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -26,42 +27,19 @@ import org.slf4j.LoggerFactory;
  * @see Object#toString()
  */
 @ThreadSafe
-public class FileBasedSet<T extends Comparable<T>> {
+public class FileBasedMap<T extends Comparable<T>> {
 
   private static final int _1K = 1024;
   private final MappedByteBuffer file;
-  private final ConcurrentSkipListSet<T> set = new ConcurrentSkipListSet<>();
-  private final Logger logger = LoggerFactory.getLogger(FileBasedSet.class);
+  private final ConcurrentSkipListMap<T, AtomicInteger> map = new ConcurrentSkipListMap<>();
+  private final Logger logger = LoggerFactory.getLogger(FileBasedMap.class);
 
-  public FileBasedSet(Path path) throws IOException {
+  public FileBasedMap(Path path) throws IOException {
     Files.createDirectories(path.getParent());
     try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet
         .of(StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE))) {
       file = fileChannel.map(MapMode.READ_WRITE, 0, _1K);
     }
-  }
-
-  public boolean append(T data) {
-    return set.add(data);
-  }
-
-  public boolean remove(T data) {
-    return set.remove(data);
-  }
-
-  public void flush() {
-    if (set.isEmpty()) {
-      return;
-    }
-    T first = set.first();
-//    logger.debug("Flushing ack info {}", first);
-    file.clear();
-    try {
-      file.put(first.toString().getBytes("utf-8"));
-    } catch (UnsupportedEncodingException ignore) {
-      logger.error("Impossible", ignore);
-    }
-    file.force();
   }
 
   public static byte[] readData(Path path) throws IOException {
@@ -78,6 +56,32 @@ public class FileBasedSet<T extends Comparable<T>> {
       }
     }
     return Bytes.toArray(bytes);
+  }
+
+  public AtomicInteger append(T data, int count) {
+    return map.put(data, new AtomicInteger(count));
+  }
+
+  public AtomicInteger remove(T data, int count) {
+    if (map.getOrDefault(data, new AtomicInteger()).get() < count) {
+      throw new IllegalStateException();
+    }
+    return map.computeIfPresent(data, (k, v) -> v.updateAndGet(x -> x - count) == 0 ? null : v);
+  }
+
+  public void flush() {
+    if (map.isEmpty()) {
+      return;
+    }
+    T first = map.firstKey();
+//    logger.debug("Flushing ack info {}", first);
+    file.clear();
+    try {
+      file.put(first.toString().getBytes("utf-8"));
+    } catch (UnsupportedEncodingException ignore) {
+      logger.error("Impossible", ignore);
+    }
+    file.force();
   }
 
 }

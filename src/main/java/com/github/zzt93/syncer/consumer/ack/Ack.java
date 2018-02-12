@@ -26,7 +26,7 @@ public class Ack {
 
   private final String metaDir;
   @ThreadSafe(sharedBy = {"shutdown hook", "syncer-filter-output"})
-  private Map<String, FileBasedSet<String>> ackMap = new HashMap<>();
+  private Map<String, FileBasedMap<String>> ackMap = new HashMap<>();
   private final String clientId;
 
   public static Ack build(String clientId, SyncerInputMeta syncerInputMeta, Set<MasterSource> masterSources,
@@ -61,7 +61,7 @@ public class Ack {
       }
     }
     try {
-      ackMap.put(identifier, new FileBasedSet<>(path));
+      ackMap.put(identifier, new FileBasedMap<>(path));
     } catch (IOException e) {
       logger.error("Fail to create file {}", path);
     }
@@ -70,7 +70,7 @@ public class Ack {
 
   private SyncInitMeta recoverSyncInitMeta(Path path,
       MasterSourceType sourceType, SyncInitMeta syncInitMeta) throws IOException {
-    byte[] bytes = FileBasedSet.readData(path);
+    byte[] bytes = FileBasedMap.readData(path);
     if (bytes.length > 0) {
       try {
         String data = new String(bytes, "utf-8");
@@ -91,21 +91,26 @@ public class Ack {
     return syncInitMeta;
   }
 
-  public void append(String identifier, String dataId) {
-    boolean append = ackMap.get(identifier).append(dataId);
+  public void append(String identifier, String dataId, int size) {
+    boolean append = ackMap.get(identifier).append(dataId, size) == null;
     if (!append) {
       logger.error("Fail to append to ack log: {} {}", identifier, dataId);
     }
   }
 
   public void remove(String identifier, String dataId) {
-    boolean remove = ackMap.get(identifier).remove(dataId);
-    if (!remove) {
-      logger.error("Fail to remove from ack log: {} {}", identifier, dataId);
+    boolean remove = false;
+    try {
+      remove = ackMap.get(identifier).remove(dataId, 1) == null;
+    } catch (Exception e) {
+      logger.error("Fail to remove from ack log: {} {}", identifier, dataId, e);
+    }
+    if (remove) {
+      logger.info("Remove {} {} from ack log", identifier, dataId);
     }
   }
 
   public void flush() {
-    ackMap.values().forEach(FileBasedSet::flush);
+    ackMap.values().forEach(FileBasedMap::flush);
   }
 }

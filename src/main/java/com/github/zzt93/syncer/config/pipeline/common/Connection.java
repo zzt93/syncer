@@ -63,6 +63,9 @@ public class Connection implements Comparable<Connection> {
   }
 
   public String getPassword() {
+    if (password == null) {
+      throw new InvalidConfigException("No passwordFile/password set");
+    }
     return password;
   }
 
