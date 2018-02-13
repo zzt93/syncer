@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.config.pipeline.common.RedisConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
-import com.github.zzt93.syncer.config.pipeline.output.Redis;
+import com.github.zzt93.syncer.config.pipeline.output.redis.Redis;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
@@ -19,6 +19,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 
 /**
@@ -30,8 +31,9 @@ public class RedisChannel implements BufferedChannel {
   private final BatchBuffer<SyncWrapper> batchBuffer;
   private final PipelineBatch batch;
   private final Ack ack;
-  private final FailureLog<SyncWrapper<String>> request;
+  private final FailureLog<SyncData> request;
   private final RedisTemplate<String, Object> template;
+  private final OperationMapper operationMapper;
 
 
   public RedisChannel(Redis redis, SyncerOutputMeta outputMeta, Ack ack) {
@@ -49,6 +51,8 @@ public class RedisChannel implements BufferedChannel {
     }
     template = new RedisTemplate<>();
     template.setConnectionFactory(new JedisConnectionFactory(connection.getConfig()));
+
+    operationMapper = new OperationMapper(redis.getMapping());
   }
 
 
@@ -75,8 +79,12 @@ public class RedisChannel implements BufferedChannel {
 
   private void send(SyncWrapper[] aim) {
     if (aim != null && aim.length != 0) {
-      for (SyncWrapper wrapper : aim) {
-      }
+      template.executePipelined((RedisCallback<Void>) connection -> {
+        for (SyncWrapper<RedisCallback> wrapper : aim) {
+          wrapper.getData().doInRedis(connection);
+        }
+        return null;
+      });
     }
   }
 
@@ -95,12 +103,18 @@ public class RedisChannel implements BufferedChannel {
 
   @Override
   public void retryFailed(SyncWrapper[] wrappers, Exception e) {
-
+    for (SyncWrapper wrapper : wrappers) {
+      wrapper.inc();
+      if (wrapper.retryCount() > batch.getMaxRetry()) {
+        request.log(wrapper.getEvent());
+      }
+    }
+    logger.error("{}", wrappers, e);
   }
 
   @Override
   public boolean output(SyncData event) {
-    return false;
+    return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
   }
 
   @Override

@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.pipeline.output;
+package com.github.zzt93.syncer.config.pipeline.output.elastic;
 
 /**
  * @author zzt

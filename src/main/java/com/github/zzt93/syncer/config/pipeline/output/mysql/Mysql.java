@@ -1,7 +1,10 @@
-package com.github.zzt93.syncer.config.pipeline.output;
+package com.github.zzt93.syncer.config.pipeline.output.mysql;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
+import com.github.zzt93.syncer.config.pipeline.output.OutputChannelConfig;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;

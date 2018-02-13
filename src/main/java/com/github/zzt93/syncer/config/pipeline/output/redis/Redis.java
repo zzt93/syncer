@@ -1,7 +1,10 @@
-package com.github.zzt93.syncer.config.pipeline.output;
+package com.github.zzt93.syncer.config.pipeline.output.redis;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.RedisConnection;
+import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
+import com.github.zzt93.syncer.config.pipeline.output.OutputChannelConfig;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.redis.RedisChannel;
@@ -12,7 +15,7 @@ import com.github.zzt93.syncer.consumer.output.channel.redis.RedisChannel;
 public class Redis implements OutputChannelConfig {
 
   private RedisConnection connection;
-  private RequestMapping requestMapping = new RequestMapping();
+  private OperationMapping mapping = new OperationMapping();
   private PipelineBatch batch = new PipelineBatch();
   private FailureLogConfig failureLog = new FailureLogConfig();
 
@@ -32,12 +35,12 @@ public class Redis implements OutputChannelConfig {
     this.connection = connection;
   }
 
-  public RequestMapping getRequestMapping() {
-    return requestMapping;
+  public OperationMapping getMapping() {
+    return mapping;
   }
 
-  public void setRequestMapping(RequestMapping requestMapping) {
-    this.requestMapping = requestMapping;
+  public void setMapping(OperationMapping mapping) {
+    this.mapping = mapping;
   }
 
 
