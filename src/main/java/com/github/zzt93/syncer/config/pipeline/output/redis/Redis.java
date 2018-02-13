@@ -18,6 +18,7 @@ public class Redis implements OutputChannelConfig {
   private OperationMapping mapping = new OperationMapping();
   private PipelineBatch batch = new PipelineBatch();
   private FailureLogConfig failureLog = new FailureLogConfig();
+  private String condition;
 
   public FailureLogConfig getFailureLog() {
     return failureLog;
@@ -43,6 +44,9 @@ public class Redis implements OutputChannelConfig {
     this.mapping = mapping;
   }
 
+  public void setCondition(String condition) {
+    this.condition = condition;
+  }
 
   public PipelineBatch getBatch() {
     return batch;
@@ -59,5 +63,10 @@ public class Redis implements OutputChannelConfig {
       return new RedisChannel(this, outputMeta, ack);
     }
     throw new InvalidConfigException("Invalid connection configuration: " + connection);
+  }
+
+  @Override
+  public String conditionExpr() {
+    return condition;
   }
 }

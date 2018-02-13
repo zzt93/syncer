@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.redis;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.RedisConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
@@ -21,6 +22,10 @@ import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParseException;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+import org.springframework.util.StringUtils;
 
 /**
  * @author zzt
@@ -34,6 +39,7 @@ public class RedisChannel implements BufferedChannel {
   private final FailureLog<SyncData> request;
   private final RedisTemplate<String, Object> template;
   private final OperationMapper operationMapper;
+  private Expression expression;
 
 
   public RedisChannel(Redis redis, SyncerOutputMeta outputMeta, Ack ack) {
@@ -50,9 +56,20 @@ public class RedisChannel implements BufferedChannel {
       throw new IllegalStateException("Impossible", e);
     }
     template = new RedisTemplate<>();
-    template.setConnectionFactory(new JedisConnectionFactory(connection.getConfig()));
+    JedisConnectionFactory factory = new JedisConnectionFactory(connection.getConfig());
+    factory.afterPropertiesSet();
+    template.setConnectionFactory(factory);
+    template.afterPropertiesSet();
 
     operationMapper = new OperationMapper(redis.getMapping());
+    SpelExpressionParser parser = new SpelExpressionParser();
+    if (!StringUtils.isEmpty(redis.conditionExpr())) {
+      try {
+        expression = parser.parseExpression(redis.conditionExpr());
+      } catch (ParseException e) {
+        throw new InvalidConfigException("Fail to parse [condition] for [redis] output channel", e);
+      }
+    }
   }
 
 
@@ -114,6 +131,14 @@ public class RedisChannel implements BufferedChannel {
 
   @Override
   public boolean output(SyncData event) {
+    if (expression == null) {
+      return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
+    }
+    Boolean value = expression.getValue(event.getContext(), Boolean.class);
+    if (value == null || !value) {
+      ack.remove(event.getSourceIdentifier(), event.getDataId());
+      return false;
+    }
     return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
   }
 
