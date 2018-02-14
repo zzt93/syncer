@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.consumer.output.channel.redis;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.pipeline.common.RedisConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.redis.Redis;
@@ -46,17 +45,16 @@ public class RedisChannel implements BufferedChannel {
     this.batch = redis.getBatch();
     batchBuffer = new BatchBuffer<>(batch, SyncWrapper.class);
     this.ack = ack;
-    RedisConnection connection = redis.getConnection();
     FailureLogConfig failureLog = redis.getFailureLog();
     try {
-      Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
+      Path path = Paths.get(outputMeta.getFailureLogDir(), redis.connectionIdentifier());
       request = new FailureLog<>(path, failureLog, new TypeToken<SyncWrapper<String>>() {
       });
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);
     }
     template = new RedisTemplate<>();
-    JedisConnectionFactory factory = new JedisConnectionFactory(connection.getConfig());
+    JedisConnectionFactory factory = redis.getConnectionFactory();
     factory.afterPropertiesSet();
     template.setConnectionFactory(factory);
     template.afterPropertiesSet();

@@ -6,7 +6,7 @@ import org.springframework.data.redis.connection.RedisPassword;
 /**
  * @author zzt
  */
-public class RedisConnection extends ClusterConnection {
+public class RedisClusterConnection extends ClusterConnection {
 
   public RedisClusterConfiguration getConfig() {
     RedisClusterConfiguration configuration = new RedisClusterConfiguration(
@@ -17,6 +17,6 @@ public class RedisConnection extends ClusterConnection {
 
   @Override
   public boolean valid() {
-    return !getClusterNodes().isEmpty();
+    return getClusterNodes() != null && !getClusterNodes().isEmpty();
   }
 }
