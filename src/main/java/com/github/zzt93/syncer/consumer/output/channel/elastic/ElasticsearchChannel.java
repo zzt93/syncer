@@ -57,7 +57,7 @@ public class ElasticsearchChannel implements BufferedChannel {
     client = connection.transportClient();
     this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch(), SyncWrapper.class);
     this.batch = elasticsearch.getBatch();
-    this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getESRequestMapping());
+    this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
     this.ack = ack;
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
     try {

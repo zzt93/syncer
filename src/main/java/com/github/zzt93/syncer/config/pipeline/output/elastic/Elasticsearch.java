@@ -15,7 +15,7 @@ import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChan
 public class Elasticsearch implements OutputChannelConfig {
 
   private ElasticsearchConnection connection;
-  private ESRequestMapping ESRequestMapping = new ESRequestMapping();
+  private ESRequestMapping requestMapping = new ESRequestMapping();
   private PipelineBatch batch = new PipelineBatch();
   private FailureLogConfig failureLog = new FailureLogConfig();
 
@@ -35,12 +35,12 @@ public class Elasticsearch implements OutputChannelConfig {
     this.connection = connection;
   }
 
-  public ESRequestMapping getESRequestMapping() {
-    return ESRequestMapping;
+  public ESRequestMapping getRequestMapping() {
+    return requestMapping;
   }
 
-  public void setESRequestMapping(ESRequestMapping ESRequestMapping) {
-    this.ESRequestMapping = ESRequestMapping;
+  public void setRequestMapping(ESRequestMapping requestMapping) {
+    this.requestMapping = requestMapping;
   }
 
 
