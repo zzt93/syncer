@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline;
 
-import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
+import com.github.zzt93.syncer.config.producer.ProducerInput;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Configuration;
 
@@ -8,16 +8,16 @@ import org.springframework.context.annotation.Configuration;
  * @author zzt
  */
 @Configuration
-@ConfigurationProperties
+@ConfigurationProperties("syncer.producer")
 public class ProducerConfig {
 
-  private PipelineInput input;
+  private ProducerInput input;
 
-  public PipelineInput getInput() {
+  public ProducerInput getInput() {
     return input;
   }
 
-  public void setInput(PipelineInput input) {
+  public void setInput(ProducerInput input) {
     this.input = input;
   }
 

@@ -6,8 +6,8 @@ import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
-import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
-import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
+import com.github.zzt93.syncer.config.producer.ProducerInput;
+import com.github.zzt93.syncer.config.producer.ProducerMaster;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
@@ -23,16 +23,16 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>> {
+public class ProducerStarter implements Starter<ProducerInput,Set<ProducerMaster>> {
 
   private static ProducerStarter starter;
   private final Logger logger = LoggerFactory.getLogger(ProducerStarter.class);
-  private final Set<MasterSource> masterSources;
+  private final Set<ProducerMaster> masterSources;
   private final ExecutorService service;
   private final ConsumerRegistry consumerRegistry;
   private final int maxRetry;
 
-  private ProducerStarter(PipelineInput input,
+  private ProducerStarter(ProducerInput input,
       SyncerInput syncerConfigInput, ConsumerRegistry consumerRegistry) {
     masterSources = fromPipelineConfig(input);
     service = Executors
@@ -42,7 +42,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
     maxRetry = syncerConfigInput.getMaxRetry();
   }
 
-  public static ProducerStarter getInstance(PipelineInput input, SyncerInput syncerConfigInput,
+  public static ProducerStarter getInstance(ProducerInput input, SyncerInput syncerConfigInput,
       ConsumerRegistry consumerRegistry) {
     if (starter == null) {
       starter = new ProducerStarter(input, syncerConfigInput, consumerRegistry);
@@ -58,7 +58,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
     }
 
     Set<Connection> wanted = consumerRegistry.wantedSource();
-    for (MasterSource masterSource : masterSources) {
+    for (ProducerMaster masterSource : masterSources) {
       Connection connection = masterSource.getConnection();
       wanted.remove(connection);
       if (consumerRegistry.outputSink(connection).isEmpty()) {
@@ -87,7 +87,7 @@ public class ProducerStarter implements Starter<PipelineInput, Set<MasterSource>
 
 
   @Override
-  public Set<MasterSource> fromPipelineConfig(PipelineInput input) {
-    return input.getMasterSet();
+  public Set<ProducerMaster> fromPipelineConfig(ProducerInput input) {
+    return input.masterSet();
   }
 }

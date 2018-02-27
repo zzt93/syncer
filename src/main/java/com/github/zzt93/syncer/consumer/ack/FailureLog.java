@@ -66,6 +66,7 @@ public class FailureLog<T> implements Resource {
       String json = gson.toJson(data, type);
       writer.append(json);
       writer.newLine();
+      writer.flush();
     } catch (IOException e) {
       logger.error("Fail to convert to json {}", data, e);
     }

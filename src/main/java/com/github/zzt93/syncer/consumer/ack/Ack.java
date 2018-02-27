@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.ack;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
-import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
+import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
 import com.github.zzt93.syncer.config.syncer.SyncerInputMeta;
 import java.io.IOException;

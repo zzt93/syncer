@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.pipeline.input;
 
 
+import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
