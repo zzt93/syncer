@@ -11,4 +11,6 @@ public interface AckChannel {
 
   void retryFailed(SyncWrapper[] wrappers, Exception e);
 
+  boolean retriable(Exception e);
+
 }

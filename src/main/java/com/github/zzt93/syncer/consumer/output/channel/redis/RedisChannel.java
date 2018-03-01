@@ -128,6 +128,11 @@ public class RedisChannel implements BufferedChannel {
   }
 
   @Override
+  public boolean retriable(Exception e) {
+    return true;
+  }
+
+  @Override
   public boolean output(SyncData event) {
     if (expression == null) {
       return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));

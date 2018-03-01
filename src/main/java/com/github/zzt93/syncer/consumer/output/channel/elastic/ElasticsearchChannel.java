@@ -204,6 +204,11 @@ public class ElasticsearchChannel implements BufferedChannel {
     }
   }
 
+  @Override
+  public boolean retriable(Exception e) {
+    return true;
+  }
+
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
   public void flushIfReachSizeLimit() {
