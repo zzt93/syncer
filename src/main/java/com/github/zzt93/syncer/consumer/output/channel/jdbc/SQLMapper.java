@@ -9,7 +9,6 @@ import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
-import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -65,24 +64,14 @@ public class SQLMapper implements Mapper<SyncData, String> {
         StringJoiner values = new StringJoiner(",");
         for (Entry<String, Object> entry : map.entrySet()) {
           keys.add(entry.getKey());
-          Object value = entry.getValue();
-          if (value instanceof String) {
-            value = "'" + StringEscapeUtils.escapeSql(value.toString()) + "'";
-          }
-          values.add(value.toString());
+          values.add(SQLHelper.inSQL(entry.getValue()));
         }
         return new String[]{keys.toString(), values.toString()};
       case UPDATE_ROWS:
         StringJoiner kv = new StringJoiner(",");
         for (Entry<String, Object> entry : map.entrySet()) {
-          Object value = entry.getValue();
-          if (value instanceof String) {
-            String tmp = "" + entry.getKey() + "='" +
-                StringEscapeUtils.escapeSql(value.toString()) + "'";
-            kv.add(tmp);
-          } else {
-            kv.add("" + entry.getKey() + "=" + entry.getValue());
-          }
+          String condition = "" + entry.getKey() + "=" + SQLHelper.inSQL(entry.getValue());
+          kv.add(condition);
         }
         return new String[]{kv.toString()};
     }

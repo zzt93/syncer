@@ -238,7 +238,9 @@ java -server -XX:+UseParallelGC -jar syncer.jar --producerConfig=/absolute/path/
 ```
 
 ## Test
-### Stress Test
+### Correctness Test
+- Test data: 7M
+### Stress Test -- TODO
 - 10G
 - CPU
 - Memory

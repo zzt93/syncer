@@ -220,7 +220,7 @@ public class SyncData {
 
   public InsertByQuery insertByQuery(String indexName, String typeName) {
     if (inner.hasExtra) {
-      logger.warn("Multiple extraQuery, not support");
+      logger.info("Multiple insert by query, not supported for mysql output");
     }
     inner.hasExtra = true;
     return new InsertByQuery(this).setIndexName(indexName).setTypeName(typeName);
