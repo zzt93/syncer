@@ -46,7 +46,9 @@ public class BatchBuffer<T extends Retryable> {
 
   @ThreadSafe(safe = {ConcurrentLinkedDeque.class, AtomicInteger.class})
   public T[] flushIfReachSizeLimit() {
-    if (estimateSize.getAndUpdate(x -> x >= limit ? x - limit : x) > limit) {
+    // The function should be side-effect-free, since it may be
+    // re-applied when attempted updates fail due to contention among threads
+    if (estimateSize.getAndUpdate(x -> x >= limit ? x - limit : x) >= limit) {
       T[] res = (T[]) Array.newInstance(clazz, limit);
       for (int i = 0; i < limit; i++) {
         res[i] = deque.removeFirst();

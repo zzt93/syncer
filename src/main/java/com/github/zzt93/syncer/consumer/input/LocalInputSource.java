@@ -5,10 +5,10 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -16,6 +16,7 @@ import java.util.concurrent.BlockingDeque;
 public abstract class LocalInputSource implements InputSource {
 
   private final BlockingDeque<SyncData> filterInput;
+  private final Logger logger = LoggerFactory.getLogger(LocalInputSource.class);
 
   private final Set<Schema> schemas;
   private final Connection connection;
@@ -53,17 +54,19 @@ public abstract class LocalInputSource implements InputSource {
 
   @Override
   public boolean input(SyncData data) {
+    logger.warn("60: data id: {}", data.getDataId());
     data.setSourceIdentifier(connection.connectionIdentifier());
     return filterInput.add(data);
   }
 
   @Override
   public boolean input(SyncData[] data) {
-    List<SyncData> res = new ArrayList<>(data.length);
+    boolean res = true;
     for (SyncData datum : data) {
-      res.add(datum.setSourceIdentifier(connection.connectionIdentifier()));
+      res = res && filterInput.add(datum.setSourceIdentifier(connection.connectionIdentifier()));
+      logger.warn("70: data id: {}", datum.getDataId());
     }
-    return filterInput.addAll(res);
+    return res;
   }
 
   @Override

@@ -42,7 +42,7 @@ public class IdGenerator {
 
   public static BinlogInfo fromDataId(String dataId) {
     String[] split = dataId.split(SEP);
-    if (split.length == 5) {
+    if (split.length == 5 || split.length == 6) {
       return new BinlogInfo(split[1], Long.parseLong(split[2]));
     }
     throw new IllegalArgumentException(dataId);
@@ -59,5 +59,9 @@ public class IdGenerator {
       return new DocTimestamp(new BsonTimestamp(Integer.parseInt(split[0]), Integer.parseInt(split[1])));
     }
     throw new IllegalArgumentException(dataId);
+  }
+
+  public static String fromEventId(String eventId, int ordinal, int offset) {
+    return eventId + SEP + ordinal + SEP + offset;
   }
 }

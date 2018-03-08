@@ -122,7 +122,6 @@ public class MysqlChannel implements BufferedChannel {
       ackSuccess(sqls);
     } catch (DataAccessException e) {
       retryFailed(sqls, e);
-      logger.error("{}", Arrays.toString(sqls), e);
     }
   }
 

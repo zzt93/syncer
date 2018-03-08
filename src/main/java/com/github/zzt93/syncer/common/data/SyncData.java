@@ -20,17 +20,23 @@ public class SyncData {
   private static class Meta {
     private final String eventId;
     private final String dataId;
+    private final int ordinal;
     private EventType type;
     private String action;
     private final StandardEvaluationContext context;
     private boolean hasExtra = false;
     private String connectionIdentifier;
 
-    Meta(String eventId, int ordinal, EventType type, String connectionIdentifier,
+    Meta(String eventId, int ordinal, int offset, EventType type, String connectionIdentifier,
         StandardEvaluationContext context) {
       this.eventId = eventId;
       this.connectionIdentifier = connectionIdentifier;
-      dataId = IdGenerator.fromEventId(eventId, ordinal);
+      if (offset < 0) {
+        dataId = IdGenerator.fromEventId(eventId, ordinal);
+      } else {
+        dataId = IdGenerator.fromEventId(eventId, ordinal, offset);
+      }
+      this.ordinal = ordinal;
       setType(type);
       this.context = context;
       context.setTypeLocator(new CommonTypeLocator());
@@ -61,7 +67,7 @@ public class SyncData {
 
   public SyncData(String eventId, int ordinal, String database, String table, String primaryKeyName,
       Map<String, Object> row, EventType type) {
-    inner = new Meta(eventId, ordinal, type, null, new StandardEvaluationContext(this));
+    inner = new Meta(eventId, ordinal, -1, type, null, new StandardEvaluationContext(this));
 
     Object key = row.get(primaryKeyName);
     this.primaryKeyName = primaryKeyName;
@@ -77,7 +83,7 @@ public class SyncData {
   }
 
   public SyncData(SyncData syncData, int offset) {
-    inner = new Meta(syncData.getEventId(), offset,
+    inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, offset,
         syncData.getType(),
         syncData.getSourceIdentifier(), new StandardEvaluationContext(this));
     syncByQuery = new SyncByQueryES(this);
