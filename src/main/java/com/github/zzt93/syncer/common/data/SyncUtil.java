@@ -28,7 +28,7 @@ public class SyncUtil {
     try {
       return gson.fromJson(json, clazz);
     } catch (JsonSyntaxException e) {
-      logger.error("Fail to parse {} as {}", json, clazz);
+      logger.error("Fail to parse json string {} to {}", json, clazz);
       return null;
     }
   }

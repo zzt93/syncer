@@ -50,7 +50,7 @@ public class BatchBuffer<T extends Retryable> {
     // re-applied when attempted updates fail due to contention among threads
     if (estimateSize.getAndUpdate(x -> x >= limit ? x - limit : x) >= limit) {
       T[] res = (T[]) Array.newInstance(clazz, limit);
-      for (int i = 0; i < limit; i++) {
+      for (int i = 0; !deque.isEmpty() && i < limit; i++) {
         res[i] = deque.removeFirst();
       }
       return res;
