@@ -55,6 +55,7 @@ public class FilterJob implements Runnable {
       for (SyncData syncData : list) {
         logger.warn("56: data id: {}", poll.getDataId());
         ack.append(syncData.getSourceIdentifier(), syncData.getDataId());
+        ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
         for (OutputChannel outputChannel : this.outputChannels) {
           try {
             outputChannel.output(syncData);
@@ -69,6 +70,7 @@ public class FilterJob implements Runnable {
       }
       if (!remove.isEmpty()) {
         outputChannels.removeAll(remove);
+        // TODO 18/2/12 channel cleanup
         remove.clear();
       }
     }

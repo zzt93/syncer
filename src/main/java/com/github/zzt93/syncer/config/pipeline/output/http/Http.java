@@ -1,7 +1,10 @@
-package com.github.zzt93.syncer.config.pipeline.output;
+package com.github.zzt93.syncer.config.pipeline.output.http;
 
 
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
+import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
+import com.github.zzt93.syncer.config.pipeline.output.OutputChannelConfig;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.http.HttpChannel;

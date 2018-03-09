@@ -1,5 +1,9 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
+import com.github.zzt93.syncer.config.pipeline.output.elastic.Elasticsearch;
+import com.github.zzt93.syncer.config.pipeline.output.http.Http;
+import com.github.zzt93.syncer.config.pipeline.output.mysql.Mysql;
+import com.github.zzt93.syncer.config.pipeline.output.redis.Redis;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
@@ -14,6 +18,15 @@ public class PipelineOutput {
   private Elasticsearch elasticsearch;
   private Http http;
   private Mysql mysql;
+  private Redis redis;
+
+  public Redis getRedis() {
+    return redis;
+  }
+
+  public void setRedis(Redis redis) {
+    this.redis = redis;
+  }
 
   public Elasticsearch getElasticsearch() {
     return elasticsearch;
@@ -50,6 +63,9 @@ public class PipelineOutput {
     }
     if (mysql != null) {
       res.add(mysql.toChannel(ack, outputMeta));
+    }
+    if (redis != null) {
+      res.add(redis.toChannel(ack, outputMeta));
     }
     return res;
   }

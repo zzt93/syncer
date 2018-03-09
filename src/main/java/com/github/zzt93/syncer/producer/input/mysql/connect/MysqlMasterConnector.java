@@ -92,7 +92,8 @@ public class MysqlMasterConnector implements MasterConnector {
         // this method is blocked
         client.connect();
       } catch (InvalidBinlogException e) {
-        logger.warn("Invalid binlog file info, reconnect to older binlog", e);
+        logger.warn("Invalid binlog file info {}@{}, reconnect to older binlog",
+            client.getBinlogFilename(), client.getBinlogPosition(), e);
         i = 0;
 //        client.setBinlogFilename(""); not fetch oldest log
         client.setBinlogFilename(null);

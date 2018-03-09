@@ -1,7 +1,10 @@
-package com.github.zzt93.syncer.config.pipeline.output;
+package com.github.zzt93.syncer.config.pipeline.output.elastic;
 
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
+import com.github.zzt93.syncer.config.pipeline.output.OutputChannelConfig;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
@@ -12,7 +15,7 @@ import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChan
 public class Elasticsearch implements OutputChannelConfig {
 
   private ElasticsearchConnection connection;
-  private RequestMapping requestMapping = new RequestMapping();
+  private ESRequestMapping requestMapping = new ESRequestMapping();
   private PipelineBatch batch = new PipelineBatch();
   private FailureLogConfig failureLog = new FailureLogConfig();
 
@@ -32,11 +35,11 @@ public class Elasticsearch implements OutputChannelConfig {
     this.connection = connection;
   }
 
-  public RequestMapping getRequestMapping() {
+  public ESRequestMapping getRequestMapping() {
     return requestMapping;
   }
 
-  public void setRequestMapping(RequestMapping requestMapping) {
+  public void setRequestMapping(ESRequestMapping requestMapping) {
     this.requestMapping = requestMapping;
   }
 

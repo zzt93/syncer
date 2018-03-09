@@ -1,10 +1,12 @@
 package com.github.zzt93.syncer.config.syncer;
 
 import java.util.concurrent.TimeUnit;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * @author zzt
  */
+@ConfigurationProperties(prefix = "syncer.ack")
 public class SyncerAck {
 
   private int flushPeriod = 100;

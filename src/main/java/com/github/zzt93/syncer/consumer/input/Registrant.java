@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
-import com.github.zzt93.syncer.config.pipeline.input.MasterSource;
+import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;

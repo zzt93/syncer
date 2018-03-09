@@ -4,8 +4,8 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
-import com.github.zzt93.syncer.config.pipeline.output.Mysql;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.mysql.Mysql;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
@@ -148,21 +148,27 @@ public class MysqlChannel implements BufferedChannel {
       int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
       for (int i = 0; i < updateCounts.length; i++) {
         if (updateCounts[i] == Statement.EXECUTE_FAILED) {
-          if (sqls[i].retryCount() < batch.getMaxRetry()) {
-            batchBuffer.addFirst(sqls[i]);
-          } else {
-            ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
-            if (e instanceof DuplicateKeyException) {
-              logger.error("Duplicate key in {}, discarded", sqls[i], e);
+          if (retriable(e)) {
+            if (sqls[i].retryCount() < batch.getMaxRetry()) {
+              batchBuffer.addFirst(sqls[i]);
             } else {
-              sqlFailureLog.log(sqls[i]);
               logger.error("Max retry exceed, write '{}' to fail.log", sqls[i]);
+              sqlFailureLog.log(sqls[i]);
+              ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
             }
+          } else {
+            logger.error("Met non-retriable error in {}, discarded", sqls[i], e);
+            ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
           }
         } else {
           ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
         }
       }
     }
+  }
+
+  @Override
+  public boolean retriable(Exception e) {
+    return !(e instanceof DuplicateKeyException);
   }
 }

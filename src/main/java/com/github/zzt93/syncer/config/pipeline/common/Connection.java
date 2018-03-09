@@ -6,6 +6,7 @@ import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 
 /**
  * @author zzt
@@ -63,7 +64,14 @@ public class Connection implements Comparable<Connection> {
   }
 
   public String getPassword() {
+    if (password == null) {
+      throw new InvalidConfigException("No passwordFile/password set");
+    }
     return password;
+  }
+
+  public boolean hasPassword() {
+    return StringUtils.isEmpty(password);
   }
 
   @Override

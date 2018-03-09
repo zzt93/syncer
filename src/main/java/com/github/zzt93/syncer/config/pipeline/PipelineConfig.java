@@ -5,10 +5,12 @@ import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
 import java.util.ArrayList;
 import java.util.List;
+import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * @author zzt
  */
+@ConfigurationProperties("syncer.consumer")
 public class PipelineConfig {
 
   private String version;

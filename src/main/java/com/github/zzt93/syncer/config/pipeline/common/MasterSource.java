@@ -1,6 +1,7 @@
-package com.github.zzt93.syncer.config.pipeline.input;
+package com.github.zzt93.syncer.config.pipeline.common;
 
-import com.github.zzt93.syncer.config.pipeline.common.Connection;
+import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
+import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -76,6 +77,7 @@ public class MasterSource {
     return "MasterSource{" +
         "connection=" + connection +
         ", schemas=" + schemas +
+        ", type=" + type +
         '}';
   }
 

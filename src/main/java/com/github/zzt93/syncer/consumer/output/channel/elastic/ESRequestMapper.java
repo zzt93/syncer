@@ -8,7 +8,7 @@ import com.github.zzt93.syncer.common.data.SyncByQueryES;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.pipeline.output.RequestMapping;
+import com.github.zzt93.syncer.config.pipeline.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import com.google.common.base.Preconditions;
@@ -32,34 +32,34 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class ESRequestMapper implements Mapper<SyncData, Object> {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
-  private final RequestMapping requestMapping;
+  private final ESRequestMapping ESRequestMapping;
   private final TransportClient client;
   private final SpelExpressionParser parser;
   private final KVMapper requestBodyMapper;
 
-  public ESRequestMapper(TransportClient client, RequestMapping requestMapping) {
-    this.requestMapping = requestMapping;
+  public ESRequestMapper(TransportClient client, ESRequestMapping ESRequestMapping) {
+    this.ESRequestMapping = ESRequestMapping;
     this.client = client;
     parser = new SpelExpressionParser();
     ESQueryMapper esQueryMapper;
-    if (requestMapping.getEnableExtraQuery()) {
+    if (ESRequestMapping.getEnableExtraQuery()) {
       esQueryMapper = new ESQueryMapper(client);
     } else {
       esQueryMapper = null;
     }
-    requestBodyMapper = new KVMapper(requestMapping.getFieldsMapping(), esQueryMapper);
+    requestBodyMapper = new KVMapper(ESRequestMapping.getFieldsMapping(), esQueryMapper);
   }
 
-  @ThreadSafe(safe = {SpelExpressionParser.class, RequestMapping.class, TransportClient.class})
+  @ThreadSafe(safe = {SpelExpressionParser.class, ESRequestMapping.class, TransportClient.class})
   @Override
   public Object map(SyncData data) {
     StandardEvaluationContext context = data.getContext();
-    String index = eval(requestMapping.getIndex(), context);
-    String type = eval(requestMapping.getType(), context);
-    String id = eval(requestMapping.getDocumentId(), context);
+    String index = eval(ESRequestMapping.getIndex(), context);
+    String type = eval(ESRequestMapping.getType(), context);
+    String id = eval(ESRequestMapping.getDocumentId(), context);
     switch (data.getType()) {
       case WRITE_ROWS:
-        if (requestMapping.getNoUseIdForIndex()) {
+        if (ESRequestMapping.getNoUseIdForIndex()) {
           return client.prepareIndex(index, type).setSource(requestBodyMapper.map(data));
         }
         return client.prepareIndex(index, type, id).setSource(requestBodyMapper.map(data));
@@ -81,7 +81,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
               .script(getScript(data));
         }
         return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
-            .setRetryOnConflict(requestMapping.getRetryOnUpdateConflict());
+            .setRetryOnConflict(ESRequestMapping.getRetryOnUpdateConflict());
     }
     throw new IllegalArgumentException("Unsupported row event type: " + data);
   }

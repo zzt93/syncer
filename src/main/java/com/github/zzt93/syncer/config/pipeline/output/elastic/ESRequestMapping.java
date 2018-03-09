@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.pipeline.output;
+package com.github.zzt93.syncer.config.pipeline.output.elastic;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
@@ -7,7 +7,7 @@ import java.util.HashMap;
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
-public class RequestMapping {
+public class ESRequestMapping {
 
   private String index = "schema";
   private String type = "table";
@@ -17,7 +17,7 @@ public class RequestMapping {
   private boolean enableExtraQuery = false;
   private int retryOnUpdateConflict = 0;
 
-  public RequestMapping() {
+  public ESRequestMapping() {
     // default value of mapper
     fieldsMapping.put(KVMapper.FAKE_KEY, KVMapper.ROW_FLATTEN);
   }

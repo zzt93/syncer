@@ -5,7 +5,6 @@ import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.apache.commons.lang.StringUtils.substringBeforeLast;
 
 import java.net.InetAddress;
-import java.util.List;
 import java.util.stream.Collectors;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
@@ -15,18 +14,13 @@ import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
-import org.springframework.util.StringUtils;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
-public class ElasticsearchConnection extends Connection {
+public class ElasticsearchConnection extends ClusterConnection {
 
-  private static final Logger logger = LoggerFactory.getLogger(ElasticsearchConnection.class);
-  private static final String COMMA = ",";
-  private static final String COLON = ":";
-  private String clusterName = "elasticsearch";
-  private List<String> clusterNodes;
+  private final Logger logger = LoggerFactory.getLogger(ElasticsearchConnection.class);
 
   public TransportClient transportClient() throws Exception {
     ElasticsearchConnection elasticsearch = this;
@@ -46,27 +40,8 @@ public class ElasticsearchConnection extends Connection {
     return client;
   }
 
-  private String getClusterName() {
-    return clusterName;
-  }
-
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
-  }
-
-  public List<String> getClusterNodes() {
-    return clusterNodes;
-  }
-
-  public void setClusterNodes(List<String> clusterNodes) {
-    if (clusterNodes.isEmpty()) {
-      throw new InvalidConfigException("clusterNodes is empty");
-    }
-    this.clusterNodes = clusterNodes;
-  }
-
   private String clusterNodesString() {
-    return clusterNodes.stream().collect(Collectors.joining(","));
+    return getClusterNodes().stream().collect(Collectors.joining(","));
   }
 
   private Settings settings() {
@@ -87,13 +62,4 @@ public class ElasticsearchConnection extends Connection {
         .build();
   }
 
-  @Override
-  public boolean valid() {
-    return !StringUtils.isEmpty(clusterName) && !clusterNodes.isEmpty();
-  }
-
-  @Override
-  public String connectionIdentifier() {
-    return clusterNodes.get(0);
-  }
 }

@@ -5,9 +5,9 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
-import com.github.zzt93.syncer.config.pipeline.output.Elasticsearch;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.elastic.Elasticsearch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
@@ -202,6 +202,11 @@ public class ElasticsearchChannel implements BufferedChannel {
         ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
       }
     }
+  }
+
+  @Override
+  public boolean retriable(Exception e) {
+    return true;
   }
 
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
