@@ -24,7 +24,7 @@
   - Table name filter
   - Interested column filter
   - automatic primary key detection and set into `id`
-  - If an event match multiple schema & table, use which filter is undefined
+  - If an table match multiple schema & table (because the usage of regex), a exception will be thrown
 - MongoDB master source filter:
   - Version: 3.x
   - Schema filter, support regex
@@ -239,7 +239,13 @@ java -server -XX:+UseParallelGC -jar syncer.jar --producerConfig=/absolute/path/
 
 ## Test
 ### Correctness Test
-- Test data: 7M
+Test data: 
+  - size: 7M
+  - machines: 3
+  - databases: 3 in logic, after horizontal split is 24
+  - tables: 90+ for each database; listening: 5 for each database
+  - types: bigint, varchar, text, tinyint, timestamp, smallint, int, unsigned, longtext
+
 ### Stress Test -- TODO
 - 10G
 - CPU

@@ -23,8 +23,8 @@ public class SchemaMeta {
     this.schema = name;
   }
 
-  void addTableMeta(String name, TableMeta tableMeta) {
-    tableMetas.put(name, tableMeta);
+  TableMeta addTableMeta(String name, TableMeta tableMeta) {
+    return tableMetas.put(name, tableMeta);
   }
 
   @ThreadSafe(safe = {Pattern.class, ConcurrentHashMap.class})

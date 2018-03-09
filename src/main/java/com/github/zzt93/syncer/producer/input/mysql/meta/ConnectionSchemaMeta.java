@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.github.zzt93.syncer.producer.output.OutputSink;
+import com.google.common.collect.Lists;
 import com.mysql.jdbc.JDBC4Connection;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
@@ -56,13 +57,13 @@ public class ConnectionSchemaMeta {
     private final Logger logger = LoggerFactory.getLogger(MetaDataBuilder.class);
 
     private final DataSource dataSource;
-    private final IdentityHashMap<Set<Schema>, OutputSink> schema;
+    private final IdentityHashMap<ConsumerSchema, OutputSink> schemasConsumerMap;
     private final String calculatedSchemaName;
 
     public MetaDataBuilder(MysqlConnection connection,
-        IdentityHashMap<Set<Schema>, OutputSink> schema) {
-      this.schema = schema;
-      Set<String> merged = schema.keySet().stream()
+        IdentityHashMap<ConsumerSchema, OutputSink> schemasConsumerMap) {
+      this.schemasConsumerMap = schemasConsumerMap;
+      Set<String> merged = schemasConsumerMap.keySet().stream().map(ConsumerSchema::getSchemas)
           .flatMap(Set::stream).map(Schema::getConnectionName).collect(Collectors.toSet());
       calculatedSchemaName = getSchemaName(merged);
       dataSource = new DriverManagerDataSource(connection.toConnectionUrl(calculatedSchemaName),
@@ -78,8 +79,8 @@ public class ConnectionSchemaMeta {
 
     public IdentityHashMap<ConnectionSchemaMeta, OutputSink> build() throws SQLException {
       IdentityHashMap<ConnectionSchemaMeta, OutputSink> res = new IdentityHashMap<>();
-      IdentityHashMap<Set<Schema>, List<SchemaMeta>> schema2Meta = build(schema);
-      for (Entry<Set<Schema>, OutputSink> entry : schema.entrySet()) {
+      IdentityHashMap<ConsumerSchema, List<SchemaMeta>> schema2Meta = build(schemasConsumerMap);
+      for (Entry<ConsumerSchema, OutputSink> entry : schemasConsumerMap.entrySet()) {
         ConnectionSchemaMeta connectionSchemaMeta = new ConnectionSchemaMeta();
         connectionSchemaMeta.schemaMetas.addAll(schema2Meta.get(entry.getKey()));
         res.put(connectionSchemaMeta, entry.getValue());
@@ -87,19 +88,20 @@ public class ConnectionSchemaMeta {
       return res;
     }
 
-    private IdentityHashMap<Set<Schema>, List<SchemaMeta>> build(Map<Set<Schema>, OutputSink> aims)
+    private IdentityHashMap<ConsumerSchema, List<SchemaMeta>> build(
+        IdentityHashMap<ConsumerSchema, OutputSink> schemasConsumerMap)
         throws SQLException {
       Connection connection = dataSource.getConnection();
       if (calculatedSchemaName.equals(MysqlConnection.DEFAULT_DB)) {
         // make it to get all databases
         ((JDBC4Connection) connection).setNullCatalogMeansCurrent(false);
       }
-      IdentityHashMap<Set<Schema>, List<SchemaMeta>> res;
+      IdentityHashMap<ConsumerSchema, List<SchemaMeta>> res;
       try {
         DatabaseMetaData metaData = connection.getMetaData();
         try (ResultSet tableResultSet = metaData
             .getTables(null, null, "%", new String[]{"TABLE"})) {
-          res = getSchemaMeta(metaData, tableResultSet, aims);
+          res = getSchemaMeta(metaData, tableResultSet, schemasConsumerMap);
         }
       } finally {
         connection.close();
@@ -107,49 +109,63 @@ public class ConnectionSchemaMeta {
       return res;
     }
 
-    private IdentityHashMap<Set<Schema>, List<SchemaMeta>> getSchemaMeta(DatabaseMetaData metaData,
-        ResultSet tableResultSet, Map<Set<Schema>, OutputSink> aims)
+    private IdentityHashMap<ConsumerSchema, List<SchemaMeta>> getSchemaMeta(DatabaseMetaData metaData,
+        ResultSet tableResultSet, Map<ConsumerSchema, OutputSink> schemasConsumerMap)
         throws SQLException {
-      IdentityHashMap<Set<Schema>, List<SchemaMeta>> res = new IdentityHashMap<>();
-      int count = 0, nowCount = 0;
-      Set<Set<Schema>> sets = aims.keySet();
-      for (Set<Schema> aim : sets) {
-        count += aim.size();
+      IdentityHashMap<ConsumerSchema, List<SchemaMeta>> res = new IdentityHashMap<>();
+      int tableCount = 0, nowCount = 0;
+      Set<ConsumerSchema> consumerSchemas = schemasConsumerMap.keySet();
+      for (ConsumerSchema schemas : consumerSchemas) {
+        tableCount += schemas.getSchemas().stream().mapToInt(s -> s.getTables().size()).sum();
       }
 
       IdentityHashMap<Schema, SchemaMeta> metaHashMap = new IdentityHashMap<>();
-      while (count > nowCount && tableResultSet.next()) {
+      while (tableCount > nowCount && tableResultSet.next()) {
         String tableSchema = tableResultSet.getString("TABLE_CAT");
         String tableName = tableResultSet.getString("TABLE_NAME");
-        for (Set<Schema> set : sets) {
-          List<SchemaMeta> schemaMetas = new ArrayList<>(set.size());
-          for (Schema aim : set) {
+        for (ConsumerSchema schemas : consumerSchemas) { // for each consumer registered schemas
+          SchemaMeta schemaMeta = null;
+          boolean newSchema = true, newTable = true;
+          for (Schema aim : schemas.getSchemas()) {
             Set<String> tableRow = aim.getTableRow(tableSchema, tableName);
-            if (tableRow == null) {
-              continue;
-            }
-            TableMeta tableMeta = new TableMeta();
-            // TODO 18/1/18 may opt to get all columns then use
-            setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
-            setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta);
-            boolean contain = metaHashMap.containsKey(aim);
-            SchemaMeta schemaMeta = metaHashMap
-                .computeIfAbsent(aim, k -> new SchemaMeta(aim.getName(), aim.getNamePattern()));
-            schemaMeta.addTableMeta(tableName, tableMeta);
-            if (!contain) {
-              schemaMetas.add(schemaMeta);
+            if (tableRow != null) { // a consumer should only match one table at one time
+              TableMeta tableMeta = new TableMeta();
+              // TODO 18/1/18 may opt to get all columns then use
+              setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
+              setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta);
+              if (metaHashMap.containsKey(aim)) {
+                newSchema = false;
+              }
+              schemaMeta = metaHashMap
+                  .computeIfAbsent(aim, k -> new SchemaMeta(aim.getName(), aim.getNamePattern()));
+              newTable = schemaMeta.addTableMeta(tableName, tableMeta) == null;
+              break;
             }
           }
-          nowCount += schemaMetas.size();
-          res.compute(set, (k, v) -> {
-            if (v == null) {
-              return schemaMetas;
-            } else {
-              v.addAll(schemaMetas);
-              return v;
+          if (schemaMeta != null) { // matched schema & name
+            if (newTable) {
+              nowCount++;
             }
-          });
+            SchemaMeta finalSchemaMeta = schemaMeta;
+            boolean finalCreate = newSchema;
+            res.compute(schemas, (k, v) -> {
+              if (v == null) {
+                return Lists.newArrayList(finalSchemaMeta);
+              } else {
+                if (finalCreate) {
+                  v.add(finalSchemaMeta);
+                }
+                return v;
+              }
+            });
+          }
         }
+      }
+      if (tableCount < nowCount) {
+        InvalidConfigException e = new InvalidConfigException();
+        logger.error("Invalid schema config: actual listening {} tables, only find {}", tableCount,
+            nowCount, e);
+        throw e;
       }
       return res;
     }

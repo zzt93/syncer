@@ -27,4 +27,10 @@ public class SyncByQuery {
     return syncBy;
   }
 
+  @Override
+  public String toString() {
+    return "SyncByQuery{" +
+        "syncBy=" + syncBy +
+        '}';
+  }
 }

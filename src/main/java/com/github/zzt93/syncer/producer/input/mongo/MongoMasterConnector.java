@@ -2,10 +2,10 @@ package com.github.zzt93.syncer.producer.input.mongo;
 
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.config.pipeline.input.Table;
 import com.github.zzt93.syncer.producer.dispatch.mongo.MongoDispatcher;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
+import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.mongodb.BasicDBObject;
@@ -51,7 +51,7 @@ public class MongoMasterConnector implements MasterConnector {
   }
 
   private void configDispatch(MongoConnection connection, ConsumerRegistry registry) {
-    IdentityHashMap<Set<Schema>, OutputSink> schemaSinkMap = registry
+    IdentityHashMap<ConsumerSchema, OutputSink> schemaSinkMap = registry
         .outputSink(connection);
     mongoDispatcher = new MongoDispatcher(schemaSinkMap);
   }
@@ -95,7 +95,7 @@ public class MongoMasterConnector implements MasterConnector {
   private Pattern getNamespaces(MongoConnection connection, ConsumerRegistry registry) {
     StringJoiner joiner = new StringJoiner("|");
     registry.outputSink(connection)
-        .keySet().stream().flatMap(Set::stream).flatMap(s -> {
+        .keySet().stream().map(ConsumerSchema::getSchemas).flatMap(Set::stream).flatMap(s -> {
       List<Table> tables = s.getTables();
       ArrayList<String> res = new ArrayList<>(tables.size());
       for (Table table : tables) {

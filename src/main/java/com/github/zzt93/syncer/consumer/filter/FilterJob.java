@@ -41,8 +41,8 @@ public class FilterJob implements Runnable {
       try {
         list.clear();
         poll = fromInput.take();
-        logger.warn("44: data id: {}", poll.getDataId());
         MDC.put(IdGenerator.EID, poll.getEventId());
+        logger.debug("remove: data id: {}", poll.getDataId());
 
         list.add(poll);
         for (ExprFilter filter : filters) {
@@ -53,8 +53,7 @@ public class FilterJob implements Runnable {
         continue;
       }
       for (SyncData syncData : list) {
-        logger.warn("56: data id: {}", poll.getDataId());
-        ack.append(syncData.getSourceIdentifier(), syncData.getDataId());
+        logger.debug("foreach output: data id: {}", poll.getDataId());
         ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
         for (OutputChannel outputChannel : this.outputChannels) {
           try {

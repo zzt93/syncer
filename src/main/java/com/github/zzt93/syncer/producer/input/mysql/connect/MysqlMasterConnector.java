@@ -6,17 +6,16 @@ import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
+import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.IdentityHashMap;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -69,10 +68,10 @@ public class MysqlMasterConnector implements MasterConnector {
 
   private void configEventListener(MysqlConnection connection, ConsumerRegistry registry)
       throws SchemaUnavailableException {
-    IdentityHashMap<Set<Schema>, OutputSink> schemaOutputSinkMap = registry.outputSink(connection);
+    IdentityHashMap<ConsumerSchema, OutputSink> schemasConsumerMap = registry.outputSink(connection);
     IdentityHashMap<ConnectionSchemaMeta, OutputSink> sinkHashMap;
     try {
-      sinkHashMap = new ConnectionSchemaMeta.MetaDataBuilder(connection, schemaOutputSinkMap)
+      sinkHashMap = new ConnectionSchemaMeta.MetaDataBuilder(connection, schemasConsumerMap)
           .build();
     } catch (SQLException e) {
       logger.error("Fail to connect to master to retrieve schema metadata", e);

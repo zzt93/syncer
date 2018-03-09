@@ -54,7 +54,7 @@ public abstract class LocalInputSource implements InputSource {
 
   @Override
   public boolean input(SyncData data) {
-    logger.warn("60: data id: {}", data.getDataId());
+    logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data.toString(), data.hashCode());
     data.setSourceIdentifier(connection.connectionIdentifier());
     return filterInput.add(data);
   }
@@ -64,7 +64,7 @@ public abstract class LocalInputSource implements InputSource {
     boolean res = true;
     for (SyncData datum : data) {
       res = res && filterInput.add(datum.setSourceIdentifier(connection.connectionIdentifier()));
-      logger.warn("70: data id: {}", datum.getDataId());
+      logger.debug("add list: data id: {}, {}, {} in {}", datum.getDataId(), datum.toString(), datum.hashCode(), data.hashCode());
     }
     return res;
   }

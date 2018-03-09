@@ -29,20 +29,29 @@ public class IdGenerator {
     }
   }
 
+  /**
+   * <a href="https://github.com/shyiko/mysql-binlog-connector-java/issues/200">binlog table map</a>
+   */
   public static String fromEvent(Event[] event, String binlogFileName) {
     EventHeaderV4 tableMap = event[0].getHeader();
     EventHeaderV4 second = event[1].getHeader();
+    // have to remember table map event for restart
+    // have to add following data event for unique id
     return second.getServerId() + SEP + binlogFileName + SEP + tableMap
-        .getPosition() + SEP + second.getEventType();
+        .getPosition() + SEP + second.getPosition() + SEP + second.getEventType();
   }
 
   public static String fromEventId(String eventId, int ordinal) {
     return eventId + SEP + ordinal;
   }
 
+  public static String fromEventId(String eventId, int ordinal, int offset) {
+    return eventId + SEP + ordinal + SEP + offset;
+  }
+
   public static BinlogInfo fromDataId(String dataId) {
     String[] split = dataId.split(SEP);
-    if (split.length == 5 || split.length == 6) {
+    if (split.length == 5 || split.length == 6 || split.length == 7) {
       return new BinlogInfo(split[1], Long.parseLong(split[2]));
     }
     throw new IllegalArgumentException(dataId);
@@ -61,7 +70,4 @@ public class IdGenerator {
     throw new IllegalArgumentException(dataId);
   }
 
-  public static String fromEventId(String eventId, int ordinal, int offset) {
-    return eventId + SEP + ordinal + SEP + offset;
-  }
 }

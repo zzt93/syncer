@@ -44,4 +44,14 @@ public class SyncByQueryES extends SyncByQuery {
   public HashMap<String, Object> getRemove() {
     return remove;
   }
+
+  @Override
+  public String toString() {
+    return "SyncByQueryES{" +
+        "upsert=" + upsert +
+        ", append=" + append +
+        ", remove=" + remove +
+        ", outer=SyncData@" + Integer.toHexString(outer.hashCode()) +
+        '}';
+  }
 }

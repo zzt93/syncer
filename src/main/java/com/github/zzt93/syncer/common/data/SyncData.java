@@ -43,6 +43,20 @@ public class SyncData {
       context.addPropertyAccessor(new MapAccessor());
     }
 
+    @Override
+    public String toString() {
+      return "Meta{" +
+          "eventId='" + eventId + '\'' +
+          ", dataId='" + dataId + '\'' +
+          ", ordinal=" + ordinal +
+          ", type=" + type +
+          ", action='" + action + '\'' +
+          ", context=" + context +
+          ", hasExtra=" + hasExtra +
+          ", connectionIdentifier='" + connectionIdentifier + '\'' +
+          '}';
+    }
+
     private void setType(EventType type) {
       this.type = type;
       action = type.toString();
@@ -243,16 +257,14 @@ public class SyncData {
   @Override
   public String toString() {
     return "SyncData{" +
-        "eventId='" + inner.eventId + '\'' +
-        ", type=" + inner.type +
-        ", action='" + inner.action + '\'' +
+        "syncByQuery=" + syncByQuery +
+        ", inner=" + inner +
         ", records=" + records +
         ", extra=" + extra +
-        ", context=" + inner.context +
         ", schema='" + schema + '\'' +
         ", table='" + table + '\'' +
-        ", id='" + id + '\'' +
-        ", syncByQuery=" + syncByQuery +
+        ", id=" + id +
+        ", primaryKeyName='" + primaryKeyName + '\'' +
         '}';
   }
 }

@@ -3,12 +3,12 @@ package com.github.zzt93.syncer.producer.register;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import com.github.zzt93.syncer.consumer.input.MongoInputSource;
 import com.github.zzt93.syncer.consumer.input.MysqlInputSource;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
+import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
 import com.github.zzt93.syncer.producer.output.LocalOutputSink;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.google.common.collect.Sets;
@@ -82,12 +82,12 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   }
 
   @Override
-  public IdentityHashMap<Set<Schema>, OutputSink> outputSink(Connection connection) {
-    IdentityHashMap<Set<Schema>, OutputSink> res = new IdentityHashMap<>();
+  public IdentityHashMap<ConsumerSchema, OutputSink> outputSink(Connection connection) {
+    IdentityHashMap<ConsumerSchema, OutputSink> res = new IdentityHashMap<>();
     // TODO 18/1/15 may reuse but not new
     if (!inputSources.containsKey(connection)) return res;
     for (InputSource inputSource : inputSources.get(connection)) {
-      res.put(inputSource.getSchemas(), new LocalOutputSink(inputSource));
+      res.put(new ConsumerSchema(inputSource.getSchemas()), new LocalOutputSink(inputSource));
     }
     return res;
   }
