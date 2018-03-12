@@ -13,6 +13,9 @@ public class SQLHelper {
   private static final Logger logger = LoggerFactory.getLogger(SQLHelper.class);
 
   public static String inSQL(Object value) {
+    if (value == null) {
+      return "NULL";
+    }
     if (ClassUtils.isPrimitiveOrWrapper(value.getClass())
         || CharSequence.class.isAssignableFrom(value.getClass())) {
       if (value instanceof String) {

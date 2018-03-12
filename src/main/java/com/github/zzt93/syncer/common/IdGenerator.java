@@ -51,7 +51,7 @@ public class IdGenerator {
 
   public static BinlogInfo fromDataId(String dataId) {
     String[] split = dataId.split(SEP);
-    if (split.length == 5 || split.length == 6 || split.length == 7) {
+    if (split.length == 6 || split.length == 7) {
       return new BinlogInfo(split[1], Long.parseLong(split[2]));
     }
     throw new IllegalArgumentException(dataId);

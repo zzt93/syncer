@@ -17,4 +17,11 @@ public class ConsumerSchema {
   public Set<Schema> getSchemas() {
     return schemas;
   }
+
+  @Override
+  public String toString() {
+    return "ConsumerSchema{" +
+        "schemas=" + schemas +
+        '}';
+  }
 }

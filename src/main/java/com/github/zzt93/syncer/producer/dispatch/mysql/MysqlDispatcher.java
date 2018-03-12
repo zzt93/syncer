@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer.dispatch.mysql;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
@@ -13,6 +14,8 @@ import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
 /**
@@ -22,11 +25,16 @@ public class MysqlDispatcher implements Dispatcher {
 
   private final List<FilterChain> filterChains;
   private final AtomicReference<BinlogInfo> binlogInfo;
+  private final Logger logger = LoggerFactory.getLogger(MysqlDispatcher.class);
 
   public MysqlDispatcher(IdentityHashMap<ConnectionSchemaMeta, OutputSink> sinkHashMap,
       AtomicReference<BinlogInfo> binlogInfo) {
     filterChains = new ArrayList<>(sinkHashMap.size());
     this.binlogInfo = binlogInfo;
+    if (sinkHashMap.isEmpty()) {
+      logger.error("No dispatch info fetched: no meta info dispatcher & output sink");
+      throw new InvalidConfigException("Invalid address & schema & table config");
+    }
     for (Entry<ConnectionSchemaMeta, OutputSink> entry : sinkHashMap.entrySet()) {
       filterChains.add(new FilterChain(entry.getKey(), entry.getValue()));
     }

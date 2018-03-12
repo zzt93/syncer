@@ -27,6 +27,7 @@ import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
 import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -82,7 +83,7 @@ public class MysqlChannel implements BufferedChannel {
   @Override
   public boolean output(SyncData event) {
     String sql = sqlMapper.map(event);
-    logger.debug("Convert event to sql: {}", sql);
+    logger.info("Convert event to sql: {}", sql);
     boolean add = batchBuffer
         .add(new SyncWrapper<>(event, sql));
     flushIfReachSizeLimit();
@@ -152,12 +153,13 @@ public class MysqlChannel implements BufferedChannel {
             if (sqls[i].retryCount() < batch.getMaxRetry()) {
               batchBuffer.addFirst(sqls[i]);
             } else {
-              logger.error("Max retry exceed, write '{}' to fail.log", sqls[i]);
+              logger.error("Max retry exceed, write '{}' to failure log", sqls[i], cause);
               sqlFailureLog.log(sqls[i]);
               ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
             }
           } else {
-            logger.error("Met non-retriable error in {}, discarded", sqls[i], e);
+            logger.error("Met non-retriable error in {}, write to failure log", sqls[i], cause);
+            sqlFailureLog.log(sqls[i]);
             ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
           }
         } else {
@@ -169,6 +171,6 @@ public class MysqlChannel implements BufferedChannel {
 
   @Override
   public boolean retriable(Exception e) {
-    return !(e instanceof DuplicateKeyException);
+    return !(e instanceof DuplicateKeyException || e instanceof BadSqlGrammarException);
   }
 }

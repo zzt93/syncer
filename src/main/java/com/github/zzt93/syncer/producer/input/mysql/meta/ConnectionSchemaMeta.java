@@ -82,6 +82,10 @@ public class ConnectionSchemaMeta {
       IdentityHashMap<ConsumerSchema, List<SchemaMeta>> schema2Meta = build(schemasConsumerMap);
       for (Entry<ConsumerSchema, OutputSink> entry : schemasConsumerMap.entrySet()) {
         ConnectionSchemaMeta connectionSchemaMeta = new ConnectionSchemaMeta();
+        if (!schema2Meta.containsKey(entry.getKey())) {
+          logger.error("Fail to fetch meta info for {}", entry.getKey());
+          continue;
+        }
         connectionSchemaMeta.schemaMetas.addAll(schema2Meta.get(entry.getKey()));
         res.put(connectionSchemaMeta, entry.getValue());
       }
