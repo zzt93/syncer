@@ -94,6 +94,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
 
 ### Limitation
 - MySQL:
+  - Supported version: depend on this [binlog connector lib](https://github.com/shyiko/mysql-binlog-connector-java)
   - Not support composite primary key
   - Not support update primary key
   - Only support update/delete by query exact value, i.e. no support query analyzed field (`text` query when update)

@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.consumer.ack.Retryable;
 import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -20,7 +21,7 @@ public class BatchBuffer<T extends Retryable> {
   private final Class<T> clazz;
 
   public BatchBuffer(PipelineBatch batch, Class<T> aClass) {
-    limit = batch.getSize();
+    limit = batch.getSize() <= 0 ? Integer.MAX_VALUE : batch.getSize();
     clazz = aClass;
   }
 
@@ -51,7 +52,11 @@ public class BatchBuffer<T extends Retryable> {
     if (estimateSize.getAndUpdate(x -> x >= limit ? x - limit : x) >= limit) {
       T[] res = (T[]) Array.newInstance(clazz, limit);
       for (int i = 0; !deque.isEmpty() && i < limit; i++) {
-        res[i] = deque.removeFirst();
+        try {
+          res[i] = deque.removeFirst();
+        } catch (NoSuchElementException ignored) {
+          // ignore, multiple thread may enter this block and cause this exception
+        }
       }
       return res;
     }
@@ -59,10 +64,14 @@ public class BatchBuffer<T extends Retryable> {
   }
 
   public T[] flush() {
-    ArrayList<T> res = new ArrayList<>();
+    ArrayList<T> res = new ArrayList<>(estimateSize.get());
     if (estimateSize.getAndUpdate(x -> 0) > 0) {
       while (!deque.isEmpty()) {
-        res.add(deque.removeFirst());
+        try {
+          res.add(deque.removeFirst());
+        } catch (NoSuchElementException ignored) {
+          // ignore, multiple thread may enter this block and cause this exception
+        }
       }
     }
     return res.toArray((T[]) Array.newInstance(clazz, 0));

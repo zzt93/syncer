@@ -233,6 +233,9 @@ public class ElasticsearchChannel implements BufferedChannel {
     // BulkProcessor?
     BulkRequestBuilder bulkRequest = client.prepareBulk();
     for (SyncWrapper<WriteRequest> requestWrapper : aim) {
+      if (requestWrapper == null) {
+        break;
+      }
       WriteRequest request = requestWrapper.getData();
       if (request instanceof IndexRequest) {
         joiner.add(request.toString());

@@ -14,6 +14,8 @@ public class SchemaMeta {
   /**
    * can't use {@link java.util.HashMap}, because it is not immutable
    */
+  @ThreadSafe(des = "effectively immutable & published by 'Thread start rule'. change to HashMap?",
+      sharedBy = "remote mysql connection, main")
   private final ConcurrentHashMap<String, TableMeta> tableMetas = new ConcurrentHashMap<>();
   private final Pattern schemaPattern;
   private final String schema;

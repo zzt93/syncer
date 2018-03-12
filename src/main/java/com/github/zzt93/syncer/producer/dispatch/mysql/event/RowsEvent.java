@@ -72,7 +72,7 @@ public abstract class RowsEvent {
       case DELETE_ROWS:
         return DeleteRowsEvent.getIndexedRows((DeleteRowsEventData) data);
       default:
-        throw new IllegalArgumentException();
+        throw new IllegalArgumentException("Unsupported event type");
     }
   }
 }

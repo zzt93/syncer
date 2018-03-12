@@ -125,7 +125,7 @@ public class MongoMasterConnector implements MasterConnector {
         logger.error("Fail to connect to remote: {}, retry in {} second", identifier, sleepInSecond);
         try {
           sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
-          Thread.sleep(sleepInSecond);
+          TimeUnit.SECONDS.sleep(sleepInSecond);
         } catch (InterruptedException ignored) {
           logger.error("", ignored);
         }

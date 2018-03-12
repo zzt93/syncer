@@ -28,6 +28,15 @@ public class SyncDeserializer {
         new UpdateRowsEventDataDeserializer(tableMapEventByTableId));
     eventDataDeserializers.put(EventType.DELETE_ROWS,
         new DeleteRowsEventDataDeserializer(tableMapEventByTableId));
+    eventDataDeserializers.put(EventType.EXT_WRITE_ROWS,
+        new WriteRowsEventDataDeserializer(tableMapEventByTableId).
+            setMayContainExtraInformation(true));
+    eventDataDeserializers.put(EventType.EXT_UPDATE_ROWS,
+        new UpdateRowsEventDataDeserializer(tableMapEventByTableId).
+            setMayContainExtraInformation(true));
+    eventDataDeserializers.put(EventType.EXT_DELETE_ROWS,
+        new DeleteRowsEventDataDeserializer(tableMapEventByTableId).
+            setMayContainExtraInformation(true));
     eventDataDeserializers.put(EventType.TABLE_MAP, new TableMapEventDataDeserializer());
     return new EventDeserializer(new EventHeaderV4Deserializer(), new NullEventDataDeserializer(),
         eventDataDeserializers, tableMapEventByTableId);

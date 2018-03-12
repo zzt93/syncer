@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
+import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
@@ -16,6 +17,7 @@ import java.io.IOException;
 import java.sql.SQLException;
 import java.util.IdentityHashMap;
 import java.util.Random;
+import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -86,6 +88,7 @@ public class MysqlMasterConnector implements MasterConnector {
   @Override
   public void run() {
     Thread.currentThread().setName(connectorIdentifier);
+    long sleepInSecond = 1;
     for (int i = 0; i < maxRetry; i++) {
       try {
         // this method is blocked
@@ -97,8 +100,14 @@ public class MysqlMasterConnector implements MasterConnector {
 //        client.setBinlogFilename(""); not fetch oldest log
         client.setBinlogFilename(null);
       } catch (IOException e) {
-        logger.error("Fail to connect to master. Reconnect to master, left retry time: {}",
-            maxRetry - i - 1, e);
+        logger.error("Fail to connect to master. Reconnect to master in {}, left retry time: {}",
+            sleepInSecond, maxRetry - i - 1, e);
+        try {
+          sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
+          TimeUnit.SECONDS.sleep(sleepInSecond);
+        } catch (InterruptedException ignored) {
+          logger.error("", ignored);
+        }
       }
     }
     logger.error("Max try exceeds, fail to connect");

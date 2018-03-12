@@ -18,14 +18,15 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @author zzt TODO 18/1/17 change identifier to Class?
+ * @author zzt TODO 18/1/17 change string identifier to Class?
  */
 public class Ack {
 
   private static final Logger logger = LoggerFactory.getLogger(Ack.class);
 
   private final String metaDir;
-  @ThreadSafe(sharedBy = {"shutdown hook", "syncer-filter-output"})
+  @ThreadSafe(sharedBy = {"main", "shutdown hook", "syncer-filter-output"}, des = "Thread start rule."
+      + "main thread init ack before two other thread start")
   private Map<String, FileBasedMap<String>> ackMap = new HashMap<>();
   private final String clientId;
 

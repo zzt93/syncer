@@ -1,7 +1,15 @@
 package com.github.zzt93.syncer.producer.input.mysql.connect;
 
+import static com.github.shyiko.mysql.binlog.event.EventType.DELETE_ROWS;
+import static com.github.shyiko.mysql.binlog.event.EventType.UPDATE_ROWS;
+import static com.github.shyiko.mysql.binlog.event.EventType.WRITE_ROWS;
+import static com.github.shyiko.mysql.binlog.event.EventType.isDelete;
+import static com.github.shyiko.mysql.binlog.event.EventType.isUpdate;
+import static com.github.shyiko.mysql.binlog.event.EventType.isWrite;
+
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;
+import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import org.slf4j.Logger;
@@ -28,12 +36,22 @@ public class SyncListener implements BinaryLogClient.EventListener {
       case TABLE_MAP:
         this.last = event;
         break;
-      case WRITE_ROWS:
-      case UPDATE_ROWS:
-      case DELETE_ROWS:
-        mysqlDispatcher.dispatch(last, event);
-        break;
       default:
+        if (EventType.isRowMutation(eventType)) {
+          try {
+            EventHeaderV4 header = event.getHeader();
+            if (isUpdate(eventType)) {
+              header.setEventType(UPDATE_ROWS);
+            } else if (isWrite(eventType)) {
+              header.setEventType(WRITE_ROWS);
+            } else if (isDelete(eventType)) {
+              header.setEventType(DELETE_ROWS);
+            }
+            mysqlDispatcher.dispatch(last, event);
+          } catch (Exception e) {
+            logger.error("", e);
+          }
+        }
         logger.trace("Receive binlog event: {}", event.toString());
     }
   }

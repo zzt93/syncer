@@ -8,6 +8,7 @@ import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
 /**
  * @author zzt
@@ -17,6 +18,7 @@ public class ProducerInput {
 
   private Logger logger = LoggerFactory.getLogger(ProducerInput.class);
 
+  @NestedConfigurationProperty
   private List<ProducerMaster> masters = new ArrayList<>();
   private Set<ProducerMaster> masterSet = new HashSet<>();
 

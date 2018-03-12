@@ -7,7 +7,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 /**
  * @author zzt
  */
-@ConfigurationProperties("syncer.producer.input.masters")
+@ConfigurationProperties("syncer.producer.input.masters[]")
 public class ProducerMaster {
 
   private MasterSourceType type = MasterSourceType.MySQL;
