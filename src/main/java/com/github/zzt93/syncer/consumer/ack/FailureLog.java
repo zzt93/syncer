@@ -59,12 +59,12 @@ public class FailureLog<T> implements Resource {
     return res;
   }
 
-  public boolean log(T data) {
+  public boolean log(T data, Exception exception) {
     itemCount.incrementAndGet();
     try {
-      writer.append(LocalDateTime.now().toString()).append(" ");
-      String json = gson.toJson(data, type);
-      writer.append(json);
+      FailureEntry failureEntry = new FailureEntry(gson.toJson(data, type), LocalDateTime.now(),
+          exception.getClass().getSimpleName());
+      writer.write(gson.toJson(failureEntry));
       writer.newLine();
       writer.flush();
     } catch (IOException e) {
@@ -77,7 +77,8 @@ public class FailureLog<T> implements Resource {
   }
 
   @Override
-  public void cleanup() {
+  public void cleanup() throws IOException {
     service.shutdown();
+    writer.close();
   }
 }

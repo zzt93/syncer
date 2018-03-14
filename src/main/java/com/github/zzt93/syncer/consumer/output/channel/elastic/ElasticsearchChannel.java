@@ -118,11 +118,6 @@ public class ElasticsearchChannel implements BufferedChannel {
 
   private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder,
       int count) {
-    if (count >= batch.getMaxRetry()) {
-      singleRequest.log(data);
-      ack.remove(data.getSourceIdentifier(), data.getDataId());
-      return;
-    }
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
@@ -137,6 +132,11 @@ public class ElasticsearchChannel implements BufferedChannel {
       public void onFailure(Exception e) {
         MDC.put(IdGenerator.EID, data.getEventId());
         logger.error("Fail to update/delete by query: {}", builder.request(), e);
+        if (count + 1 >= batch.getMaxRetry()) {
+          singleRequest.log(data, e);
+          ack.remove(data.getSourceIdentifier(), data.getDataId());
+          return;
+        }
         bulkByScrollRequest(data, builder, count + 1);
       }
     });
@@ -195,7 +195,7 @@ public class ElasticsearchChannel implements BufferedChannel {
           batchBuffer.addFirst(wrapper);
         } else {
           logger.error("Max retry exceed, write {} to fail.log", wrapper, e);
-          singleRequest.log(wrapper.getEvent());
+          singleRequest.log(wrapper.getEvent(), e);
           ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else {

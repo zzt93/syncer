@@ -16,7 +16,7 @@ public class SyncByQueryES extends SyncByQuery {
   private final HashMap<String, Object> upsert = new HashMap<>();
   private final HashMap<String, Object> append = new HashMap<>();
   private final HashMap<String, Object> remove = new HashMap<>();
-  private final SyncData outer;
+  private transient final SyncData outer;
 
   public SyncByQueryES(SyncData data) {
     outer = data;

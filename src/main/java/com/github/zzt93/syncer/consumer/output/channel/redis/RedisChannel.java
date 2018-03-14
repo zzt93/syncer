@@ -121,7 +121,7 @@ public class RedisChannel implements BufferedChannel {
     for (SyncWrapper wrapper : wrappers) {
       wrapper.inc();
       if (wrapper.retryCount() > batch.getMaxRetry()) {
-        request.log(wrapper.getEvent());
+        request.log(wrapper.getEvent(), e);
       }
     }
     logger.error("{}", wrappers, e);

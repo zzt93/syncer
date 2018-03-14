@@ -154,12 +154,12 @@ public class MysqlChannel implements BufferedChannel {
               batchBuffer.addFirst(sqls[i]);
             } else {
               logger.error("Max retry exceed, write '{}' to failure log", sqls[i], cause);
-              sqlFailureLog.log(sqls[i]);
+              sqlFailureLog.log(sqls[i], e);
               ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
             }
           } else {
             logger.error("Met non-retriable error in {}, write to failure log", sqls[i], cause);
-            sqlFailureLog.log(sqls[i]);
+            sqlFailureLog.log(sqls[i], e);
             ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
           }
         } else {
@@ -171,6 +171,11 @@ public class MysqlChannel implements BufferedChannel {
 
   @Override
   public boolean retriable(Exception e) {
+    /*
+     * Two possible reasons for DuplicateKey
+     * 1. the first failed, the second succeed. Then restart, then the second will send again and cause this
+     * 2. duplicate entry in binlog file: load data into db multiple time
+     */
     return !(e instanceof DuplicateKeyException || e instanceof BadSqlGrammarException);
   }
 }

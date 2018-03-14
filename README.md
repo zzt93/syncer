@@ -263,6 +263,8 @@ Test data:
 - For auth data sync
 
 ## TODO
+- Order problem: make same id to same thread
+- Add file as data source: to read binlog file
 - Support set parent of ES
 - Row image format support?
   - Add must appeared field restriction -- now only primary key
