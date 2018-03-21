@@ -248,7 +248,9 @@ Test data:
   - types: bigint, varchar, text, tinyint, timestamp, smallint, int, unsigned, longtext
 
 ### Stress Test -- TODO
-- 10G
+- 10G & 10^8 lines
+  - load every 10^5 lines by `mysqlimport`
+  - no pause between import
 - CPU
 - Memory
 - IO
@@ -263,7 +265,7 @@ Test data:
 - For auth data sync
 
 ## TODO
-- Order problem: make same id to same thread
+- Order problem: make same id to same thread; strict mode: retry error item and all left; retry only error item
 - Add file as data source: to read binlog file
 - Support set parent of ES
 - Row image format support?

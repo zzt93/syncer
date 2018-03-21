@@ -17,9 +17,8 @@ import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.sql.BatchUpdateException;
 import java.sql.Statement;
-import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Stream;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,10 +32,10 @@ import org.springframework.jdbc.core.JdbcTemplate;
 /**
  * @author zzt
  */
-public class MysqlChannel implements BufferedChannel {
+public class MysqlChannel implements BufferedChannel<String> {
 
   private final Logger logger = LoggerFactory.getLogger(MysqlChannel.class);
-  private final BatchBuffer<SyncWrapper> batchBuffer;
+  private final BatchBuffer<SyncWrapper<String>> batchBuffer;
   private final PipelineBatch batch;
   private final JdbcTemplate jdbcTemplate;
   private final SQLMapper sqlMapper;
@@ -46,7 +45,7 @@ public class MysqlChannel implements BufferedChannel {
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
-    batchBuffer = new BatchBuffer<>(mysql.getBatch(), SyncWrapper.class);
+    batchBuffer = new BatchBuffer<>(mysql.getBatch());
     sqlMapper = new NestedSQLMapper(mysql.getRowMapping(), jdbcTemplate);
     this.batch = mysql.getBatch();
     this.ack = ack;
@@ -109,17 +108,17 @@ public class MysqlChannel implements BufferedChannel {
 
   @Override
   public void flush() {
-    SyncWrapper<String>[] sqls = batchBuffer.flush();
-    if (sqls.length != 0) {
-      logger.debug("Flush batch of {}", Arrays.toString(sqls));
+    List<SyncWrapper<String>> sqls = batchBuffer.flush();
+    if (sqls.size() != 0) {
+      logger.debug("Flush batch of {}", sqls);
       batchAndRetry(sqls);
     }
   }
 
-  private void batchAndRetry(SyncWrapper<String>[] sqls) {
+  private void batchAndRetry(List<SyncWrapper<String>> sqls) {
     try {
-      Stream<String> stringStream = Arrays.stream(sqls).map(SyncWrapper::getData);
-      jdbcTemplate.batchUpdate(stringStream.toArray(String[]::new));
+      String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
+      jdbcTemplate.batchUpdate(sqlStatement);
       ackSuccess(sqls);
     } catch (DataAccessException e) {
       retryFailed(sqls, e);
@@ -128,42 +127,44 @@ public class MysqlChannel implements BufferedChannel {
 
   @Override
   public void flushIfReachSizeLimit() {
-    SyncWrapper<String>[] sqls = batchBuffer.flushIfReachSizeLimit();
+    List<SyncWrapper<String>> sqls = batchBuffer.flushIfReachSizeLimit();
     if (sqls != null) {
-      logger.debug("Flush when reach size limit, send batch of {}", Arrays.toString(sqls));
+      logger.debug("Flush when reach size limit, send batch of {}", sqls);
       batchAndRetry(sqls);
     }
   }
 
   @Override
-  public void ackSuccess(SyncWrapper[] wrappers) {
-    for (SyncWrapper wrapper : wrappers) {
+  public void ackSuccess(List<SyncWrapper<String>> aim) {
+    for (SyncWrapper wrapper : aim) {
       ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
     }
   }
 
   @Override
-  public void retryFailed(SyncWrapper[] sqls, Exception e) {
+  public void retryFailed(List<SyncWrapper<String>> sqls, Exception e) {
     Throwable cause = e.getCause();
     if (cause instanceof BatchUpdateException) {
       int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
       for (int i = 0; i < updateCounts.length; i++) {
+        SyncWrapper<String> stringSyncWrapper = sqls.get(i);
         if (updateCounts[i] == Statement.EXECUTE_FAILED) {
           if (retriable(e)) {
-            if (sqls[i].retryCount() < batch.getMaxRetry()) {
-              batchBuffer.addFirst(sqls[i]);
+            if (stringSyncWrapper.retryCount() < batch.getMaxRetry()) {
+              batchBuffer.addFirst(stringSyncWrapper);
             } else {
-              logger.error("Max retry exceed, write '{}' to failure log", sqls[i], cause);
-              sqlFailureLog.log(sqls[i], e);
-              ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
+              logger.error("Max retry exceed, write '{}' to failure log", stringSyncWrapper, cause);
+              sqlFailureLog.log(stringSyncWrapper, e);
+              ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
             }
           } else {
-            logger.error("Met non-retriable error in {}, write to failure log", sqls[i], cause);
-            sqlFailureLog.log(sqls[i], e);
-            ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
+            logger.error("Met non-retriable error in {}, write to failure log", stringSyncWrapper,
+                cause);
+            sqlFailureLog.log(stringSyncWrapper, e);
+            ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
           }
         } else {
-          ack.remove(sqls[i].getSourceId(), sqls[i].getSyncDataId());
+          ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
         }
       }
     }

@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
@@ -41,9 +42,9 @@ import org.slf4j.MDC;
 /**
  * @author zzt
  */
-public class ElasticsearchChannel implements BufferedChannel {
+public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
-  private final BatchBuffer<SyncWrapper> batchBuffer;
+  private final BatchBuffer<SyncWrapper<WriteRequest>> batchBuffer;
   private final ESRequestMapper esRequestMapper;
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final TransportClient client;
@@ -55,7 +56,7 @@ public class ElasticsearchChannel implements BufferedChannel {
       throws Exception {
     ElasticsearchConnection connection = elasticsearch.getConnection();
     client = connection.transportClient();
-    this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch(), SyncWrapper.class);
+    this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch());
     this.batch = elasticsearch.getBatch();
     this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
     this.ack = ack;
@@ -162,19 +163,19 @@ public class ElasticsearchChannel implements BufferedChannel {
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
   public void flush() {
-    SyncWrapper<WriteRequest>[] aim = batchBuffer.flush();
+    List<SyncWrapper<WriteRequest>> aim = batchBuffer.flush();
     buildAndSend(aim);
   }
 
   @Override
-  public void ackSuccess(SyncWrapper[] aim) {
+  public void ackSuccess(List<SyncWrapper<WriteRequest>> aim) {
     for (SyncWrapper wrapper : aim) {
       ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
     }
   }
 
   @Override
-  public void retryFailed(SyncWrapper[] aim, Exception e) {
+  public void retryFailed(List<SyncWrapper<WriteRequest>> aim, Exception e) {
     Map<String, String> failedDocuments = ((ElasticsearchBulkException) e).getFailedDocuments();
     for (SyncWrapper<WriteRequest> wrapper : aim) {
       WriteRequest request = wrapper.getData();
@@ -213,12 +214,12 @@ public class ElasticsearchChannel implements BufferedChannel {
   @Override
   public void flushIfReachSizeLimit() {
     @SuppressWarnings("unchecked")
-    SyncWrapper<WriteRequest>[] aim = batchBuffer.flushIfReachSizeLimit();
+    List<SyncWrapper<WriteRequest>> aim = batchBuffer.flushIfReachSizeLimit();
     buildAndSend(aim);
   }
 
-  private void buildAndSend(SyncWrapper<WriteRequest>[] aim) {
-    if (aim != null && aim.length != 0) {
+  private void buildAndSend(List<SyncWrapper<WriteRequest>> aim) {
+    if (aim != null && aim.size() != 0) {
       try {
         buildRequest(aim);
         ackSuccess(aim);
@@ -228,14 +229,11 @@ public class ElasticsearchChannel implements BufferedChannel {
     }
   }
 
-  private void buildRequest(SyncWrapper<WriteRequest>[] aim) {
+  private void buildRequest(List<SyncWrapper<WriteRequest>> aim) {
     StringJoiner joiner = new StringJoiner(",", "[", "]");
     // BulkProcessor?
     BulkRequestBuilder bulkRequest = client.prepareBulk();
     for (SyncWrapper<WriteRequest> requestWrapper : aim) {
-      if (requestWrapper == null) {
-        break;
-      }
       WriteRequest request = requestWrapper.getData();
       if (request instanceof IndexRequest) {
         joiner.add(request.toString());

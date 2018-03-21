@@ -1,15 +1,16 @@
 package com.github.zzt93.syncer.consumer.output.channel;
 
 import com.github.zzt93.syncer.common.data.SyncWrapper;
+import java.util.List;
 
 /**
  * @author zzt
  */
-public interface AckChannel {
+public interface AckChannel<T> {
 
-  void ackSuccess(SyncWrapper[] wrappers);
+  void ackSuccess(List<SyncWrapper<T>> aim);
 
-  void retryFailed(SyncWrapper[] wrappers, Exception e);
+  void retryFailed(List<SyncWrapper<T>> aim, Exception e);
 
   boolean retriable(Exception e);
 

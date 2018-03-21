@@ -15,6 +15,7 @@ import com.google.gson.reflect.TypeToken;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,10 +30,10 @@ import org.springframework.util.StringUtils;
 /**
  * @author zzt
  */
-public class RedisChannel implements BufferedChannel {
+public class RedisChannel implements BufferedChannel<RedisCallback> {
 
   private final Logger logger = LoggerFactory.getLogger(RedisChannel.class);
-  private final BatchBuffer<SyncWrapper> batchBuffer;
+  private final BatchBuffer<SyncWrapper<RedisCallback>> batchBuffer;
   private final PipelineBatch batch;
   private final Ack ack;
   private final FailureLog<SyncData> request;
@@ -43,7 +44,7 @@ public class RedisChannel implements BufferedChannel {
 
   public RedisChannel(Redis redis, SyncerOutputMeta outputMeta, Ack ack) {
     this.batch = redis.getBatch();
-    batchBuffer = new BatchBuffer<>(batch, SyncWrapper.class);
+    batchBuffer = new BatchBuffer<>(batch);
     this.ack = ack;
     FailureLogConfig failureLog = redis.getFailureLog();
     try {
@@ -83,7 +84,7 @@ public class RedisChannel implements BufferedChannel {
 
   @Override
   public void flush() {
-    SyncWrapper[] aim = batchBuffer.flush();
+    List<SyncWrapper<RedisCallback>> aim = batchBuffer.flush();
     try {
       send(aim);
       ackSuccess(aim);
@@ -92,8 +93,8 @@ public class RedisChannel implements BufferedChannel {
     }
   }
 
-  private void send(SyncWrapper[] aim) {
-    if (aim != null && aim.length != 0) {
+  private void send(List<SyncWrapper<RedisCallback>> aim) {
+    if (aim != null && aim.size() != 0) {
       template.executePipelined((RedisCallback<Void>) connection -> {
         for (SyncWrapper<RedisCallback> wrapper : aim) {
           wrapper.getData().doInRedis(connection);
@@ -105,26 +106,26 @@ public class RedisChannel implements BufferedChannel {
 
   @Override
   public void flushIfReachSizeLimit() {
-    SyncWrapper[] wrappers = batchBuffer.flushIfReachSizeLimit();
+    List<SyncWrapper<RedisCallback>> wrappers = batchBuffer.flushIfReachSizeLimit();
     send(wrappers);
   }
 
   @Override
-  public void ackSuccess(SyncWrapper[] wrappers) {
-    for (SyncWrapper wrapper : wrappers) {
+  public void ackSuccess(List<SyncWrapper<RedisCallback>> aim) {
+    for (SyncWrapper wrapper : aim) {
       ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
     }
   }
 
   @Override
-  public void retryFailed(SyncWrapper[] wrappers, Exception e) {
-    for (SyncWrapper wrapper : wrappers) {
+  public void retryFailed(List<SyncWrapper<RedisCallback>> aim, Exception e) {
+    for (SyncWrapper wrapper : aim) {
       wrapper.inc();
       if (wrapper.retryCount() > batch.getMaxRetry()) {
         request.log(wrapper.getEvent(), e);
       }
     }
-    logger.error("{}", wrappers, e);
+    logger.error("{}", aim, e);
   }
 
   @Override

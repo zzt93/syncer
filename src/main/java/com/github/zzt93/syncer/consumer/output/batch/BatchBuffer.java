@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.consumer.output.batch;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.consumer.ack.Retryable;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -18,11 +17,9 @@ public class BatchBuffer<T extends Retryable> {
   private final int limit;
   private final ConcurrentLinkedDeque<T> deque = new ConcurrentLinkedDeque<>();
   private final AtomicInteger estimateSize = new AtomicInteger(0);
-  private final Class<T> clazz;
 
-  public BatchBuffer(PipelineBatch batch, Class<T> aClass) {
+  public BatchBuffer(PipelineBatch batch) {
     limit = batch.getSize() <= 0 ? Integer.MAX_VALUE : batch.getSize();
-    clazz = aClass;
   }
 
   public boolean add(T data) {
@@ -46,14 +43,14 @@ public class BatchBuffer<T extends Retryable> {
   }
 
   @ThreadSafe(safe = {ConcurrentLinkedDeque.class, AtomicInteger.class})
-  public T[] flushIfReachSizeLimit() {
+  public List<T> flushIfReachSizeLimit() {
     // The function should be side-effect-free, since it may be
     // re-applied when attempted updates fail due to contention among threads
     if (estimateSize.getAndUpdate(x -> x >= limit ? x - limit : x) >= limit) {
-      T[] res = (T[]) Array.newInstance(clazz, limit);
+      ArrayList<T> res = new ArrayList<>(limit);
       for (int i = 0; !deque.isEmpty() && i < limit; i++) {
         try {
-          res[i] = deque.removeFirst();
+          res.add(deque.removeFirst());
         } catch (NoSuchElementException ignored) {
           // ignore, multiple thread may enter this block and cause this exception
         }
@@ -63,7 +60,7 @@ public class BatchBuffer<T extends Retryable> {
     return null;
   }
 
-  public T[] flush() {
+  public List<T> flush() {
     ArrayList<T> res = new ArrayList<>(estimateSize.get());
     if (estimateSize.getAndUpdate(x -> 0) > 0) {
       while (!deque.isEmpty()) {
@@ -74,6 +71,6 @@ public class BatchBuffer<T extends Retryable> {
         }
       }
     }
-    return res.toArray((T[]) Array.newInstance(clazz, 0));
+    return res;
   }
 }

@@ -25,11 +25,12 @@ public class OutputStarter {
     workerCheck(module.getWorker());
     workerCheck(module.getBatch().getWorker());
 
-    ScheduledExecutorService batchService = Executors
-        .newScheduledThreadPool(module.getBatch().getWorker(),
-            new NamedThreadFactory("syncer-batch"));
 
     outputChannels = pipelineOutput.toOutputChannels(ack, module.getOutputMeta());
+    ScheduledExecutorService batchService = Executors
+        .newScheduledThreadPool(Math.min(module.getBatch().getWorker(), outputChannels.size()),
+            new NamedThreadFactory("syncer-batch"));
+
     for (OutputChannel outputChannel : outputChannels) {
       if (outputChannel instanceof BufferedChannel) {
         BufferedChannel bufferedChannel = (BufferedChannel) outputChannel;
