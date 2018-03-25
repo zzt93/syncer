@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.producer.dispatch.mongo;
 
+import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.producer.output.OutputSink;
@@ -31,6 +32,9 @@ public class JsonKeyFilter {
       }
     }
     tmp.forEach(records::remove);
+    if (records.isEmpty() && data.getType() == EventType.UPDATE_ROWS) {
+      return false;
+    }
     return outputSink.output(data);
   }
 }

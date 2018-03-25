@@ -100,6 +100,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) {
+    // TODO 18/3/25 remove following line, keep it for the time being
     event.removePrimaryKey();
     Object builder = esRequestMapper.map(event);
     if (buffered(builder)) {

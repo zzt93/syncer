@@ -18,6 +18,7 @@ public class SyncData {
   private final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
 
   private static class Meta {
+    private final static MapAccessor accessor = new MapAccessor();
     private final String eventId;
     private final String dataId;
     private final int ordinal;
@@ -40,7 +41,7 @@ public class SyncData {
       setType(type);
       this.context = context;
       context.setTypeLocator(new CommonTypeLocator());
-      context.addPropertyAccessor(new MapAccessor());
+      context.addPropertyAccessor(accessor);
     }
 
     @Override
@@ -93,14 +94,15 @@ public class SyncData {
     schema = database;
     this.table = table;
     records.putAll(row);
-    syncByQuery = new SyncByQueryES(this);
   }
 
   public SyncData(SyncData syncData, int offset) {
     inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, offset,
         syncData.getType(),
         syncData.getSourceIdentifier(), new StandardEvaluationContext(this));
-    syncByQuery = new SyncByQueryES(this);
+    if (syncData.syncByQuery != null) {
+      syncByQuery = new SyncByQueryES(this);
+    }
   }
 
   public Object getId() {
@@ -228,13 +230,16 @@ public class SyncData {
   }
 
   public boolean isSyncWithoutId() {
-    return syncByQuery.isSyncWithoutId();
+    return syncByQuery != null && syncByQuery.isSyncWithoutId();
   }
 
   /**
    * update/delete by query
    */
   public SyncByQuery syncByQuery() {
+    if (syncByQuery == null) {
+      syncByQuery = new SyncByQueryES(this);
+    }
     return syncByQuery;
   }
 

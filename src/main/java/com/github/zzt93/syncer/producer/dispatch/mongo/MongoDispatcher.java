@@ -25,6 +25,7 @@ import org.slf4j.MDC;
  */
 public class MongoDispatcher implements Dispatcher {
 
+  private static final String ID = "_id";
   private final Logger logger = LoggerFactory.getLogger(MongoDispatcher.class);
   private final HashMap<String, List<JsonKeyFilter>> directOutput = new HashMap<>();
   private final HashMap<Pattern, JsonKeyFilter> regexOutput = new HashMap<>();
@@ -40,6 +41,10 @@ public class MongoDispatcher implements Dispatcher {
         }
       }
     }
+  }
+
+  private static boolean onlyId(Map<String, Object> row) {
+    return row.size() == 1 && row.containsKey(ID);
   }
 
   @Override
@@ -71,6 +76,11 @@ public class MongoDispatcher implements Dispatcher {
     return true;
   }
 
+  /**
+   * <ul> <li> {"ts":Timestamp(1521530692,1),"t":NumberLong("5"),"h":NumberLong("-384939294837368966"),
+   * "v":2,"op":"u","ns":"foo.bar","o2":{"_id":"L0KB$fjfLFra"},"o":{"$set":{"apns":"[]"}}} </li>
+   * </ul>
+   */
   private SyncData fromDocument(Document document, String eventId, String[] namespace) {
     String op = document.getString("op");
     Map<String, Object> row = new HashMap<>();
@@ -81,6 +91,9 @@ public class MongoDispatcher implements Dispatcher {
         type = EventType.UPDATE_ROWS;
         row.putAll((Map) obj.get("$set"));
         row.putAll((Map) document.get("o2"));
+        if (onlyId(row)) {
+          return null;
+        }
         break;
       case "i":
         type = EventType.WRITE_ROWS;
@@ -94,6 +107,6 @@ public class MongoDispatcher implements Dispatcher {
         return null;
     }
     Preconditions.checkState(row.containsKey("_id"));
-    return new SyncData(eventId, 0, namespace[0], namespace[1], "_id", row, type);
+    return new SyncData(eventId, 0, namespace[0], namespace[1], ID, row, type);
   }
 }

@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.consumer.ack;
 import com.github.zzt93.syncer.common.data.SyncDataExclusion;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.util.FileUtil;
+import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.consumer.output.Resource;
 import com.google.gson.Gson;
@@ -42,7 +43,7 @@ public class FailureLog<T> implements Resource {
   public FailureLog(Path path, FailureLogConfig limit, TypeToken token)
       throws FileNotFoundException {
     countLimit = limit.getCountLimit();
-    service = Executors.newScheduledThreadPool(1);
+    service = Executors.newScheduledThreadPool(1, new NamedThreadFactory("syncer-failure-log-timer"));
     service
         .scheduleWithFixedDelay(() -> itemCount.set(0), limit.getTimeLimit(), limit.getTimeLimit(),
             limit.getUnit());

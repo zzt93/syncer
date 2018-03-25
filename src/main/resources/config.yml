@@ -8,7 +8,7 @@ syncer:
       last-run-metadata-dir: /data/syncer/input/last_position/
 
   filter:
-    worker: 4
+    worker: 6
 
   output:
     worker: 2

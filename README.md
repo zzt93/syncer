@@ -71,7 +71,6 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - Join/merge documents from different source when push to ES<sup>[1](#join_in_es)</sup>
     - One to many relationship (parent-child relationship in ES)for document in different index
     - Self referential relationship handle
-  - Default exclude `primary key` of a row/document from the json body of ES request
 
 - Http Endpoint
 - MySQL
@@ -152,12 +151,16 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - `schema`: schema/db/index
   - `table`: table or collection
   - `id`: data primary key or similar thing
-  - `records`: data content of this sync event converted from log content
-  - `extra`
+  - `records`: data content of this sync event converted from log content according to your config. 
+  **Notice**: 
+    - if your interested column config (`rowName`) has name of `id`, records will have it. Otherwise, it will only in `id` field;
+  - `extra`: an extra map to store extra info
 
 ### Output Choice
 
  - Elasticsearch
+  - When using this channel, you may prefer to not include `id` like field in interested column config (`rowName`),
+  because it is always no need to include it in data field for ES and we will auto detect it and set it for you.
  - MySQL
  - Http endpoint
 
@@ -247,12 +250,13 @@ Test data:
   - tables: 90+ for each database; listening: 5 for each database
   - types: bigint, varchar, text, tinyint, timestamp, smallint, int, unsigned, longtext
 
-### Stress Test -- TODO
+### Stress Test
 - 10G & 10^8 lines
   - load every 10^5 lines by `mysqlimport`
   - no pause between import
-- CPU
-- Memory
+- Throughput
+- CPU: 80-90
+- Memory: 4g
 - IO
   - Network
   - Disk
