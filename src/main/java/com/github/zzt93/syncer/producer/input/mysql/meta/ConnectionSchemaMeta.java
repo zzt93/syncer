@@ -185,7 +185,7 @@ public class ConnectionSchemaMeta {
           }
           // use - 1 because the index of mysql column is count from 1
           int ordinalPosition = columnResultSet.getInt("ORDINAL_POSITION") - 1;
-          tableMeta.addNameIndex(columnName, ordinalPosition);
+          tableMeta.addInterestedCol(columnName, ordinalPosition);
         }
       }
     }
@@ -194,20 +194,19 @@ public class ConnectionSchemaMeta {
         Set<String> tableRow, TableMeta tableMeta) throws SQLException {
       try (ResultSet primaryKeys = metaData.getPrimaryKeys(tableSchema, "", tableName)) {
         if (primaryKeys.next()) {
-          // use - 1 because the index of mysql column is count from 1
+          // use `- 1` because the index of mysql column is count from 1
           int ordinalPosition = primaryKeys.getInt("KEY_SEQ") - 1;
           String columnName = primaryKeys.getString("COLUMN_NAME");
           if (!tableRow.contains(columnName)) {
-            logger.warn("Not config primary key as interested column, adding it anyway");
+            tableMeta.noPrimaryKey();
+            logger.info("Not config primary key as interested column, can be accessed only in `id` but not in `record`");
           }
-          tableMeta.addNameIndex(columnName, ordinalPosition);
+          tableMeta.addInterestedCol(columnName, ordinalPosition);
           tableMeta.addPrimaryKey(ordinalPosition);
         }
         if (primaryKeys.next()) {
-          InvalidConfigException e = new InvalidConfigException(
-              "Not support composite primary key");
-          logger
-              .error("Not support composite primary key {}.{}", tableSchema, tableName, e);
+          InvalidConfigException e = new InvalidConfigException("Not support composite primary key");
+          logger.error("Not support composite primary key {}.{}", tableSchema, tableName, e);
           throw e;
         }
       }

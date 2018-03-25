@@ -32,8 +32,8 @@ public class SchemaAndRowFilter {
     EventType eventType = e[1].getHeader().getEventType();
     List<HashMap<Integer, Object>> indexedRow = RowsEvent
         .getIndexedRows(eventType, e[1].getData(), table.getPrimaryKeys());
-    boolean filtered = RowsEvent.filterData(indexedRow, table.getInterestedColIndex());
-    if (!filtered) {
+    boolean hasMore = RowsEvent.filterData(indexedRow, table.getInterestedColIndex(), eventType);
+    if (!hasMore) {
       return null;
     }
 
@@ -42,8 +42,12 @@ public class SchemaAndRowFilter {
     String primaryKey = RowsEvent.getPrimaryKey(table.getIndexToName(), table.getPrimaryKeys());
     SyncData[] res = new SyncData[namedRow.size()];
     for (int i = 0; i < res.length; i++) {
+      HashMap<String, Object> row = namedRow.get(i);
       res[i] = new SyncData(eventId, i, tableMap.getDatabase(), tableMap.getTable(), primaryKey,
-          namedRow.get(i), eventType);
+          row.get(primaryKey), row, eventType);
+      if (!table.isInterestedPK()) {
+        row.remove(primaryKey);
+      }
     }
     return res;
   }

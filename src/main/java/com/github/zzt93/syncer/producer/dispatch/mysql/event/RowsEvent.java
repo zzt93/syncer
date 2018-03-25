@@ -23,7 +23,7 @@ import org.springframework.util.Assert;
 public abstract class RowsEvent {
 
   public static boolean filterData(List<HashMap<Integer, Object>> indexedRow,
-      List<Integer> interested) {
+      List<Integer> interested, EventType eventType) {
     Assert.isTrue(!indexedRow.isEmpty(), "Assertion Failure: no row to filter");
     List<HashMap<Integer, Object>> tmp = new ArrayList<>();
     for (HashMap<Integer, Object> row : indexedRow) {
@@ -33,7 +33,8 @@ public abstract class RowsEvent {
           map.put(integer, row.get(integer));
         }
       }
-      if (!map.isEmpty()) {
+      if (map.size() > 1 || (map.size() == 1 && eventType != EventType.UPDATE_ROWS)) {
+        // discard event which only has id (size is 1) && event type is UPDATE_ROWS
         tmp.add(map);
       }
     }
@@ -48,8 +49,8 @@ public abstract class RowsEvent {
     List<HashMap<String, Object>> res = new ArrayList<>();
     for (HashMap<Integer, Object> row : indexedRow) {
       HashMap<String, Object> map = new HashMap<>();
-      for (Integer integer : row.keySet()) {
-        map.put(indexToName.get(integer), row.get(integer));
+      for (Integer index : row.keySet()) {
+        map.put(indexToName.get(index), row.get(index));
       }
       res.add(map);
     }

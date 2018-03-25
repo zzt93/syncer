@@ -24,7 +24,10 @@
   - Table name filter
   - Interested column filter
   - automatic primary key detection and set into `id`
-  - If an table match multiple schema & table (because the usage of regex), a exception will be thrown
+  - If a table match multiple schema & table (because the usage of regex), a exception will be thrown
+  - If an event go through column filter, and only primary key is left:
+    - If event type is UPDATE_ROWS, then discard this event -- because not support update id now;
+    - Other event type, keep it.
 - MongoDB master source filter:
   - Version: 3.x
   - Schema filter, support regex
@@ -32,6 +35,9 @@
   - automatic `_id` detection and set into `id`
   - If an event match multiple schema & table, we will use the first specific match to filter/output,
   i.e. the specific schema config will override the regex schema config
+  - If an event go through column filter, and only primary key is left:
+    - If event type is UPDATE_ROWS, then discard this event -- because not support update id now;
+    - Other event type, keep it.
 - Remember start file/position of binlog/oplog, and resume from where we leave so as to avoid any data loss
   - More than once: we can ensure the at least once semantics now, so you need to make sure your `SyncData`
   is idempotent and your destination can handle it. Counterexample: a table without primary key definitely

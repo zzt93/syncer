@@ -16,8 +16,9 @@ public class TableMeta {
   private final List<Integer> index = new ArrayList<>();
   private final HashMap<Integer, String> indexToName = new HashMap<>();
   private final Set<Integer> primaryKeys = new HashSet<>();
+  private boolean interestedPK;
 
-  void addNameIndex(String columnName, int ordinalPosition) {
+  void addInterestedCol(String columnName, int ordinalPosition) {
     index.add(ordinalPosition);
     indexToName.put(ordinalPosition, columnName);
   }
@@ -43,5 +44,13 @@ public class TableMeta {
     return "TableMeta{" +
         "indexToName=" + indexToName +
         '}';
+  }
+
+  void noPrimaryKey() {
+    interestedPK = false;
+  }
+
+  public boolean isInterestedPK() {
+    return interestedPK;
   }
 }

@@ -81,15 +81,14 @@ public class SyncData {
 
 
   public SyncData(String eventId, int ordinal, String database, String table, String primaryKeyName,
-      Map<String, Object> row, EventType type) {
+      Object id, Map<String, Object> row, EventType type) {
     inner = new Meta(eventId, ordinal, -1, type, null, new StandardEvaluationContext(this));
 
-    Object key = row.get(primaryKeyName);
     this.primaryKeyName = primaryKeyName;
-    if (key != null) {
-      id = key;
+    if (id != null) {
+      this.id = id;
     } else {
-      logger.warn("{} without primary key", type);
+      logger.error("{} without primary key", type);
     }
     schema = database;
     this.table = table;
