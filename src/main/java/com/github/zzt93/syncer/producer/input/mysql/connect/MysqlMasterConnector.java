@@ -56,7 +56,7 @@ public class MysqlMasterConnector implements MasterConnector {
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
     client.setEventDeserializer(SyncDeserializer.defaultDeserialzer());
-    client.setServerId(random.nextInt(Integer.MAX_VALUE));
+    client.setServerId(random.nextInt(Byte.MAX_VALUE));
     client.setSSLMode(SSLMode.DISABLED);
     BinlogInfo binlogInfo = registry.votedBinlogInfo(connection);
     if (!binlogInfo.isEmpty()) {
@@ -70,7 +70,8 @@ public class MysqlMasterConnector implements MasterConnector {
 
   private void configEventListener(MysqlConnection connection, ConsumerRegistry registry)
       throws SchemaUnavailableException {
-    IdentityHashMap<ConsumerSchema, OutputSink> schemasConsumerMap = registry.outputSink(connection);
+    IdentityHashMap<ConsumerSchema, OutputSink> schemasConsumerMap = registry
+        .outputSink(connection);
     IdentityHashMap<ConnectionSchemaMeta, OutputSink> sinkHashMap;
     try {
       sinkHashMap = new ConnectionSchemaMeta.MetaDataBuilder(connection, schemasConsumerMap)
@@ -96,10 +97,12 @@ public class MysqlMasterConnector implements MasterConnector {
       } catch (InvalidBinlogException e) {
         logger.warn("Invalid binlog file info {}@{}, reconnect to latest binlog",
             client.getBinlogFilename(), client.getBinlogPosition(), e);
-        i = 0;
         // TODO 18/3/13 read from binlog file
+        i = 0;
 //        client.setBinlogFilename(""); not fetch oldest log
         client.setBinlogFilename(null);
+      } catch (DupServerIdException e) {
+        client.setServerId(random.nextInt(Byte.MAX_VALUE));
       } catch (IOException e) {
         logger.error("Fail to connect to master. Reconnect to master in {}, left retry time: {}",
             sleepInSecond, maxRetry - i - 1, e);

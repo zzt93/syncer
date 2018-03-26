@@ -21,8 +21,15 @@ public class LogLifecycleListener implements BinaryLogClient.LifecycleListener {
   public void onCommunicationFailure(BinaryLogClient client, Exception ex) {
     logger.error("Communication failure", ex);
     if (binlogDeprecated(ex)) {
+      if (dupServerId(ex)) {
+        throw new DupServerIdException(ex);
+      }
       throw new InvalidBinlogException(ex, client.getBinlogFilename(), client.getBinlogPosition());
     }
+  }
+
+  private boolean dupServerId(Exception ex) {
+    return ex.getMessage().startsWith("A slave with the same server_uuid/server_id as this slave has connected to the master");
   }
 
   private boolean binlogDeprecated(Exception ex) {

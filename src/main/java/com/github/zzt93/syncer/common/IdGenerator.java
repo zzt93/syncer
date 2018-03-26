@@ -13,35 +13,36 @@ import org.bson.Document;
 public class IdGenerator {
 
   public static final String EID = "eid";
-  private static final int COMMON_LEN = 60;
-  private static final String SEP  = "/";
-
-  public enum Offset {
-    DUP(1000), CLONE(2000);
-
-    private final int offset;
-
-    Offset(int offset) {
-      this.offset = offset;
-    }
-
-    public int getOffset() {
-      return offset;
-    }
-  }
+  private static final int COMMON_LEN = 50;
+  private static final String SEP = "/";
 
   /**
-   * <a href="https://github.com/shyiko/mysql-binlog-connector-java/issues/200">binlog table map</a>
+   * <a href="https://github.com/shyiko/mysql-binlog-connector-java/issues/200">binlog table
+   * map</a>
    */
   public static String fromEvent(Event[] event, String binlogFileName) {
     EventHeaderV4 tableMap = event[0].getHeader();
     EventHeaderV4 second = event[1].getHeader();
     // have to remember table map event for restart
     // have to add following data event for unique id
-    return new StringBuilder(COMMON_LEN).append(second.getServerId()).append(SEP).append(binlogFileName)
-        .append(SEP).append(tableMap
-        .getPosition()).append(SEP).append(second.getPosition()).append(SEP)
-        .append(second.getEventType()).toString();
+    return new StringBuilder(COMMON_LEN).append(second.getServerId()).append(SEP)
+        .append(binlogFileName).append(SEP)
+        .append(tableMap.getPosition()).append(SEP)
+        .append(second.getPosition()).append(SEP)
+        .append(getEventTypeAbbr(second)).toString();
+  }
+
+  private static String getEventTypeAbbr(EventHeaderV4 second) {
+    switch (second.getEventType()) {
+      case UPDATE_ROWS:
+        return "u";
+      case WRITE_ROWS:
+        return "w";
+      case DELETE_ROWS:
+        return "d";
+      default:
+        throw new IllegalArgumentException("Unsupported event type");
+    }
   }
 
   public static String fromEventId(String eventId, int ordinal) {
@@ -69,9 +70,24 @@ public class IdGenerator {
   public static DocTimestamp fromMongoDataId(String dataId) {
     String[] split = dataId.split(SEP);
     if (split.length == 3) {
-      return new DocTimestamp(new BsonTimestamp(Integer.parseInt(split[0]), Integer.parseInt(split[1])));
+      return new DocTimestamp(
+          new BsonTimestamp(Integer.parseInt(split[0]), Integer.parseInt(split[1])));
     }
     throw new IllegalArgumentException(dataId);
+  }
+
+  public enum Offset {
+    DUP(1000), CLONE(2000);
+
+    private final int offset;
+
+    Offset(int offset) {
+      this.offset = offset;
+    }
+
+    public int getOffset() {
+      return offset;
+    }
   }
 
 }
