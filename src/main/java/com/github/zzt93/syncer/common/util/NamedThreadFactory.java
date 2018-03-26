@@ -10,7 +10,8 @@ import org.slf4j.LoggerFactory;
  */
 public class NamedThreadFactory implements ThreadFactory {
 
-  private static final AtomicLong count = new AtomicLong(1);
+  private static final AtomicLong all = new AtomicLong(1);
+  private final AtomicLong every = new AtomicLong(1);
   private static Logger logger = LoggerFactory.getLogger(NamedThreadFactory.class);
   private final String prefix;
 
@@ -24,7 +25,7 @@ public class NamedThreadFactory implements ThreadFactory {
 
   @Override
   public Thread newThread(Runnable r) {
-    String name = prefix + "-" + count.getAndAdd(1L);
+    String name = prefix + "-" + every.getAndAdd(1L) + "-" + all.getAndAdd(1L);
     logger.debug("Create a new thread: {}", name);
     return new Thread(r, name);
   }

@@ -12,4 +12,4 @@ spring:
 
 ---
 
-syncer.version: 1.0
+syncer.version: 1.1

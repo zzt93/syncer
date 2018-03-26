@@ -13,6 +13,7 @@ import org.bson.Document;
 public class IdGenerator {
 
   public static final String EID = "eid";
+  private static final int COMMON_LEN = 60;
   private static final String SEP  = "/";
 
   public enum Offset {
@@ -37,16 +38,19 @@ public class IdGenerator {
     EventHeaderV4 second = event[1].getHeader();
     // have to remember table map event for restart
     // have to add following data event for unique id
-    return second.getServerId() + SEP + binlogFileName + SEP + tableMap
-        .getPosition() + SEP + second.getPosition() + SEP + second.getEventType();
+    return new StringBuilder(COMMON_LEN).append(second.getServerId()).append(SEP).append(binlogFileName)
+        .append(SEP).append(tableMap
+        .getPosition()).append(SEP).append(second.getPosition()).append(SEP)
+        .append(second.getEventType()).toString();
   }
 
   public static String fromEventId(String eventId, int ordinal) {
-    return eventId + SEP + ordinal;
+    return new StringBuilder(COMMON_LEN).append(eventId).append(SEP).append(ordinal).toString();
   }
 
   public static String fromEventId(String eventId, int ordinal, int offset) {
-    return eventId + SEP + ordinal + SEP + offset;
+    return new StringBuilder(COMMON_LEN).append(eventId).append(SEP).append(ordinal).append(SEP)
+        .append(offset).toString();
   }
 
   public static BinlogInfo fromDataId(String dataId) {

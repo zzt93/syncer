@@ -44,8 +44,8 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
 
   private void filterModuleInit(Ack ack, SyncerFilter module, List<ExprFilter> filters,
       BlockingDeque<SyncData> fromInput, List<OutputChannel> outputChannels) {
-    Preconditions.checkArgument(module.getWorker() <= 8, "Too many worker thread");
-    Preconditions.checkArgument(module.getWorker() > 0, "Too few worker thread");
+    Preconditions.checkArgument(module.getWorker() <= Runtime.getRuntime().availableProcessors() * 3, "Too many worker thread");
+    Preconditions.checkArgument(module.getWorker() > 0, "Invalid worker thread number config");
     service = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter-output"));
 

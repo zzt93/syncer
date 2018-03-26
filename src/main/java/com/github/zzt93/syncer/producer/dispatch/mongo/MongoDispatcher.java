@@ -43,10 +43,6 @@ public class MongoDispatcher implements Dispatcher {
     }
   }
 
-  private static boolean onlyId(Map<String, Object> row) {
-    return row.size() == 1 && row.containsKey(ID);
-  }
-
   @Override
   public boolean dispatch(Object... data) {
     Document document = (Document) data[0];
@@ -91,9 +87,6 @@ public class MongoDispatcher implements Dispatcher {
         type = EventType.UPDATE_ROWS;
         row.putAll((Map) obj.get("$set"));
         row.putAll((Map) document.get("o2"));
-        if (onlyId(row)) {
-          return null;
-        }
         break;
       case "i":
         type = EventType.WRITE_ROWS;

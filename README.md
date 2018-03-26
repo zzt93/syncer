@@ -260,7 +260,7 @@ Test data:
 - 10G & 10^8 lines
   - load every 10^5 lines by `mysqlimport`
   - no pause between import
-- Throughput
+- Throughput: limited by filter worker number, in average 1200+ events per worker
 - CPU: 80-90
 - Memory: 4g
 - IO

@@ -35,6 +35,7 @@ public class FailureLog<T> implements Resource {
       .create();
   private final Logger logger = LoggerFactory.getLogger(FailureLog.class);
   private final Type type;
+  // TODO 18/3/26 change to intStream and IntegerSummaryStatistic
   private final AtomicInteger itemCount = new AtomicInteger(0);
   private final BufferedWriter writer;
   private final int countLimit;
