@@ -52,7 +52,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
             logger.error("", e);
           }
         }
-        logger.trace("Receive binlog event: {}", event.toString());
+        logger.trace("Receive binlog event: {}", event);
     }
   }
 }

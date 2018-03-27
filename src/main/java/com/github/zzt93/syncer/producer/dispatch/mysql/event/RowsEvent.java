@@ -6,9 +6,12 @@ import com.github.shyiko.mysql.binlog.event.EventData;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.UpdateRowsEventData;
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -46,7 +49,7 @@ public abstract class RowsEvent {
   public static List<HashMap<String, Object>> getNamedRows(
       List<HashMap<Integer, Object>> indexedRow,
       Map<Integer, String> indexToName) {
-    List<HashMap<String, Object>> res = new ArrayList<>();
+    List<HashMap<String, Object>> res = new ArrayList<>(indexedRow.size());
     for (HashMap<Integer, Object> row : indexedRow) {
       HashMap<String, Object> map = new HashMap<>();
       for (Integer index : row.keySet()) {
@@ -69,11 +72,29 @@ public abstract class RowsEvent {
       case UPDATE_ROWS:
         return UpdateRowsEvent.getIndexedRows((UpdateRowsEventData) data, primaryKeys);
       case WRITE_ROWS:
-        return WriteRowsEvent.getIndexedRows((WriteRowsEventData) data);
+        WriteRowsEventData write = (WriteRowsEventData) data;
+        return getIndexedRows(write.getRows(), write.getIncludedColumns());
       case DELETE_ROWS:
-        return DeleteRowsEvent.getIndexedRows((DeleteRowsEventData) data);
+        DeleteRowsEventData delete = (DeleteRowsEventData) data;
+        return getIndexedRows(delete.getRows(), delete.getIncludedColumns());
       default:
         throw new IllegalArgumentException("Unsupported event type");
     }
   }
+
+  private static List<HashMap<Integer, Object>> getIndexedRows(List<Serializable[]> rows,
+      BitSet includedColumns) {
+    List<HashMap<Integer, Object>> res = new LinkedList<>();
+    for (Serializable[] row : rows) {
+      HashMap<Integer, Object> map = new HashMap<>();
+      for (int i = 0; i < row.length; i++) {
+        if (includedColumns.get(i)) {
+          map.put(i, row[i]);
+        }
+      }
+      res.add(map);
+    }
+    return res;
+  }
+
 }

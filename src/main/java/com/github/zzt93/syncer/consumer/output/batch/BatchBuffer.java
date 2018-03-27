@@ -53,6 +53,7 @@ public class BatchBuffer<T extends Retryable> {
           res.add(deque.removeFirst());
         } catch (NoSuchElementException ignored) {
           // ignore, multiple thread may enter this block and cause this exception
+          return res;
         }
       }
       return res;
@@ -68,6 +69,7 @@ public class BatchBuffer<T extends Retryable> {
           res.add(deque.removeFirst());
         } catch (NoSuchElementException ignored) {
           // ignore, multiple thread may enter this block and cause this exception
+          return res;
         }
       }
     }

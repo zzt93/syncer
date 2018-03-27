@@ -14,6 +14,9 @@
 - Input module remember where we leave, try to not miss data if syncer shutdown in accident
 - If data is still not send in output channel when input is starting to handle next event, and syncer shutdown?
 - If output channel fail to send to output target, retry until success
+- Order problem situation:
+  - update id1 set 1; update id1 set 2;
+  - insert id1 1; update id1 set 2;
 
 
 ### Input

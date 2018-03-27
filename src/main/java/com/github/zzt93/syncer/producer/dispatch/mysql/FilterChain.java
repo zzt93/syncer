@@ -24,7 +24,9 @@ public class FilterChain {
   }
 
   public FilterRes decide(String eventId, Event[] events) {
-    logger.debug("Receive binlog event: {}", Arrays.toString(events));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Receive binlog event: {}", Arrays.toString(events));
+    }
     SyncData[] aim = start.decide(eventId, events[0], events[1]);
     if (aim == null) { // not interested in this database+table
       return FilterRes.DENY;
