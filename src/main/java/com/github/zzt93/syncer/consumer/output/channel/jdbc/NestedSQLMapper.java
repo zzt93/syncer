@@ -9,6 +9,7 @@ import java.util.Map.Entry;
 import java.util.StringJoiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -20,19 +21,20 @@ import org.springframework.util.Assert;
 public class NestedSQLMapper extends SQLMapper {
 
   /**
-   * <a href="https://www.w3schools.com/sql/sql_insert_into_select.asp">insert into select</a>
-   * the `?3` is a select clause
+   * <a href="https://www.w3schools.com/sql/sql_insert_into_select.asp">insert into select</a> the
+   * `?3` is a select clause
    */
   private static final String INSERT_INTO_SELECT = "insert into `?0`.`?1` (?2) (?3)";
   private final Logger logger = LoggerFactory.getLogger(NestedSQLMapper.class);
   private final KVMapper kvMapper;
-  private final RowMapping rowMapping;
-  private final SpelExpressionParser parser;
+  private final Expression schema;
+  private final Expression table;
 
   public NestedSQLMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
     super(rowMapping, jdbcTemplate);
-    this.rowMapping = rowMapping;
-    parser = new SpelExpressionParser();
+    SpelExpressionParser parser = new SpelExpressionParser();
+    schema = parser.parseExpression(rowMapping.getSchema());
+    table = parser.parseExpression(rowMapping.getTable());
     kvMapper = new KVMapper(rowMapping.getRows(), new JdbcNestedQueryMapper());
   }
 
@@ -62,8 +64,8 @@ public class NestedSQLMapper extends SQLMapper {
       return super.map(data);
     }
     StandardEvaluationContext context = data.getContext();
-    String schema = eval(rowMapping.getSchema(), context);
-    String table = eval(rowMapping.getTable(), context);
+    String schema = eval(this.schema, context);
+    String table = eval(this.table, context);
     HashMap<String, Object> map = kvMapper.map(data);
     logger.debug("Convert SyncData to {}", map);
     switch (data.getType()) {
@@ -75,10 +77,8 @@ public class NestedSQLMapper extends SQLMapper {
     throw new IllegalArgumentException("Unsupported row event type: " + data);
   }
 
-  private String eval(String expr, StandardEvaluationContext context) {
-    return parser
-        .parseExpression(expr)
-        .getValue(context, String.class);
+  private String eval(Expression expr, StandardEvaluationContext context) {
+    return expr.getValue(context, String.class);
   }
 
 }

@@ -20,13 +20,12 @@ public class OperationMapper implements Mapper<SyncData, RedisCallback> {
 
   private final Logger logger = LoggerFactory.getLogger(OperationMapper.class);
   private final OperationMapping mapping;
-  private final SpelExpressionParser parser;
   private Expression keyExpr;
   private Expression valueExpr;
 
   public OperationMapper(OperationMapping mapping) {
     this.mapping = mapping;
-    parser = new SpelExpressionParser();
+    SpelExpressionParser parser = new SpelExpressionParser();
     try {
       keyExpr = parser.parseExpression(mapping.getKey());
       valueExpr = parser.parseExpression(mapping.getValue());

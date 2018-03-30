@@ -4,8 +4,10 @@ import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.filter.CloneConfig;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
+import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
@@ -15,15 +17,18 @@ public class Clone implements ExprFilter, IfBodyAction {
 
   private final FilterActions newObjAction;
   private final FilterActions oldObjAction;
-  private final SpelExpressionParser parser;
-  private final List<String> copyValue;
+  private final List<Expression> copyValue;
 
   public Clone(SpelExpressionParser parser,
       CloneConfig cloneConfig) throws NoSuchFieldException {
-    this.parser = parser;
-    copyValue = cloneConfig.getCopyValue();
-    newObjAction = new FilterActions(cloneConfig.getNew());
-    oldObjAction = new FilterActions(cloneConfig.getOld());
+    SpelExpressionParser parser1 = parser;
+    List<String> cp = cloneConfig.getCopyValue();
+    copyValue = new ArrayList<>(cp.size());
+    for (String s : cp) {
+      copyValue.add(parser.parseExpression(s));
+    }
+    newObjAction = new FilterActions(parser, cloneConfig.getNew());
+    oldObjAction = new FilterActions(parser, cloneConfig.getOld());
   }
 
   @Override
@@ -39,12 +44,12 @@ public class Clone implements ExprFilter, IfBodyAction {
 
   private SyncData clone(SyncData src) {
     SyncData clone = new SyncData(src, Offset.CLONE.getOffset());
-    for (String s : copyValue) {
-      Object value = parser.parseExpression(s).getValue(src.getContext());
-      parser.parseExpression(s).setValue(clone.getContext(), value);
+    for (Expression s : copyValue) {
+      Object value = s.getValue(src.getContext());
+      s.setValue(clone.getContext(), value);
     }
-    newObjAction.execute(parser, clone.getContext());
-    oldObjAction.execute(parser, src.getContext());
+    newObjAction.execute(clone.getContext());
+    oldObjAction.execute(src.getContext());
     return clone;
   }
 

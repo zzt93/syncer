@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 import java.util.StringJoiner;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -25,21 +26,26 @@ public class SQLMapper implements Mapper<SyncData, String> {
   private static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = ?2";
   private final Logger logger = LoggerFactory.getLogger(SQLMapper.class);
   private final KVMapper kvMapper;
-  private final RowMapping rowMapping;
-  private final SpelExpressionParser parser;
+  private final Expression schema;
+  private final Expression table;
+  private final Expression id;
 
   public SQLMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
-    this.rowMapping = rowMapping;
-    parser = new SpelExpressionParser();
+    SpelExpressionParser parser = new SpelExpressionParser();
+
+    schema = parser.parseExpression(rowMapping.getSchema());
+    table = parser.parseExpression(rowMapping.getTable());
+    id = parser.parseExpression(rowMapping.getId());
+
     kvMapper = new KVMapper(rowMapping.getRows(), new JdbcNestedQueryMapper());
   }
 
   @Override
   public String map(SyncData data) {
     StandardEvaluationContext context = data.getContext();
-    String schema = eval(rowMapping.getSchema(), context);
-    String table = eval(rowMapping.getTable(), context);
-    String id = eval(rowMapping.getId(), context);
+    String schema = eval(this.schema, context);
+    String table = eval(this.table, context);
+    String id = eval(this.id, context);
     HashMap<String, Object> map = kvMapper.map(data);
     logger.debug("Convert SyncData to {}", map);
     // TODO 18/1/24 replace with `PreparedStatement`?
@@ -78,10 +84,8 @@ public class SQLMapper implements Mapper<SyncData, String> {
     throw new IllegalArgumentException("Unsupported row event type: " + type);
   }
 
-  private String eval(String expr, StandardEvaluationContext context) {
-    return parser
-        .parseExpression(expr)
-        .getValue(context, String.class);
+  private String eval(Expression expr, StandardEvaluationContext context) {
+    return expr.getValue(context, String.class);
   }
 
 }

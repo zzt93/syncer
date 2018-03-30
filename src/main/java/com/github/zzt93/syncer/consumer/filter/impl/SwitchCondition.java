@@ -2,22 +2,22 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.expr.Expression;
 import org.springframework.expression.EvaluationContext;
-import org.springframework.expression.ExpressionParser;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
 public class SwitchCondition implements Expression<String> {
 
-  private final String condition;
+  private final org.springframework.expression.Expression condition;
 
-  public SwitchCondition(String condition) {
-    this.condition = condition;
+  public SwitchCondition(String condition, SpelExpressionParser parser) {
+    this.condition = parser.parseExpression(condition);
   }
 
   @Override
-  public String execute(ExpressionParser parser, EvaluationContext context) {
-    Object value = parser.parseExpression(condition).getValue(context);
+  public String execute(EvaluationContext context) {
+    Object value = condition.getValue(context);
     if (value == null) {
       return null;
     }

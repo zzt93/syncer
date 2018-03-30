@@ -24,7 +24,7 @@ public class If implements ExprFilter {
   public If(SpelExpressionParser parser, IfConfig ifConfig) {
     this.parser = parser;
     ifConfig.checkConfig();
-    ifCondition = new Condition(ifConfig.getCondition());
+    ifCondition = new Condition(parser, ifConfig.getCondition());
     ifAction = ifConfig.getIfAction(parser);
     elseAction = ifConfig.getElseAction(parser);
   }
@@ -35,7 +35,7 @@ public class If implements ExprFilter {
     for (Iterator<SyncData> iterator = dataList.iterator(); iterator.hasNext(); ) {
       SyncData syncData = iterator.next();
       StandardEvaluationContext context = syncData.getContext();
-      Boolean conditionRes = ifCondition.execute(parser, context);
+      Boolean conditionRes = ifCondition.execute(context);
       List<IfBodyAction> action;
       if (conditionRes) {
         action = ifAction;

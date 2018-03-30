@@ -17,7 +17,7 @@ public class Statement implements ExprFilter, IfBodyAction {
 
   public Statement(SpelExpressionParser parser, List<String> statement) {
     this.parser = parser;
-    this.filterActions = new FilterActions(statement);
+    this.filterActions = new FilterActions(parser, statement);
   }
 
   @ThreadSafe(safe = {FilterActions.class, SpelExpressionParser.class})
@@ -25,14 +25,14 @@ public class Statement implements ExprFilter, IfBodyAction {
   public Void decide(List<SyncData> dataList) {
     for (SyncData syncData : dataList) {
       StandardEvaluationContext context = syncData.getContext();
-      filterActions.execute(parser, context);
+      filterActions.execute(context);
     }
     return null;
   }
 
   @Override
   public Object execute(SyncData data) {
-    filterActions.execute(parser, data.getContext());
+    filterActions.execute(data.getContext());
     return FilterRes.ACCEPT;
   }
 }

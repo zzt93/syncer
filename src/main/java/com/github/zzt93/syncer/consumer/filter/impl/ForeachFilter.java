@@ -23,8 +23,8 @@ public class ForeachFilter implements ExprFilter, IfBodyAction {
   public ForeachFilter(SpelExpressionParser parser, ForeachConfig foreach) {
     this.parser = parser;
     var = foreach.getVar();
-    iterable = new FilterActions(foreach.getIn());
-    statement = new FilterActions(foreach.getStatement());
+    iterable = new FilterActions(parser, foreach.getIn());
+    statement = new FilterActions(parser, foreach.getStatement());
   }
 
 
@@ -39,18 +39,18 @@ public class ForeachFilter implements ExprFilter, IfBodyAction {
   @Override
   public Object execute(SyncData data) {
     StandardEvaluationContext context = data.getContext();
-    List<Object> res = iterable.execute(parser, context);
+    List<Object> res = iterable.execute(context);
     if (!res.isEmpty()) {
       Object collectionOrArray = res.get(0);
       if (collectionOrArray instanceof Object[]) {
         for (Object o : ((Object[]) collectionOrArray)) {
           context.setVariable(var, o);
-          statement.execute(parser, context);
+          statement.execute(context);
         }
       } else if (collectionOrArray instanceof Iterable) {
         for (Object o : ((Iterable) collectionOrArray)) {
           context.setVariable(var, o);
-          statement.execute(parser, context);
+          statement.execute(context);
         }
       } else {
         logger

@@ -24,10 +24,10 @@ public class Switch implements ExprFilter, IfBodyAction {
   private final Map<String, FilterActions> actionsMap;
 
   public Switch(SpelExpressionParser parser, Switcher filter) {
-    switchCondition = new SwitchCondition(filter.getSwitch());
+    switchCondition = new SwitchCondition(filter.getSwitch(), parser);
     this.parser = parser;
     Map<String, FilterActions> tmp = new HashMap<>();
-    filter.getCase().forEach((k, v) -> tmp.put(k, new FilterActions(v)));
+    filter.getCase().forEach((k, v) -> tmp.put(k, new FilterActions(parser, v)));
     actionsMap = Collections.unmodifiableMap(tmp);
   }
 
@@ -48,16 +48,16 @@ public class Switch implements ExprFilter, IfBodyAction {
   @Override
   public Object execute(SyncData syncData) {
     StandardEvaluationContext context = syncData.getContext();
-    String conditionRes = switchCondition.execute(parser, context);
+    String conditionRes = switchCondition.execute(context);
     if (conditionRes == null) {
       logger.warn("switch on `null`, skip {}", syncData);
       return FilterRes.DENY;
     }
     FilterActions filterActions = actionsMap.get(conditionRes);
     if (filterActions != null) {
-      filterActions.execute(parser, context);
+      filterActions.execute(context);
     } else if (actionsMap.containsKey(Switcher.DEFAULT)) {
-      actionsMap.get(Switcher.DEFAULT).execute(parser, context);
+      actionsMap.get(Switcher.DEFAULT).execute(context);
     }
     return FilterRes.ACCEPT;
   }
