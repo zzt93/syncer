@@ -41,6 +41,7 @@ public class FilterJob implements Runnable {
       try {
         list.clear();
         poll = fromInput.take();
+        ack.append(poll.getSourceIdentifier(), poll.getDataId(), 1);
         MDC.put(IdGenerator.EID, poll.getEventId());
         logger.debug("remove: data id: {}", poll.getDataId());
 
@@ -49,11 +50,12 @@ public class FilterJob implements Runnable {
           filter.decide(list);
         }
       } catch (Exception e) {
-        logger.error("Filter job failed with {}", poll, e);
+        logger.error("Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked", poll, e);
         continue;
       }
+      ack.remove(poll.getSourceIdentifier(), poll.getDataId());
       for (SyncData syncData : list) {
-        logger.debug("foreach output: data id: {}", poll.getDataId());
+        logger.debug("foreach output: data id: {}", syncData.getDataId());
         ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
         for (OutputChannel outputChannel : this.outputChannels) {
           try {
