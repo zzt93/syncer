@@ -47,7 +47,7 @@ public class ElasticsearchConnection extends ClusterConnection {
   private Settings settings() {
     Builder builder = Settings.builder()
         .put("cluster.name", getClusterName());
-    if (getUser() == null && getPassword() == null) {
+    if (getUser() == null && noPassword()) {
       return builder.build();
     }
     if (getUser() == null || getPassword() == null) {

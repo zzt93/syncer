@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
-import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
@@ -39,7 +38,7 @@ public class MysqlMasterConnector implements MasterConnector {
       ConsumerRegistry registry, int maxRetry)
       throws IOException, SchemaUnavailableException {
     this.maxRetry = maxRetry;
-    String password = FileUtil.readAll(connection.getPasswordFile());
+    String password = connection.getPassword();
     if (StringUtils.isEmpty(password)) {
       throw new InvalidPasswordException(password);
     }

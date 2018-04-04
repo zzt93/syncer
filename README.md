@@ -247,6 +247,7 @@ output:
 ```
 git clone https://github.com/zzt93/syncer
 mvn package
+# /path/to/config/: producer.yml, consumer.yml, password-file
 java -server -XX:+UseParallelGC -jar syncer.jar --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
 ```
 

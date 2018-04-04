@@ -91,7 +91,7 @@ public class Redis implements OutputChannelConfig {
       RedisStandaloneConfiguration standaloneConfig = new RedisStandaloneConfiguration(
           connection.getAddress(),
           connection.getPort());
-      if (connection.hasPassword()) {
+      if (!connection.noPassword()) {
         standaloneConfig.setPassword(RedisPassword.of(connection.getPassword()));
       }
       return new JedisConnectionFactory(standaloneConfig);

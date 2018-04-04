@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.config.pipeline.common;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NetworkUtil;
+import com.google.common.base.Preconditions;
 import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -53,14 +54,19 @@ public class Connection implements Comparable<Connection> {
   }
 
   public void setPasswordFile(String passwordFile) {
+    Preconditions.checkNotNull(passwordFile);
     this.passwordFile = passwordFile;
     try {
-      this.password = FileUtil.readAll(passwordFile);
+      this.password = FileUtil.readLine(passwordFile).get(0);
     } catch (Exception e) {
       logger
           .error("Fail to read password file from classpath, you may consider using absolute path",
               e);
     }
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
   }
 
   public String getPassword() {
@@ -70,7 +76,7 @@ public class Connection implements Comparable<Connection> {
     return password;
   }
 
-  public boolean hasPassword() {
+  public boolean noPassword() {
     return StringUtils.isEmpty(password);
   }
 

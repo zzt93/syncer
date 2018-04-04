@@ -8,6 +8,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.List;
 import java.util.function.Consumer;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,10 @@ public class FileUtil {
   public static String readAll(String resourceName) throws IOException {
     return FileCopyUtils
         .copyToString(new InputStreamReader(getResource(resourceName).getInputStream()));
+  }
+
+  public static List<String> readLine(String resourceName) throws IOException {
+    return Files.readAllLines(getResource(resourceName).getFile().toPath());
   }
 
   public static String readAll(InputStream inputStream) throws IOException {

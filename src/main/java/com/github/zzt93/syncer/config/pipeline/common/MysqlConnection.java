@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.common;
 
+import com.google.common.base.Preconditions;
 import java.net.UnknownHostException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +24,8 @@ public class MysqlConnection extends Connection {
     }
     setPort(connection.getPort());
     setUser(connection.getUser());
-    setPasswordFile(connection.getPasswordFile());
+    Preconditions.checkNotNull(connection.getPassword());
+    setPassword(connection.getPassword());
   }
 
   public String toConnectionUrl(String schema) {
