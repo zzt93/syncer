@@ -280,6 +280,8 @@ Test data:
 
 ## TODO
 - Order problem: make same id to same thread; strict mode: retry error item and all left; retry only error item
+- Support set start binlog file name & position in config file
+- Support read binlog from file
 - Add file as data source: to read binlog file
 - Support set parent of ES
 - Row image format support?
