@@ -23,7 +23,7 @@ public class ElasticsearchChannelTest {
   private static Script mockInlineScript(final String script) {
     return new Script(ScriptType.INLINE, "mock", script, emptyMap());
   }
-  private final XContentParser createParser(XContent xContent, BytesReference data) throws IOException {
+  private XContentParser createParser(XContent xContent, BytesReference data) throws IOException {
     return xContent.createParser(xContentRegistry(), data);
   }
   private NamedXContentRegistry xContentRegistry() {

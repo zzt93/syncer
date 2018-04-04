@@ -16,13 +16,11 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  */
 public class If implements ExprFilter {
 
-  private final SpelExpressionParser parser;
   private final Condition ifCondition;
   private final List<IfBodyAction> ifAction;
   private final List<IfBodyAction> elseAction;
 
   public If(SpelExpressionParser parser, IfConfig ifConfig) {
-    this.parser = parser;
     ifConfig.checkConfig();
     ifCondition = new Condition(parser, ifConfig.getCondition());
     ifAction = ifConfig.getIfAction(parser);

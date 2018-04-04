@@ -54,7 +54,7 @@ public class Schema implements Hashable {
    * @return the database name used in jdbc connection string
    */
   public String getConnectionName() {
-    if (!hasNamePattern()) {
+    if (noNamePattern()) {
       return name;
     }
     return MysqlConnection.DEFAULT_DB;
@@ -64,8 +64,8 @@ public class Schema implements Hashable {
     return namePattern;
   }
 
-  public boolean hasNamePattern() {
-    return namePattern != null;
+  public boolean noNamePattern() {
+    return namePattern == null;
   }
 
   @Override

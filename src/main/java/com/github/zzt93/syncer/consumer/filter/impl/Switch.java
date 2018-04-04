@@ -19,13 +19,11 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class Switch implements ExprFilter, IfBodyAction {
 
   private final Logger logger = LoggerFactory.getLogger(Switch.class);
-  private final SpelExpressionParser parser;
   private final SwitchCondition switchCondition;
   private final Map<String, FilterActions> actionsMap;
 
   public Switch(SpelExpressionParser parser, Switcher filter) {
     switchCondition = new SwitchCondition(filter.getSwitch(), parser);
-    this.parser = parser;
     Map<String, FilterActions> tmp = new HashMap<>();
     filter.getCase().forEach((k, v) -> tmp.put(k, new FilterActions(parser, v)));
     actionsMap = Collections.unmodifiableMap(tmp);

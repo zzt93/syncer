@@ -15,13 +15,11 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class ForeachFilter implements ExprFilter, IfBodyAction {
   private final Logger logger = LoggerFactory.getLogger(ForeachFilter.class);
 
-  private final SpelExpressionParser parser;
   private final FilterActions iterable;
   private final FilterActions statement;
   private final String var;
 
   public ForeachFilter(SpelExpressionParser parser, ForeachConfig foreach) {
-    this.parser = parser;
     var = foreach.getVar();
     iterable = new FilterActions(parser, foreach.getIn());
     statement = new FilterActions(parser, foreach.getStatement());

@@ -63,7 +63,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     StandardEvaluationContext context = data.getContext();
     String index = eval(indexExpr, context);
     String type = eval(typeExpr, context);
-    String id = eval(indexExpr, context);
+    String id = eval(idExpr, context);
     switch (data.getType()) {
       case WRITE_ROWS:
         if (esRequestMapping.getNoUseIdForIndex()) {

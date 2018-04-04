@@ -30,14 +30,19 @@ public class SyncerApplication implements CommandLineRunner {
 
   private final Logger logger = LoggerFactory.getLogger(SyncerApplication.class);
 
-  @Autowired
-  private ProducerConfig producerConfig;
-  @Autowired
-  private SyncerConfig syncerConfig;
-  @Autowired
-  private ConsumerRegistry consumerRegistry;
+  private final ProducerConfig producerConfig;
+  private final SyncerConfig syncerConfig;
+  private final ConsumerRegistry consumerRegistry;
   @Value("${syncer.version}")
   private String version;
+
+  @Autowired
+  public SyncerApplication(ProducerConfig producerConfig, SyncerConfig syncerConfig,
+      ConsumerRegistry consumerRegistry) {
+    this.producerConfig = producerConfig;
+    this.syncerConfig = syncerConfig;
+    this.consumerRegistry = consumerRegistry;
+  }
 
   public static void main(String[] args) {
     SpringApplication application = new SpringApplication(SyncerApplication.class);

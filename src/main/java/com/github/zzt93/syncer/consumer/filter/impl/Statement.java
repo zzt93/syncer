@@ -12,11 +12,9 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  */
 public class Statement implements ExprFilter, IfBodyAction {
 
-  private final SpelExpressionParser parser;
   private final FilterActions filterActions;
 
   public Statement(SpelExpressionParser parser, List<String> statement) {
-    this.parser = parser;
     this.filterActions = new FilterActions(parser, statement);
   }
 

@@ -21,7 +21,6 @@ public class Clone implements ExprFilter, IfBodyAction {
 
   public Clone(SpelExpressionParser parser,
       CloneConfig cloneConfig) throws NoSuchFieldException {
-    SpelExpressionParser parser1 = parser;
     List<String> cp = cloneConfig.getCopyValue();
     copyValue = new ArrayList<>(cp.size());
     for (String s : cp) {

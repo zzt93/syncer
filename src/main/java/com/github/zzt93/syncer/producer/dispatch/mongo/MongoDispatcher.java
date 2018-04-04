@@ -33,7 +33,7 @@ public class MongoDispatcher implements Dispatcher {
   public MongoDispatcher(IdentityHashMap<ConsumerSchema, OutputSink> schemaSinkMap) {
     for (Entry<ConsumerSchema, OutputSink> entry : schemaSinkMap.entrySet()) {
       for (Schema schema : entry.getKey().getSchemas()) {
-        if (!schema.hasNamePattern()) {
+        if (schema.noNamePattern()) {
           directOutput.computeIfAbsent(schema.getName(), k -> new ArrayList<>())
               .add(new JsonKeyFilter(schema, entry.getValue()));
         } else {
