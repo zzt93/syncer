@@ -31,6 +31,7 @@
   - If an event go through column filter, and only primary key is left:
     - If event type is UPDATE_ROWS, then discard this event -- because not support update id now;
     - Other event type, keep it.
+  - Support reading from binlog file to do data recovering in case of loss of data 
 - MongoDB master source filter:
   - Version: 3.x
   - Schema filter, support regex
@@ -281,7 +282,7 @@ Test data:
 ## TODO
 - Order problem: make same id to same thread; strict mode: retry error item and all left; retry only error item
 - Support set start binlog file name & position in config file
-- Support read binlog from file
+- Config thread for each consumer
 - Add file as data source: to read binlog file
 - Support set parent of ES
 - Row image format support?
