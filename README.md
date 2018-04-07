@@ -4,17 +4,18 @@
 
 ### Consistency
 
-#### Consistent mode: 
+#### Consistent mode (TODO): 
   - `strict`: make sure output is successful, otherwise, retry until success
   - `loose`: try to send to output
 
 #### Consistency Promise
 
-- If network has problem, MySQL master slave protocol?
-- Input module remember where we leave, try to not miss data if syncer shutdown in accident
-- If data is still not send in output channel when input is starting to handle next event, and syncer shutdown?
-- If output channel fail to send to output target, retry until success
-- Order problem situation:
+- Master slave replication protocol: If network has problem, MySQL master will re-send lost packet
+- `WAL`: Consumer module adopts `write ahead log`, write what receive then try to process & send
+- Checkpoint: Consumer module remember where we leave, try to not miss data if syncer shutdown in accident
+- Retry: If output channel fail to send to output target, retry until success or write to failure log
+- Failure Log: If retry exceed configured num, write item to failure log for human recheck
+- Order problem situation (TODO):
   - update id1 set 1; update id1 set 2;
   - insert id1 1; update id1 set 2;
 
@@ -31,6 +32,7 @@
   - If an event go through column filter, and only primary key is left:
     - If event type is UPDATE_ROWS, then discard this event -- because not support update id now;
     - Other event type, keep it.
+  - Support reading from binlog file to do data recovering in case of loss of data 
 - MongoDB master source filter:
   - Version: 3.x
   - Schema filter, support regex
@@ -279,15 +281,7 @@ Test data:
 - For auth data sync
 
 ## TODO
-- Order problem: make same id to same thread; strict mode: retry error item and all left; retry only error item
-- Support set start binlog file name & position in config file
-- Support read binlog from file
-- Add file as data source: to read binlog file
-- Support set parent of ES
-- Row image format support?
-  - Add must appeared field restriction -- now only primary key
-  - Opt: keep only changed field in update event & primary key in delete event -- include must appear field
-- Join by query mysql?
+[See Issue 1](https://github.com/zzt93/syncer/issues/1)
 
 ---
 
