@@ -42,7 +42,7 @@ public class FilterActions implements Expression<List<Object>> {
           res.add(value);
         }
       } catch (EvaluationException | ParseException e) {
-        logger.error("Invalid expression {}, fail to parse", s, e);
+        logger.error("Invalid expression {}, fail to parse", s.getExpressionString(), e);
       }
     }
     return res;
