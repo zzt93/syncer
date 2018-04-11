@@ -6,9 +6,11 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
+import com.github.zzt93.syncer.config.pipeline.input.SyncMeta;
 import com.github.zzt93.syncer.config.syncer.SyncerAck;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
 import java.util.HashMap;
@@ -40,6 +42,11 @@ public class RegistrationStarter implements Starter<PipelineInput, Set<MasterSou
     for (MasterSource masterSource : masterSet) {
       String identifier = masterSource.getConnection().connectionIdentifier();
       SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
+      if (masterSource.hasSyncMeta()) {
+        SyncMeta syncMeta = masterSource.getSyncMeta();
+        logger.info("Override syncer remembered position with config in file {}, watch out", syncMeta);
+        syncInitMeta = new BinlogInfo(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
+      }
       registrant.addDatasource(masterSource, syncInitMeta, masterSource.getType());
     }
     this.ackConfig = ackConfig;
