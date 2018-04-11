@@ -15,6 +15,7 @@ import org.springframework.util.StringUtils;
 public class Connection implements Comparable<Connection> {
 
   private static final Logger logger = LoggerFactory.getLogger(Connection.class);
+  private static final String COMMON = ":";
 
   private String address;
   private int port;
@@ -116,7 +117,7 @@ public class Connection implements Comparable<Connection> {
   }
 
   public String initIdentifier() {
-    identifier = ip + ":" + getPort();
+    identifier = ip + COMMON + getPort();
     return identifier;
   }
 

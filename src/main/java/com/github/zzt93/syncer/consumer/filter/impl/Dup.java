@@ -33,7 +33,7 @@ public class Dup implements ExprFilter, IfBodyAction {
     LinkedList<SyncData> res = new LinkedList<>();
     for (int i = 0; i < newObjAction.size(); i++) {
       FilterActions filterActions = newObjAction.get(i);
-      SyncData dup = new SyncData(src, Offset.DUP.getOffset() + i);
+      SyncData dup = new SyncData(src, Offset.DUP.ordinal() + i);
       for (Expression s : copyValue) {
         Object value = s.getValue(src.getContext());
         s.setValue(dup.getContext(), value);

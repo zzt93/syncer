@@ -13,7 +13,7 @@ import org.bson.Document;
 public class IdGenerator {
 
   public static final String EID = "eid";
-  private static final int COMMON_LEN = 50;
+  private static final int COMMON_LEN = 40;
   private static final String SEP = "/";
 
   /**
@@ -25,10 +25,10 @@ public class IdGenerator {
     EventHeaderV4 second = event[1].getHeader();
     // have to remember table map event for restart
     // have to add following data event for unique id
-    return new StringBuilder(COMMON_LEN).append(second.getServerId()).append(SEP)
+    return new StringBuilder(COMMON_LEN)
         .append(binlogFileName).append(SEP)
         .append(tableMap.getPosition()).append(SEP)
-        .append(second.getPosition()).append(SEP)
+        .append(second.getPosition() - tableMap.getPosition()).append(SEP)
         .append(getEventTypeAbbr(second)).toString();
   }
 
@@ -56,8 +56,8 @@ public class IdGenerator {
 
   public static BinlogInfo fromDataId(String dataId) {
     String[] split = dataId.split(SEP);
-    if (split.length == 6 || split.length == 7) {
-      return new BinlogInfo(split[1], Long.parseLong(split[2]));
+    if (split.length == 5 || split.length == 6) {
+      return new BinlogInfo(split[0], Long.parseLong(split[1]));
     }
     throw new IllegalArgumentException(dataId);
   }
@@ -77,17 +77,7 @@ public class IdGenerator {
   }
 
   public enum Offset {
-    DUP(1000), CLONE(2000);
-
-    private final int offset;
-
-    Offset(int offset) {
-      this.offset = offset;
-    }
-
-    public int getOffset() {
-      return offset;
-    }
+    DUP(), CLONE()
   }
 
 }

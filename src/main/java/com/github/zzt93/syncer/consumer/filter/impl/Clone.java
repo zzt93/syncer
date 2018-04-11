@@ -42,7 +42,7 @@ public class Clone implements ExprFilter, IfBodyAction {
   }
 
   private SyncData clone(SyncData src) {
-    SyncData clone = new SyncData(src, Offset.CLONE.getOffset());
+    SyncData clone = new SyncData(src, Offset.CLONE.ordinal());
     for (Expression s : copyValue) {
       Object value = s.getValue(src.getContext());
       s.setValue(clone.getContext(), value);
