@@ -6,7 +6,7 @@ import java.util.List;
 
 /**
  * @author zzt
- * have to use list to handle clone/dup
+ * have to use list to handle create/dup
  */
 public interface ExprFilter extends Filter<List<SyncData>, Void> {
 

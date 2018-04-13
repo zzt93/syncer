@@ -50,7 +50,7 @@ public class If implements ExprFilter {
             case ACCEPT:
               break;
           }
-        } else if (res instanceof SyncData) { // Clone SyncData
+        } else if (res instanceof SyncData) { // Create SyncData
           list.add((SyncData) res);
         } else if (res instanceof List) {
           list.addAll((Collection<? extends SyncData>) res);

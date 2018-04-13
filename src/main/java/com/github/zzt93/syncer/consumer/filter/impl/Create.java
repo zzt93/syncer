@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.filter.CloneConfig;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -13,47 +12,37 @@ import org.springframework.expression.spel.standard.SpelExpressionParser;
 /**
  * @author zzt
  */
-public class Clone implements ExprFilter, IfBodyAction {
+public class Create implements ExprFilter, IfBodyAction {
 
   private final FilterActions newObjAction;
-  private final FilterActions oldObjAction;
   private final List<Expression> copyValue;
 
-  public Clone(SpelExpressionParser parser,
-      CloneConfig cloneConfig) throws NoSuchFieldException {
-    List<String> cp = cloneConfig.getCopyValue();
+  public Create(SpelExpressionParser parser, List<String> cp, ArrayList<String> single) {
     copyValue = new ArrayList<>(cp.size());
     for (String s : cp) {
       copyValue.add(parser.parseExpression(s));
     }
-    newObjAction = new FilterActions(parser, cloneConfig.getNew());
-    oldObjAction = new FilterActions(parser, cloneConfig.getOld());
+    newObjAction = new FilterActions(parser, single);
   }
 
   @Override
   public Void decide(List<SyncData> dataList) {
     LinkedList<SyncData> list = new LinkedList<>();
     for (SyncData src : dataList) {
-      SyncData clone = clone(src);
-      list.add(clone);
+      list.add((SyncData) execute(src));
     }
     dataList.addAll(list);
     return null;
   }
 
-  private SyncData clone(SyncData src) {
-    SyncData clone = new SyncData(src, Offset.CLONE.ordinal());
+  @Override
+  public Object execute(SyncData src) {
+    SyncData create = new SyncData(src, Offset.CLONE.ordinal());
     for (Expression s : copyValue) {
       Object value = s.getValue(src.getContext());
-      s.setValue(clone.getContext(), value);
+      s.setValue(create.getContext(), value);
     }
-    newObjAction.execute(clone.getContext());
-    oldObjAction.execute(src.getContext());
-    return clone;
-  }
-
-  @Override
-  public Object execute(SyncData data) {
-    return clone(data);
+    newObjAction.execute(create.getContext());
+    return create;
   }
 }

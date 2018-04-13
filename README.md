@@ -140,7 +140,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - only execute one case
 - foreach: in most cases, you can use [Spring EL's collection projection](https://docs.spring.io/spring/docs/3.0.x/reference/expressions.html) rather than this feature
 - if
-  - clone: clone a new event
+  - new: create a new event (or a bunch) and cp value & execute statement
   - drop
   - statement: same with outer `statement`
   - dup: duplicate multiple event
@@ -156,7 +156,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - ...
   - `syncByQuery()`: update/delete by query, now only support ES
     - `SyncByQueryES`
-  - `insertByQuery(String schemaName, String tableName)`: usually work with `clone` & `dup` to convert one event to multiple events
+  - `insertByQuery(String schemaName, String tableName)`: usually work with `new` & `dup` to convert one event to multiple events
     - `ExtraQuery`
 - all data field in `SyncData`:
   - `schema`: schema/db/index
@@ -212,7 +212,7 @@ filter:
       condition: "table == 'test_table' && action == 'WRITE_ROWS'"
       ifBody:
         - dup:
-            copyValue: ["id"]
+            copy: ["id"]
             new:
             - ["table='permission_identity'", "addRecord('name', '盟主')
             .addRecord('permission_category', '[105,205,305,405,505,605,705,805]')

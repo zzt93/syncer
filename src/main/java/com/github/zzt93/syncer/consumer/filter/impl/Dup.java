@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.filter.DupConfig;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -19,13 +18,15 @@ public class Dup implements ExprFilter, IfBodyAction {
   private final List<FilterActions> newObjAction;
   private final List<Expression> copyValue;
 
-  public Dup(SpelExpressionParser parser, DupConfig dupConfig) {
-    List<String> cp = dupConfig.getCopyValue();
+
+  public Dup(SpelExpressionParser parser, List<String> cp,
+      ArrayList<List<String>> multiple) {
     copyValue = new ArrayList<>(cp.size());
     for (String s : cp) {
       copyValue.add(parser.parseExpression(s));
     }
-    newObjAction = dupConfig.getNew().stream().map(action -> new FilterActions(parser, action)).collect(Collectors.toList());
+    newObjAction = multiple.stream().map(action -> new FilterActions(parser, action)).collect(Collectors.toList());
+
   }
 
   @Override

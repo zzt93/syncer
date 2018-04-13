@@ -99,9 +99,6 @@ public class SyncData {
     inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, offset,
         syncData.getType(),
         syncData.getSourceIdentifier(), new StandardEvaluationContext(this));
-    if (syncData.syncByQuery != null) {
-      syncByQuery = new SyncByQueryES(this);
-    }
   }
 
   public Object getId() {

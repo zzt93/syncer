@@ -1,9 +1,7 @@
 package com.github.zzt93.syncer.config.pipeline.filter;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.consumer.filter.impl.Clone;
 import com.github.zzt93.syncer.consumer.filter.impl.Drop;
-import com.github.zzt93.syncer.consumer.filter.impl.Dup;
 import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.IfBodyAction;
 import com.github.zzt93.syncer.consumer.filter.impl.Statement;
@@ -57,18 +55,16 @@ public class IfConfig {
     }
     List<IfBodyAction> res = new ArrayList<>();
     for (IfStatement statement : body) {
-      if (statement.getClone() != null) {
+      if (statement.getCreate() != null) {
         try {
-          res.add(new Clone(parser, statement.getClone()));
+          res.add(statement.getCreate().toAction(parser));
         } catch (NoSuchFieldException e) {
-          throw new InvalidConfigException("Unknown field of `SyncData` to clone", e);
+          throw new InvalidConfigException("Unknown field of `SyncData` to copy", e);
         }
       } else if (statement.getDrop() != null) {
         res.add(new Drop());
       } else if (statement.getStatement() != null) {
         res.add(new Statement(parser, statement.getStatement()));
-      } else if (statement.getDup() != null) {
-        res.add(new Dup(parser, statement.getDup()));
       } else if (statement.getSwitcher() != null) {
         res.add(new Switch(parser, statement.getSwitcher()));
       } else if (statement.getForeach() !=null) {
@@ -99,8 +95,7 @@ public class IfConfig {
 
   public static class IfStatement {
 
-    private CloneConfig clone;
-    private DupConfig dup;
+    private CreateConfig create;
     private List<String> statement;
     private Map drop;
     private Switcher switcher;
@@ -114,7 +109,7 @@ public class IfConfig {
       this.foreach = foreach;
     }
 
-    public Switcher getSwitcher() {
+    Switcher getSwitcher() {
       return switcher;
     }
 
@@ -122,12 +117,12 @@ public class IfConfig {
       this.switcher = switcher;
     }
 
-    public CloneConfig getClone() {
-      return clone;
+    CreateConfig getCreate() {
+      return create;
     }
 
-    public void setClone(CloneConfig clone) {
-      this.clone = clone;
+    public void setCreate(CreateConfig create) {
+      this.create = create;
     }
 
     public List<String> getStatement() {
@@ -138,7 +133,7 @@ public class IfConfig {
       this.statement = statement;
     }
 
-    public Map getDrop() {
+    Map getDrop() {
       return drop;
     }
 
@@ -146,13 +141,6 @@ public class IfConfig {
       this.drop = drop;
     }
 
-    public DupConfig getDup() {
-      return dup;
-    }
-
-    public void setDup(DupConfig dup) {
-      this.dup = dup;
-    }
-  }
+}
 
 }

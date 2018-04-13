@@ -63,9 +63,9 @@ filter:
   - if:
       condition: "table == 'affair'"
       if-body:
-        clone:
-          copyValue: [row]
-          new: ["table = 'role'", "row['id']"]
+        create:
+          copy: [row]
+          postCreation: ["table = 'role'", "row['id']"]
       else-body:
         drop: {}
 
