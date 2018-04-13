@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.BinaryLogFileReader;
 import com.github.shyiko.mysql.binlog.event.Event;
+import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.common.util.FileUtil;
@@ -92,24 +93,30 @@ public class MysqlMasterConnector implements MasterConnector {
     return eventListener;
   }
 
-  private void consumeFile(SyncListener listener, String fileName) {
+  private long consumeFile(SyncListener listener, String fileName) {
     logger.info("Consuming the old binlog from {}", fileName);
+    long position = 0;
     Event e;
     try (BinaryLogFileReader reader = new BinaryLogFileReader(
         FileUtil.getResource(fileName).getInputStream())) {
       while ((e = reader.readEvent()) != null) {
         listener.onEvent(e);
+        position = ((EventHeaderV4) e.getHeader()).getNextPosition();
       }
     } catch (Exception ex) {
       logger.error("Fail to read from {}", fileName, ex);
     }
     logger.info("Finished consuming the old binlog from {}", fileName);
+    return position;
   }
 
   @Override
   public void run() {
     if (file != null) {
-      consumeFile(listener, file);
+      long position = consumeFile(listener, file);
+      logger.info("Continue read binlog from server using {}@{}", file, position);
+      client.setBinlogFilename(file);
+      client.setBinlogPosition(position);
     }
     Thread.currentThread().setName(connectorIdentifier);
     long sleepInSecond = 1;
