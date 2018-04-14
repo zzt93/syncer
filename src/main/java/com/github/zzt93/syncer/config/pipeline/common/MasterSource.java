@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.config.pipeline.common;
 
 import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.SyncMeta;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -15,11 +16,11 @@ import org.slf4j.LoggerFactory;
 public class MasterSource {
 
   private final Logger logger = LoggerFactory.getLogger(MasterSource.class);
-
+  private final Set<Schema> schemaSet = new HashSet<>();
   private MasterSourceType type = MasterSourceType.MySQL;
+  private SyncMeta syncMeta;
   private Connection connection;
   private List<Schema> schemas = new ArrayList<>();
-  private final Set<Schema> schemaSet = new HashSet<>();
 
   public Connection getConnection() {
     return connection;
@@ -33,10 +34,6 @@ public class MasterSource {
     return schemas;
   }
 
-  public Set<Schema> getSchemaSet() {
-    return schemaSet;
-  }
-
   public void setSchemas(List<Schema> schemas) {
     this.schemas = schemas;
     schemaSet.addAll(schemas);
@@ -45,12 +42,28 @@ public class MasterSource {
     }
   }
 
+  public Set<Schema> getSchemaSet() {
+    return schemaSet;
+  }
+
   public MasterSourceType getType() {
     return type;
   }
 
   public void setType(MasterSourceType type) {
     this.type = type;
+  }
+
+  public void setSyncMeta(SyncMeta syncMeta) {
+    this.syncMeta = syncMeta;
+  }
+
+  public boolean hasSyncMeta() {
+    return syncMeta != null && type == MasterSourceType.MySQL;
+  }
+
+  public SyncMeta getSyncMeta() {
+    return syncMeta;
   }
 
   @Override

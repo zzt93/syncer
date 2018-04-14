@@ -12,6 +12,7 @@ public class ProducerMaster {
 
   private MasterSourceType type = MasterSourceType.MySQL;
   private Connection connection;
+  private String file;
 
   public Connection getConnection() {
     return connection;
@@ -27,6 +28,14 @@ public class ProducerMaster {
 
   public void setType(MasterSourceType type) {
     this.type = type;
+  }
+
+  public String getFile() {
+    return file;
+  }
+
+  public void setFile(String file) {
+    this.file = file;
   }
 
   @Override

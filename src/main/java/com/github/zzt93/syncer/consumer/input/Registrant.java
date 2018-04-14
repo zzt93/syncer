@@ -45,7 +45,7 @@ public class Registrant {
       case Mongo:
         Preconditions.checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is "+syncInitMeta);
         inputSource = new MongoLocalInputSource(clientId,masterSource.getConnection(),masterSource.getSchemaSet(),
-            (DocTimestamp) syncInitMeta,filterInput);
+            (DocTimestamp) syncInitMeta, filterInput);
         break;
       case MySQL:
         Preconditions.checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is "+syncInitMeta);

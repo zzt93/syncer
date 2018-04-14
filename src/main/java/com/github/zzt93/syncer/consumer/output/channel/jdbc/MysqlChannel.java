@@ -17,6 +17,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.sql.BatchUpdateException;
 import java.sql.Statement;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import org.apache.tomcat.jdbc.pool.DataSource;
@@ -118,6 +119,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   private void batchAndRetry(List<SyncWrapper<String>> sqls) {
     try {
       String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
+      logger.info("Sending to {}", Arrays.toString(sqlStatement));
       jdbcTemplate.batchUpdate(sqlStatement);
       ackSuccess(sqls);
     } catch (DataAccessException e) {

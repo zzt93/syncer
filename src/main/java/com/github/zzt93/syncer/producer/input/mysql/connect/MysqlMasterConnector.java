@@ -1,8 +1,12 @@
 package com.github.zzt93.syncer.producer.input.mysql.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
+import com.github.shyiko.mysql.binlog.BinaryLogFileReader;
+import com.github.shyiko.mysql.binlog.event.Event;
+import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
+import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
@@ -30,12 +34,14 @@ public class MysqlMasterConnector implements MasterConnector {
   private final static Random random = new Random();
   private final String connectorIdentifier;
   private final int maxRetry;
+  private final SyncListener listener;
+  private final String file;
   private Logger logger = LoggerFactory.getLogger(MysqlMasterConnector.class);
   private BinaryLogClient client;
   private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
   public MysqlMasterConnector(MysqlConnection connection,
-      ConsumerRegistry registry, int maxRetry)
+      String file, ConsumerRegistry registry, int maxRetry)
       throws IOException, SchemaUnavailableException {
     this.maxRetry = maxRetry;
     String password = connection.getPassword();
@@ -46,7 +52,8 @@ public class MysqlMasterConnector implements MasterConnector {
     connectorIdentifier = connection.initIdentifier();
 
     configLogClient(connection, password, registry);
-    configEventListener(connection, registry);
+    listener = configEventListener(connection, registry);
+    this.file = file;
   }
 
   private void configLogClient(MysqlConnection connection, String password,
@@ -67,7 +74,7 @@ public class MysqlMasterConnector implements MasterConnector {
 
   }
 
-  private void configEventListener(MysqlConnection connection, ConsumerRegistry registry)
+  private SyncListener configEventListener(MysqlConnection connection, ConsumerRegistry registry)
       throws SchemaUnavailableException {
     IdentityHashMap<ConsumerSchema, OutputSink> schemasConsumerMap = registry
         .outputSink(connection);
@@ -83,10 +90,34 @@ public class MysqlMasterConnector implements MasterConnector {
     client.registerEventListener(eventListener);
     client.registerEventListener((event) -> binlogInfo
         .set(new BinlogInfo(client.getBinlogFilename(), client.getBinlogPosition())));
+    return eventListener;
+  }
+
+  private long consumeFile(SyncListener listener, String fileName) {
+    logger.info("Consuming the old binlog from {}", fileName);
+    long position = 0;
+    Event e;
+    try (BinaryLogFileReader reader = new BinaryLogFileReader(
+        FileUtil.getResource(fileName).getInputStream())) {
+      while ((e = reader.readEvent()) != null) {
+        listener.onEvent(e);
+        position = ((EventHeaderV4) e.getHeader()).getNextPosition();
+      }
+    } catch (Exception ex) {
+      logger.error("Fail to read from {}", fileName, ex);
+    }
+    logger.info("Finished consuming the old binlog from {}", fileName);
+    return position;
   }
 
   @Override
   public void run() {
+    if (file != null) {
+      long position = consumeFile(listener, file);
+      logger.info("Continue read binlog from server using {}@{}", file, position);
+      client.setBinlogFilename(file);
+      client.setBinlogPosition(position);
+    }
     Thread.currentThread().setName(connectorIdentifier);
     long sleepInSecond = 1;
     for (int i = 0; i < maxRetry; i++) {

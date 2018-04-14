@@ -247,7 +247,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         bulkRequest.add(((DeleteRequest) request));
       }
     }
-    logger.info("Sending a batch of Elasticsearch: {}", joiner);
+    logger.info("Sending to Elasticsearch: {}", joiner);
     checkForBulkUpdateFailure(bulkRequest.execute().actionGet());
   }
 
