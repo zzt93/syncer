@@ -116,22 +116,14 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
 
 
 ## Producer Data Source Config
-## TODO
-- Support set parent of ES
-- Row image format support?
-  - Add must appeared field restriction -- now only primary key
-  - Opt: keep only changed field in update event & primary key in delete event -- include must appear field
-- Join by query mysql?
-- Make all output channel strict
-
 - MySQL master connection
 - Mongo master connection
 
 ## Consumer Pipeline Config
 
 ### Input
-- MySQL master connection: specify the master want to listen to
-- Mongo master connection: specify the master want to listen to
+- MySQL master connection: specify the master wanting to listen to
+- Mongo master connection: specify the master wanting to listen to
 ### Filter
 
 - statement: implemented by Spring EL, can call all public method in `SyncData`
@@ -286,6 +278,12 @@ Test data:
 ---
 
 ## Implementation
+
+- [Elasticsearch & MySQL Sync Challenge(1)](https://tonyz93.blogspot.com/2017/11/elasticsearch-mysql-sync-challenge-1.html)
+- [Elasticsearch & MySQL Sync Challenge(2): Event Driven](https://tonyz93.blogspot.com/2017/12/elasticsearch-mysql-sync-challenge-2.html)
+- [Elasticsearch & MySQL Sync Challenge(3): Implementation](https://tonyz93.blogspot.com/2017/12/elasticsearch-mysql-sync-challenge-3.html)
+- [Elasticsearch & MySQL Sync Challenge(4): Quality Attributes](https://tonyz93.blogspot.com/2018/01/elasticsearch-mysql-sync-challenge-4.html)
+- [Elasticsearch & MySQL Sync Challenge(5): Redesign](https://tonyz93.blogspot.com/2018/02/elasticsearch-mysql-sync-challenge-5.html)
 
 ### Input Module
 

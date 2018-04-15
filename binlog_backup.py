@@ -35,7 +35,7 @@ if __name__ == '__main__':
 
     dump = ['mysqlbinlog', '-u', args.user, '-p' + args.password, '-P', args.port, '-h', args.host, '--raw',
             '--result-file', args.dir, '-R']
-    # dump = ['docker', 'run', '-it', '-v', '/data/:/data/', '--rm', 'mysql:5.7.15',
+    # dump = ['docker', 'run', '-v', '/data/:/data/', '--rm', 'mysql:5.7.15',
     # 'mysqlbinlog', '-u', args.user, '-p' + args.password, '-P', args.port, '-h', args.host, '--raw',
     #        '--result-file', args.dir, '-R']
 

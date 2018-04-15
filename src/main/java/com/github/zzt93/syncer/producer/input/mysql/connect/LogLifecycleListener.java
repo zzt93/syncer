@@ -19,12 +19,13 @@ public class LogLifecycleListener implements BinaryLogClient.LifecycleListener {
 
   @Override
   public void onCommunicationFailure(BinaryLogClient client, Exception ex) {
-    logger.error("Communication failure", ex);
     if (binlogDeprecated(ex)) {
       if (dupServerId(ex)) {
         throw new DupServerIdException(ex);
       }
       throw new InvalidBinlogException(ex, client.getBinlogFilename(), client.getBinlogPosition());
+    } else {
+      logger.error("Communication failure", ex);
     }
   }
 
