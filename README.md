@@ -247,12 +247,15 @@ java -server -XX:+UseParallelGC -jar syncer.jar --producerConfig=/absolute/path/
 
 ## Test
 ### Correctness Test
-Test data: 
+#### Test data: 
   - size: 7M
   - machines: 3
   - databases: 3 in logic, after horizontal split is 24
   - tables: 90+ for each database; listening: 5 for each database
   - types: bigint, varchar, text, tinyint, timestamp, smallint, int, unsigned, longtext
+#### How
+- Insert/load data, count in mysql & es and compare numbers;
+- Delete data, count in mysql & es and compare numbers;
 
 ### Stress Test
 - 10G & 10^8 lines

@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
@@ -12,11 +13,15 @@ import java.util.concurrent.CopyOnWriteArrayList;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
  * @author zzt
  */
 public class FilterJob implements Runnable {
+
+  private static final ThreadLocal<StandardEvaluationContext> contexts = ThreadLocal.withInitial(
+      EvaluationFactory::context);
 
   private final Logger logger = LoggerFactory.getLogger(FilterJob.class);
   private final BlockingDeque<SyncData> fromInput;
@@ -41,6 +46,9 @@ public class FilterJob implements Runnable {
       try {
         list.clear();
         poll = fromInput.take();
+        // one thread share one context to save much memory
+        poll.setContext(contexts.get());
+        // add dataId to avoid the loss of data when exception happens when do filter
         ack.append(poll.getSourceIdentifier(), poll.getDataId(), 1);
         MDC.put(IdGenerator.EID, poll.getEventId());
         logger.debug("remove: data id: {}", poll.getDataId());
@@ -68,6 +76,7 @@ public class FilterJob implements Runnable {
             logger.error("Output job failed", e);
           }
         }
+        syncData.setContext(null);
       }
       if (!remove.isEmpty()) {
         outputChannels.removeAll(remove);

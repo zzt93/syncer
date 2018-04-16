@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.consumer.ack;
 
-import com.github.zzt93.syncer.common.data.SyncDataExclusion;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
@@ -31,7 +30,6 @@ import org.slf4j.LoggerFactory;
 public class FailureLog<T> implements Resource {
 
   private static final Gson gson = new GsonBuilder()
-      .setExclusionStrategies(new SyncDataExclusion())
       .create();
   private final Logger logger = LoggerFactory.getLogger(FailureLog.class);
   private final Type type;

@@ -135,6 +135,7 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
 
   @Override
   public boolean output(SyncData event) {
+    // TODO 18/4/16 add flushIfReachSizeLimit
     if (expression == null) {
       return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
     }

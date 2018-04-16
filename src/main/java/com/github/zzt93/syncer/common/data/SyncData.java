@@ -6,7 +6,6 @@ import java.util.HashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 import org.springframework.util.Assert;
 
@@ -18,18 +17,16 @@ public class SyncData {
   private final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
 
   private static class Meta {
-    private final static MapAccessor accessor = new MapAccessor();
     private final String eventId;
     private final String dataId;
     private final int ordinal;
     private EventType type;
     private String action;
-    private final StandardEvaluationContext context;
+    private transient StandardEvaluationContext context;
     private boolean hasExtra = false;
     private String connectionIdentifier;
 
-    Meta(String eventId, int ordinal, int offset, EventType type, String connectionIdentifier,
-        StandardEvaluationContext context) {
+    Meta(String eventId, int ordinal, int offset, EventType type, String connectionIdentifier) {
       this.eventId = eventId;
       this.connectionIdentifier = connectionIdentifier;
       if (offset < 0) {
@@ -39,9 +36,6 @@ public class SyncData {
       }
       this.ordinal = ordinal;
       setType(type);
-      this.context = context;
-      context.setTypeLocator(new CommonTypeLocator());
-      context.addPropertyAccessor(accessor);
     }
 
     @Override
@@ -82,7 +76,7 @@ public class SyncData {
 
   public SyncData(String eventId, int ordinal, String database, String table, String primaryKeyName,
       Object id, Map<String, Object> row, EventType type) {
-    inner = new Meta(eventId, ordinal, -1, type, null, new StandardEvaluationContext(this));
+    inner = new Meta(eventId, ordinal, -1, type, null);
 
     this.primaryKeyName = primaryKeyName;
     if (id != null) {
@@ -98,7 +92,8 @@ public class SyncData {
   public SyncData(SyncData syncData, int offset) {
     inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, offset,
         syncData.getType(),
-        syncData.getSourceIdentifier(), new StandardEvaluationContext(this));
+        syncData.getSourceIdentifier());
+    inner.context = EvaluationFactory.context();
   }
 
   public Object getId() {
@@ -189,6 +184,11 @@ public class SyncData {
 
   public StandardEvaluationContext getContext() {
     return inner.context;
+  }
+
+  public void setContext(StandardEvaluationContext context) {
+    inner.context = context;
+    context.setRootObject(this);
   }
 
   public HashMap<String, Object> getRecords() {
