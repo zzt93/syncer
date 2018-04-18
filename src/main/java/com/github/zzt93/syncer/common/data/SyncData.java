@@ -191,6 +191,11 @@ public class SyncData {
     context.setRootObject(this);
   }
 
+  public void removeContext() {
+    inner.context.setRootObject(null);
+    inner.context = null;
+  }
+
   public HashMap<String, Object> getRecords() {
     return records;
   }

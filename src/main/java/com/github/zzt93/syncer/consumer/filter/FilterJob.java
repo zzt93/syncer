@@ -45,7 +45,7 @@ public class FilterJob implements Runnable {
       SyncData poll = null;
       try {
         list.clear();
-        poll = fromInput.take();
+        poll = fromInput.takeFirst();
         // one thread share one context to save much memory
         poll.setContext(contexts.get());
         // add dataId to avoid the loss of data when exception happens when do filter
@@ -76,7 +76,7 @@ public class FilterJob implements Runnable {
             logger.error("Output job failed", e);
           }
         }
-        syncData.setContext(null);
+        syncData.removeContext();
       }
       if (!remove.isEmpty()) {
         outputChannels.removeAll(remove);
