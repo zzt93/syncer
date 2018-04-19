@@ -23,7 +23,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class ProducerStarter implements Starter<ProducerInput,Set<ProducerMaster>> {
+public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaster>> {
 
   private static ProducerStarter starter;
   private final Logger logger = LoggerFactory.getLogger(ProducerStarter.class);
@@ -35,9 +35,11 @@ public class ProducerStarter implements Starter<ProducerInput,Set<ProducerMaster
   private ProducerStarter(ProducerInput input,
       SyncerInput syncerConfigInput, ConsumerRegistry consumerRegistry) {
     masterSources = fromPipelineConfig(input);
-    service = Executors
-        .newFixedThreadPool(syncerConfigInput.getWorker(),
-            new NamedThreadFactory("syncer-producer"));
+    int size = masterSources.size();
+    if (size > Runtime.getRuntime().availableProcessors()) {
+      logger.warn("Too many master source: {} > cores", size);
+    }
+    service = Executors.newFixedThreadPool(size, new NamedThreadFactory("syncer-producer"));
     this.consumerRegistry = consumerRegistry;
     maxRetry = syncerConfigInput.getMaxRetry();
   }
@@ -69,10 +71,12 @@ public class ProducerStarter implements Starter<ProducerInput,Set<ProducerMaster
         MasterConnector masterConnector = null;
         switch (masterSource.getType()) {
           case MySQL:
-            masterConnector = new MysqlMasterConnector(new MysqlConnection(connection), masterSource.getFile(), consumerRegistry, maxRetry);
+            masterConnector = new MysqlMasterConnector(new MysqlConnection(connection),
+                masterSource.getFile(), consumerRegistry, maxRetry);
             break;
           case Mongo:
-            masterConnector = new MongoMasterConnector(new MongoConnection(connection), consumerRegistry, maxRetry);
+            masterConnector = new MongoMasterConnector(new MongoConnection(connection),
+                consumerRegistry, maxRetry);
             break;
         }
         service.submit(masterConnector);

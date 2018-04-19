@@ -257,7 +257,7 @@ java -server -XX:+UseParallelGC -jar syncer.jar --producerConfig=/absolute/path/
 - Insert/load data, count in mysql & es and compare numbers;
 - Delete data, count in mysql & es and compare numbers;
 
-### Stress Test
+### Pressure Test
 - 10G & 10^8 lines
   - load every 10^5 lines by `mysqlimport`
   - no pause between import

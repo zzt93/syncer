@@ -28,7 +28,7 @@
     </rollingPolicy>
   </appender>
 
-  <root level="info">
+  <root level="WARN">
     <appender-ref ref="info"/>
     <appender-ref ref="console"/>
   </root>

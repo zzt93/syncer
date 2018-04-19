@@ -8,7 +8,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties(prefix = "syncer.input")
 public class SyncerInput {
 
-  private int worker;
   private int maxRetry;
   private SyncerInputMeta inputMeta;
 
@@ -18,14 +17,6 @@ public class SyncerInput {
 
   public void setInputMeta(SyncerInputMeta inputMeta) {
     this.inputMeta = inputMeta;
-  }
-
-  public int getWorker() {
-    return worker;
-  }
-
-  public void setWorker(int worker) {
-    this.worker = worker;
   }
 
   public int getMaxRetry() {
