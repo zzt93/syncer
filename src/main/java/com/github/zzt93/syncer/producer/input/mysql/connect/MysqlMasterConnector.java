@@ -127,9 +127,10 @@ public class MysqlMasterConnector implements MasterConnector {
       } catch (InvalidBinlogException e) {
         logger.error("Invalid binlog file info {}@{}, reconnect to latest binlog",
             client.getBinlogFilename(), client.getBinlogPosition(), e);
-//        client.setBinlogFilename(""); not fetch oldest log
+        client.setBinlogFilename(""); // fetch oldest log, but can't ensure no data loss if syncer is closed too long
+        client.setBinlogPosition(0); // have to reset it to avoid exception
         i = 0;
-        client.setBinlogFilename(null);
+//        client.setBinlogFilename(null);
       } catch (DupServerIdException e) {
         logger.warn("Dup serverId detected, reconnect again");
         client.setServerId(random.nextInt(Byte.MAX_VALUE));
