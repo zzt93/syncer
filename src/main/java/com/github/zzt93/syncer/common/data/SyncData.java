@@ -94,6 +94,7 @@ public class SyncData {
         syncData.getType(),
         syncData.getSourceIdentifier());
     inner.context = EvaluationFactory.context();
+    inner.context.setRootObject(this);
   }
 
   public Object getId() {
