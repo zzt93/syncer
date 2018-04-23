@@ -242,7 +242,9 @@ output:
 git clone https://github.com/zzt93/syncer
 mvn package
 # /path/to/config/: producer.yml, consumer.yml, password-file
-java -server -XX:+UseParallelGC -jar syncer.jar --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
+# use `-XX:+UseParallelOldGC` if you have less memory and lower input pressure
+# use `-XX:+UseG1GC` if you have at least 4g memory and event input rate larger than 2*10^4/s
+java -server -XX:+UseG1GC -jar syncer.jar --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
 ```
 
 ## Test
@@ -261,7 +263,7 @@ java -server -XX:+UseParallelGC -jar syncer.jar --producerConfig=/absolute/path/
 - 10G & 10^8 lines
   - load every 10^5 lines by `mysqlimport`
   - no pause between import
-- Throughput: limited by filter worker number, in average 1200+ events per worker
+- Throughput: limited by filter worker number, in average 2000 events per worker
 - CPU: 80-90
 - Memory: 4g
 - IO

@@ -22,13 +22,12 @@ public class SchemaAndRowFilter {
   }
 
   public SyncData[] decide(String eventId, Event... e) {
-    TableMapEventData event = e[0].getData();
-    TableMeta table = connectionSchemaMeta.findTable(event.getDatabase(), event.getTable());
+    TableMapEventData tableMap = e[0].getData();
+    TableMeta table = connectionSchemaMeta.findTable(tableMap.getDatabase(), tableMap.getTable());
     if (table == null) {
       return null;
     }
 
-    TableMapEventData tableMap = e[0].getData();
     EventType eventType = e[1].getHeader().getEventType();
     List<HashMap<Integer, Object>> indexedRow = RowsEvent
         .getIndexedRows(eventType, e[1].getData(), table.getPrimaryKeys());
