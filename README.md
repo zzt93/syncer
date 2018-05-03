@@ -4,9 +4,12 @@
 
 ### Consistency
 
-#### Consistent mode (TODO): 
-  - `strict`: make sure output is successful, otherwise, retry until success
-  - `loose`: try to send to output
+#### Aims 
+
+- Eventual Consistency: Make data reach destination
+- Order Problem: Make data reach in same order as it is
+  - update id1 set 1; update id1 set 2;
+  - insert id1 1; delete id1;
 
 #### Consistency Promise
 
@@ -15,9 +18,10 @@
 - Checkpoint: Consumer module remember where we leave, try to not miss data if syncer shutdown in accident
 - Retry: If output channel fail to send to output target, retry until success or write to failure log
 - Failure Log: If retry exceed configured num, write item to failure log for human recheck
-- Order problem situation (TODO):
-  - update id1 set 1; update id1 set 2;
-  - insert id1 1; update id1 set 2;
+- Event Scheduler: to solve *Order problem* between events
+  - `mod`: `mod` integral primary key to make same row change always handled in order;
+  - `hash`: hash primary key of data row, then `mod` hash value to schedule;
+  - `direct`: *no order promise*, higher output rate if you can endure some inconsistency;
 
 
 ### Input
@@ -41,7 +45,7 @@
   - If an event match multiple schema & table, we will use the first specific match to filter/output,
   i.e. the specific schema config will override the regex schema config
   - If an event go through column filter, and only primary key is left:
-    - If event type is UPDATE_ROWS, then discard this event -- because not support update id now;
+    - If event type is `UPDATE_ROWS`, then discard this event -- because not support update id now;
     - Other event type, keep it.
 - Remember start file/position of binlog/oplog, and resume from where we leave so as to avoid any data loss
   - More than once: we can ensure the at least once semantics now, so you need to make sure your `SyncData`

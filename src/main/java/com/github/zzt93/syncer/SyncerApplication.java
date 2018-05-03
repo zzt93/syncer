@@ -1,17 +1,12 @@
 package com.github.zzt93.syncer;
 
-import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.pipeline.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
-import com.github.zzt93.syncer.consumer.ack.Ack;
-import com.github.zzt93.syncer.consumer.filter.ConsumerStarter;
-import com.github.zzt93.syncer.consumer.input.RegistrationStarter;
+import com.github.zzt93.syncer.consumer.ConsumerStarter;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.LinkedBlockingDeque;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -57,14 +52,7 @@ public class SyncerApplication implements CommandLineRunner {
       if (!verifyPipeline(pipelineConfig)) {
         continue;
       }
-      String consumerId = pipelineConfig.getConsumerId();
-      BlockingDeque<SyncData> filterInput = new LinkedBlockingDeque<>();
-      RegistrationStarter registrationStarter = new RegistrationStarter(pipelineConfig.getInput(),
-          syncerConfig.getAck(), syncerConfig.getInput(), consumerRegistry, consumerId, filterInput);
-      registrationStarter.start();
-      Ack ack = registrationStarter.getAck();
-      new ConsumerStarter(ack, pipelineConfig.getFilter(), syncerConfig.getFilter(), filterInput,
-          pipelineConfig.getOutput(), syncerConfig.getOutput()).start();
+      new ConsumerStarter(pipelineConfig, syncerConfig, consumerRegistry).start();
     }
     ProducerStarter.getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry).start();
   }

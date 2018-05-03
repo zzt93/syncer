@@ -15,11 +15,11 @@ import org.slf4j.LoggerFactory;
 public class FilterChain {
 
   private final Logger logger = LoggerFactory.getLogger(FilterChain.class);
-  private final SchemaAndRowFilter start;
+  private final SchemaAndRowFilter entry;
   private final OutputSink outputSink;
 
   public FilterChain(ConnectionSchemaMeta connectionSchemaMeta, OutputSink outputSink) {
-    this.start = new SchemaAndRowFilter(connectionSchemaMeta);
+    this.entry = new SchemaAndRowFilter(connectionSchemaMeta);
     this.outputSink = outputSink;
   }
 
@@ -27,7 +27,7 @@ public class FilterChain {
     if (logger.isDebugEnabled()) {
       logger.debug("Receive binlog event: {}", Arrays.toString(events));
     }
-    SyncData[] aim = start.decide(eventId, events[0], events[1]);
+    SyncData[] aim = entry.decide(eventId, events[0], events[1]);
     if (aim == null) { // not interested in this database+table
       return FilterRes.DENY;
     }

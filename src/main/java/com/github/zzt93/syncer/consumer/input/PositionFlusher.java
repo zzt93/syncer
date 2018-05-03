@@ -12,7 +12,7 @@ public class PositionFlusher implements Runnable {
   private final Ack ack;
   private final Logger logger = LoggerFactory.getLogger(PositionFlusher.class);
 
-  PositionFlusher(Ack ack) {
+  public PositionFlusher(Ack ack) {
     this.ack = ack;
   }
 

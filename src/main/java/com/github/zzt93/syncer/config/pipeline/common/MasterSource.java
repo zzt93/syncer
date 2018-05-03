@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.config.pipeline.common;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.config.pipeline.input.SyncMeta;
+import com.github.zzt93.syncer.consumer.input.SchedulerBuilder.SchedulerType;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -18,6 +19,7 @@ public class MasterSource {
   private final Logger logger = LoggerFactory.getLogger(MasterSource.class);
   private final Set<Schema> schemaSet = new HashSet<>();
   private MasterSourceType type = MasterSourceType.MySQL;
+  private SchedulerType schedulerType = SchedulerType.hash;
   private SyncMeta syncMeta;
   private Connection connection;
   private List<Schema> schemas = new ArrayList<>();
@@ -64,6 +66,15 @@ public class MasterSource {
 
   public SyncMeta getSyncMeta() {
     return syncMeta;
+  }
+
+  public void setSchedulerType(SchedulerType schedulerType) {
+    this.schedulerType = schedulerType;
+  }
+
+  public SchedulerType getSchedulerType() {
+
+    return schedulerType;
   }
 
   @Override

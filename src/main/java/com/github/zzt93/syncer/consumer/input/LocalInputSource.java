@@ -6,7 +6,6 @@ import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,7 +14,7 @@ import org.slf4j.LoggerFactory;
  */
 public abstract class LocalInputSource implements InputSource {
 
-  private final BlockingDeque<SyncData> filterInput;
+  private final EventScheduler scheduler;
   private final Logger logger = LoggerFactory.getLogger(LocalInputSource.class);
 
   private final Set<Schema> schemas;
@@ -26,12 +25,12 @@ public abstract class LocalInputSource implements InputSource {
   public LocalInputSource(
       String clientId, Connection connection, Set<Schema> schemas,
       SyncInitMeta syncInitMeta,
-      BlockingDeque<SyncData> input) {
+      EventScheduler scheduler) {
     this.schemas = schemas;
     this.connection = connection;
     this.syncInitMeta = syncInitMeta;
     this.clientId = clientId;
-    this.filterInput = input;
+    this.scheduler = scheduler;
   }
 
   @Override
@@ -56,7 +55,7 @@ public abstract class LocalInputSource implements InputSource {
   public boolean input(SyncData data) {
     logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data, data.hashCode());
     data.setSourceIdentifier(connection.connectionIdentifier());
-    return filterInput.add(data);
+    return scheduler.schedule(data);
   }
 
   @Override
@@ -64,7 +63,7 @@ public abstract class LocalInputSource implements InputSource {
     boolean res = true;
     int array = data.hashCode();
     for (SyncData datum : data) {
-      res = res && filterInput.add(datum.setSourceIdentifier(connection.connectionIdentifier()));
+      res = res && scheduler.schedule(datum.setSourceIdentifier(connection.connectionIdentifier()));
       logger.debug("add list: data id: {}, {}, {} in {}", datum.getDataId(), datum, datum.hashCode(),
           array);
     }
