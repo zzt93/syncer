@@ -31,6 +31,7 @@ public class ESQueryMapper implements ExtraQueryMapper {
   @Override
   public Map<String, Object> map(InsertByQuery insertByQuery) {
     String[] select = insertByQuery.getSelect();
+    // TODO 18/5/8 retry
     SearchResponse response;
     try {
       response = client.prepareSearch(insertByQuery.getIndexName())

@@ -8,18 +8,22 @@ import java.util.concurrent.BlockingDeque;
  */
 public class DirectScheduler implements EventScheduler {
 
-  private final BlockingDeque<SyncData> deque;
+  private final BlockingDeque<SyncData>[] deque;
+  private final int length;
+  private int round = 0;
 
   DirectScheduler(BlockingDeque<SyncData>[] deques) {
-    deque = deques[0];
-    for (int i = 1; i < deques.length; i++) {
-      deques[i] = null;
-    }
+    deque = deques;
+    length = deques.length;
   }
 
   @Override
   public boolean schedule(SyncData syncData) {
-    deque.addLast(syncData);
+    // Precondition: only one thread invoke this method
+    deque[round++].addLast(syncData);
+    if (round == length) {
+      round = 0;
+    }
     return true;
   }
 }

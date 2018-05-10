@@ -20,8 +20,10 @@
 - Failure Log: If retry exceed configured num, write item to failure log for human recheck
 - Event Scheduler: to solve *Order problem* between events
   - `mod`: `mod` integral primary key to make same row change always handled in order;
-  - `hash`: hash primary key of data row, then `mod` hash value to schedule;
-  - `direct`: *no order promise*, higher output rate if you can endure some inconsistency;
+  - `hash`: hash primary key of data row, then `mod` hash value to schedule -- default value now;
+  - `direct`: 
+    - If your datasource has only insert operation, you can choose this scheduler, which is faster;
+    - *No order promise* for datasource with insert/update/delete, higher output rate if you can endure some inconsistency;
 
 
 ### Input

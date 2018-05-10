@@ -22,6 +22,8 @@ import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.If;
 import com.github.zzt93.syncer.consumer.filter.impl.Statement;
 import com.github.zzt93.syncer.consumer.filter.impl.Switch;
+import com.github.zzt93.syncer.consumer.input.EventScheduler;
+import com.github.zzt93.syncer.consumer.input.LocalInputSource;
 import com.github.zzt93.syncer.consumer.input.PositionFlusher;
 import com.github.zzt93.syncer.consumer.input.Registrant;
 import com.github.zzt93.syncer.consumer.input.SchedulerBuilder;
@@ -114,7 +116,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
       SchedulerBuilder schedulerBuilder,
       PipelineInput input,
       HashMap<String, SyncInitMeta> id2SyncInitMeta) {
-    registrant = new Registrant(consumerId, consumerRegistry, schedulerBuilder);
+    registrant = new Registrant(consumerRegistry);
     for (MasterSource masterSource : input.getMasterSet()) {
       String identifier = masterSource.getConnection().connectionIdentifier();
       SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
@@ -124,7 +126,11 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
             syncMeta);
         syncInitMeta = new BinlogInfo(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
       }
-      registrant.addDatasource(masterSource, syncInitMeta, masterSource.getType());
+      EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getSchedulerType())
+          .build();
+      LocalInputSource localInputSource = LocalInputSource
+          .inputSource(consumerId, masterSource, syncInitMeta, scheduler);
+      registrant.addDatasource(localInputSource);
     }
   }
 

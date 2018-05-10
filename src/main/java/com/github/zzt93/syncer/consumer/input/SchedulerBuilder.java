@@ -25,7 +25,7 @@ public class SchedulerBuilder {
     return this;
   }
 
-  EventScheduler build() {
+  public EventScheduler build() {
     Preconditions.checkNotNull(deques);
     switch (type) {
       case direct:

@@ -3,8 +3,12 @@ package com.github.zzt93.syncer.consumer.input;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
+import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.InputSource;
+import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
+import com.google.common.base.Preconditions;
 import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -97,5 +101,27 @@ public abstract class LocalInputSource implements InputSource {
         ", syncInitMeta=" + syncInitMeta +
         ", clientId='" + clientId + '\'' +
         '}';
+  }
+
+  public static LocalInputSource inputSource(String consumerId, MasterSource masterSource,
+      SyncInitMeta syncInitMeta, EventScheduler scheduler) {
+    LocalInputSource inputSource;
+    switch (masterSource.getType()) {
+      case Mongo:
+        Preconditions
+            .checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is " + syncInitMeta);
+        inputSource = new MongoLocalInputSource(consumerId, masterSource.getConnection(),
+            masterSource.getSchemaSet(), (DocTimestamp) syncInitMeta, scheduler);
+        break;
+      case MySQL:
+        Preconditions
+            .checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is " + syncInitMeta);
+        inputSource = new MysqlLocalInputSource(consumerId, masterSource.getConnection(),
+            masterSource.getSchemaSet(), (BinlogInfo) syncInitMeta, scheduler);
+        break;
+      default:
+        throw new IllegalStateException("Not implemented type");
+    }
+    return inputSource;
   }
 }
