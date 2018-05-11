@@ -44,6 +44,7 @@ import org.slf4j.MDC;
  */
 public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
+  private long refreshInterval = 1000;
   private final BatchBuffer<SyncWrapper<WriteRequest>> batchBuffer;
   private final ESRequestMapper esRequestMapper;
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
@@ -56,6 +57,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       throws Exception {
     ElasticsearchConnection connection = elasticsearch.getConnection();
     client = connection.transportClient();
+    refreshInterval = elasticsearch.getRefreshInMillis();
     this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch());
     this.batch = elasticsearch.getBatch();
     this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
@@ -120,20 +122,29 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder,
       int count) {
+    waitRefresh();
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
         MDC.put(IdGenerator.EID, data.getEventId());
-        logger.info("Update/Delete by query {}: update {} or delete {} documents",
-            builder.request(), bulkByScrollResponse.getUpdated(),
-            bulkByScrollResponse.getDeleted());
-        ack.remove(data.getSourceIdentifier(), data.getDataId());
+        if (bulkByScrollResponse.getUpdated() == 0
+            && bulkByScrollResponse.getDeleted() == 0) {
+          logger.warn("Fail to {} by query {}: no documents changed",
+              builder.request(), builder.source());
+          retry(new IllegalStateException("Fail to update/delete"));
+        } else {
+          ack.remove(data.getSourceIdentifier(), data.getDataId());
+        }
       }
 
       @Override
       public void onFailure(Exception e) {
         MDC.put(IdGenerator.EID, data.getEventId());
-        logger.error("Fail to update/delete by query: {}", builder.request(), e);
+        logger.error("Fail to {} by query: {}", builder.request(), builder.source(), e);
+        retry(e);
+      }
+
+      private void retry(Exception e) {
         if (count + 1 >= batch.getMaxRetry()) {
           singleRequest.log(data, e);
           ack.remove(data.getSourceIdentifier(), data.getDataId());
@@ -142,6 +153,13 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         bulkByScrollRequest(data, builder, count + 1);
       }
     });
+  }
+
+  private void waitRefresh() {
+    if (refreshInterval == 0) return;
+    try {
+      Thread.sleep(refreshInterval);
+    } catch (InterruptedException ignored) { }
   }
 
   @Override

@@ -104,12 +104,21 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     SyncByQuery syncByQuery = data.syncByQuery();
     if (syncByQuery instanceof SyncByQueryES) {
       // handle append/remove elements from list/array field
-      makeScript(code, " += params.", ";", ((SyncByQueryES) syncByQuery).getAppend(), params);
-      makeScript(code, ".remove(params.", ");", ((SyncByQueryES) syncByQuery).getRemove(), params);
+      makeScript(code, ".add(params.", ");", ((SyncByQueryES) syncByQuery).getAppend(), params);
+      makeRemove(code, ((SyncByQueryES) syncByQuery).getRemove(), params);
     } else {
       Preconditions.checkState(false, "should be `SyncByQueryES`");
     }
     return new Script(ScriptType.INLINE, "painless", code.toString(), params);
+  }
+
+  private void makeRemove(StringBuilder code, HashMap<String, Object> remove,
+      HashMap<String, Object> params) {
+    for (String col : remove.keySet()) {
+      code.append("ctx._source.").append(col).append("remove(ctx._source.").append(col)
+          .append("lastIndexOf(params.").append(col).append("));");
+    }
+    scriptCheck(code, remove, params);
   }
 
   private void makeScript(StringBuilder code, String op, String endOp, HashMap<String, Object> data,
@@ -117,6 +126,11 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     for (String col : data.keySet()) {
       code.append("ctx._source.").append(col).append(op).append(col).append(endOp);
     }
+    scriptCheck(code, data, params);
+  }
+
+  private void scriptCheck(StringBuilder code, HashMap<String, Object> data,
+      HashMap<String, Object> params) {
     int before = params.size();
     params.putAll(data);
     if (before + data.size() != params.size()) {

@@ -15,7 +15,7 @@
     </filter>
   </appender>
 
-  <appender name="info" class="ch.qos.logback.core.rolling.RollingFileAppender">
+  <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
     <File>log/${application}@${env}.log</File>
     <Append>true</Append>
     <encoder>
@@ -28,8 +28,8 @@
     </rollingPolicy>
   </appender>
 
-  <root level="WARN">
-    <appender-ref ref="info"/>
+  <root level="info">
+    <appender-ref ref="file"/>
     <appender-ref ref="console"/>
   </root>
 
