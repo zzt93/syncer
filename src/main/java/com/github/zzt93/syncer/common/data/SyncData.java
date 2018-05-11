@@ -232,7 +232,7 @@ public class SyncData {
   }
 
   public boolean isSyncWithoutId() {
-    return syncByQuery != null && syncByQuery.isSyncWithoutId();
+    return id == null;
   }
 
   /**

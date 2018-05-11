@@ -37,6 +37,10 @@ public class SyncByQueryES extends SyncByQuery {
     return this;
   }
 
+  public boolean needScript() {
+    return !append.isEmpty() || !remove.isEmpty();
+  }
+
   public HashMap<String, Object> getAppend() {
     return append;
   }

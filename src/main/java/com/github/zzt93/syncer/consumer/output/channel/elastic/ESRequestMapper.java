@@ -85,38 +85,50 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
           return UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
               .source(index)
               .filter(getFilter(data))
-              .script(getScript(data));
+              .script(getScript(data, data.getRecords()));
         }
-        return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
-            .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
+        if (needScript(data)) {
+          HashMap<String, Object> map = requestBodyMapper.map(data);
+          return client.prepareUpdate(index, type, id)
+              .setScript(getScript(data, map))
+              .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
+        } else {
+          return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
+              .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
+        }
     }
     throw new IllegalArgumentException("Unsupported row event type: " + data);
+  }
+
+  private boolean needScript(SyncData data) {
+    SyncByQuery syncByQuery = data.syncByQuery();
+    return syncByQuery!=null && ((SyncByQueryES) syncByQuery).needScript();
   }
 
   private String eval(Expression expr, StandardEvaluationContext context) {
     return expr.getValue(context, String.class);
   }
 
-  private Script getScript(SyncData data) {
+  private Script getScript(SyncData data, HashMap<String, Object> toSet) {
     HashMap<String, Object> params = new HashMap<>();
     StringBuilder code = new StringBuilder();
-    makeScript(code, " = params.", ";", data.getRecords(), params);
+    makeScript(code, " = params.", ";", toSet, params);
     SyncByQuery syncByQuery = data.syncByQuery();
     if (syncByQuery instanceof SyncByQueryES) {
       // handle append/remove elements from list/array field
       makeScript(code, ".add(params.", ");", ((SyncByQueryES) syncByQuery).getAppend(), params);
-      makeRemove(code, ((SyncByQueryES) syncByQuery).getRemove(), params);
+      makeRemoveScript(code, ((SyncByQueryES) syncByQuery).getRemove(), params);
     } else {
       Preconditions.checkState(false, "should be `SyncByQueryES`");
     }
     return new Script(ScriptType.INLINE, "painless", code.toString(), params);
   }
 
-  private void makeRemove(StringBuilder code, HashMap<String, Object> remove,
+  private void makeRemoveScript(StringBuilder code, HashMap<String, Object> remove,
       HashMap<String, Object> params) {
     for (String col : remove.keySet()) {
-      code.append("ctx._source.").append(col).append("remove(ctx._source.").append(col)
-          .append("lastIndexOf(params.").append(col).append("));");
+      code.append("ctx._source.").append(col).append(".remove(ctx._source.").append(col)
+          .append(".lastIndexOf(params.").append(col).append("));");
     }
     scriptCheck(code, remove, params);
   }
@@ -142,6 +154,9 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private QueryBuilder getFilter(SyncData data) {
     BoolQueryBuilder builder = boolQuery();
     HashMap<String, Object> syncBy = data.getSyncBy();
+    if (syncBy.isEmpty()) {
+      throw new InvalidConfigException("No data used to do sync(update/delete) filter");
+    }
     for (Entry<String, Object> entry : syncBy.entrySet()) {
       builder.filter(termQuery(entry.getKey(), entry.getValue()));
     }
