@@ -122,7 +122,6 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder,
       int count) {
-    waitRefresh();
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
@@ -131,6 +130,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
             && bulkByScrollResponse.getDeleted() == 0) {
           logger.warn("Fail to {} by query {}: no documents changed",
               builder.request(), builder.source());
+          waitRefresh();
           retry(new IllegalStateException("Fail to update/delete"));
         } else {
           ack.remove(data.getSourceIdentifier(), data.getDataId());
