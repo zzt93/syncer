@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.mapper;
 
-import com.github.zzt93.syncer.common.data.InsertByQuery;
+import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
 import java.util.HashMap;
@@ -99,10 +99,10 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
           default:
             throw new IllegalStateException(expr);
         }
-      } else if (value instanceof InsertByQuery) {
+      } else if (value instanceof ExtraQuery) {
         if (queryMapper != null) {
           if (!queryResult.containsKey(key)) {
-            queryResult.putAll(queryMapper.map((InsertByQuery) value));
+            queryResult.putAll(queryMapper.map((ExtraQuery) value));
           }
           if (!queryResult.containsKey(key)) {
             logger.warn("Fail to query record {} by {}", key, value);

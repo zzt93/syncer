@@ -231,26 +231,22 @@ public class SyncData {
     return syncByQuery.getSyncBy();
   }
 
-  public boolean isSyncWithoutId() {
-    return id == null;
-  }
-
   /**
    * update/delete by query
    */
   public SyncByQuery syncByQuery() {
     if (syncByQuery == null) {
-      syncByQuery = new SyncByQueryES(this);
+      syncByQuery = new ESScriptUpdate(this);
     }
     return syncByQuery;
   }
 
-  public InsertByQuery insertByQuery(String indexName, String typeName) {
+  public ExtraQuery extraQuery(String indexName, String typeName) {
     if (inner.hasExtra) {
       logger.info("Multiple insert by query, not supported for mysql output");
     }
     inner.hasExtra = true;
-    return new InsertByQuery(this).setIndexName(indexName).setTypeName(typeName);
+    return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
   }
 
   public boolean hasExtra() {

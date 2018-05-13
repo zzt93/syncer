@@ -3,8 +3,8 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
 import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
+import com.github.zzt93.syncer.common.data.ESScriptUpdate;
 import com.github.zzt93.syncer.common.data.SyncByQuery;
-import com.github.zzt93.syncer.common.data.SyncByQueryES;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
@@ -71,30 +71,33 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
         }
         return client.prepareIndex(index, type, id).setSource(requestBodyMapper.map(data));
       case DELETE_ROWS:
-        logger.info("Deleting data from Elasticsearch, may affect performance");
-        if (data.isSyncWithoutId()) {
-          logger.warn("Deleting data by query, may affect performance");
-          return DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
-              .source(index)
-              .filter(getFilter(data));
+        logger.info("Deleting doc from Elasticsearch, may affect performance");
+        if (id != null) {
+          return client.prepareDelete(index, type, id);
         }
-        return client.prepareDelete(index, type, id);
+        logger.warn("Deleting doc by query, may affect performance");
+        return DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
+            .source(index)
+            .filter(getFilter(data));
       case UPDATE_ROWS:
-        if (data.isSyncWithoutId()) {
-          logger.warn("Updating data by query, may affect performance");
+        // Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
+        // TODO 18/5/13 upsert & scripted_upsert
+        if (id != null) {
+          if (needScript(data)) {
+            HashMap<String, Object> map = requestBodyMapper.map(data);
+            return client.prepareUpdate(index, type, id)
+                .setScript(getScript(data, map))
+                .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
+          } else {
+            return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
+                .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
+          }
+        } else {
+          logger.warn("Updating doc by query, may affect performance");
           return UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
               .source(index)
               .filter(getFilter(data))
               .script(getScript(data, data.getRecords()));
-        }
-        if (needScript(data)) {
-          HashMap<String, Object> map = requestBodyMapper.map(data);
-          return client.prepareUpdate(index, type, id)
-              .setScript(getScript(data, map))
-              .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
-        } else {
-          return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
-              .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
         }
     }
     throw new IllegalArgumentException("Unsupported row event type: " + data);
@@ -102,7 +105,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
 
   private boolean needScript(SyncData data) {
     SyncByQuery syncByQuery = data.syncByQuery();
-    return syncByQuery!=null && ((SyncByQueryES) syncByQuery).needScript();
+    return syncByQuery != null && ((ESScriptUpdate) syncByQuery).needScript();
   }
 
   private String eval(Expression expr, StandardEvaluationContext context) {
@@ -114,10 +117,10 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     StringBuilder code = new StringBuilder();
     makeScript(code, " = params.", ";", toSet, params);
     SyncByQuery syncByQuery = data.syncByQuery();
-    if (syncByQuery instanceof SyncByQueryES) {
+    if (syncByQuery instanceof ESScriptUpdate) {
       // handle append/remove elements from list/array field
-      makeScript(code, ".add(params.", ");", ((SyncByQueryES) syncByQuery).getAppend(), params);
-      makeRemoveScript(code, ((SyncByQueryES) syncByQuery).getRemove(), params);
+      makeScript(code, ".add(params.", ");", ((ESScriptUpdate) syncByQuery).getAppend(), params);
+      makeRemoveScript(code, ((ESScriptUpdate) syncByQuery).getRemove(), params);
     } else {
       Preconditions.checkState(false, "should be `SyncByQueryES`");
     }
