@@ -78,7 +78,7 @@ public class ExtraQuery {
 
   @Override
   public String toString() {
-    return "InsertByQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
+    return "ExtraQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
         + " from " + indexName + "." + typeName + " where " + queryBy +"}";
   }
 }
