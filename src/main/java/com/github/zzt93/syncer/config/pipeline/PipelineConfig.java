@@ -5,6 +5,8 @@ import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
@@ -12,6 +14,8 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  */
 @ConfigurationProperties("syncer.consumer")
 public class PipelineConfig {
+
+  private Logger logger = LoggerFactory.getLogger(PipelineConfig.class);
 
   private String version;
   private String consumerId;
@@ -56,6 +60,9 @@ public class PipelineConfig {
   }
 
   public void setFilter(List<FilterConfig> filter) {
+    if (filter == null) {
+      logger.warn("No filter config content, but has `filter` key");
+    }
     this.filter = filter;
   }
 }

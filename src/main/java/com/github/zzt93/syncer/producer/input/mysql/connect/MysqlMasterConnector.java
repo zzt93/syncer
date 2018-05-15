@@ -4,6 +4,8 @@ import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.BinaryLogFileReader;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
+import com.github.shyiko.mysql.binlog.event.deserialization.ChecksumType;
+import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.common.util.FileUtil;
@@ -17,11 +19,18 @@ import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.sql.SQLException;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -71,7 +80,6 @@ public class MysqlMasterConnector implements MasterConnector {
     } else {
       logger.info("No binlog info provided by consumer, connect to latest binlog");
     }
-
   }
 
   private SyncListener configEventListener(MysqlConnection connection, ConsumerRegistry registry)
@@ -96,17 +104,35 @@ public class MysqlMasterConnector implements MasterConnector {
   private long consumeFile(SyncListener listener, String fileName) {
     logger.info("Consuming the old binlog from {}", fileName);
     long position = 0;
-    Event e;
-    try (BinaryLogFileReader reader = new BinaryLogFileReader(
-        FileUtil.getResource(fileName).getInputStream())) {
-      while ((e = reader.readEvent()) != null) {
-        listener.onEvent(e);
-        position = ((EventHeaderV4) e.getHeader()).getNextPosition();
+    Path path = Paths.get(fileName);
+    List<Path> files = Collections.singletonList(path);
+    if (Files.isDirectory(path)) {
+      logger.warn("Consuming binlog under {} in alphabetical order! Be careful", path);
+      try {
+        files = Files.list(path).sorted(Comparator.comparing(Path::getFileName))
+            .collect(Collectors.toList());
+      } catch (IOException e1) {
+        logger.error("Fail to read file under {}", path, e1);
+        return position;
       }
-    } catch (Exception ex) {
-      logger.error("Fail to read from {}", fileName, ex);
     }
-    logger.info("Finished consuming the old binlog from {}", fileName);
+    EventDeserializer eventDeserializer = SyncDeserializer.defaultDeserialzer();
+    eventDeserializer.setChecksumType(ChecksumType.CRC32);
+    Event e;
+    for (Path file : files) {
+      try (BinaryLogFileReader reader = new BinaryLogFileReader(
+          FileUtil.getResource(file.toString()).getInputStream(), eventDeserializer)) {
+        while ((e = reader.readEvent()) != null) {
+          binlogInfo
+              .set(new BinlogInfo(path.toString(), ((EventHeaderV4) e.getHeader()).getPosition()));
+          listener.onEvent(e);
+          position = ((EventHeaderV4) e.getHeader()).getNextPosition();
+        }
+      } catch (Exception ex) {
+        logger.error("Fail to read from {}", file, ex);
+      }
+      logger.info("Finished consuming the old binlog from {}", file);
+    }
     return position;
   }
 
@@ -127,7 +153,8 @@ public class MysqlMasterConnector implements MasterConnector {
       } catch (InvalidBinlogException e) {
         logger.error("Invalid binlog file info {}@{}, reconnect to latest binlog",
             client.getBinlogFilename(), client.getBinlogPosition(), e);
-        client.setBinlogFilename(""); // fetch oldest log, but can't ensure no data loss if syncer is closed too long
+        client.setBinlogFilename(
+            ""); // fetch oldest log, but can't ensure no data loss if syncer is closed too long
         client.setBinlogPosition(0); // have to reset it to avoid exception
         i = 0;
 //        client.setBinlogFilename(null);
