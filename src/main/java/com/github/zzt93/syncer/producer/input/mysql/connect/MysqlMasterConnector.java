@@ -18,6 +18,7 @@ import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import java.io.EOFException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -71,7 +72,7 @@ public class MysqlMasterConnector implements MasterConnector {
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
     client.setEventDeserializer(SyncDeserializer.defaultDeserialzer());
-    client.setServerId(random.nextInt(Byte.MAX_VALUE));
+    client.setServerId(random.nextInt(Integer.MAX_VALUE));
     client.setSSLMode(SSLMode.DISABLED);
     BinlogInfo binlogInfo = registry.votedBinlogInfo(connection);
     if (!binlogInfo.isEmpty()) {
@@ -101,13 +102,13 @@ public class MysqlMasterConnector implements MasterConnector {
     return eventListener;
   }
 
-  private long consumeFile(SyncListener listener, String fileName) {
-    logger.info("Consuming the old binlog from {}", fileName);
+  private long consumeFile(SyncListener listener, String fileOrDir) {
+    logger.info("Consuming the old binlog from {}", fileOrDir);
     long position = 0;
-    Path path = Paths.get(fileName);
+    Path path = Paths.get(fileOrDir);
     List<Path> files = Collections.singletonList(path);
     if (Files.isDirectory(path)) {
-      logger.warn("Consuming binlog under {} in alphabetical order! Be careful", path);
+      logger.warn("Consuming binlog under {} in alphabetical order! Be careful.", path);
       try {
         files = Files.list(path).sorted(Comparator.comparing(Path::getFileName))
             .collect(Collectors.toList());
@@ -124,7 +125,7 @@ public class MysqlMasterConnector implements MasterConnector {
           FileUtil.getResource(file.toString()).getInputStream(), eventDeserializer)) {
         while ((e = reader.readEvent()) != null) {
           binlogInfo
-              .set(new BinlogInfo(path.toString(), ((EventHeaderV4) e.getHeader()).getPosition()));
+              .set(new BinlogInfo(file.getFileName().toString(), ((EventHeaderV4) e.getHeader()).getPosition()));
           listener.onEvent(e);
           position = ((EventHeaderV4) e.getHeader()).getNextPosition();
         }
@@ -153,14 +154,13 @@ public class MysqlMasterConnector implements MasterConnector {
       } catch (InvalidBinlogException e) {
         logger.error("Invalid binlog file info {}@{}, reconnect to latest binlog",
             client.getBinlogFilename(), client.getBinlogPosition(), e);
-        client.setBinlogFilename(
-            ""); // fetch oldest log, but can't ensure no data loss if syncer is closed too long
+        client.setBinlogFilename(""); // fetch oldest log, but can't ensure no data loss if syncer is closed too long
         client.setBinlogPosition(0); // have to reset it to avoid exception
         i = 0;
 //        client.setBinlogFilename(null);
-      } catch (DupServerIdException e) {
-        logger.warn("Dup serverId detected, reconnect again");
-        client.setServerId(random.nextInt(Byte.MAX_VALUE));
+      } catch (DupServerIdException | EOFException e) {
+        logger.warn("Dup serverId {} detected, reconnect again", client.getServerId());
+        client.setServerId(random.nextInt(Integer.MAX_VALUE));
         i = 0;
       } catch (IOException e) {
         logger.error("Fail to connect to master. Reconnect to master in {}, left retry time: {}",
