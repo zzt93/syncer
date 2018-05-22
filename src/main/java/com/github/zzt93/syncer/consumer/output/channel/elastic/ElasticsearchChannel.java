@@ -10,6 +10,7 @@ import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.elastic.Elasticsearch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
@@ -66,7 +67,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     try {
       Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
       singleRequest = new FailureLog<>(path,
-          failureLog, new TypeToken<SyncData>() {
+          failureLog, new TypeToken<FailureEntry<SyncData>>() {
       });
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);
@@ -210,11 +211,17 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         throw new IllegalStateException("Impossible: " + request);
       }
       if (failedDocuments.containsKey(id)) {
-        logger.info("Retry request: {}", reqStr == null ? request : reqStr);
-        if (wrapper.retryCount() < batch.getMaxRetry()) {
-          batchBuffer.addFirst(wrapper);
+        if (retriable(e)) {
+          logger.info("Retry request: {}", reqStr == null ? request : reqStr);
+          if (wrapper.retryCount() < batch.getMaxRetry()) {
+            batchBuffer.addFirst(wrapper);
+          } else {
+            logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, failedDocuments.get(id));
+            singleRequest.log(wrapper.getEvent(), e);
+            ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+          }
         } else {
-          logger.error("Max retry exceed, write {} to fail.log", wrapper, e);
+          logger.error("Met non-retriable error, write {} to fail.log: {}", wrapper, failedDocuments.get(id));
           singleRequest.log(wrapper.getEvent(), e);
           ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }

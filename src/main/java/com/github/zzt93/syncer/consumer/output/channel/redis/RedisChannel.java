@@ -8,6 +8,7 @@ import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.redis.Redis;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
@@ -49,7 +50,7 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
     FailureLogConfig failureLog = redis.getFailureLog();
     try {
       Path path = Paths.get(outputMeta.getFailureLogDir(), redis.connectionIdentifier());
-      request = new FailureLog<>(path, failureLog, new TypeToken<SyncWrapper<String>>() {
+      request = new FailureLog<>(path, failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
       });
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);

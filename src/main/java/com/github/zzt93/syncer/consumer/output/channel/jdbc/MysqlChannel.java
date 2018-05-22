@@ -8,6 +8,7 @@ import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.mysql.Mysql;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
@@ -54,7 +55,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     try {
       sqlFailureLog = new FailureLog<>(
           Paths.get(outputMeta.getFailureLogDir(), connection.initIdentifier()),
-          failureLog, new TypeToken<SyncWrapper<String>>() {
+          failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
       });
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);
