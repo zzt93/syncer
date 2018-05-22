@@ -157,13 +157,13 @@ public class MysqlChannel implements BufferedChannel<String> {
               batchBuffer.addFirst(stringSyncWrapper);
             } else {
               logger.error("Max retry exceed, write '{}' to failure log", stringSyncWrapper, cause);
-              sqlFailureLog.log(stringSyncWrapper, e);
+              sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
               ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
             }
           } else {
             logger.error("Met non-retriable error in {}, write to failure log", stringSyncWrapper,
                 cause);
-            sqlFailureLog.log(stringSyncWrapper, e);
+            sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
             ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
           }
         } else {

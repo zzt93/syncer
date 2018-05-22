@@ -147,7 +147,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
       private void retry(Exception e) {
         if (count + 1 >= batch.getMaxRetry()) {
-          singleRequest.log(data, e);
+          singleRequest.log(data, e.getMessage());
           ack.remove(data.getSourceIdentifier(), data.getDataId());
           return;
         }
@@ -217,12 +217,12 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
             batchBuffer.addFirst(wrapper);
           } else {
             logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, failedDocuments.get(id));
-            singleRequest.log(wrapper.getEvent(), e);
+            singleRequest.log(wrapper.getEvent(), failedDocuments.get(id));
             ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
           }
         } else {
           logger.error("Met non-retriable error, write {} to fail.log: {}", wrapper, failedDocuments.get(id));
-          singleRequest.log(wrapper.getEvent(), e);
+          singleRequest.log(wrapper.getEvent(), failedDocuments.get(id));
           ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else {

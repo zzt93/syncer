@@ -59,11 +59,10 @@ public class FailureLog<T> implements Resource {
     return res;
   }
 
-  public boolean log(T data, Exception exception) {
+  public boolean log(T data, String errorMsg) {
     itemCount.incrementAndGet();
     try {
-      FailureEntry<T> failureEntry = new FailureEntry<>(data, LocalDateTime.now(),
-          exception.getClass().getSimpleName());
+      FailureEntry<T> failureEntry = new FailureEntry<>(data, LocalDateTime.now(), errorMsg);
       writer.write(gson.toJson(failureEntry, type));
       writer.newLine();
       writer.flush();
