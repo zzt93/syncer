@@ -24,7 +24,7 @@ public enum FallBackPolicy {
    * <a href="https://aws.amazon.com/cn/blogs/architecture/exponential-backoff-and-jitter/">randomized
    * exp backoff</a> policy, not thread safe
    */
-  POW_2_Random {
+  POW_2_RANDOM {
     @Override
     public long next(long last, TimeUnit unit) {
       long min = Math.min(last * 2, max(unit));
@@ -37,7 +37,7 @@ public enum FallBackPolicy {
     }
   },
 
-  POW_2_Random_Local {
+  POW_2_THREAD_LOCAL_RANDOM {
     @Override
     public long next(long last, TimeUnit unit) {
       ThreadLocalRandom safeRandom = ThreadLocalRandom.current();

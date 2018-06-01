@@ -99,8 +99,9 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
               .filter(getFilter(data))
               .script(getScript(data, data.getRecords()));
         }
+      default:
+        throw new IllegalArgumentException("Unsupported row event type: " + data);
     }
-    throw new IllegalArgumentException("Unsupported row event type: " + data);
   }
 
   private boolean needScript(SyncData data) {

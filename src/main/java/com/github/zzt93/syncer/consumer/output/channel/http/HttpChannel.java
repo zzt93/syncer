@@ -57,8 +57,9 @@ public class HttpChannel implements OutputChannel {
         return execute(res, DELETE).is2xxSuccessful();
       case WRITE_ROWS:
         return execute(res, PUT).is2xxSuccessful();
+      default:
+        return false;
     }
-    return false;
   }
 
 

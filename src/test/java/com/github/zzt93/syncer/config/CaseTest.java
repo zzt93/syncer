@@ -7,7 +7,7 @@ import org.junit.Test;
 /**
  * @author zzt
  */
-public class YamlEnvironmentPostProcessorTest {
+public class CaseTest {
 
   @Test
   public void caseTest() throws Exception {
