@@ -18,6 +18,7 @@ public class Elasticsearch implements OutputChannelConfig {
   private ESRequestMapping requestMapping = new ESRequestMapping();
   private PipelineBatch batch = new PipelineBatch();
   private FailureLogConfig failureLog = new FailureLogConfig();
+  private long refreshInMillis = 0;
 
   public FailureLogConfig getFailureLog() {
     return failureLog;
@@ -43,6 +44,13 @@ public class Elasticsearch implements OutputChannelConfig {
     this.requestMapping = requestMapping;
   }
 
+  public long getRefreshInMillis() {
+    return refreshInMillis;
+  }
+
+  public void setRefreshInMillis(long refreshInMillis) {
+    this.refreshInMillis = refreshInMillis;
+  }
 
   public PipelineBatch getBatch() {
     return batch;

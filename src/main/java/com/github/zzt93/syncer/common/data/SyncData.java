@@ -151,8 +151,9 @@ public class SyncData {
     return this;
   }
 
-  public void removeRecord(String key) {
+  public SyncData removeRecord(String key) {
     records.remove(key);
+    return this;
   }
 
   public void removePrimaryKey() {
@@ -161,17 +162,18 @@ public class SyncData {
     }
   }
 
-  public void removeRecords(String... keys) {
+  public SyncData removeRecords(String... keys) {
     for (String colName : keys) {
       records.remove(colName);
     }
+    return this;
   }
 
   public boolean containRecord(String key) {
     return records.containsKey(key);
   }
 
-  public void updateRecord(String key, Object value) {
+  public SyncData updateRecord(String key, Object value) {
     if (records.containsKey(key)) {
       if (value != null) {
         records.put(key, value);
@@ -181,6 +183,7 @@ public class SyncData {
     } else {
       logger.warn("No such record name (check your config): {} in {}.{}", key, schema, table);
     }
+    return this;
   }
 
   public StandardEvaluationContext getContext() {
@@ -231,26 +234,22 @@ public class SyncData {
     return syncByQuery.getSyncBy();
   }
 
-  public boolean isSyncWithoutId() {
-    return syncByQuery != null && syncByQuery.isSyncWithoutId();
-  }
-
   /**
    * update/delete by query
    */
   public SyncByQuery syncByQuery() {
     if (syncByQuery == null) {
-      syncByQuery = new SyncByQueryES(this);
+      syncByQuery = new ESScriptUpdate(this);
     }
     return syncByQuery;
   }
 
-  public InsertByQuery insertByQuery(String indexName, String typeName) {
+  public ExtraQuery extraQuery(String indexName, String typeName) {
     if (inner.hasExtra) {
       logger.info("Multiple insert by query, not supported for mysql output");
     }
     inner.hasExtra = true;
-    return new InsertByQuery(this).setIndexName(indexName).setTypeName(typeName);
+    return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
   }
 
   public boolean hasExtra() {

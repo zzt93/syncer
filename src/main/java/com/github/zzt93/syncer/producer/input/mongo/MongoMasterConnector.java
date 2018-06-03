@@ -126,8 +126,9 @@ public class MongoMasterConnector implements MasterConnector {
         try {
           sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
           TimeUnit.SECONDS.sleep(sleepInSecond);
-        } catch (InterruptedException ignored) {
-          logger.error("", ignored);
+        } catch (InterruptedException e1) {
+          logger.error("Interrupt mongo {}", identifier, e1);
+          Thread.currentThread().interrupt();
         }
       }
     }

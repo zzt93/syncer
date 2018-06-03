@@ -1,7 +1,8 @@
 package com.github.zzt93.syncer.consumer.output.mapper;
 
-import com.github.zzt93.syncer.common.data.InsertByQuery;
+import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
 import java.util.HashMap;
 import java.util.Map;
@@ -39,7 +40,7 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
 
   public HashMap<String, Object> map(SyncData data) {
     HashMap<String, Object> res = new HashMap<>();
-    mapToRes(data, mapping, res);
+    mapToRes(data, mapping, res, true);
     logger.info("SyncData json: " + res);
     return res;
   }
@@ -72,7 +73,8 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
     }
   }
 
-  private void mapToRes(SyncData src, Map<String, Object> mapping, HashMap<String, Object> res) {
+  private void mapToRes(SyncData src, Map<String, Object> mapping, HashMap<String, Object> res,
+      boolean interpretSpecialString) {
     Map<String, Object> queryResult = new HashMap<>();
     for (String key : mapping.keySet()) {
       Object value = mapping.get(key);
@@ -80,29 +82,29 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
         res.put(key, ((Expression) value).getValue(src.getContext()));
       } else if (value instanceof Map) {
         Map map = (Map) value;
-        mapObj(src, res, key, map);
-      } else if (value instanceof String) {
+        mapObj(src, res, key, map, true);
+      } else if (value instanceof String && interpretSpecialString) {
         String expr = (String) value;
         switch (expr) {
           case ROW_ALL:
-            res.put(key, src.getRecords());
+            mapObj(src, res, key, src.getRecords(), false);
             break;
           case EXTRA_ALL:
             res.put(key, src.getExtra());
             break;
           case ROW_FLATTEN:
-            res.putAll(src.getRecords());
+            mapToRes(src, src.getRecords(), res, false);
             break;
           case EXTRA_FLATTEN:
             res.putAll(src.getExtra());
             break;
           default:
-            throw new IllegalStateException(expr);
+            throw new InvalidConfigException("Unknown special expression: " + expr);
         }
-      } else if (value instanceof InsertByQuery) {
+      } else if (value instanceof ExtraQuery) {
         if (queryMapper != null) {
           if (!queryResult.containsKey(key)) {
-            queryResult.putAll(queryMapper.map((InsertByQuery) value));
+            queryResult.putAll(queryMapper.map((ExtraQuery) value));
           }
           if (!queryResult.containsKey(key)) {
             logger.warn("Fail to query record {} by {}", key, value);
@@ -117,16 +119,10 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
     }
   }
 
-  private void handleAll(SyncData src, HashMap<String, Object> res, String key,
-      HashMap<String, Object> nested) {
-    HashMap<String, Object> map = new HashMap<>();
-    map.put(key, nested);
-    mapObj(src, res, key, map);
-  }
-
-  private void mapObj(SyncData src, HashMap<String, Object> res, String objKey, Map objMap) {
+  private void mapObj(SyncData src, HashMap<String, Object> res, String objKey, Map objMap,
+      boolean interpretSpecialString) {
     HashMap<String, Object> sub = new HashMap<>();
-    mapToRes(src, objMap, sub);
+    mapToRes(src, objMap, sub, interpretSpecialString);
     res.put(objKey, sub);
   }
 }

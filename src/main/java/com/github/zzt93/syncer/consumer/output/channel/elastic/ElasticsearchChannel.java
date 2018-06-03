@@ -10,6 +10,7 @@ import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.pipeline.output.elastic.Elasticsearch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
@@ -44,6 +45,7 @@ import org.slf4j.MDC;
  */
 public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
+  private long refreshInterval = 1000;
   private final BatchBuffer<SyncWrapper<WriteRequest>> batchBuffer;
   private final ESRequestMapper esRequestMapper;
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
@@ -56,6 +58,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       throws Exception {
     ElasticsearchConnection connection = elasticsearch.getConnection();
     client = connection.transportClient();
+    refreshInterval = elasticsearch.getRefreshInMillis();
     this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch());
     this.batch = elasticsearch.getBatch();
     this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
@@ -64,7 +67,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     try {
       Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
       singleRequest = new FailureLog<>(path,
-          failureLog, new TypeToken<SyncData>() {
+          failureLog, new TypeToken<FailureEntry<SyncData>>() {
       });
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);
@@ -124,24 +127,40 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
         MDC.put(IdGenerator.EID, data.getEventId());
-        logger.info("Update/Delete by query {}: update {} or delete {} documents",
-            builder.request(), bulkByScrollResponse.getUpdated(),
-            bulkByScrollResponse.getDeleted());
-        ack.remove(data.getSourceIdentifier(), data.getDataId());
+        if (bulkByScrollResponse.getUpdated() == 0
+            && bulkByScrollResponse.getDeleted() == 0) {
+          logger.warn("Fail to {} by query {}: no documents changed",
+              builder.request(), builder.source());
+          waitRefresh();
+          retry(new IllegalStateException("Fail to update/delete"));
+        } else {
+          ack.remove(data.getSourceIdentifier(), data.getDataId());
+        }
       }
 
       @Override
       public void onFailure(Exception e) {
         MDC.put(IdGenerator.EID, data.getEventId());
-        logger.error("Fail to update/delete by query: {}", builder.request(), e);
+        logger.error("Fail to {} by query: {}", builder.request(), builder.source(), e);
+        retry(e);
+      }
+
+      private void retry(Exception e) {
         if (count + 1 >= batch.getMaxRetry()) {
-          singleRequest.log(data, e);
+          singleRequest.log(data, e.getMessage());
           ack.remove(data.getSourceIdentifier(), data.getDataId());
           return;
         }
         bulkByScrollRequest(data, builder, count + 1);
       }
     });
+  }
+
+  private void waitRefresh() {
+    if (refreshInterval == 0) return;
+    try {
+      Thread.sleep(refreshInterval);
+    } catch (InterruptedException ignored) { }
   }
 
   @Override
@@ -192,12 +211,18 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         throw new IllegalStateException("Impossible: " + request);
       }
       if (failedDocuments.containsKey(id)) {
-        logger.info("Retry request: {}", reqStr == null ? request : reqStr);
-        if (wrapper.retryCount() < batch.getMaxRetry()) {
-          batchBuffer.addFirst(wrapper);
+        if (retriable(e)) {
+          logger.info("Retry request: {}", reqStr == null ? request : reqStr);
+          if (wrapper.retryCount() < batch.getMaxRetry()) {
+            batchBuffer.addFirst(wrapper);
+          } else {
+            logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, failedDocuments.get(id));
+            singleRequest.log(wrapper.getEvent(), failedDocuments.get(id));
+            ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+          }
         } else {
-          logger.error("Max retry exceed, write {} to fail.log", wrapper, e);
-          singleRequest.log(wrapper.getEvent(), e);
+          logger.error("Met non-retriable error, write {} to fail.log: {}", wrapper, failedDocuments.get(id));
+          singleRequest.log(wrapper.getEvent(), failedDocuments.get(id));
           ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else {

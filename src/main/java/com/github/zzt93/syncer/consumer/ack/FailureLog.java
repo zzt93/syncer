@@ -47,6 +47,7 @@ public class FailureLog<T> implements Resource {
             limit.getUnit());
 
     type = token.getType();
+    assert token.getRawType() == FailureEntry.class;
     FileUtil.createFile(path, (e) -> logger.error("Fail to create failure log file [{}]", path, e));
     writer = new BufferedWriter(
         new OutputStreamWriter(new FileOutputStream(path.toFile(), true)));
@@ -58,12 +59,11 @@ public class FailureLog<T> implements Resource {
     return res;
   }
 
-  public boolean log(T data, Exception exception) {
+  public boolean log(T data, String errorMsg) {
     itemCount.incrementAndGet();
     try {
-      FailureEntry failureEntry = new FailureEntry(gson.toJson(data, type), LocalDateTime.now(),
-          exception.getClass().getSimpleName());
-      writer.write(gson.toJson(failureEntry));
+      FailureEntry<T> failureEntry = new FailureEntry<>(data, LocalDateTime.now(), errorMsg);
+      writer.write(gson.toJson(failureEntry, type));
       writer.newLine();
       writer.flush();
     } catch (IOException e) {

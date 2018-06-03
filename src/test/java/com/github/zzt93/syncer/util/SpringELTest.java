@@ -116,6 +116,12 @@ public class SpringELTest {
     Assert.assertEquals(value, "Test");
   }
 
+  @Test
+  public void nullCheck() throws Exception {
+    Boolean value = parser.parseExpression("null").getValue(Boolean.class);
+    Assert.assertNull(value);
+  }
+
   private static class Tmp {
 
     private int a;

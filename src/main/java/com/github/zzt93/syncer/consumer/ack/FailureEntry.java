@@ -5,13 +5,13 @@ import java.time.LocalDateTime;
 /**
  * @author zzt
  */
-public class FailureEntry {
+public class FailureEntry <T> {
 
-  private final String data;
+  private final T data;
   private final String timestamp;
   private final String exception;
 
-  FailureEntry(String data, LocalDateTime timestamp, String exception) {
+  FailureEntry(T data, LocalDateTime timestamp, String exception) {
     this.data = data;
     this.timestamp = timestamp.toString();
     this.exception = exception;

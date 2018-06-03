@@ -10,9 +10,9 @@ import org.slf4j.LoggerFactory;
  * ----------- index/insert by query ------------
  * @see SyncByQuery
  */
-public class InsertByQuery {
+public class ExtraQuery {
 
-  private static final Logger logger = LoggerFactory.getLogger(InsertByQuery.class);
+  private static final Logger logger = LoggerFactory.getLogger(ExtraQuery.class);
   private final HashMap<String, Object> queryBy = new HashMap<>();
   private final SyncData data;
   private String queryId;
@@ -21,7 +21,7 @@ public class InsertByQuery {
   private String[] select;
   private String[] as;
 
-  InsertByQuery(SyncData data) {
+  ExtraQuery(SyncData data) {
     this.data = data;
   }
 
@@ -29,22 +29,22 @@ public class InsertByQuery {
     return typeName;
   }
 
-  InsertByQuery setTypeName(String typeName) {
+  ExtraQuery setTypeName(String typeName) {
     this.typeName = typeName;
     return this;
   }
 
-  public InsertByQuery filter(String field, Object value) {
+  public ExtraQuery filter(String field, Object value) {
     queryBy.put(field, value);
     return this;
   }
 
-  public InsertByQuery select(String... field) {
+  public ExtraQuery select(String... field) {
     select = field;
     return this;
   }
 
-  public InsertByQuery addRecord(String... cols) {
+  public ExtraQuery addRecord(String... cols) {
     if (cols.length != select.length) {
       throw new InvalidConfigException("Column length is not same as query select result");
     }
@@ -59,7 +59,7 @@ public class InsertByQuery {
     return indexName;
   }
 
-  InsertByQuery setIndexName(String indexName) {
+  ExtraQuery setIndexName(String indexName) {
     this.indexName = indexName;
     return this;
   }
@@ -78,7 +78,7 @@ public class InsertByQuery {
 
   @Override
   public String toString() {
-    return "InsertByQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
+    return "ExtraQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
         + " from " + indexName + "." + typeName + " where " + queryBy +"}";
   }
 }

@@ -43,9 +43,9 @@ public class SQLMapper implements Mapper<SyncData, String> {
   @Override
   public String map(SyncData data) {
     StandardEvaluationContext context = data.getContext();
-    String schema = eval(this.schema, context);
-    String table = eval(this.table, context);
-    String id = eval(this.id, context);
+    String schema = evalString(this.schema, context);
+    String table = evalString(this.table, context);
+    String id = evalString(this.id, context);
     HashMap<String, Object> map = kvMapper.map(data);
     logger.debug("Convert SyncData to {}", map);
     // TODO 18/1/24 replace with `PreparedStatement`?
@@ -59,8 +59,9 @@ public class SQLMapper implements Mapper<SyncData, String> {
       case UPDATE_ROWS:
         return ParameterReplace.orderedParam(UPDATE_SET_WHERE_ID, schema, table, id, join(map,
             data.getType())[0]);
+      default:
+        throw new IllegalArgumentException("Unsupported row event type: " + data);
     }
-    throw new IllegalArgumentException("Unsupported row event type: " + data);
   }
 
   private String[] join(HashMap<String, Object> map, EventType type) {
@@ -80,11 +81,12 @@ public class SQLMapper implements Mapper<SyncData, String> {
           kv.add(condition);
         }
         return new String[]{kv.toString()};
+      default:
+        throw new IllegalArgumentException("Unsupported row event type: " + type);
     }
-    throw new IllegalArgumentException("Unsupported row event type: " + type);
   }
 
-  private String eval(Expression expr, StandardEvaluationContext context) {
+  String evalString(Expression expr, StandardEvaluationContext context) {
     return expr.getValue(context, String.class);
   }
 

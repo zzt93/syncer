@@ -64,8 +64,8 @@ public class NestedSQLMapper extends SQLMapper {
       return super.map(data);
     }
     StandardEvaluationContext context = data.getContext();
-    String schema = eval(this.schema, context);
-    String table = eval(this.table, context);
+    String schema = evalString(this.schema, context);
+    String table = evalString(this.table, context);
     HashMap<String, Object> map = kvMapper.map(data);
     logger.debug("Convert SyncData to {}", map);
     switch (data.getType()) {
@@ -73,12 +73,9 @@ public class NestedSQLMapper extends SQLMapper {
         String[] entry = join(map);
         return ParameterReplace
             .orderedParam(INSERT_INTO_SELECT, schema, table, entry[0], entry[1]);
+      default:
+        throw new IllegalArgumentException("Unsupported row event type: " + data);
     }
-    throw new IllegalArgumentException("Unsupported row event type: " + data);
-  }
-
-  private String eval(Expression expr, StandardEvaluationContext context) {
-    return expr.getValue(context, String.class);
   }
 
 }

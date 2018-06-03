@@ -72,7 +72,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - `updateRecord(String key, Object value)` 
   - ...
   - `syncByQuery()`
-  - `insertByQuery(String schemaName, String tableName)`
+  - `extraQuery(String schemaName, String tableName)`
 - all data field in `SyncData`:
   - `schema`
   - `table`
@@ -154,7 +154,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - ...
   - `syncByQuery()`: update/delete by query, now only support ES
     - `SyncByQueryES`
-  - `insertByQuery(String schemaName, String tableName)`: usually work with `new` & `dup` to convert one event to multiple events
+  - `extraQuery(String schemaName, String tableName)`: usually work with `new` & `dup` to convert one event to multiple events
     - `ExtraQuery`
 - all data field in `SyncData`:
   - `schema`: schema/db/index
@@ -219,7 +219,7 @@ filter:
             - ["table='role_permission'", "addRecord('role_id', records['owner_role_id'])
             .addRecord('affair_id', records['root_affair_id'])
             .addRecord('alliance_id', records['id'])",
-            "insertByQuery(schema, 'permission_identity').filter('is_super', 1).filter('allianceId', records['id'])
+            "extraQuery(schema, 'permission_identity').filter('is_super', 1).filter('allianceId', records['id'])
             .select('id').addRecord('identity_id')"]
 
 

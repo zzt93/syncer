@@ -6,23 +6,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * @see InsertByQuery
+ * @see ExtraQuery
  * @see SyncByQuery
+ * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html#_scripted_updates
  */
-public class SyncByQueryES extends SyncByQuery {
+public class ESScriptUpdate extends SyncByQuery {
 
-  private static final Logger logger = LoggerFactory.getLogger(SyncByQueryES.class);
+  private static final Logger logger = LoggerFactory.getLogger(ESScriptUpdate.class);
 
-  private final HashMap<String, Object> upsert = new HashMap<>();
+  // todo other script op: +=, contains
   private final HashMap<String, Object> append = new HashMap<>();
   private final HashMap<String, Object> remove = new HashMap<>();
   private transient final SyncData outer;
 
-  public SyncByQueryES(SyncData data) {
+  public ESScriptUpdate(SyncData data) {
     outer = data;
   }
 
-  public SyncByQueryES updateList(String listField, Object delta) {
+  public ESScriptUpdate updateList(String listField, Object delta) {
     switch (outer.getType()) {
       case DELETE_ROWS:
         remove.put(listField, delta);
@@ -37,6 +38,10 @@ public class SyncByQueryES extends SyncByQuery {
     return this;
   }
 
+  public boolean needScript() {
+    return !append.isEmpty() || !remove.isEmpty();
+  }
+
   public HashMap<String, Object> getAppend() {
     return append;
   }
@@ -48,7 +53,6 @@ public class SyncByQueryES extends SyncByQuery {
   @Override
   public String toString() {
     return "SyncByQueryES{" +
-        "upsert=" + upsert +
         ", append=" + append +
         ", remove=" + remove +
         ", outer=SyncData@" + Integer.toHexString(outer.hashCode()) +

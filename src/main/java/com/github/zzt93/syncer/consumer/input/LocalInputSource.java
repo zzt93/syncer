@@ -65,11 +65,10 @@ public abstract class LocalInputSource implements InputSource {
   @Override
   public boolean input(SyncData[] data) {
     boolean res = true;
-    int array = data.hashCode();
     for (SyncData datum : data) {
       res = res && scheduler.schedule(datum.setSourceIdentifier(connection.connectionIdentifier()));
       logger.debug("add list: data id: {}, {}, {} in {}", datum.getDataId(), datum, datum.hashCode(),
-          array);
+          data);
     }
     return res;
   }
