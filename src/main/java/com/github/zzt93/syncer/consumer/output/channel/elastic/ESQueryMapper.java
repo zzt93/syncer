@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.transport.TransportClient;
@@ -37,7 +38,7 @@ public class ESQueryMapper implements ExtraQueryMapper {
           .setTypes(extraQuery.getTypeName())
           .setSearchType(SearchType.DEFAULT)
           .setFetchSource(select, null)
-          .setQuery(getFilter(extraQuery.getQueryBy()))
+          .setQuery(getFilter(extraQuery))
           .execute()
           .actionGet();
     } catch (Exception e) {
@@ -56,15 +57,41 @@ public class ESQueryMapper implements ExtraQueryMapper {
     for (int i = 0; i < select.length; i++) {
       res.put(extraQuery.getAs(i), hit.getSource().get(select[i]));
     }
+    extraQuery.addQueryResult(res);
     return res;
   }
 
-  private QueryBuilder getFilter(HashMap<String, Object> queryBy) {
+  private QueryBuilder getFilter(ExtraQuery extraQuery) {
     BoolQueryBuilder bool = new BoolQueryBuilder();
-    for (String s : queryBy.keySet()) {
-      bool.filter(QueryBuilders.termQuery(s, queryBy.get(s)));
+    for (Entry<String, Object> e : extraQuery.getQueryBy().entrySet()) {
+      Object value = e.getValue();
+      String key = e.getKey();
+      Object queryResult = getQueryResult(extraQuery, value);
+      if (queryResult != null) {
+        extraQuery.filter(key, queryResult);
+        bool.filter(QueryBuilders.termQuery(key, queryResult));
+      } else {
+        bool.filter(QueryBuilders.termQuery(key, value));
+      }
     }
     return bool;
+  }
+
+  private Object getQueryResult(ExtraQuery extraQuery, Object value) {
+    if (value instanceof String) {
+      String str = ((String) value);
+      if (str.startsWith("$") && str.endsWith("$")) {
+        String key = str.substring(1, str.length() - 1);
+        Object record = extraQuery.getRecord(key);
+        if (!(record instanceof ExtraQuery) || ((ExtraQuery) record).getQueryResult(key) == null) {
+          logger.error("Dependent extra query {} has no result of {} from {}", record, key, value);
+          return null;
+        } else {
+          return ((ExtraQuery) record).getQueryResult(key);
+        }
+      }
+    }
+    return null;
   }
 
 }

@@ -129,11 +129,15 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         MDC.put(IdGenerator.EID, data.getEventId());
         if (bulkByScrollResponse.getUpdated() == 0
             && bulkByScrollResponse.getDeleted() == 0) {
-          logger.warn("Fail to {} by query {}: no documents changed",
-              builder.request(), builder.source());
+          if (count == 0) {// only log at first failure
+            logger.warn("No documents changed of {}: {}", builder.request(), builder.source());
+          }
           waitRefresh();
-          retry(new IllegalStateException("Fail to update/delete"));
+          retry(null, false);
         } else {
+          if (count > 0) {
+            logger.warn("Finally succeed to {}: {}", builder.request(), builder.source());
+          }
           ack.remove(data.getSourceIdentifier(), data.getDataId());
         }
       }
@@ -141,13 +145,17 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       @Override
       public void onFailure(Exception e) {
         MDC.put(IdGenerator.EID, data.getEventId());
-        logger.error("Fail to {} by query: {}", builder.request(), builder.source(), e);
-        retry(e);
+        if (count == 0) {// only log at first failure
+          logger.error("Fail to {}: {}", builder.request(), builder.source(), e);
+        }
+        retry(e, true);
       }
 
-      private void retry(Exception e) {
+      private void retry(Exception e, boolean log) {
         if (count + 1 >= batch.getMaxRetry()) {
-          singleRequest.log(data, e.getMessage());
+          if (log) {
+            singleRequest.log(data, e.getMessage());
+          }
           ack.remove(data.getSourceIdentifier(), data.getDataId());
           return;
         }
@@ -157,6 +165,8 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   }
 
   private void waitRefresh() {
+    // wait in case of the document need to update by query is just indexed,
+    // and not refreshed, so not visible for user
     if (refreshInterval == 0) return;
     try {
       Thread.sleep(refreshInterval);

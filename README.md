@@ -155,7 +155,7 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
   - `syncByQuery()`: update/delete by query, now only support ES
     - `SyncByQueryES`
   - `extraQuery(String schemaName, String tableName)`: usually work with `new` & `dup` to convert one event to multiple events
-    - `ExtraQuery`
+    - `ExtraQuery`: enhance syncer with multiple dependent query;
 - all data field in `SyncData`:
   - `schema`: schema/db/index
   - `table`: table or collection

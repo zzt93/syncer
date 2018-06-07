@@ -48,6 +48,7 @@ public class HttpChannel implements OutputChannel {
   @Override
   public boolean output(SyncData event) {
     // TODO 17/9/22 add batch worker
+    // TODO 18/6/6 add ack
     HashMap<String, Object> res = mapper.map(event);
     logger.debug("Mapping table row {} to {}", event.getRecords(), res);
     switch (event.getType()) {

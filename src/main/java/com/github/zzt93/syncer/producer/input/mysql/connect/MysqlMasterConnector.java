@@ -118,6 +118,7 @@ public class MysqlMasterConnector implements MasterConnector {
       }
     }
     EventDeserializer eventDeserializer = SyncDeserializer.defaultDeserialzer();
+    // TODO 18/6/3 change to auto detect checksum type
     eventDeserializer.setChecksumType(ChecksumType.CRC32);
     Event e;
     for (Path file : files) {

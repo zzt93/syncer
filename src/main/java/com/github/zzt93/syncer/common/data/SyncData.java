@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.common.data;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.IdGenerator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -63,7 +64,10 @@ public class SyncData {
   /*
    * The following is data field
    */
-  private final HashMap<String, Object> records = new HashMap<>();
+  /**
+   * records have to use `LinkedHashMap` to be in order to support multiple dependent extraQuery
+   */
+  private final HashMap<String, Object> records = new LinkedHashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
   private String schema;
   private String table;

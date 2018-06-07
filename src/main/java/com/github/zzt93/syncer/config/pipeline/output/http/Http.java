@@ -10,7 +10,7 @@ import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.http.HttpChannel;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import java.util.Collections;
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * @author zzt
@@ -18,7 +18,7 @@ import java.util.HashMap;
 public class Http implements OutputChannelConfig {
 
   private HttpConnection connection;
-  private HashMap<String, Object> jsonMapping = new HashMap<>();
+  private LinkedHashMap<String, Object> jsonMapping = new LinkedHashMap<>();
   private PipelineBatch batch = new PipelineBatch();
   private FailureLogConfig failureLog = new FailureLogConfig();
 
@@ -43,14 +43,14 @@ public class Http implements OutputChannelConfig {
     this.connection = connection;
   }
 
-  public HashMap<String, Object> getJsonMapping() {
+  public LinkedHashMap<String, Object> getJsonMapping() {
     if (jsonMapping.size() > 1 && jsonMapping.containsKey(KVMapper.FAKE_KEY)) {
       jsonMapping.remove(KVMapper.FAKE_KEY);
     }
     return jsonMapping;
   }
 
-  public void setJsonMapping(HashMap<String, Object> jsonMapping) {
+  public void setJsonMapping(LinkedHashMap<String, Object> jsonMapping) {
     this.jsonMapping = jsonMapping;
   }
 

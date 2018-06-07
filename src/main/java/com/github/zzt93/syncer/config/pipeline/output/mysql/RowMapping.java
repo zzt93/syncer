@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline.output.mysql;
 
-import java.util.HashMap;
+import java.util.LinkedHashMap;
 
 /**
  * @author zzt
@@ -11,7 +11,7 @@ public class RowMapping {
   private String schema = "schema";
   private String table = "table";
   private String id = "id";
-  private HashMap<String, Object> rows = new HashMap<>();
+  private LinkedHashMap<String, Object> rows = new LinkedHashMap<>();
 
   public String getSchema() {
     return schema;
@@ -37,11 +37,11 @@ public class RowMapping {
     this.id = id;
   }
 
-  public HashMap<String, Object> getRows() {
+  public LinkedHashMap<String, Object> getRows() {
     return rows;
   }
 
-  public void setRows(HashMap<String, Object> rows) {
+  public void setRows(LinkedHashMap<String, Object> rows) {
     this.rows = rows;
   }
 }

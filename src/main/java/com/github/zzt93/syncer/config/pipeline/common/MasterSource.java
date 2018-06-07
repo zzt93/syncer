@@ -19,7 +19,7 @@ public class MasterSource {
   private final Logger logger = LoggerFactory.getLogger(MasterSource.class);
   private final Set<Schema> schemaSet = new HashSet<>();
   private MasterSourceType type = MasterSourceType.MySQL;
-  private SchedulerType schedulerType = SchedulerType.hash;
+  private SchedulerType scheduler = SchedulerType.hash;
   private SyncMeta syncMeta;
   private Connection connection;
   private List<Schema> schemas = new ArrayList<>();
@@ -68,13 +68,12 @@ public class MasterSource {
     return syncMeta;
   }
 
-  public void setSchedulerType(SchedulerType schedulerType) {
-    this.schedulerType = schedulerType;
+  public void setScheduler(SchedulerType scheduler) {
+    this.scheduler = scheduler;
   }
 
-  public SchedulerType getSchedulerType() {
-
-    return schedulerType;
+  public SchedulerType getScheduler() {
+    return scheduler;
   }
 
   @Override

@@ -126,7 +126,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
             syncMeta);
         syncInitMeta = new BinlogInfo(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
       }
-      EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getSchedulerType())
+      EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler())
           .build();
       LocalInputSource localInputSource = LocalInputSource
           .inputSource(consumerId, masterSource, syncInitMeta, scheduler);

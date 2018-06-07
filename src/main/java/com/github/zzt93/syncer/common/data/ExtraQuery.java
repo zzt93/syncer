@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.common.data;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.Map;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,6 +21,7 @@ public class ExtraQuery {
   private String typeName;
   private String[] select;
   private String[] as;
+  private final HashMap<String, Object> queryResult = new HashMap<>();
 
   ExtraQuery(SyncData data) {
     this.data = data;
@@ -76,9 +78,21 @@ public class ExtraQuery {
     return as[i];
   }
 
+  public void addQueryResult(Map<String, Object> result) {
+    queryResult.putAll(result);
+  }
+
+  public Object getQueryResult(String key) {
+    return queryResult.get(key);
+  }
+
+  public Object getRecord(String s) {
+    return data.getRecordValue(s);
+  }
+
   @Override
   public String toString() {
     return "ExtraQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
-        + " from " + indexName + "." + typeName + " where " + queryBy +"}";
+        + " from " + indexName + "." + typeName + " where " + queryBy +"}" + (!queryResult.isEmpty() ? queryResult : "");
   }
 }

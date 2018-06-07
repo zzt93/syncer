@@ -33,10 +33,9 @@ public class ElasticsearchConnection extends ClusterConnection {
       String port = substringAfterLast(clusterNode, COLON);
       Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
       Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
-      try (TransportClient ignored = client.addTransportAddress(
-          new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)))) {
-        logger.info("Added transport node : {}", clusterNode);
-      }
+      logger.info("Adding transport node : {}", clusterNode);
+      client.addTransportAddress(
+          new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
     }
     return client;
   }
