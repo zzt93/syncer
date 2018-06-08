@@ -23,11 +23,12 @@ public class ModIdScheduler implements EventScheduler {
   @Override
   public boolean schedule(SyncData syncData) {
     // precondition: syncData#id instanceOf Long or Integer
-    long id = 0;
+    long id;
     try {
-      id = (long) syncData.getId();
+      Object dataId = syncData.getId();
+      id = dataId instanceof Long ? (long) dataId : (int) dataId;
     } catch (Exception e) {
-      logger.error("Invalid [scheduler] config, [id] is not Long nor Integer", e);
+      logger.error("Invalid [scheduler] config for {}, [id] is not Long nor Integer", syncData, e);
       throw new InvalidConfigException("");
     }
     deques[(int) (id % size)].addLast(syncData);
