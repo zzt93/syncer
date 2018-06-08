@@ -118,7 +118,7 @@ public class MongoMasterConnector implements MasterConnector {
             mongoDispatcher.dispatch(d);
           } catch (Exception e) {
             // TODO 18/1/26 how to retry?
-            logger.error("Fail to dispatch this doc {}", d);
+            logger.error("Fail to dispatch this doc {}", d, e);
           }
         }
 
