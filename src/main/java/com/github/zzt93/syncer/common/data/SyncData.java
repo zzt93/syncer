@@ -22,7 +22,6 @@ public class SyncData {
     private final String dataId;
     private final int ordinal;
     private EventType type;
-    private String action;
     private transient StandardEvaluationContext context;
     private boolean hasExtra = false;
     private String connectionIdentifier;
@@ -46,7 +45,6 @@ public class SyncData {
           ", dataId='" + dataId + '\'' +
           ", ordinal=" + ordinal +
           ", type=" + type +
-          ", action='" + action + '\'' +
           ", context=" + context +
           ", hasExtra=" + hasExtra +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
@@ -55,7 +53,6 @@ public class SyncData {
 
     private void setType(EventType type) {
       this.type = type;
-      action = type.toString();
     }
   }
   private SyncByQuery syncByQuery;
@@ -113,8 +110,16 @@ public class SyncData {
     return table;
   }
 
-  public String getAction() {
-    return inner.action;
+  public boolean isWrite() {
+    return EventType.isWrite(inner.type);
+  }
+
+  public boolean isUpdate() {
+    return EventType.isUpdate(inner.type);
+  }
+
+  public boolean isDelete() {
+    return EventType.isDelete(inner.type);
   }
 
   public void setTable(String table) {

@@ -15,6 +15,10 @@ public class SyncByQuery {
   private final HashMap<String, Object> syncBy = new HashMap<>();
 
   public SyncByQuery filter(String syncWithCol, Object value) {
+    if (syncWithCol == null || value == null) {
+      logger.warn("filter with {}={}", syncWithCol, value);
+      return this;
+    }
     syncBy.put(syncWithCol, value);
     return this;
   }

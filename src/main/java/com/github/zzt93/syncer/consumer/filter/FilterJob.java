@@ -73,7 +73,7 @@ public class FilterJob implements Runnable {
             logger.error("Failure log with too many failed items, aborting this output channel", e);
             remove.add(outputChannel);
           } catch (Exception e) {
-            logger.error("Output job failed", e);
+            logger.error("Output {} failed", syncData, e);
           }
         }
         syncData.removeContext();
