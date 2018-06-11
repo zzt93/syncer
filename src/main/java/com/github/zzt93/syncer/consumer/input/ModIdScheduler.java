@@ -32,6 +32,6 @@ public class ModIdScheduler implements EventScheduler {
       throw new InvalidConfigException("");
     }
     deques[(int) (id % size)].addLast(syncData);
-    return false;
+    return true;
   }
 }

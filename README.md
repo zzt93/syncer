@@ -8,8 +8,8 @@
 
 - Eventual Consistency: Make data reach destination
 - Order Problem: Make data reach in same order as it is
-  - update id1 set 1; update id1 set 2;
-  - insert id1 1; delete id1;
+  - update `item(id1)` set `field1` to `1`; then, update `item(id1)` set `field1` to `2`;
+  - insert `item(id1)` with `field1` as `1`; delete `item(id1)`;
 
 #### Consistency Promise
 
