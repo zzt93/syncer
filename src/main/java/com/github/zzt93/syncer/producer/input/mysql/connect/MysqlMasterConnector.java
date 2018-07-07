@@ -32,6 +32,7 @@ import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -109,8 +110,8 @@ public class MysqlMasterConnector implements MasterConnector {
     List<Path> files = Collections.singletonList(path);
     if (Files.isDirectory(path)) {
       logger.warn("Consuming binlog under {} in alphabetical order! Be careful.", path);
-      try {
-        files = Files.list(path).sorted(Comparator.comparing(Path::getFileName))
+      try (Stream<Path> s = Files.list(path)) {
+        files = s.sorted(Comparator.comparing(Path::getFileName))
             .collect(Collectors.toList());
       } catch (IOException e1) {
         logger.error("Fail to read file under {}", path, e1);

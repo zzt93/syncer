@@ -82,17 +82,17 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
       case UPDATE_ROWS:
         // Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
         // TODO 18/5/13 upsert & scripted_upsert
-        if (id != null) {
-          if (needScript(data)) {
+        if (id != null) { // update doc with `id`
+          if (needScript(data)) { // update using script
             HashMap<String, Object> map = requestBodyMapper.map(data);
             return client.prepareUpdate(index, type, id)
                 .setScript(getScript(data, map))
                 .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
-          } else {
+          } else { // update with partial doc
             return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
                 .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
           }
-        } else {
+        } else { // update doc by `query`
           logger.warn("Updating doc by query, may affect performance");
           return UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
               .source(index)

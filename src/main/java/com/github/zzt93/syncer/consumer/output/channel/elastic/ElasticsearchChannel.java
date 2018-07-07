@@ -19,9 +19,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 import org.elasticsearch.action.ActionListener;
@@ -45,7 +43,6 @@ import org.slf4j.MDC;
  */
 public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
-  private long refreshInterval = 1000;
   private final BatchBuffer<SyncWrapper<WriteRequest>> batchBuffer;
   private final ESRequestMapper esRequestMapper;
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
@@ -53,6 +50,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private final PipelineBatch batch;
   private final Ack ack;
   private final FailureLog<SyncData> singleRequest;
+  private long refreshInterval = 1000;
 
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
       throws Exception {
@@ -167,10 +165,13 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private void waitRefresh() {
     // wait in case of the document need to update by query is just indexed,
     // and not refreshed, so not visible for user
-    if (refreshInterval == 0) return;
+    if (refreshInterval == 0) {
+      return;
+    }
     try {
       Thread.sleep(refreshInterval);
-    } catch (InterruptedException ignored) { }
+    } catch (InterruptedException ignored) {
+    }
   }
 
   @Override
@@ -206,33 +207,29 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @Override
   public void retryFailed(List<SyncWrapper<WriteRequest>> aim, Exception e) {
-    Map<String, String> failedDocuments = ((ElasticsearchBulkException) e).getFailedDocuments();
-    for (SyncWrapper<WriteRequest> wrapper : aim) {
+    BulkItemResponse[] items = ((ElasticsearchBulkException) e).getBulkItemResponses().getItems();
+    for (int i = 0; i < aim.size(); i++) {
+      SyncWrapper<WriteRequest> wrapper = aim.get(i);
       WriteRequest request = wrapper.getData();
-      String id, reqStr = null;
-      if (request instanceof IndexRequest) {
-        id = ((IndexRequest) request).id();
-      } else if (request instanceof UpdateRequest) {
-        id = ((UpdateRequest) request).id();
+      String reqStr = null;
+      if (request instanceof UpdateRequest) {
         reqStr = toString((UpdateRequest) request);
-      } else if (request instanceof DeleteRequest) {
-        id = ((DeleteRequest) request).id();
-      } else {
-        throw new IllegalStateException("Impossible: " + request);
       }
-      if (failedDocuments.containsKey(id)) {
+      BulkItemResponse item = items[i];
+      if (item.isFailed()) {
         if (retriable(e)) {
           logger.info("Retry request: {}", reqStr == null ? request : reqStr);
           if (wrapper.retryCount() < batch.getMaxRetry()) {
             batchBuffer.addFirst(wrapper);
           } else {
-            logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, failedDocuments.get(id));
-            singleRequest.log(wrapper.getEvent(), failedDocuments.get(id));
+            logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, item.getFailure());
+            singleRequest.log(wrapper.getEvent(), item.getFailure().toString());
             ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
           }
         } else {
-          logger.error("Met non-retriable error, write {} to fail.log: {}", wrapper, failedDocuments.get(id));
-          singleRequest.log(wrapper.getEvent(), failedDocuments.get(id));
+          logger.error("Met non-retriable error, write {} to fail.log: {}", wrapper,
+              item.getFailure());
+          singleRequest.log(wrapper.getEvent(), item.getFailure().toString());
           ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else {
@@ -256,16 +253,16 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   private void buildAndSend(List<SyncWrapper<WriteRequest>> aim) {
     if (aim != null && aim.size() != 0) {
-      try {
-        buildRequest(aim);
+      BulkResponse bulkResponse = buildRequest(aim);
+      if (!bulkResponse.hasFailures()) {
         ackSuccess(aim);
-      } catch (ElasticsearchBulkException e) {
-        retryFailed(aim, e);
+      } else {
+        retryFailed(aim, new ElasticsearchBulkException("Bulk request has failures", bulkResponse));
       }
     }
   }
 
-  private void buildRequest(List<SyncWrapper<WriteRequest>> aim) {
+  private BulkResponse buildRequest(List<SyncWrapper<WriteRequest>> aim) {
     StringJoiner joiner = new StringJoiner(",", "[", "]");
     // BulkProcessor?
     BulkRequestBuilder bulkRequest = client.prepareBulk();
@@ -283,20 +280,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
     }
     logger.info("Sending to Elasticsearch: {}", joiner);
-    checkForBulkUpdateFailure(bulkRequest.execute().actionGet());
-  }
-
-  private void checkForBulkUpdateFailure(BulkResponse bulkResponse) {
-    if (bulkResponse.hasFailures()) {
-      Map<String, String> failedDocuments = new HashMap<>();
-      for (BulkItemResponse item : bulkResponse.getItems()) {
-        if (item.isFailed()) {
-          failedDocuments.put(item.getId(), item.getFailure().toString());
-        }
-      }
-      throw new ElasticsearchBulkException("Bulk request has failures: [" + failedDocuments + "]",
-          failedDocuments);
-    }
+    return bulkRequest.execute().actionGet();
   }
 
 }

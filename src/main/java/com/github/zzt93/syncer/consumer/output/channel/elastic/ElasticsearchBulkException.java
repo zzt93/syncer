@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
-import java.util.Map;
+import org.elasticsearch.action.bulk.BulkResponse;
 
 /**
  * Created by zzt on 9/24/17.
@@ -9,14 +9,14 @@ import java.util.Map;
  */
 public class ElasticsearchBulkException extends RuntimeException {
 
-  private final Map<String, String> failedDocuments;
+  private final BulkResponse bulkItemResponses;
 
-  public ElasticsearchBulkException(String msg, Map<String, String> failedDocuments) {
+  ElasticsearchBulkException(String msg, BulkResponse bulkItemResponses) {
     super(msg);
-    this.failedDocuments = failedDocuments;
+    this.bulkItemResponses = bulkItemResponses;
   }
 
-  public Map<String, String> getFailedDocuments() {
-    return failedDocuments;
+  public BulkResponse getBulkItemResponses() {
+    return bulkItemResponses;
   }
 }

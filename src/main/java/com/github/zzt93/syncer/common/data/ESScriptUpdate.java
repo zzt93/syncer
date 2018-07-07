@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.common.data;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
+import java.io.Serializable;
 import java.util.HashMap;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -10,14 +11,14 @@ import org.slf4j.LoggerFactory;
  * @see SyncByQuery
  * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html#_scripted_updates
  */
-public class ESScriptUpdate extends SyncByQuery {
+public class ESScriptUpdate extends SyncByQuery implements Serializable {
 
   private static final Logger logger = LoggerFactory.getLogger(ESScriptUpdate.class);
 
   // todo other script op: +=, contains
   private final HashMap<String, Object> append = new HashMap<>();
   private final HashMap<String, Object> remove = new HashMap<>();
-  private transient final SyncData outer;
+  private final transient SyncData outer;
 
   public ESScriptUpdate(SyncData data) {
     outer = data;
