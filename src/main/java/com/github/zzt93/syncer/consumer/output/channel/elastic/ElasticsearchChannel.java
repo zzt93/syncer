@@ -31,6 +31,7 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -46,7 +47,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private final BatchBuffer<SyncWrapper<WriteRequest>> batchBuffer;
   private final ESRequestMapper esRequestMapper;
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
-  private final TransportClient client;
+  // TODO 18/7/12 change to rest client:
+  // https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-low-usage-maven.html
+  private final AbstractClient client;
   private final PipelineBatch batch;
   private final Ack ack;
   private final FailureLog<SyncData> singleRequest;
@@ -55,7 +58,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
       throws Exception {
     ElasticsearchConnection connection = elasticsearch.getConnection();
-    client = connection.transportClient();
+    client = connection.esClient();
     refreshInterval = elasticsearch.getRefreshInMillis();
     this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch());
     this.batch = elasticsearch.getBatch();
@@ -72,7 +75,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     }
   }
 
-  public static String toString(UpdateRequest request) {
+  static String toString(UpdateRequest request) {
     String res = "update {[" + request.index() + "][" + request.type() + "][" + request.id() + "]";
     if (request.docAsUpsert()) {
       res += (", doc_as_upsert[" + request.docAsUpsert() + "]");
@@ -163,6 +166,8 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   }
 
   private void waitRefresh() {
+    // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-refresh.html
+    // 1. shouldn't force refresh; 2. `wait_for` & `false` not solve the problem
     // wait in case of the document need to update by query is just indexed,
     // and not refreshed, so not visible for user
     if (refreshInterval == 0) {

@@ -1,11 +1,10 @@
 package com.github.zzt93.syncer.config.pipeline.common;
 
-import static org.apache.commons.lang.StringUtils.split;
 import static org.apache.commons.lang.StringUtils.substringAfterLast;
 import static org.apache.commons.lang.StringUtils.substringBeforeLast;
 
 import java.net.InetAddress;
-import java.util.stream.Collectors;
+import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
@@ -16,19 +15,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 /**
- * Created by zzt on 9/11/17. <p> <h3></h3>
+ * Created by zzt on 9/11/17. <h3></h3>
  */
 public class ElasticsearchConnection extends ClusterConnection {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchConnection.class);
 
-  public TransportClient transportClient() throws Exception {
-    ElasticsearchConnection elasticsearch = this;
-    PreBuiltXPackTransportClient client = new PreBuiltXPackTransportClient(
-        elasticsearch.settings());
-    String clusterNodes = elasticsearch.clusterNodesString();
-    Assert.hasText(clusterNodes, "[Assertion failed] clusterNodes settings missing.");
-    for (String clusterNode : split(clusterNodes, COMMA)) {
+  public AbstractClient esClient() throws Exception {
+    TransportClient client = new PreBuiltXPackTransportClient(settings());
+//    TransportClient client = new PreBuiltTransportClient(settings());
+    for (String clusterNode : getClusterNodes()) {
       String hostName = substringBeforeLast(clusterNode, COLON);
       String port = substringAfterLast(clusterNode, COLON);
       Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
@@ -38,10 +34,6 @@ public class ElasticsearchConnection extends ClusterConnection {
           new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
     }
     return client;
-  }
-
-  private String clusterNodesString() {
-    return getClusterNodes().stream().collect(Collectors.joining(","));
   }
 
   private Settings settings() {

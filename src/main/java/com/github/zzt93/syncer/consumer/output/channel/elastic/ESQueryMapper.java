@@ -8,7 +8,7 @@ import java.util.Map;
 import java.util.Map.Entry;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
-import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -22,10 +22,10 @@ import org.slf4j.LoggerFactory;
  */
 public class ESQueryMapper implements ExtraQueryMapper {
 
-  private final TransportClient client;
+  private final AbstractClient client;
   private final Logger logger = LoggerFactory.getLogger(ESQueryMapper.class);
 
-  public ESQueryMapper(TransportClient client) {
+  public ESQueryMapper(AbstractClient client) {
     this.client = client;
   }
 

@@ -14,6 +14,7 @@ import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.Map.Entry;
+import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
@@ -34,13 +35,13 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final ESRequestMapping esRequestMapping;
-  private final TransportClient client;
+  private final AbstractClient client;
   private final KVMapper requestBodyMapper;
   private final Expression indexExpr;
   private final Expression typeExpr;
   private final Expression idExpr;
 
-  public ESRequestMapper(TransportClient client, ESRequestMapping esRequestMapping) {
+  public ESRequestMapper(AbstractClient client, ESRequestMapping esRequestMapping) {
     this.esRequestMapping = esRequestMapping;
     this.client = client;
     SpelExpressionParser parser = new SpelExpressionParser();
@@ -132,7 +133,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
       HashMap<String, Object> params) {
     for (String col : remove.keySet()) {
       code.append("ctx._source.").append(col).append(".remove(ctx._source.").append(col)
-          .append(".lastIndexOf(params.").append(col).append("));");
+          .append(".indexOf(params.").append(col).append("));");
     }
     scriptCheck(code, remove, params);
   }
