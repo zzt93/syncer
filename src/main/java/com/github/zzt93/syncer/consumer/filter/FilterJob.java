@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.google.common.base.Throwables;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
@@ -57,8 +58,9 @@ public class FilterJob implements Runnable {
         for (ExprFilter filter : filters) {
           filter.decide(list);
         }
-      } catch (Exception e) {
+      } catch (Throwable e) {
         logger.error("Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked", poll, e);
+        Throwables.throwIfUnchecked(e);
         continue;
       }
       ack.remove(poll.getSourceIdentifier(), poll.getDataId());
@@ -72,8 +74,9 @@ public class FilterJob implements Runnable {
             fromInput.addFirst(syncData);
             logger.error("Failure log with too many failed items, aborting this output channel", e);
             remove.add(outputChannel);
-          } catch (Exception e) {
+          } catch (Throwable e) {
             logger.error("Output {} failed", syncData, e);
+            Throwables.throwIfUnchecked(e);
           }
         }
         syncData.removeContext();

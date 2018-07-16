@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.batch;
 
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,8 +23,9 @@ public class BatchJob implements Runnable {
   public void run() {
     try {
       bufferedChannel.flush();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       logger.error("Batch job failed with", e);
+      Throwables.throwIfUnchecked(e);
     }
   }
 }

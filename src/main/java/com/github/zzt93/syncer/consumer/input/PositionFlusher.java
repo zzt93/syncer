@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,8 +21,9 @@ public class PositionFlusher implements Runnable {
   public void run() {
     try {
       ack.flush();
-    } catch (Exception e) {
+    } catch (Throwable e) {
       logger.error("Fail to flush ack info", e);
+      Throwables.throwIfUnchecked(e);
     }
   }
 }
