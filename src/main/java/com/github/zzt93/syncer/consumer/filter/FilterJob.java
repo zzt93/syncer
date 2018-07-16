@@ -77,6 +77,7 @@ public class FilterJob implements Runnable {
           }
         }
         syncData.removeContext();
+        contexts.remove();
       }
       if (!remove.isEmpty()) {
         outputChannels.removeAll(remove);

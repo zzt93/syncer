@@ -205,7 +205,6 @@ public class SyncData {
   }
 
   public void removeContext() {
-    inner.context.setRootObject(null);
     inner.context = null;
   }
 
