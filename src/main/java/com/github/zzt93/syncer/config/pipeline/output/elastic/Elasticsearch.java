@@ -8,6 +8,7 @@ import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
+import com.google.common.base.Preconditions;
 
 /**
  * @author zzt
@@ -49,6 +50,7 @@ public class Elasticsearch implements OutputChannelConfig {
   }
 
   public void setRefreshInMillis(long refreshInMillis) {
+    Preconditions.checkArgument(refreshInMillis >= 0, "Invalid [refreshInMillis] config");
     this.refreshInMillis = refreshInMillis;
   }
 

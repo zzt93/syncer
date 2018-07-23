@@ -167,11 +167,11 @@ Manipulate `SyncData` through (for more details, see input part of *Pipelinie Co
 
 ### Output Choice
 
- - Elasticsearch
+- Elasticsearch
   - When using this channel, you may prefer to not include `id` like field in interested column config (`rowName`),
   because it is always no need to include it in data field for ES and we will auto detect it and set it for you.
- - MySQL
- - Http endpoint
+- MySQL
+- Http endpoint
 
 ### Sample
 More samples can be found under `src/test/resource/`

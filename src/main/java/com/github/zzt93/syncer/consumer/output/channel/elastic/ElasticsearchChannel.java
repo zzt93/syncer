@@ -133,7 +133,12 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
           if (count == 0) {// only log at first failure
             logger.warn("No documents changed of {}: {}", builder.request(), builder.source());
           }
-          waitRefresh();
+          try {
+            waitRefresh();
+          } catch (InterruptedException e) {
+            logger.error("Thread interrupted", e);
+            return;
+          }
           retry(null, false);
         } else {
           if (count > 0) {
@@ -165,7 +170,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     });
   }
 
-  private void waitRefresh() {
+  private void waitRefresh() throws InterruptedException {
     // https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-refresh.html
     // 1. shouldn't force refresh; 2. `wait_for` & `false` not solve the problem
     // wait in case of the document need to update by query is just indexed,
@@ -173,10 +178,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     if (refreshInterval == 0) {
       return;
     }
-    try {
-      Thread.sleep(refreshInterval);
-    } catch (InterruptedException ignored) {
-    }
+    Thread.sleep(refreshInterval);
   }
 
   @Override
