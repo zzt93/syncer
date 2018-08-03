@@ -15,9 +15,9 @@ public interface BufferedChannel<T> extends OutputChannel, AckChannel<T> {
   TimeUnit getDelayUnit();
 
   @ThreadSafe
-  void flush();
+  void flush() throws InterruptedException;
 
   @ThreadSafe
-  void flushIfReachSizeLimit();
+  void flushIfReachSizeLimit() throws InterruptedException;
 
 }

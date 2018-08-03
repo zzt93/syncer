@@ -15,7 +15,7 @@ public interface OutputChannel {
    * @return whether output is success
    */
   @ThreadSafe
-  boolean output(SyncData event);
+  boolean output(SyncData event) throws InterruptedException;
 
   String des();
 

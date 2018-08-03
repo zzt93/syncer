@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
+import com.github.zzt93.syncer.common.exception.ShutDownException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.google.common.base.Throwables;
@@ -70,6 +71,10 @@ public class FilterJob implements Runnable {
         for (OutputChannel outputChannel : this.outputChannels) {
           try {
             outputChannel.output(syncData);
+          } catch (InterruptedException e) {
+            // TODO 18/8/3 channel cleanup
+            logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
+            throw new ShutDownException(e);
           } catch (FailureException e) {
             fromInput.addFirst(syncData);
             logger.error("Failure log with too many failed items, aborting this output channel", e);

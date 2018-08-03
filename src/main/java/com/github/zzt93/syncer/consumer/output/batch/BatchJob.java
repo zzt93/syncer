@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.batch;
 
+import com.github.zzt93.syncer.common.exception.ShutDownException;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.google.common.base.Throwables;
 import org.slf4j.Logger;
@@ -23,6 +24,9 @@ public class BatchJob implements Runnable {
   public void run() {
     try {
       bufferedChannel.flush();
+    } catch (InterruptedException e) {
+      logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
+      throw new ShutDownException(e);
     } catch (Throwable e) {
       logger.error("Batch job failed with", e);
       Throwables.throwIfUnchecked(e);

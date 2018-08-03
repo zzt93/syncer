@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
+import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
@@ -32,6 +33,7 @@ import org.elasticsearch.action.support.WriteRequest;
 import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.support.AbstractClient;
+import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -103,7 +105,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
-  public boolean output(SyncData event) {
+  public boolean output(SyncData event) throws InterruptedException {
     // TODO 18/3/25 remove following line, keep it for the time being
     event.removePrimaryKey();
     Object builder = esRequestMapper.map(event);
@@ -200,7 +202,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
-  public void flush() {
+  public void flush() throws InterruptedException {
     List<SyncWrapper<WriteRequest>> aim = batchBuffer.flush();
     buildAndSend(aim);
   }
@@ -252,13 +254,13 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
-  public void flushIfReachSizeLimit() {
+  public void flushIfReachSizeLimit() throws InterruptedException {
     @SuppressWarnings("unchecked")
     List<SyncWrapper<WriteRequest>> aim = batchBuffer.flushIfReachSizeLimit();
     buildAndSend(aim);
   }
 
-  private void buildAndSend(List<SyncWrapper<WriteRequest>> aim) {
+  private void buildAndSend(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {
     if (aim != null && aim.size() != 0) {
       BulkResponse bulkResponse = buildRequest(aim);
       if (!bulkResponse.hasFailures()) {
@@ -269,7 +271,8 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     }
   }
 
-  private BulkResponse buildRequest(List<SyncWrapper<WriteRequest>> aim) {
+  private BulkResponse buildRequest(List<SyncWrapper<WriteRequest>> aim)
+      throws InterruptedException {
     StringJoiner joiner = new StringJoiner(",", "[", "]");
     // BulkProcessor?
     BulkRequestBuilder bulkRequest = client.prepareBulk();
@@ -287,7 +290,16 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
     }
     logger.info("Sending to Elasticsearch: {}", joiner);
-    return bulkRequest.execute().actionGet();
+    while (true) {
+      long sleepInSecond = 1;
+      try {
+        return bulkRequest.execute().actionGet();
+      } catch (NoNodeAvailableException e) {
+        logger.error("Fail to connect to ES server, will retry in {}s", sleepInSecond, e);
+      }
+      sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
+      TimeUnit.SECONDS.sleep(sleepInSecond);
+    }
   }
 
 }
