@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
+import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
@@ -29,6 +30,7 @@ import org.springframework.boot.jdbc.DatabaseDriver;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
@@ -82,7 +84,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   @Override
-  public boolean output(SyncData event) {
+  public boolean output(SyncData event) throws InterruptedException {
     String sql = sqlMapper.map(event);
     logger.info("Convert event to sql: {}", sql);
     boolean add = batchBuffer
@@ -109,7 +111,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   @Override
-  public void flush() {
+  public void flush() throws InterruptedException {
     List<SyncWrapper<String>> sqls = batchBuffer.flush();
     if (sqls.size() != 0) {
       logger.debug("Flush batch of {}", sqls);
@@ -117,19 +119,28 @@ public class MysqlChannel implements BufferedChannel<String> {
     }
   }
 
-  private void batchAndRetry(List<SyncWrapper<String>> sqls) {
-    try {
-      String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
-      logger.info("Sending to {}", Arrays.toString(sqlStatement));
-      jdbcTemplate.batchUpdate(sqlStatement);
-      ackSuccess(sqls);
-    } catch (DataAccessException e) {
-      retryFailed(sqls, e);
+  private void batchAndRetry(List<SyncWrapper<String>> sqls) throws InterruptedException {
+    String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
+    logger.info("Sending to {}", Arrays.toString(sqlStatement));
+    while (true) {
+      long sleepInSecond = 1;
+      try {
+        jdbcTemplate.batchUpdate(sqlStatement);
+        ackSuccess(sqls);
+        return;
+      } catch (CannotGetJdbcConnectionException e) {
+        logger.error("Fail to connect to DB, will retry in {}", sleepInSecond, e);
+        sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
+        TimeUnit.SECONDS.sleep(sleepInSecond);
+      } catch (DataAccessException e) {
+        retryFailed(sqls, e);
+        return;
+      }
     }
   }
 
   @Override
-  public void flushIfReachSizeLimit() {
+  public void flushIfReachSizeLimit() throws InterruptedException {
     List<SyncWrapper<String>> sqls = batchBuffer.flushIfReachSizeLimit();
     if (sqls != null) {
       logger.debug("Flush when reach size limit, send batch of {}", sqls);
