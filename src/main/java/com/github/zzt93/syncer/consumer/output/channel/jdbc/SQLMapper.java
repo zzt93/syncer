@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.exception.InvalidSyncDataException;
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
 import com.github.zzt93.syncer.config.pipeline.output.mysql.RowMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
@@ -24,6 +25,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
   private static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3)";
   private static final String DELETE_FROM_WHERE_ID = "delete from `?0`.`?1` where id = ?2";
   private static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = ?2";
+  private static final String UPDATE_SET_WHERE = "update `?0`.`?1` set ?3 where ?2";
   private final Logger logger = LoggerFactory.getLogger(SQLMapper.class);
   private final KVMapper kvMapper;
   private final Expression schema;
@@ -57,8 +59,18 @@ public class SQLMapper implements Mapper<SyncData, String> {
       case DELETE_ROWS:
         return ParameterReplace.orderedParam(DELETE_FROM_WHERE_ID, schema, table, id);
       case UPDATE_ROWS:
-        return ParameterReplace.orderedParam(UPDATE_SET_WHERE_ID, schema, table, id, join(map,
-            data.getType())[0]);
+        if (id != null) {
+          return ParameterReplace.orderedParam(UPDATE_SET_WHERE_ID, schema, table, id, join(map,
+              data.getType())[0]);
+        } else {
+          HashMap<String, Object> syncBy = data.getSyncBy();
+          if (syncBy == null) {
+            throw new InvalidSyncDataException("Ignore invalid SyncData: update row without [id] and/or [syncByQuery].", data);
+          }
+          String filterCondition = join(syncBy, EventType.UPDATE_ROWS)[0];
+          return ParameterReplace.orderedParam(UPDATE_SET_WHERE, schema, table, filterCondition, join(map,
+              data.getType())[0]);
+        }
       default:
         throw new IllegalArgumentException("Unsupported row event type: " + data);
     }

@@ -122,14 +122,14 @@ public class MysqlChannel implements BufferedChannel<String> {
   private void batchAndRetry(List<SyncWrapper<String>> sqls) throws InterruptedException {
     String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
     logger.info("Sending to {}", Arrays.toString(sqlStatement));
+    long sleepInSecond = 1;
     while (true) {
-      long sleepInSecond = 1;
       try {
         jdbcTemplate.batchUpdate(sqlStatement);
         ackSuccess(sqls);
         return;
       } catch (CannotGetJdbcConnectionException e) {
-        logger.error("Fail to connect to DB, will retry in {}", sleepInSecond, e);
+        logger.error("Fail to connect to DB, will retry in {} second(s)", sleepInSecond, e);
         sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
         TimeUnit.SECONDS.sleep(sleepInSecond);
       } catch (DataAccessException e) {

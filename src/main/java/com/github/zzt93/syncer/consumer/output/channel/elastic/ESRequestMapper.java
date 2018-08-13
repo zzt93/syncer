@@ -6,12 +6,12 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 import com.github.zzt93.syncer.common.data.ESScriptUpdate;
 import com.github.zzt93.syncer.common.data.SyncByQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.exception.InvalidSyncDataException;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
-import com.google.common.base.Preconditions;
 import java.util.HashMap;
 import java.util.Map.Entry;
 import org.elasticsearch.client.support.AbstractClient;
@@ -124,7 +124,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
       makeScript(code, ".add(params.", ");", ((ESScriptUpdate) syncByQuery).getAppend(), params);
       makeRemoveScript(code, ((ESScriptUpdate) syncByQuery).getRemove(), params);
     } else {
-      Preconditions.checkState(false, "should be `SyncByQueryES`");
+      throw new InvalidSyncDataException("[syncByQuery] should be [SyncByQueryES]", data);
     }
     return new Script(ScriptType.INLINE, "painless", code.toString(), params);
   }
@@ -152,7 +152,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     params.putAll(data);
     if (before + data.size() != params.size()) {
       throw new InvalidConfigException("Key conflict happens when making script [" + code + "], "
-          + "check config file about `syncByQuery()` (Notice the `syncByQuery()` will default use all field for 'set' update)");
+          + "check config file about `syncByQuery()` (Notice the `syncByQuery()` will default use all fields for 'set' update)");
     }
   }
 

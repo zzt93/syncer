@@ -6,6 +6,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Optional;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.support.AbstractClient;
@@ -66,10 +67,10 @@ public class ESQueryMapper implements ExtraQueryMapper {
     for (Entry<String, Object> e : extraQuery.getQueryBy().entrySet()) {
       Object value = e.getValue();
       String key = e.getKey();
-      Object queryResult = getQueryResult(extraQuery, value);
-      if (queryResult != null) {
-        extraQuery.filter(key, queryResult);
-        bool.filter(QueryBuilders.termQuery(key, queryResult));
+      Optional<Object> queryResult = getPlaceholderQueryResult(extraQuery, value);
+      if (queryResult.isPresent()) {
+        extraQuery.filter(key, queryResult.get());
+        bool.filter(QueryBuilders.termQuery(key, queryResult.get()));
       } else {
         bool.filter(QueryBuilders.termQuery(key, value));
       }
@@ -77,21 +78,33 @@ public class ESQueryMapper implements ExtraQueryMapper {
     return bool;
   }
 
-  private Object getQueryResult(ExtraQuery extraQuery, Object value) {
+  private Optional<Object> getPlaceholderQueryResult(ExtraQuery extraQuery, Object value) {
     if (value instanceof String) {
       String str = ((String) value);
-      if (str.startsWith("$") && str.endsWith("$")) {
-        String key = str.substring(1, str.length() - 1);
+      Optional<String> placeholderValue = getPlaceholderValue(str);
+      if (placeholderValue.isPresent()) {
+        String key = placeholderValue.get();
         Object record = extraQuery.getRecord(key);
         if (!(record instanceof ExtraQuery) || ((ExtraQuery) record).getQueryResult(key) == null) {
           logger.error("Dependent extra query {} has no result of {} from {}", record, key, value);
-          return null;
+          return Optional.empty();
         } else {
-          return ((ExtraQuery) record).getQueryResult(key);
+          return Optional.of(((ExtraQuery) record).getQueryResult(key));
         }
       }
     }
-    return null;
+    return Optional.empty();
+  }
+
+  /**
+   * @param str special placeholder: $userId$
+   * means this key is the result of previous query
+   */
+  private Optional<String> getPlaceholderValue(String str) {
+    if (str.startsWith("$") && str.endsWith("$")) {
+      return Optional.of(str.substring(1, str.length() - 1));
+    }
+    return Optional.empty();
   }
 
 }

@@ -290,8 +290,8 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
     }
     logger.info("Sending to Elasticsearch: {}", joiner);
+    long sleepInSecond = 1;
     while (true) {
-      long sleepInSecond = 1;
       try {
         return bulkRequest.execute().actionGet();
       } catch (NoNodeAvailableException e) {

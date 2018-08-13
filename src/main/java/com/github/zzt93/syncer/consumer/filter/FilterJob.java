@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.exception.ShutDownException;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.google.common.base.Throwables;
@@ -31,7 +32,8 @@ public class FilterJob implements Runnable {
   private final List<ExprFilter> filters;
   private final Ack ack;
 
-  public FilterJob(Ack ack, BlockingDeque<SyncData> fromInput, CopyOnWriteArrayList<OutputChannel> outputChannels,
+  public FilterJob(Ack ack, BlockingDeque<SyncData> fromInput,
+      CopyOnWriteArrayList<OutputChannel> outputChannels,
       List<ExprFilter> filters) {
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
@@ -60,7 +62,9 @@ public class FilterJob implements Runnable {
           filter.decide(list);
         }
       } catch (Throwable e) {
-        logger.error("Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked", poll, e);
+        logger.error(
+            "Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked",
+            poll, e);
         Throwables.throwIfUnchecked(e);
         continue;
       }
@@ -72,9 +76,11 @@ public class FilterJob implements Runnable {
           try {
             outputChannel.output(syncData);
           } catch (InterruptedException e) {
-            // TODO 18/8/3 channel cleanup
             logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
-            throw new ShutDownException(e);
+            shutdown(e);
+          } catch (InvalidConfigException e) {
+            logger.error("Invalid config for {}", syncData, e);
+            shutdown(e);
           } catch (FailureException e) {
             fromInput.addFirst(syncData);
             logger.error("Failure log with too many failed items, aborting this output channel", e);
@@ -93,5 +99,10 @@ public class FilterJob implements Runnable {
         remove.clear();
       }
     }
+  }
+
+  private void shutdown(Exception e) {
+    // TODO 18/8/3 channel cleanup
+    throw new ShutDownException(e);
   }
 }

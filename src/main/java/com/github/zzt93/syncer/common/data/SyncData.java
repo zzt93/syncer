@@ -239,6 +239,9 @@ public class SyncData {
   }
 
   public HashMap<String, Object> getSyncBy() {
+    if (syncByQuery == null) {
+      return null;
+    }
     return syncByQuery.getSyncBy();
   }
 
@@ -254,7 +257,7 @@ public class SyncData {
 
   public ExtraQuery extraQuery(String indexName, String typeName) {
     if (inner.hasExtra) {
-      logger.info("Multiple insert by query, not supported for mysql output");
+      logger.warn("Multiple insert by query, not supported for mysql output channel: old query will be override");
     }
     inner.hasExtra = true;
     return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
