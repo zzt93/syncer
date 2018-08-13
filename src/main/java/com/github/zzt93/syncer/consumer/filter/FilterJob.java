@@ -46,59 +46,76 @@ public class FilterJob implements Runnable {
     LinkedList<SyncData> list = new LinkedList<>();
     List<OutputChannel> remove = new LinkedList<>();
     while (!Thread.interrupted()) {
-      SyncData poll = null;
-      try {
-        list.clear();
-        poll = fromInput.takeFirst();
-        // one thread share one context to save much memory
-        poll.setContext(contexts.get());
-        // add dataId to avoid the loss of data when exception happens when do filter
-        ack.append(poll.getSourceIdentifier(), poll.getDataId(), 1);
-        MDC.put(IdGenerator.EID, poll.getEventId());
-        logger.debug("remove: data id: {}", poll.getDataId());
-
-        list.add(poll);
-        for (ExprFilter filter : filters) {
-          filter.decide(list);
-        }
-      } catch (Throwable e) {
-        logger.error(
-            "Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked",
-            poll, e);
-        Throwables.throwIfUnchecked(e);
+      if (filter(list)) {
         continue;
       }
-      ack.remove(poll.getSourceIdentifier(), poll.getDataId());
-      for (SyncData syncData : list) {
-        logger.debug("foreach output: data id: {}", syncData.getDataId());
-        ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
-        for (OutputChannel outputChannel : this.outputChannels) {
-          try {
-            outputChannel.output(syncData);
-          } catch (InterruptedException e) {
-            logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
-            shutdown(e);
-          } catch (InvalidConfigException e) {
-            logger.error("Invalid config for {}", syncData, e);
-            shutdown(e);
-          } catch (FailureException e) {
-            fromInput.addFirst(syncData);
-            logger.error("Failure log with too many failed items, aborting this output channel", e);
-            remove.add(outputChannel);
-          } catch (Throwable e) {
-            logger.error("Output {} failed", syncData, e);
-            Throwables.throwIfUnchecked(e);
-          }
-        }
-        syncData.removeContext();
-        contexts.remove();
-      }
-      if (!remove.isEmpty()) {
-        outputChannels.removeAll(remove);
-        // TODO 18/2/12 channel cleanup
-        remove.clear();
-      }
+      output(list, remove);
     }
+  }
+
+  private void output(LinkedList<SyncData> list, List<OutputChannel> remove) {
+    for (SyncData syncData : list) {
+      logger.debug("foreach output: data id: {}", syncData.getDataId());
+      ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
+      for (OutputChannel outputChannel : this.outputChannels) {
+        try {
+          outputChannel.output(syncData);
+        } catch (InterruptedException e) {
+          logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
+          shutdown(e);
+        } catch (InvalidConfigException e) {
+          logger.error("Invalid config for {}", syncData, e);
+          shutdown(e);
+        } catch (FailureException e) {
+          fromInput.addFirst(syncData);
+          logger.error("Failure log with too many failed items, aborting this output channel", e);
+          remove.add(outputChannel);
+        } catch (Throwable e) {
+          logger.error("Output {} failed", syncData, e);
+          Throwables.throwIfUnchecked(e);
+        }
+      }
+      syncData.removeContext();
+      contexts.remove();
+    }
+    failureChannelCleanUp(remove);
+  }
+
+  private void failureChannelCleanUp(List<OutputChannel> remove) {
+    if (!remove.isEmpty()) {
+      outputChannels.removeAll(remove);
+      for (OutputChannel outputChannel : remove) {
+        // TODO 18/2/12 channel cleanup
+      }
+      remove.clear();
+    }
+  }
+
+  private boolean filter(LinkedList<SyncData> list) {
+    SyncData poll = null;
+    try {
+      list.clear();
+      poll = fromInput.takeFirst();
+      // one thread share one context to save much memory
+      poll.setContext(contexts.get());
+      // add dataId to avoid the loss of data when exception happens when do filter
+      ack.append(poll.getSourceIdentifier(), poll.getDataId(), 1);
+      MDC.put(IdGenerator.EID, poll.getEventId());
+      logger.debug("remove: data id: {}", poll.getDataId());
+
+      list.add(poll);
+      for (ExprFilter filter : filters) {
+        filter.decide(list);
+      }
+    } catch (Throwable e) {
+      logger.error(
+          "Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked",
+          poll, e);
+      Throwables.throwIfUnchecked(e);
+      return true;
+    }
+    ack.remove(poll.getSourceIdentifier(), poll.getDataId());
+    return false;
   }
 
   private void shutdown(Exception e) {
