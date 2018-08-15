@@ -4,7 +4,7 @@ package com.github.zzt93.syncer.config.pipeline.output.http;
 import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.OutputChannelConfig;
-import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.http.HttpChannel;
@@ -19,7 +19,7 @@ public class Http implements OutputChannelConfig {
 
   private HttpConnection connection;
   private LinkedHashMap<String, Object> jsonMapping = new LinkedHashMap<>();
-  private PipelineBatch batch = new PipelineBatch();
+  private PipelineBatchConfig batch = new PipelineBatchConfig();
   private FailureLogConfig failureLog = new FailureLogConfig();
 
   public FailureLogConfig getFailureLog() {
@@ -54,11 +54,11 @@ public class Http implements OutputChannelConfig {
     this.jsonMapping = jsonMapping;
   }
 
-  public PipelineBatch getBatch() {
+  public PipelineBatchConfig getBatch() {
     return batch;
   }
 
-  public void setBatch(PipelineBatch batch) {
+  public void setBatch(PipelineBatchConfig batch) {
     this.batch = batch;
   }
 

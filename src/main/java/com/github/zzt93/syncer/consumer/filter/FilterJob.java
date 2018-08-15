@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.exception.ShutDownException;
+import com.github.zzt93.syncer.common.thread.VoidCallable;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
@@ -21,7 +22,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 /**
  * @author zzt
  */
-public class FilterJob implements Runnable {
+public class FilterJob implements VoidCallable {
 
   private static final ThreadLocal<StandardEvaluationContext> contexts = ThreadLocal.withInitial(
       EvaluationFactory::context);
@@ -42,7 +43,7 @@ public class FilterJob implements Runnable {
   }
 
   @Override
-  public void run() {
+  public void loop() {
     LinkedList<SyncData> list = new LinkedList<>();
     List<OutputChannel> remove = new LinkedList<>();
     while (!Thread.interrupted()) {
@@ -57,7 +58,7 @@ public class FilterJob implements Runnable {
         output(list, remove);
       } catch (InterruptedException e) {
         logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
-        shutdown(e);
+        shutdown(e, outputChannels);
       }
     }
   }
@@ -98,7 +99,7 @@ public class FilterJob implements Runnable {
           throw e;
         } catch (InvalidConfigException e) {
           logger.error("Invalid config for {}", syncData, e);
-          shutdown(e);
+          shutdown(e, outputChannels);
         } catch (FailureException e) {
           fromInput.addFirst(syncData);
           logger.error("Failure log with too many failed items, aborting this output channel", e);
@@ -117,14 +118,16 @@ public class FilterJob implements Runnable {
     if (!remove.isEmpty()) {
       outputChannels.removeAll(remove);
       for (OutputChannel outputChannel : remove) {
-        // TODO 18/2/12 channel cleanup
+        outputChannel.close();
       }
       remove.clear();
     }
   }
 
-  private void shutdown(Exception e) {
-    // TODO 18/8/3 channel cleanup
+  private void shutdown(Exception e, List<OutputChannel> all) {
+    for (OutputChannel outputChannel : all) {
+      outputChannel.close();
+    }
     throw new ShutDownException(e);
   }
 }

@@ -106,6 +106,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     BlockingDeque<SyncData>[] deques = new BlockingDeque[worker];
     for (int i = 0; i < worker; i++) {
       deques[i] = new LinkedBlockingDeque<>();
+      // TODO 18/8/15 new list?
       filterJobs[i] = new FilterJob(ack, deques[i], new CopyOnWriteArrayList<>(outputChannels),
           exprFilters);
     }

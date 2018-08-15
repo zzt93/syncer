@@ -4,7 +4,7 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
-import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.pipeline.output.redis.Redis;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
@@ -35,7 +35,7 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
 
   private final Logger logger = LoggerFactory.getLogger(RedisChannel.class);
   private final BatchBuffer<SyncWrapper<RedisCallback>> batchBuffer;
-  private final PipelineBatch batch;
+  private final PipelineBatchConfig batch;
   private final Ack ack;
   private final FailureLog<SyncData> request;
   private final RedisTemplate<String, Object> template;
@@ -154,4 +154,10 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
         "template=" + template +
         '}';
   }
+
+  @Override
+  public void close() {
+
+  }
+
 }

@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.RedisClusterConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.OutputChannelConfig;
-import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.redis.RedisChannel;
@@ -21,7 +21,7 @@ public class Redis implements OutputChannelConfig {
   private RedisClusterConnection clusterConnection = new RedisClusterConnection();
   private Connection connection = new Connection();
   private OperationMapping mapping = new OperationMapping();
-  private PipelineBatch batch = new PipelineBatch();
+  private PipelineBatchConfig batch = new PipelineBatchConfig();
   private FailureLogConfig failureLog = new FailureLogConfig();
   private String condition;
 
@@ -53,11 +53,11 @@ public class Redis implements OutputChannelConfig {
     this.condition = condition;
   }
 
-  public PipelineBatch getBatch() {
+  public PipelineBatchConfig getBatch() {
     return batch;
   }
 
-  public void setBatch(PipelineBatch batch) {
+  public void setBatch(PipelineBatchConfig batch) {
     this.batch = batch;
   }
 

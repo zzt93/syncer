@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
-import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.pipeline.output.elastic.Elasticsearch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
@@ -47,14 +47,15 @@ import org.slf4j.MDC;
 public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   private final BatchBuffer<SyncWrapper<WriteRequest>> batchBuffer;
-  private final ESRequestMapper esRequestMapper;
-  private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
-  // TODO 18/7/12 change to rest client:
-  // https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-low-usage-maven.html
-  private final AbstractClient client;
-  private final PipelineBatch batch;
   private final Ack ack;
+  // https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-low-usage-maven.html
+  // TODO 18/7/12 change to rest client:
+  private final AbstractClient client;
   private final FailureLog<SyncData> singleRequest;
+  private final ESRequestMapper esRequestMapper;
+
+  private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
+  private final PipelineBatchConfig batchConfig;
   private long refreshInterval = 1000;
 
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
@@ -63,7 +64,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     client = connection.esClient();
     refreshInterval = elasticsearch.getRefreshInMillis();
     this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch());
-    this.batch = elasticsearch.getBatch();
+    this.batchConfig = elasticsearch.getBatch();
     this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
     this.ack = ack;
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
@@ -160,7 +161,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
 
       private void retry(Exception e, boolean log) {
-        if (count + 1 >= batch.getMaxRetry()) {
+        if (count + 1 >= batchConfig.getMaxRetry()) {
           if (log) {
             singleRequest.log(data, e.getMessage());
           }
@@ -191,13 +192,20 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   }
 
   @Override
+  public void close() {
+    client.close();
+    // ack
+
+  }
+
+  @Override
   public long getDelay() {
-    return batch.getDelay();
+    return batchConfig.getDelay();
   }
 
   @Override
   public TimeUnit getDelayUnit() {
-    return batch.getDelayTimeUnit();
+    return batchConfig.getDelayTimeUnit();
   }
 
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
@@ -228,7 +236,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       if (item.isFailed()) {
         if (retriable(e)) {
           logger.info("Retry request: {}", reqStr == null ? request : reqStr);
-          if (wrapper.retryCount() < batch.getMaxRetry()) {
+          if (wrapper.retryCount() < batchConfig.getMaxRetry()) {
             batchBuffer.addFirst(wrapper);
           } else {
             logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, item.getFailure());

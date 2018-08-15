@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
-import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.pipeline.output.mysql.Mysql;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
@@ -40,7 +40,7 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   private final Logger logger = LoggerFactory.getLogger(MysqlChannel.class);
   private final BatchBuffer<SyncWrapper<String>> batchBuffer;
-  private final PipelineBatch batch;
+  private final PipelineBatchConfig batch;
   private final JdbcTemplate jdbcTemplate;
   private final SQLMapper sqlMapper;
   private final Ack ack;
@@ -98,6 +98,11 @@ public class MysqlChannel implements BufferedChannel<String> {
     return "MysqlChannel{" +
         "jdbcTemplate=" + jdbcTemplate +
         '}';
+  }
+
+  @Override
+  public void close() {
+
   }
 
   @Override

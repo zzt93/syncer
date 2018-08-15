@@ -4,7 +4,7 @@ import com.github.zzt93.syncer.config.pipeline.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.pipeline.output.OutputChannelConfig;
-import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
@@ -17,7 +17,7 @@ public class Elasticsearch implements OutputChannelConfig {
 
   private ElasticsearchConnection connection;
   private ESRequestMapping requestMapping = new ESRequestMapping();
-  private PipelineBatch batch = new PipelineBatch();
+  private PipelineBatchConfig batch = new PipelineBatchConfig();
   private FailureLogConfig failureLog = new FailureLogConfig();
   private long refreshInMillis = 0;
 
@@ -54,11 +54,11 @@ public class Elasticsearch implements OutputChannelConfig {
     this.refreshInMillis = refreshInMillis;
   }
 
-  public PipelineBatch getBatch() {
+  public PipelineBatchConfig getBatch() {
     return batch;
   }
 
-  public void setBatch(PipelineBatch batch) {
+  public void setBatch(PipelineBatchConfig batch) {
     this.batch = batch;
   }
 

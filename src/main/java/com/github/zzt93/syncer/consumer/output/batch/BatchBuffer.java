@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.batch;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
-import com.github.zzt93.syncer.config.pipeline.output.PipelineBatch;
+import com.github.zzt93.syncer.config.pipeline.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.consumer.ack.Retryable;
 import java.util.ArrayList;
 import java.util.List;
@@ -18,7 +18,7 @@ public class BatchBuffer<T extends Retryable> {
   private final ConcurrentLinkedDeque<T> deque = new ConcurrentLinkedDeque<>();
   private final AtomicInteger estimateSize = new AtomicInteger(0);
 
-  public BatchBuffer(PipelineBatch batch) {
+  public BatchBuffer(PipelineBatchConfig batch) {
     limit = batch.getSize() <= 0 ? Integer.MAX_VALUE : batch.getSize();
   }
 

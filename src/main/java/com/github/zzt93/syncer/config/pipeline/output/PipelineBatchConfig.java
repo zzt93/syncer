@@ -7,9 +7,9 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class PipelineBatch {
+public class PipelineBatchConfig {
 
-  private final Logger logger = LoggerFactory.getLogger(PipelineBatch.class);
+  private final Logger logger = LoggerFactory.getLogger(PipelineBatchConfig.class);
 
   private final TimeUnit delayTimeUnit = TimeUnit.MILLISECONDS;
   /**

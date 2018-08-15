@@ -76,4 +76,9 @@ public class HttpChannel implements OutputChannel {
         '}';
   }
 
+  @Override
+  public void close() {
+
+  }
+
 }
