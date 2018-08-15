@@ -204,8 +204,9 @@ public class SyncData {
     context.setRootObject(this);
   }
 
-  public void removeContext() {
+  public void recycleParseContext(ThreadLocal<StandardEvaluationContext> contexts) {
     inner.context = null;
+    contexts.remove();
   }
 
   public HashMap<String, Object> getRecords() {

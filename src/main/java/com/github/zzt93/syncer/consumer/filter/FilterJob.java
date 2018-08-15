@@ -46,64 +46,32 @@ public class FilterJob implements Runnable {
     LinkedList<SyncData> list = new LinkedList<>();
     List<OutputChannel> remove = new LinkedList<>();
     while (!Thread.interrupted()) {
-      if (filter(list)) {
-        continue;
-      }
-      output(list, remove);
-    }
-  }
+      try {
+        SyncData poll = fromInput.takeFirst();
+        MDC.put(IdGenerator.EID, poll.getEventId());
+        logger.debug("Filter SyncData: {}", poll.getDataId());
 
-  private void output(LinkedList<SyncData> list, List<OutputChannel> remove) {
-    for (SyncData syncData : list) {
-      logger.debug("foreach output: data id: {}", syncData.getDataId());
-      ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
-      for (OutputChannel outputChannel : this.outputChannels) {
-        try {
-          outputChannel.output(syncData);
-        } catch (InterruptedException e) {
-          logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
-          shutdown(e);
-        } catch (InvalidConfigException e) {
-          logger.error("Invalid config for {}", syncData, e);
-          shutdown(e);
-        } catch (FailureException e) {
-          fromInput.addFirst(syncData);
-          logger.error("Failure log with too many failed items, aborting this output channel", e);
-          remove.add(outputChannel);
-        } catch (Throwable e) {
-          logger.error("Output {} failed", syncData, e);
-          Throwables.throwIfUnchecked(e);
+        if (filter(list, poll)) {
+          continue;
         }
+        output(list, remove);
+      } catch (InterruptedException e) {
+        logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
+        shutdown(e);
       }
-      syncData.removeContext();
-      contexts.remove();
-    }
-    failureChannelCleanUp(remove);
-  }
-
-  private void failureChannelCleanUp(List<OutputChannel> remove) {
-    if (!remove.isEmpty()) {
-      outputChannels.removeAll(remove);
-      for (OutputChannel outputChannel : remove) {
-        // TODO 18/2/12 channel cleanup
-      }
-      remove.clear();
     }
   }
 
-  private boolean filter(LinkedList<SyncData> list) {
-    SyncData poll = null;
+  private boolean filter(LinkedList<SyncData> list, SyncData poll) {
     try {
       list.clear();
-      poll = fromInput.takeFirst();
-      // one thread share one context to save much memory
-      poll.setContext(contexts.get());
+      list.add(poll);
+
       // add dataId to avoid the loss of data when exception happens when do filter
       ack.append(poll.getSourceIdentifier(), poll.getDataId(), 1);
-      MDC.put(IdGenerator.EID, poll.getEventId());
-      logger.debug("remove: data id: {}", poll.getDataId());
+      // one thread share one context to save much memory
+      poll.setContext(contexts.get());
 
-      list.add(poll);
       for (ExprFilter filter : filters) {
         filter.decide(list);
       }
@@ -116,6 +84,43 @@ public class FilterJob implements Runnable {
     }
     ack.remove(poll.getSourceIdentifier(), poll.getDataId());
     return false;
+  }
+
+  private void output(LinkedList<SyncData> list, List<OutputChannel> remove)
+      throws InterruptedException {
+    for (SyncData syncData : list) {
+      logger.debug("Output SyncData {}", syncData.getDataId());
+      ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
+      for (OutputChannel outputChannel : this.outputChannels) {
+        try {
+          outputChannel.output(syncData);
+        } catch (InterruptedException e) {
+          throw e;
+        } catch (InvalidConfigException e) {
+          logger.error("Invalid config for {}", syncData, e);
+          shutdown(e);
+        } catch (FailureException e) {
+          fromInput.addFirst(syncData);
+          logger.error("Failure log with too many failed items, aborting this output channel", e);
+          remove.add(outputChannel);
+        } catch (Throwable e) {
+          logger.error("Output {} failed", syncData, e);
+          Throwables.throwIfUnchecked(e);
+        }
+      }
+      syncData.recycleParseContext(contexts);
+    }
+    failureChannelCleanUp(remove);
+  }
+
+  private void failureChannelCleanUp(List<OutputChannel> remove) {
+    if (!remove.isEmpty()) {
+      outputChannels.removeAll(remove);
+      for (OutputChannel outputChannel : remove) {
+        // TODO 18/2/12 channel cleanup
+      }
+      remove.clear();
+    }
   }
 
   private void shutdown(Exception e) {
