@@ -107,7 +107,7 @@ public class MongoMasterConnector implements MasterConnector {
   }
 
   @Override
-  public void run() {
+  public void loop() {
     Thread.currentThread().setName(identifier);
     long sleepInSecond = 1;
     for (int i = 0; i < maxRetry; i++) {

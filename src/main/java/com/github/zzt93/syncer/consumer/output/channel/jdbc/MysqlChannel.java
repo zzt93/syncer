@@ -192,9 +192,10 @@ public class MysqlChannel implements BufferedChannel<String> {
   @Override
   public boolean retriable(Exception e) {
     /*
-     * Two possible reasons for DuplicateKey
+     * Possible reasons for DuplicateKey
      * 1. the first failed, the second succeed. Then restart, then the second will send again and cause this
      * 2. duplicate entry in binlog file: load data into db multiple time
+     * 3. the data is sync to mysql but not receive response before syncer shutdown
      */
     return !(e instanceof DuplicateKeyException || e instanceof BadSqlGrammarException);
   }

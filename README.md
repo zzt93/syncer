@@ -28,7 +28,7 @@
 
 ### Input
 
-- Support listening to both MySQL & MongoDB
+- Support listening to both MySQL & MongoDB & DRDS of Aliyun (https://www.aliyun.com/product/drds)
 - MySQL master source filter:
   - Schema filter, support regex
   - Table name filter

@@ -49,15 +49,18 @@ public class SyncerApplication implements CommandLineRunner {
   @Override
   public void run(String... strings) throws Exception {
     for (PipelineConfig pipelineConfig : YamlEnvironmentPostProcessor.getConfigs()) {
-      if (!verifyPipeline(pipelineConfig)) {
+      if (!validPipeline(pipelineConfig)) {
         continue;
       }
       new ConsumerStarter(pipelineConfig, syncerConfig, consumerRegistry).start();
     }
-    ProducerStarter.getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry).start();
+    ProducerStarter
+        .getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry)
+        .start()
+        .waitTermination();
   }
 
-  private boolean verifyPipeline(PipelineConfig pipelineConfig) {
+  private boolean validPipeline(PipelineConfig pipelineConfig) {
     if (!supportedVersion(pipelineConfig.getVersion())) {
       logger.error("Not supported version[{}] config file", pipelineConfig.getVersion());
       return false;

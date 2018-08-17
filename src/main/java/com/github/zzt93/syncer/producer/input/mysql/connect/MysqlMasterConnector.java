@@ -140,7 +140,7 @@ public class MysqlMasterConnector implements MasterConnector {
   }
 
   @Override
-  public void run() {
+  public void loop() {
     if (file != null) {
       long position = consumeFile(listener, file);
       logger.info("Continue read binlog from server using {}@{}", file, position);
@@ -156,10 +156,11 @@ public class MysqlMasterConnector implements MasterConnector {
       } catch (InvalidBinlogException e) {
         logger.error("Invalid binlog file info {}@{}, reconnect to latest binlog",
             client.getBinlogFilename(), client.getBinlogPosition(), e);
-        client.setBinlogFilename(""); // fetch oldest log, but can't ensure no data loss if syncer is closed too long
-        client.setBinlogPosition(0); // have to reset it to avoid exception
+        // fetch oldest binlog file, but can't ensure no data loss if syncer is closed too long
+        client.setBinlogFilename("");
+        // have to reset it to avoid exception
+        client.setBinlogPosition(0);
         i = 0;
-//        client.setBinlogFilename(null);
       } catch (DupServerIdException | EOFException e) {
         logger.warn("Dup serverId {} detected, reconnect again", client.getServerId());
         client.setServerId(random.nextInt(Integer.MAX_VALUE));

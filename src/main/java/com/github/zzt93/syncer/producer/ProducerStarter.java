@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.producer;
 
 import com.github.zzt93.syncer.Starter;
+import com.github.zzt93.syncer.common.thread.StarterFuture;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
@@ -14,9 +15,13 @@ import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.connect.MysqlMasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.io.IOException;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -53,12 +58,13 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
   }
 
   @Override
-  public void start() throws IOException {
+  public StarterFuture start() throws IOException {
     logger.info("Start connecting to [{}]", masterSources);
     if (masterSources.size() > 1) {
       logger.warn("Connect to multiple masters, not suggested usage");
     }
 
+    List<Future> futures = new LinkedList<>();
     Set<Connection> wanted = consumerRegistry.wantedSource();
     for (ProducerMaster masterSource : masterSources) {
       Connection connection = masterSource.getConnection();
@@ -79,7 +85,7 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
                 consumerRegistry, maxRetry);
             break;
         }
-        service.submit(masterConnector);
+        futures.add(service.submit(masterConnector));
       } catch (IOException | SchemaUnavailableException e) {
         logger.error("Fail to connect to master source: {}", masterSource, e);
       }
@@ -87,11 +93,20 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
     if (!wanted.isEmpty()) {
       logger.warn("Some consumer wanted source is not configured in `producer`: {}", wanted);
     }
+    return new StarterFuture(this, futures);
   }
 
 
   @Override
   public Set<ProducerMaster> fromPipelineConfig(ProducerInput input) {
     return input.masterSet();
+  }
+
+  @Override
+  public void close() throws Exception {
+    service.shutdown();
+    if(!service.awaitTermination(5, TimeUnit.SECONDS)) {
+      logger.error("Fail to shutdown producer");
+    }
   }
 }

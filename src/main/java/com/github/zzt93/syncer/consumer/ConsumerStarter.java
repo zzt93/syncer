@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.consumer;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
+import com.github.zzt93.syncer.common.thread.StarterFuture;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
@@ -35,14 +36,17 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -60,11 +64,12 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   private SyncerAck ackConfig;
   private Registrant registrant;
   private Ack ack;
+  private final String id;
 
   public ConsumerStarter(PipelineConfig pipeline, SyncerConfig syncer,
       ConsumerRegistry consumerRegistry) throws Exception {
 
-    String id = pipeline.getConsumerId();
+    id = pipeline.getConsumerId();
     HashMap<String, SyncInitMeta> id2SyncInitMeta = initAckModule(id, pipeline.getInput(),
         syncer.getInput(), syncer.getAck());
 
@@ -160,10 +165,19 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     return res;
   }
 
-  public void start() throws InterruptedException, IOException {
+  public StarterFuture start() throws InterruptedException, IOException {
+    List<Future> futures = new LinkedList<>();
     startAck();
     for (int i = 0; i < worker; i++) {
-      service.submit(filterJobs[i]);
+      futures.add(service.submit(filterJobs[i]));
+    }
+    return new StarterFuture(this, futures);
+  }
+
+  public void close() throws InterruptedException {
+    service.shutdown();
+    if(!service.awaitTermination(5, TimeUnit.SECONDS)) {
+      logger.error("Fail to shutdown consumer: {}", id);
     }
   }
 
