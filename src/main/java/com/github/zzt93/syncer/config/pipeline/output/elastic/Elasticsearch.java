@@ -19,7 +19,7 @@ public class Elasticsearch implements OutputChannelConfig {
   private ESRequestMapping requestMapping = new ESRequestMapping();
   private PipelineBatchConfig batch = new PipelineBatchConfig();
   private FailureLogConfig failureLog = new FailureLogConfig();
-  private long refreshInMillis = 0;
+  private long refreshInMillis = 1000;
 
   public FailureLogConfig getFailureLog() {
     return failureLog;

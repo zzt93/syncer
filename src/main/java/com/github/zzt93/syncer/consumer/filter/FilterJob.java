@@ -57,7 +57,7 @@ public class FilterJob implements VoidCallable {
         }
         output(list, remove);
       } catch (InterruptedException e) {
-        logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
+        logger.warn("Interrupt thread {}", Thread.currentThread().getName());
         shutdown(e, outputChannels);
       }
     }

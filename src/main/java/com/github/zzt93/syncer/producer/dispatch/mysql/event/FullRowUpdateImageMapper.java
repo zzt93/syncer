@@ -32,18 +32,9 @@ public class FullRowUpdateImageMapper implements RowUpdateImageMapper {
     Serializable[] after = row.getValue();
     Assert.isTrue(before.length == after.length && after.length == includedColumns.length(),
         "before and after row image are not same length");
-    // only 'full' now
-    // TODO 17/10/25 only keep non-null field (id, partition key) & updated fields
     for (int i = 0; i < after.length; i++) {
-      if (after[i] == null && before[i] == null) {
-        continue;
-      } else if (after[i] == null) {
-        map.put(i, null);
-        if (primaryKeys.contains(i)) {
-          logger.warn("Updating id of table, not supported");
-        }
-        continue;
-      }
+      // because format 'full', shouldn't be null
+      assert after[i] != null && before[i] != null;
 
       if (primaryKeys.contains(i))  {
         if (!after[i].equals(before[i])) {

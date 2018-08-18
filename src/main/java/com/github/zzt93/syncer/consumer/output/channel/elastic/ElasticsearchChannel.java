@@ -56,7 +56,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final PipelineBatchConfig batchConfig;
-  private long refreshInterval = 1000;
+  private final long refreshInterval;
+  private volatile boolean closed = false;
+
 
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
       throws Exception {
@@ -107,6 +109,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) throws InterruptedException {
+    if (closed) return false;
     // TODO 18/3/25 remove following line, keep it for the time being
     event.removePrimaryKey();
     Object builder = esRequestMapper.map(event);
@@ -139,7 +142,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
           try {
             waitRefresh();
           } catch (InterruptedException e) {
-            logger.error("Thread interrupted", e);
+            logger.warn("Interrupt thread {}", Thread.currentThread().getName());
             return;
           }
           retry(null, false);
@@ -193,9 +196,20 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @Override
   public void close() {
-    client.close();
-    // ack
+    // TODO 18/8/18 CAS?
+    if (closed) return;
+    closed = true;
 
+    try {
+      flush();
+    } catch (InterruptedException e) {
+      logger.warn("Interrupt thread {}", Thread.currentThread().getName());
+    }
+    // ack
+    logger.info("Waiting for clear ack info");
+
+    // client
+    client.close();
   }
 
   @Override

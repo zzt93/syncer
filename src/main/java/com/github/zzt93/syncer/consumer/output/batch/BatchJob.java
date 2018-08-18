@@ -25,7 +25,7 @@ public class BatchJob implements Runnable {
     try {
       bufferedChannel.flush();
     } catch (InterruptedException e) {
-      logger.warn("Interrupt current thread {}", Thread.currentThread().getName(), e);
+      logger.warn("Interrupt thread {}", Thread.currentThread().getName());
       throw new ShutDownException(e);
     } catch (Throwable e) {
       logger.error("Batch job failed with", e);

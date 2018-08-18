@@ -10,14 +10,17 @@ import java.util.Map.Entry;
 import java.util.Set;
 
 /**
- * Created by zzt on 9/14/17. <p> <h3> <a href="https://dev.mysql.com/doc/internals/en/event-data-for-specific-event-types.html">The
+ * Created by zzt on 9/14/17.
+ * <p>
+ *
+ * <h3> <a href="https://dev.mysql.com/doc/internals/en/event-data-for-specific-event-types.html">The
  * format of update rows log event</a></h3>
  *
  * <ul> <li>before update row image & bit field indicating presence</li> <li>after update row image
  * & bit field indicating presence</li> </ul>
  *
- * <p> <a href="https://dev.mysql.com/doc/refman/5.7/en/replication-options-binary-log.html">The
- * binlog row image format</a>: For now, only support 'full' </p>
+ * <p> <a href="https://dev.mysql.com/doc/refman/5.7/en/replication-options-binary-log.html#sysvar_binlog_row_image">
+ *   The binlog row image format</a>: For now, only support 'full' now </p>
  */
 public class UpdateRowsEvent  {
 
@@ -26,6 +29,8 @@ public class UpdateRowsEvent  {
     List<HashMap<Integer, Object>> res = new ArrayList<>();
     BitSet includedColumns = updateRowsEventData.getIncludedColumns();
     // TODO 17/10/10 may support different binlog row image, only 'full' now
+    // If support 'minimal' format:
+    // - it will only keep columns needed to identify rows (id) & updated fields, but not partition key in DRDS
     RowUpdateImageMapper mapper = new FullRowUpdateImageMapper(primaryKeys, includedColumns);
     List<Entry<Serializable[], Serializable[]>> rows = updateRowsEventData.getRows();
     for (Entry<Serializable[], Serializable[]> row : rows) {

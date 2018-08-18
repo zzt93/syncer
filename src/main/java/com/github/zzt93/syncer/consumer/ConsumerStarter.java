@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.consumer;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
-import com.github.zzt93.syncer.common.thread.StarterFuture;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
@@ -36,14 +35,12 @@ import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
 import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -165,17 +162,16 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     return res;
   }
 
-  public StarterFuture start() throws InterruptedException, IOException {
-    List<Future> futures = new LinkedList<>();
+  public Starter start() throws InterruptedException, IOException {
     startAck();
     for (int i = 0; i < worker; i++) {
-      futures.add(service.submit(filterJobs[i]));
+      service.submit(filterJobs[i]);
     }
-    return new StarterFuture(this, futures);
+    return this;
   }
 
   public void close() throws InterruptedException {
-    service.shutdown();
+    service.shutdownNow();
     if(!service.awaitTermination(5, TimeUnit.SECONDS)) {
       logger.error("Fail to shutdown consumer: {}", id);
     }

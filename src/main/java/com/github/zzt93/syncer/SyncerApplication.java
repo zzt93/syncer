@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer;
 
+import com.github.zzt93.syncer.common.thread.WaitingAckHook;
 import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.pipeline.ProducerConfig;
@@ -56,8 +57,8 @@ public class SyncerApplication implements CommandLineRunner {
     }
     ProducerStarter
         .getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry)
-        .start()
-        .waitTermination();
+        .start();
+    Runtime.getRuntime().addShutdownHook(new WaitingAckHook());
   }
 
   private boolean validPipeline(PipelineConfig pipelineConfig) {
