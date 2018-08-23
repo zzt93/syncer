@@ -8,6 +8,8 @@ import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.consumer.ConsumerStarter;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import java.util.LinkedList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -49,16 +51,17 @@ public class SyncerApplication implements CommandLineRunner {
 
   @Override
   public void run(String... strings) throws Exception {
+    List<Starter> starters = new LinkedList<>();
     for (PipelineConfig pipelineConfig : YamlEnvironmentPostProcessor.getConfigs()) {
       if (!validPipeline(pipelineConfig)) {
         continue;
       }
-      new ConsumerStarter(pipelineConfig, syncerConfig, consumerRegistry).start();
+      starters.add(new ConsumerStarter(pipelineConfig, syncerConfig, consumerRegistry).start());
     }
-    ProducerStarter
+    starters.add(ProducerStarter
         .getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry)
-        .start();
-    Runtime.getRuntime().addShutdownHook(new WaitingAckHook());
+        .start());
+    Runtime.getRuntime().addShutdownHook(new WaitingAckHook(starters));
   }
 
   private boolean validPipeline(PipelineConfig pipelineConfig) {

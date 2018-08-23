@@ -112,6 +112,7 @@ public class Ack {
   }
 
   public void flush() {
+    // TODO 18/8/20 If dataId is just removed and map is empty, add next dataId
     ackMap.values().forEach(FileBasedMap::flush);
   }
 }

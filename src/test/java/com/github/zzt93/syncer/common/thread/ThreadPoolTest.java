@@ -35,7 +35,7 @@ public class ThreadPoolTest {
     ExecutorService service = Executors
         .newFixedThreadPool(nThreads, new NamedThreadFactory("syncer-producer"));
     for (int i = 0; i < nThreads; i++) {
-      service.submit(() -> {
+      service.submit((Runnable) () -> {
         while (true) {
           if (Thread.currentThread().isInterrupted()) {
             System.out.println("interrupted");
