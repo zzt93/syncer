@@ -44,7 +44,6 @@ public class MysqlMasterConnector implements MasterConnector {
 
   private final static Random random = new Random();
   private final String connectorIdentifier;
-  private final int maxRetry;
   private final SyncListener listener;
   private final String file;
   private Logger logger = LoggerFactory.getLogger(MysqlMasterConnector.class);
@@ -52,9 +51,8 @@ public class MysqlMasterConnector implements MasterConnector {
   private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
   public MysqlMasterConnector(MysqlConnection connection,
-      String file, ConsumerRegistry registry, int maxRetry)
+      String file, ConsumerRegistry registry)
       throws IOException, SchemaUnavailableException {
-    this.maxRetry = maxRetry;
     String password = connection.getPassword();
     if (StringUtils.isEmpty(password)) {
       throw new InvalidPasswordException(password);
@@ -141,15 +139,16 @@ public class MysqlMasterConnector implements MasterConnector {
 
   @Override
   public void loop() {
+    Thread.currentThread().setName(connectorIdentifier);
+
     if (file != null) {
       long position = consumeFile(listener, file);
       logger.info("Continue read binlog from server using {}@{}", file, position);
       client.setBinlogFilename(file);
       client.setBinlogPosition(position);
     }
-    Thread.currentThread().setName(connectorIdentifier);
     long sleepInSecond = 1;
-    for (int i = 0; i < maxRetry; i++) {
+    while (!Thread.interrupted()) {
       try {
         // this method is blocked
         client.connect();
@@ -160,14 +159,11 @@ public class MysqlMasterConnector implements MasterConnector {
         client.setBinlogFilename("");
         // have to reset it to avoid exception
         client.setBinlogPosition(0);
-        i = 0;
       } catch (DupServerIdException | EOFException e) {
         logger.warn("Dup serverId {} detected, reconnect again", client.getServerId());
         client.setServerId(random.nextInt(Integer.MAX_VALUE));
-        i = 0;
       } catch (IOException e) {
-        logger.error("Fail to connect to master. Reconnect to master in {}, left retry time: {}",
-            sleepInSecond, maxRetry - i - 1, e);
+        logger.error("Fail to connect to master. Reconnect to master in {}(s)", sleepInSecond, e);
         try {
           sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
           TimeUnit.SECONDS.sleep(sleepInSecond);
@@ -177,6 +173,5 @@ public class MysqlMasterConnector implements MasterConnector {
         }
       }
     }
-    logger.error("Max try exceeds, fail to connect");
   }
 }

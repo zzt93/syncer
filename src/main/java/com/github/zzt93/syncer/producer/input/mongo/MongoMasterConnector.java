@@ -8,10 +8,12 @@ import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
 import com.github.zzt93.syncer.producer.output.OutputSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import com.google.common.base.Throwables;
 import com.mongodb.BasicDBObject;
 import com.mongodb.CursorType;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.MongoTimeoutException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
@@ -36,17 +38,19 @@ public class MongoMasterConnector implements MasterConnector {
   private final Logger logger = LoggerFactory.getLogger(MongoMasterConnector.class);
 
   private final String identifier;
-  private final int maxRetry;
+  private final MongoConnection connection;
+  private final ConsumerRegistry registry;
   private MongoCursor<Document> cursor;
   private MongoDispatcher mongoDispatcher;
+  private MongoClient client;
 
 
-  public MongoMasterConnector(MongoConnection connection, ConsumerRegistry registry,
-      int maxRetry) throws IOException {
+  public MongoMasterConnector(MongoConnection connection, ConsumerRegistry registry) throws IOException {
     identifier = connection.initIdentifier();
-    this.maxRetry = maxRetry;
 
-    configCursor(connection, registry);
+    this.connection = connection;
+    this.registry = registry;
+    client = new MongoClient(new MongoClientURI(connection.toConnectionUrl(null)));
     configDispatch(connection, registry);
   }
 
@@ -57,8 +61,6 @@ public class MongoMasterConnector implements MasterConnector {
   }
 
   private void configCursor(MongoConnection connection, ConsumerRegistry registry) {
-    MongoClient client = new MongoClient(
-        new MongoClientURI(connection.toConnectionUrl(null)));
     this.cursor = getReplicaCursor(connection, registry, client);
   }
 
@@ -84,7 +86,7 @@ public class MongoMasterConnector implements MasterConnector {
     // no need for capped collections:
     // perform a find() on a capped collection with no ordering specified,
     // MongoDB guarantees that the ordering of results is the same as the insertion order.
-//    BasicDBObject sort = new BasicDBObject("$natural", 1);
+    // BasicDBObject sort = new BasicDBObject("$natural", 1);
 
     return coll.find(query)
         .cursorType(CursorType.TailableAwait)
@@ -109,20 +111,15 @@ public class MongoMasterConnector implements MasterConnector {
   @Override
   public void loop() {
     Thread.currentThread().setName(identifier);
-    long sleepInSecond = 1;
-    for (int i = 0; i < maxRetry; i++) {
-      while (!Thread.interrupted()) {
-        while (cursor.hasNext()) {
-          Document d = cursor.next();
-          try {
-            mongoDispatcher.dispatch(d);
-          } catch (Exception e) {
-            // TODO 18/1/26 how to retry?
-            logger.error("Fail to dispatch this doc {}", d, e);
-          }
-        }
 
-        logger.error("Fail to connect to remote: {}, retry in {} second", identifier, sleepInSecond);
+    long sleepInSecond = 1;
+    while (!Thread.interrupted()) {
+      try {
+        configCursor(connection, registry);
+        eventLoop();
+      } catch (MongoTimeoutException e) {
+        logger
+            .error("Fail to connect to remote: {}, retry in {} second", identifier, sleepInSecond);
         try {
           sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
           TimeUnit.SECONDS.sleep(sleepInSecond);
@@ -133,4 +130,18 @@ public class MongoMasterConnector implements MasterConnector {
       }
     }
   }
+
+  private void eventLoop() {
+    while (cursor.hasNext()) {
+      Document d = cursor.next();
+      try {
+        mongoDispatcher.dispatch(d);
+      } catch (Throwable e) {
+        // TODO 18/1/26 how to retry?
+        logger.error("Fail to dispatch this doc {}", d, e);
+        Throwables.throwIfUnchecked(e);
+      }
+    }
+  }
+
 }

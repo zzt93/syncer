@@ -31,7 +31,6 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
   private final Set<ProducerMaster> masterSources;
   private final ExecutorService service;
   private final ConsumerRegistry consumerRegistry;
-  private final int maxRetry;
 
   private ProducerStarter(ProducerInput input,
       SyncerInput syncerConfigInput, ConsumerRegistry consumerRegistry) {
@@ -42,7 +41,6 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
     }
     service = Executors.newFixedThreadPool(size, new NamedThreadFactory("syncer-producer"));
     this.consumerRegistry = consumerRegistry;
-    maxRetry = syncerConfigInput.getMaxRetry();
   }
 
   public static ProducerStarter getInstance(ProducerInput input, SyncerInput syncerConfigInput,
@@ -73,11 +71,11 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
         switch (masterSource.getType()) {
           case MySQL:
             masterConnector = new MysqlMasterConnector(new MysqlConnection(connection),
-                masterSource.getFile(), consumerRegistry, maxRetry);
+                masterSource.getFile(), consumerRegistry);
             break;
           case Mongo:
             masterConnector = new MongoMasterConnector(new MongoConnection(connection),
-                consumerRegistry, maxRetry);
+                consumerRegistry);
             break;
         }
         service.submit(masterConnector);
