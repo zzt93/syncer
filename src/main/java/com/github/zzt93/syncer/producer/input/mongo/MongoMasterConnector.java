@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.producer.input.mongo;
 
+import com.github.zzt93.syncer.common.exception.ShutDownException;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
 import com.github.zzt93.syncer.config.pipeline.input.Table;
@@ -13,6 +14,8 @@ import com.mongodb.BasicDBObject;
 import com.mongodb.CursorType;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
+import com.mongodb.MongoInterruptedException;
+import com.mongodb.MongoSocketException;
 import com.mongodb.MongoTimeoutException;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
@@ -117,7 +120,7 @@ public class MongoMasterConnector implements MasterConnector {
       try {
         configCursor(connection, registry);
         eventLoop();
-      } catch (MongoTimeoutException e) {
+      } catch (MongoTimeoutException | MongoSocketException e) {
         logger
             .error("Fail to connect to remote: {}, retry in {} second", identifier, sleepInSecond);
         try {
@@ -127,6 +130,9 @@ public class MongoMasterConnector implements MasterConnector {
           logger.error("Interrupt mongo {}", identifier, e1);
           Thread.currentThread().interrupt();
         }
+      } catch (MongoInterruptedException e) {
+        logger.warn("Mongo master interrupted");
+        throw new ShutDownException(e);
       }
     }
   }

@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
 import java.io.Serializable;
 import java.util.HashMap;
 import org.slf4j.Logger;
@@ -35,7 +34,7 @@ public class ESScriptUpdate extends SyncByQuery implements Serializable {
       default:
         logger.warn("Not support update list variable for {}", outer.getType());
     }
-    outer.setEventType(EventType.UPDATE_ROWS);
+    outer.toUpdate();
     return this;
   }
 

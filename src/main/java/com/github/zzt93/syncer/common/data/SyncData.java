@@ -122,6 +122,24 @@ public class SyncData {
     return EventType.isDelete(inner.type);
   }
 
+  public boolean toWrite() {
+    return updateType(EventType.WRITE_ROWS);
+  }
+
+  public boolean toUpdate() {
+    return updateType(EventType.UPDATE_ROWS);
+  }
+
+  public boolean toDelete() {
+    return updateType(EventType.DELETE_ROWS);
+  }
+
+  private boolean updateType(EventType type) {
+    boolean res = inner.type == type;
+    inner.setType(type);
+    return res;
+  }
+
   public void setTable(String table) {
     this.table = table;
   }
@@ -266,10 +284,6 @@ public class SyncData {
 
   public boolean hasExtra() {
     return inner.hasExtra;
-  }
-
-  void setEventType(EventType type) {
-    inner.setType(type);
   }
 
   @Override

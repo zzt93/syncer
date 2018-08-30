@@ -40,6 +40,8 @@ public class SyncListener implements BinaryLogClient.EventListener {
         if (EventType.isRowMutation(eventType)) {
           try {
             EventHeaderV4 header = event.getHeader();
+            // unify multiple update/delete/write into one single type
+            // to avoid checking wrong type
             if (isUpdate(eventType)) {
               header.setEventType(UPDATE_ROWS);
             } else if (isWrite(eventType)) {
