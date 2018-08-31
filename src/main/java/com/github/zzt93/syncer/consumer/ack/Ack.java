@@ -62,7 +62,7 @@ public class Ack {
       }
     }
     try {
-      ackMap.put(identifier, new FileBasedMap<>(path));
+      ackMap.put(identifier, new FileBasedMap<>(path, IdGenerator.maxIdLen()));
     } catch (IOException e) {
       logger.error("Fail to create file {}", path);
     }
