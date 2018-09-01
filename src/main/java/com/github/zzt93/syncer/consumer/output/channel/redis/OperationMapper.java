@@ -4,7 +4,6 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.output.redis.OperationMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
-import java.io.UnsupportedEncodingException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisCallback;
@@ -12,6 +11,8 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+
+import java.nio.charset.StandardCharsets;
 
 /**
  * @author zzt
@@ -49,19 +50,10 @@ public class OperationMapper implements Mapper<SyncData, RedisCallback> {
   }
 
   private byte[] rawKey(String key) {
-    try {
-      return key.getBytes("utf8");
-    } catch (UnsupportedEncodingException ignored) {
-      logger.error("Impossible", ignored);
-      throw new IllegalStateException();
-    }
+    return key.getBytes(StandardCharsets.UTF_8);
   }
+
   private byte[] rawValue(Object value) {
-    try {
-      return ((String) value).getBytes("utf8");
-    } catch (UnsupportedEncodingException ignored) {
-      logger.error("Impossible", ignored);
-      throw new IllegalStateException();
-    }
+    return ((String) value).getBytes(StandardCharsets.UTF_8);
   }
 }

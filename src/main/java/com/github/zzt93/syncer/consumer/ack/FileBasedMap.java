@@ -2,13 +2,16 @@ package com.github.zzt93.syncer.consumer.ack;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.google.common.primitives.Bytes;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.io.UnsupportedEncodingException;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.nio.channels.FileChannel.MapMode;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
@@ -16,12 +19,10 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
- *
+ * <p>
  * The class use {@link Object#toString()} to get content to write, so you may need to customize
  * this method.
  * @see Object#toString()
@@ -41,7 +42,7 @@ public class FileBasedMap<T extends Comparable<T>> {
       file = fileChannel.map(MapMode.READ_WRITE, 0, _1K);
     }
     int i;
-    for (i = 0; i < _1K && file.get(i) != 0; i++);
+    for (i = 0; i < _1K && file.get(i) != 0; i++) ;
     file.position(i);
   }
 
@@ -78,20 +79,16 @@ public class FileBasedMap<T extends Comparable<T>> {
     }
     T first = map.firstKey();
 //    logger.debug("Flushing ack info {}", first);
-    try {
-      byte[] bytes = first.toString().getBytes("utf-8");
-      putBytes(file, bytes);
-    } catch (UnsupportedEncodingException ignore) {
-      logger.error("Impossible", ignore);
-    }
+    byte[] bytes = first.toString().getBytes(StandardCharsets.UTF_8);
+    putBytes(file, bytes);
     file.force();
   }
 
   private void putBytes(MappedByteBuffer file, byte[] bytes) {
-    int position = file.position();
     for (int i = 0; i < bytes.length; i++) {
       file.put(i, bytes[i]);
     }
+    int position = file.position();
     for (int i = bytes.length; i < position; i++) {
       file.put(i, (byte) 0);
     }
