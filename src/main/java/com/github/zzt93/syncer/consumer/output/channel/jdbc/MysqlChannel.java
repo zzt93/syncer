@@ -15,13 +15,6 @@ import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
-import java.io.FileNotFoundException;
-import java.nio.file.Paths;
-import java.sql.BatchUpdateException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.apache.tomcat.jdbc.pool.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +25,14 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import java.io.FileNotFoundException;
+import java.nio.file.Paths;
+import java.sql.BatchUpdateException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzt
@@ -45,9 +46,11 @@ public class MysqlChannel implements BufferedChannel<String> {
   private final SQLMapper sqlMapper;
   private final Ack ack;
   private final FailureLog<SyncWrapper<String>> sqlFailureLog;
+  private final String id;
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
+    id = connection.connectionIdentifier();
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
     batchBuffer = new BatchBuffer<>(mysql.getBatch());
     sqlMapper = new NestedSQLMapper(mysql.getRowMapping(), jdbcTemplate);
@@ -103,6 +106,11 @@ public class MysqlChannel implements BufferedChannel<String> {
   @Override
   public void close() {
 
+  }
+
+  @Override
+  public String id() {
+    return id;
   }
 
   @Override

@@ -9,17 +9,20 @@ import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException
 import com.github.zzt93.syncer.config.producer.ProducerInput;
 import com.github.zzt93.syncer.config.producer.ProducerMaster;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.connect.MysqlMasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -100,6 +103,13 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
     service.shutdownNow();
     if (!service.awaitTermination(5, TimeUnit.SECONDS)) {
       logger.error("Fail to shutdown producer");
+    }
+  }
+
+  @Override
+  public void registerToHealthCenter() {
+    for (ProducerMaster source : masterSources) {
+      SyncerHealth.producer(source.getConnection().connectionIdentifier(), Health.green());
     }
   }
 }

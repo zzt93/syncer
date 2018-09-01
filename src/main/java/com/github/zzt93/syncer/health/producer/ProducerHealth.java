@@ -20,4 +20,8 @@ public class ProducerHealth {
   public Health getStatus() {
     return status;
   }
+
+  public ProducerHealth status(Health status) {
+    return new ProducerHealth(connection, status);
+  }
 }

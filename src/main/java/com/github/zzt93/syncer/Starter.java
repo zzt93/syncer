@@ -12,4 +12,5 @@ public interface Starter<I, O> {
 
   void close() throws Exception;
 
+  void registerToHealthCenter();
 }
