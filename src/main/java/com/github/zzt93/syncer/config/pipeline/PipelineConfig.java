@@ -3,16 +3,18 @@ package com.github.zzt93.syncer.config.pipeline;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
-import java.util.ArrayList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author zzt
  */
 @ConfigurationProperties("syncer.consumer")
+// TODO: 18/9/1 rename ConsumerConfig
 public class PipelineConfig {
 
   private Logger logger = LoggerFactory.getLogger(PipelineConfig.class);

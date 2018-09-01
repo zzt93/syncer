@@ -1,12 +1,12 @@
 package com.github.zzt93.syncer.producer.output;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.consumer.InputSource;
+import com.github.zzt93.syncer.consumer.ConsumerSource;
 
 /**
  * @author zzt
  */
-public interface OutputSink {
+public interface ProducerSink {
 
   /**
    * @param data SyncData info
@@ -23,7 +23,7 @@ public interface OutputSink {
    */
   boolean output(SyncData[] data);
 
-  InputSource remote();
+  ConsumerSource remote();
 
   String toString();
 }

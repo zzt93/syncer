@@ -5,8 +5,9 @@ import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.RowsEvent;
-import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
+import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
 import com.github.zzt93.syncer.producer.input.mysql.meta.TableMeta;
+
 import java.util.HashMap;
 import java.util.List;
 
@@ -15,15 +16,15 @@ import java.util.List;
  */
 public class SchemaAndRowFilter {
 
-  private final ConnectionSchemaMeta connectionSchemaMeta;
+  private final ConsumerSchemaMeta consumerSchemaMeta;
 
-  public SchemaAndRowFilter(ConnectionSchemaMeta connectionSchemaMeta) {
-    this.connectionSchemaMeta = connectionSchemaMeta;
+  public SchemaAndRowFilter(ConsumerSchemaMeta consumerSchemaMeta) {
+    this.consumerSchemaMeta = consumerSchemaMeta;
   }
 
   public SyncData[] decide(String eventId, Event... e) {
     TableMapEventData tableMap = e[0].getData();
-    TableMeta table = connectionSchemaMeta.findTable(tableMap.getDatabase(), tableMap.getTable());
+    TableMeta table = consumerSchemaMeta.findTable(tableMap.getDatabase(), tableMap.getTable());
     if (table == null) {
       return null;
     }

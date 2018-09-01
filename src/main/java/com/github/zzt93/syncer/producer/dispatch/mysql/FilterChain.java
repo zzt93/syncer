@@ -3,11 +3,12 @@ package com.github.zzt93.syncer.producer.dispatch.mysql;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
-import com.github.zzt93.syncer.producer.output.OutputSink;
-import java.util.Arrays;
+import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
+import com.github.zzt93.syncer.producer.output.ProducerSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Arrays;
 
 /**
  * @author zzt
@@ -16,11 +17,11 @@ public class FilterChain {
 
   private final Logger logger = LoggerFactory.getLogger(FilterChain.class);
   private final SchemaAndRowFilter entry;
-  private final OutputSink outputSink;
+  private final ProducerSink producerSink;
 
-  public FilterChain(ConnectionSchemaMeta connectionSchemaMeta, OutputSink outputSink) {
-    this.entry = new SchemaAndRowFilter(connectionSchemaMeta);
-    this.outputSink = outputSink;
+  public FilterChain(ConsumerSchemaMeta consumerSchemaMeta, ProducerSink producerSink) {
+    this.entry = new SchemaAndRowFilter(consumerSchemaMeta);
+    this.producerSink = producerSink;
   }
 
   public FilterRes decide(String eventId, Event[] events) {
@@ -34,10 +35,10 @@ public class FilterChain {
 
     FilterRes res = FilterRes.ACCEPT;
     try {
-      outputSink.output(aim);
+      producerSink.output(aim);
     } catch (Exception e) {
       res = FilterRes.DENY;
-      logger.error("Fail to send data to output: {}", outputSink, e);
+      logger.error("Fail to send data to output: {}", producerSink, e);
     }
     return res;
   }

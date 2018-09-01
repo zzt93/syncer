@@ -3,7 +3,8 @@ package com.github.zzt93.syncer.producer.dispatch.mongo;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
-import com.github.zzt93.syncer.producer.output.OutputSink;
+import com.github.zzt93.syncer.producer.output.ProducerSink;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map.Entry;
@@ -15,11 +16,11 @@ import java.util.Set;
 public class JsonKeyFilter {
 
   private final Schema schema;
-  private final OutputSink outputSink;
+  private final ProducerSink producerSink;
 
-  public JsonKeyFilter(Schema schema, OutputSink outputSink) {
+  public JsonKeyFilter(Schema schema, ProducerSink producerSink) {
     this.schema = schema;
-    this.outputSink = outputSink;
+    this.producerSink = producerSink;
   }
 
   public boolean output(SyncData data) {
@@ -35,6 +36,6 @@ public class JsonKeyFilter {
     if (records.isEmpty() && data.getType() == EventType.UPDATE_ROWS) {
       return false;
     }
-    return outputSink.output(data);
+    return producerSink.output(data);
   }
 }

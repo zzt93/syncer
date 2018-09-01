@@ -1,13 +1,14 @@
 package com.github.zzt93.syncer.producer.register;
 
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.consumer.InputSource;
+import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
-import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
-import com.github.zzt93.syncer.producer.output.OutputSink;
-import java.util.IdentityHashMap;
+import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
+import com.github.zzt93.syncer.producer.output.ProducerSink;
+
+import java.util.HashMap;
 import java.util.Set;
 
 /**
@@ -15,13 +16,13 @@ import java.util.Set;
  */
 public interface ConsumerRegistry {
 
-  boolean register(Connection connection, InputSource source);
+  boolean register(Connection connection, ConsumerSource source);
 
   BinlogInfo votedBinlogInfo(Connection connection);
 
   DocTimestamp votedMongoId(Connection connection);
 
-  IdentityHashMap<ConsumerSchema, OutputSink> outputSink(Connection connection);
+  HashMap<Consumer, ProducerSink> outputSink(Connection connection);
 
   /**
    * should return a copy of wanted source

@@ -32,6 +32,12 @@
             <name>spring milestone</name>
             <url>http://repo.spring.io/milestone/</url>
         </repository>
+
+        <repository>
+            <id>spring.plugin</id>
+            <name>Spring Plugins Repository</name>
+            <url>http://repo.spring.io/plugins-release/</url>
+        </repository>
     </repositories>
 
     <pluginRepositories>

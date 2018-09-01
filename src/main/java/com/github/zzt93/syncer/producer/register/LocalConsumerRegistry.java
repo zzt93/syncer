@@ -1,25 +1,26 @@
 package com.github.zzt93.syncer.producer.register;
 
-import static com.google.common.base.Preconditions.checkState;
-
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.consumer.InputSource;
+import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.consumer.input.MongoInputSource;
 import com.github.zzt93.syncer.consumer.input.MysqlInputSource;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
-import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
-import com.github.zzt93.syncer.producer.output.LocalOutputSink;
-import com.github.zzt93.syncer.producer.output.OutputSink;
+import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
+import com.github.zzt93.syncer.producer.output.LocalProducerSink;
+import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Sets;
-import java.util.HashSet;
-import java.util.IdentityHashMap;
-import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentSkipListSet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentSkipListSet;
+
+import static com.google.common.base.Preconditions.checkState;
 
 /**
  * @author zzt
@@ -32,10 +33,10 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   private ConcurrentHashMap<Connection, BinlogInfo> olderBinlog = new ConcurrentHashMap<>();
   private ConcurrentHashMap<Connection, DocTimestamp> smallerId = new ConcurrentHashMap<>();
   private ConcurrentSkipListSet<Connection> voted = new ConcurrentSkipListSet<>();
-  private ConcurrentHashMap<Connection, Set<InputSource>> inputSources = new ConcurrentHashMap<>();
+  private ConcurrentHashMap<Connection, Set<ConsumerSource>> consumerSources = new ConcurrentHashMap<>();
 
   @Override
-  public boolean register(Connection connection, InputSource source) {
+  public boolean register(Connection connection, ConsumerSource source) {
     if (voted.contains(connection)) {
       logger.warn("Output sink is already started, fail to register");
       return false;
@@ -52,7 +53,7 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
       checkState(false);
     }
     final boolean[] add = new boolean[1];
-    inputSources.compute(connection, (k, v) -> {
+    consumerSources.compute(connection, (k, v) -> {
       if (v == null) {
         add[0] = true;
         return Sets.newHashSet(source);
@@ -82,19 +83,19 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   }
 
   @Override
-  public IdentityHashMap<ConsumerSchema, OutputSink> outputSink(Connection connection) {
-    IdentityHashMap<ConsumerSchema, OutputSink> res = new IdentityHashMap<>();
+  public HashMap<Consumer, ProducerSink> outputSink(Connection connection) {
+    HashMap<Consumer, ProducerSink> res = new HashMap<>();
     // TODO 18/1/15 may reuse but not new
-    if (!inputSources.containsKey(connection)) return res;
-    for (InputSource inputSource : inputSources.get(connection)) {
-      res.put(new ConsumerSchema(inputSource.getSchemas()), new LocalOutputSink(inputSource));
+    if (!consumerSources.containsKey(connection)) return res;
+    for (ConsumerSource consumerSource : consumerSources.get(connection)) {
+      res.put(new Consumer(consumerSource), new LocalProducerSink(consumerSource));
     }
     return res;
   }
 
   @Override
   public Set<Connection> wantedSource() {
-    return new HashSet<>(inputSources.keySet());
+    return new HashSet<>(consumerSources.keySet());
   }
 
 }

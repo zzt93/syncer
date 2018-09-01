@@ -1,7 +1,8 @@
 package com.github.zzt93.syncer.consumer.input;
 
-import com.github.zzt93.syncer.consumer.InputSource;
+import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -10,7 +11,7 @@ import java.util.List;
  */
 public class Registrant {
 
-  private final List<InputSource> inputSources = new ArrayList<>();
+  private final List<ConsumerSource> consumerSources = new ArrayList<>();
   private final ConsumerRegistry consumerRegistry;
 
   public Registrant(ConsumerRegistry consumerRegistry) {
@@ -19,14 +20,14 @@ public class Registrant {
 
   public Boolean register() {
     boolean res = true;
-    for (InputSource inputSource : inputSources) {
-      res = res && consumerRegistry.register(inputSource.getRemoteConnection(), inputSource);
+    for (ConsumerSource consumerSource : consumerSources) {
+      res = res && consumerRegistry.register(consumerSource.getRemoteConnection(), consumerSource);
     }
     return res;
   }
 
-  public void addDatasource(InputSource inputSource) {
-    inputSources.add(inputSource);
+  public void addDatasource(ConsumerSource consumerSource) {
+    consumerSources.add(consumerSource);
   }
 
 }
