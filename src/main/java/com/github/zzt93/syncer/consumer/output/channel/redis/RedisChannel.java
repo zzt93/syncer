@@ -21,6 +21,7 @@ import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.expression.Expression;
@@ -56,7 +57,7 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
       throw new IllegalStateException("Impossible", e);
     }
     template = new RedisTemplate<>();
-    JedisConnectionFactory factory = redis.getConnectionFactory();
+    LettuceConnectionFactory factory = redis.getConnectionFactory();
     factory.afterPropertiesSet();
     template.setConnectionFactory(factory);
     template.afterPropertiesSet();

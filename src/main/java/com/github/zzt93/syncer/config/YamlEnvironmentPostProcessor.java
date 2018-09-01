@@ -9,6 +9,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 import org.slf4j.Logger;
@@ -94,7 +95,12 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
   private PropertySource<?> loadYaml(String name) {
     Resource path = FileUtil.getResource(name);
     try {
-      return this.loader.load(name, path, null);
+      List<PropertySource<?>> load = this.loader.load(name, path);
+      if (load.size() != 1) {
+        throw new IllegalStateException(
+            "Invalid yaml configuration file" + path);
+      }
+      return load.get(0);
     } catch (IOException ex) {
       throw new IllegalStateException(
           "Failed to load yaml configuration from " + path, ex);
