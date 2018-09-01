@@ -33,15 +33,16 @@ public class FileBasedMap<T extends Comparable<T>> {
   private final MappedByteBuffer file;
   private final ConcurrentSkipListMap<T, AtomicInteger> map = new ConcurrentSkipListMap<>();
   private final Logger logger = LoggerFactory.getLogger(FileBasedMap.class);
-  private final int maxKeyLen;
 
-  public FileBasedMap(Path path, int maxKeyLen) throws IOException {
-    this.maxKeyLen = maxKeyLen;
+  public FileBasedMap(Path path) throws IOException {
     Files.createDirectories(path.toAbsolutePath().getParent());
     try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet
         .of(StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE))) {
       file = fileChannel.map(MapMode.READ_WRITE, 0, _1K);
     }
+    int i;
+    for (i = 0; i < _1K && file.get(i) != 0; i++);
+    file.position(i);
   }
 
   public static byte[] readData(Path path) throws IOException {
@@ -77,25 +78,25 @@ public class FileBasedMap<T extends Comparable<T>> {
     }
     T first = map.firstKey();
 //    logger.debug("Flushing ack info {}", first);
-    clearBuf(maxKeyLen);
     try {
       byte[] bytes = first.toString().getBytes("utf-8");
-      if (bytes.length > maxKeyLen) {
-        // TODO 18/8/31
-        logger.error("key too long {}", first);
-      }
-      file.put(bytes);
+      putBytes(file, bytes);
     } catch (UnsupportedEncodingException ignore) {
       logger.error("Impossible", ignore);
     }
     file.force();
   }
 
-  private void clearBuf(int size) {
-    for (int i = 0; i < size; i++) {
+  private void putBytes(MappedByteBuffer file, byte[] bytes) {
+    int position = file.position();
+    for (int i = 0; i < bytes.length; i++) {
+      file.put(i, bytes[i]);
+    }
+    for (int i = bytes.length; i < position; i++) {
       file.put(i, (byte) 0);
     }
-    file.position(0);
+    file.position(bytes.length);
   }
+
 
 }

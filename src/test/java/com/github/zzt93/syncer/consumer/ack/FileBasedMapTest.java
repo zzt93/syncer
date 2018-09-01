@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.consumer.ack;
 
-import com.github.zzt93.syncer.common.IdGenerator;
 import java.nio.file.Paths;
 import org.junit.Before;
 import org.junit.Test;
@@ -14,7 +13,7 @@ public class FileBasedMapTest {
 
   @Before
   public void setUp() throws Exception {
-    map = new FileBasedMap<>(Paths.get("src/test/resources/FileBasedMapTest"), IdGenerator.maxIdLen());
+    map = new FileBasedMap<>(Paths.get("src/test/resources/FileBasedMapTest"));
   }
 
   @Test
@@ -23,6 +22,9 @@ public class FileBasedMapTest {
     map.flush();
     map.remove("mysql-bin.000115/1234360405/139/u", 2);
     map.append("mysql-bin.000116/1305/139/w", 1);
+    map.flush();
+    map.remove("mysql-bin.000116/1305/139/w", 1);
+    map.append("mysql-bin.000116/1305/13/w", 1);
     map.flush();
   }
 

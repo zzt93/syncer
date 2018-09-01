@@ -80,8 +80,4 @@ public class IdGenerator {
     DUP(), CLONE()
   }
 
-  public static int maxIdLen() {
-    return COMMON_LEN * 2;
-  }
-
 }
