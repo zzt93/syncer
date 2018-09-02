@@ -24,9 +24,9 @@ import java.util.stream.Collectors;
  * All schema metas {@link SchemaMeta} that a DB has.
  * A DB is identified by connection identifier (host + port).
  *
+ * @author zzt
  * @see SchemaMeta
  * @see com.github.zzt93.syncer.config.pipeline.common.Connection#connectionIdentifier()
- * @author zzt
  */
 public class ConsumerSchemaMeta {
 
@@ -141,51 +141,37 @@ public class ConsumerSchemaMeta {
         tableCount += consumer.getSchemas().stream().mapToInt(s -> s.getTables().size()).sum();
       }
 
-      HashMap<Schema, SchemaMeta> metaHashMap = new HashMap<>();
-      while (tableCount > nowCount && tableResultSet.next()) {
+      // It is a mapping for each consumer (because diff consumer may have diff interested col, can't share),
+      // so use IdentityHashMap (Map<Consumer, Map> is the same)
+      IdentityHashMap<Schema, SchemaMeta> metaOfEachConsumer = new IdentityHashMap<>();
+      while (tableCount > nowCount && tableResultSet.next()) { // for each table
         String tableSchema = tableResultSet.getString("TABLE_CAT");
         String tableName = tableResultSet.getString("TABLE_NAME");
-        for (Consumer consumer : consumers) {
-          SchemaMeta schemaMeta = null;
-          boolean newSchema = true, newTable = true;
-          for (Schema aim : consumer.getSchemas()) {
-            Set<String> tableRow = aim.getTableRow(tableSchema, tableName);
-            if (tableRow != null) { // a consumer should only match one table at one time
-              TableMeta tableMeta = new TableMeta();
-              // TODO 18/1/18 may opt to get all columns then use
-              setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
-              setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta);
-              if (metaHashMap.containsKey(aim)) {
-                newSchema = false;
-              }
-              schemaMeta = metaHashMap
-                  .computeIfAbsent(aim, k -> new SchemaMeta(aim.getName(), aim.getNamePattern()));
-              newTable = schemaMeta.addTableMeta(tableName, tableMeta) == null;
-              break;
-            }
-          }
-          if (schemaMeta != null) { // matched schema & name
-            if (newTable) {
-              nowCount++;
-            }
-            SchemaMeta finalSchemaMeta = schemaMeta;
-            boolean finalCreate = newSchema;
-            res.compute(consumer, (k, v) -> {
-              if (v == null) {
-                return Lists.newArrayList(finalSchemaMeta);
-              } else {
-                if (finalCreate) {
-                  v.add(finalSchemaMeta);
-                }
-                return v;
-              }
+        for (Consumer consumer : consumers) { // if any consumer interested in
+          Schema aim = consumer.matchedSchema(tableSchema, tableName);
+          if (aim != null) {
+            SchemaMeta schemaMeta = metaOfEachConsumer.computeIfAbsent(aim, k -> {
+              SchemaMeta tmp = new SchemaMeta(aim.getName(), aim.getNamePattern());
+              // add meta to consumer map if new schema
+              res.computeIfAbsent(consumer, key -> Lists.newLinkedList()).add(tmp);
+              return tmp;
             });
+            Set<String> tableRow = aim.getTableRow(tableSchema, tableName);
+            TableMeta tableMeta = new TableMeta();
+            // TODO 18/1/18 may opt to get all columns then use
+            setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
+            setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta);
+            if (schemaMeta.addTableMeta(tableName, tableMeta) == null) {
+              nowCount++;
+            } else {
+              assert false; // TODO: 18/9/2 verify and remove
+            }
           }
         }
       }
       if (tableCount < nowCount) {
         InvalidConfigException e = new InvalidConfigException();
-        logger.error("Invalid schema config: actual listening {} tables, only find {}", tableCount,
+        logger.error("Invalid schema config: want {} tables, only find {}", tableCount,
             nowCount, e);
         throw e;
       }
@@ -193,7 +179,7 @@ public class ConsumerSchemaMeta {
     }
 
     private void setInterestedCol(DatabaseMetaData metaData, String tableSchema, String tableName,
-        Set<String> tableRow, TableMeta tableMeta) throws SQLException {
+                                  Set<String> tableRow, TableMeta tableMeta) throws SQLException {
       try (ResultSet columnResultSet = metaData
           .getColumns(tableSchema, "public", tableName, null)) {
         while (columnResultSet.next()) {
@@ -209,7 +195,7 @@ public class ConsumerSchemaMeta {
     }
 
     private void setPrimaryKey(DatabaseMetaData metaData, String tableSchema, String tableName,
-        Set<String> tableRow, TableMeta tableMeta) throws SQLException {
+                               Set<String> tableRow, TableMeta tableMeta) throws SQLException {
       try (ResultSet primaryKeys = metaData.getPrimaryKeys(tableSchema, "", tableName)) {
         if (primaryKeys.next()) {
           // use `- 1` because the index of mysql column is count from 1

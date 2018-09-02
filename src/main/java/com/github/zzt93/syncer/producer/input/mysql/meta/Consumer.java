@@ -51,4 +51,15 @@ public class Consumer {
         ", id='" + id + '\'' +
         '}';
   }
+
+  Schema matchedSchema(String tableSchema, String tableName) {
+    for (Schema aim : getSchemas()) {
+      Set<String> tableRow = aim.getTableRow(tableSchema, tableName);
+      if (tableRow != null) {
+        // a consumer should only match one table at one time
+        return aim;
+      }
+    }
+    return null;
+  }
 }
