@@ -4,7 +4,7 @@ syncer:
   input:
     max-retry: 5
     input-meta:
-      last-run-metadata-dir: /data/syncer/input/last_position/
+      last-run-metadata-dir: //Users/xiong/data/syncer/input/last_position/
 
   filter:
     # should be at least twice of core
@@ -15,4 +15,4 @@ syncer:
     batch:
       worker: 2
     output-meta:
-      failure-log-dir: /data/syncer/output/failure/
+      failure-log-dir: //Users/xiong/data/syncer/output/failure/

@@ -5,12 +5,6 @@ import com.github.zzt93.syncer.common.util.RegexUtil;
 import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.google.common.base.Preconditions;
-import java.io.IOException;
-import java.io.InputStream;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map.Entry;
-import java.util.regex.Matcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.SpringApplication;
@@ -20,6 +14,13 @@ import org.springframework.core.env.ConfigurableEnvironment;
 import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.Resource;
 import org.yaml.snakeyaml.Yaml;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
 
 /**
  * @author zzt
@@ -82,7 +83,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     while (matcher.find()) {
       String group = matcher.group(1);
       String property = environment.getProperty(group);
-      Preconditions.checkNotNull(property);
+      Preconditions.checkNotNull(property, "Fail to resolve env var: %s", group);
       rep.put(matcher.group(), property);
     }
     for (Entry<String, String> entry : rep.entrySet()) {
