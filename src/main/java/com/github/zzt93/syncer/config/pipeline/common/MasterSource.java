@@ -4,12 +4,13 @@ import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.config.pipeline.input.SyncMeta;
 import com.github.zzt93.syncer.consumer.input.SchedulerBuilder.SchedulerType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -40,7 +41,8 @@ public class MasterSource {
     this.schemas = schemas;
     schemaSet.addAll(schemas);
     if (schemaSet.size() < schemas.size()) {
-      logger.warn("Duplicate schemas in settings: {}", schemas);
+      logger.error("Duplicate schemas: {}", schemas);
+      throw new InvalidConfigException("Duplicate schemas");
     }
   }
 

@@ -1,13 +1,15 @@
 package com.github.zzt93.syncer.config.pipeline.input;
 
 
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -27,7 +29,8 @@ public class PipelineInput {
     this.masters = masters;
     masterSet.addAll(masters);
     if (masterSet.size() < masters.size()) {
-      logger.warn("Duplicate mysql master connection endpoint");
+      logger.error("Duplicate master source: {}", masters);
+      throw new InvalidConfigException("Duplicate master source");
     }
   }
 
