@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.producer;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.pipeline.common.*;
@@ -79,9 +80,10 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
         service.submit(masterConnector);
       } catch (InvalidConfigException e) {
         logger.error("Invalid config for {}", masterSource);
-        System.exit(1);
+        ShutDownCenter.initShutDown();
       } catch (IOException | SchemaUnavailableException e) {
         logger.error("Fail to connect to master source: {}", masterSource, e);
+        ShutDownCenter.initShutDown();
       }
     }
     if (!wanted.isEmpty()) {

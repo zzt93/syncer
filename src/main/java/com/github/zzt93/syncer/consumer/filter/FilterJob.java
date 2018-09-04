@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.filter;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
@@ -35,8 +36,8 @@ public class FilterJob implements VoidCallable {
   private final Ack ack;
 
   public FilterJob(Ack ack, BlockingDeque<SyncData> fromInput,
-      CopyOnWriteArrayList<OutputChannel> outputChannels,
-      List<ExprFilter> filters) {
+                   CopyOnWriteArrayList<OutputChannel> outputChannels,
+                   List<ExprFilter> filters) {
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
     this.filters = filters;
@@ -132,14 +133,11 @@ public class FilterJob implements VoidCallable {
     for (OutputChannel outputChannel : all) {
       outputChannel.close();
     }
-    if (inShutDown(e)) {
+    if (ShutDownCenter.inShutDown()) {
       throw new ShutDownException(e);
-    } else if (e instanceof InvalidConfigException) {
-      System.exit(1);
+    } else {
+      ShutDownCenter.initShutDown();
     }
   }
 
-  private boolean inShutDown(Exception e) {
-    return e instanceof InterruptedException;
-  }
 }

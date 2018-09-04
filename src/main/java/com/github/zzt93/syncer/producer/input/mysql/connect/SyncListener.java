@@ -4,6 +4,7 @@ import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
 import com.github.shyiko.mysql.binlog.event.EventType;
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import org.slf4j.Logger;
@@ -47,7 +48,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
             }
             mysqlDispatcher.dispatch(last, event);
           } catch (InvalidConfigException e) {
-            System.exit(1);
+            ShutDownCenter.initShutDown();
           } catch (Throwable e) {
             logger.error("Fail to dispatch {}", event, e);
           }

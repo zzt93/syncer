@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.producer.input.mongo;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.common.exception.ShutDownException;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
@@ -135,7 +136,7 @@ public class MongoMasterConnector implements MasterConnector {
       try {
         mongoDispatcher.dispatch(d);
       } catch (InvalidConfigException e) {
-        System.exit(1);
+        ShutDownCenter.initShutDown();
       } catch (Throwable e) {
         // TODO 18/1/26 how to retry?
         logger.error("Fail to dispatch this doc {}", d, e);
