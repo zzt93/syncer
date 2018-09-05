@@ -6,12 +6,11 @@ public class ShutDownCenter {
 
   private static AtomicBoolean shutdown = new AtomicBoolean(false);
 
-  public static boolean initShutDown() {
+  public static void initShutDown() {
     boolean b = shutdown.compareAndSet(false, true);
     if (b) {
       System.exit(1);
     }
-    return b;
   }
 
   public static boolean inShutDown() {

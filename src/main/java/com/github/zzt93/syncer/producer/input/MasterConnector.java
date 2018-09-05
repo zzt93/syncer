@@ -1,10 +1,10 @@
 package com.github.zzt93.syncer.producer.input;
 
-import com.github.zzt93.syncer.common.thread.VoidCallable;
+import com.github.zzt93.syncer.common.thread.EventLoop;
 
 /**
  * @author zzt
  */
-public interface MasterConnector extends VoidCallable {
+public interface MasterConnector extends EventLoop {
 
 }

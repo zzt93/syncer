@@ -85,7 +85,6 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   @Override
   public HashMap<Consumer, ProducerSink> outputSink(Connection connection) {
     HashMap<Consumer, ProducerSink> res = new HashMap<>();
-    // TODO 18/1/15 may reuse but not new
     if (!consumerSources.containsKey(connection)) return res;
     for (ConsumerSource consumerSource : consumerSources.get(connection)) {
       res.put(new Consumer(consumerSource), new LocalProducerSink(consumerSource));

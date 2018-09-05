@@ -1,15 +1,15 @@
 package com.github.zzt93.syncer.consumer.output.batch;
 
 import com.github.zzt93.syncer.common.exception.ShutDownException;
+import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
-import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
  */
-public class BatchJob implements Runnable {
+public class BatchJob implements EventLoop {
 
   private static final Logger logger = LoggerFactory.getLogger(BatchJob.class);
 
@@ -21,15 +21,12 @@ public class BatchJob implements Runnable {
   }
 
   @Override
-  public void run() {
+  public void loop() {
     try {
       bufferedChannel.flush();
     } catch (InterruptedException e) {
-      logger.warn("Interrupt thread {}", Thread.currentThread().getName());
+      logger.warn("Batch job interrupted");
       throw new ShutDownException(e);
-    } catch (Throwable e) {
-      logger.error("Batch job failed with", e);
-      Throwables.throwIfUnchecked(e);
     }
   }
 }

@@ -1,20 +1,19 @@
 package com.github.zzt93.syncer.common.thread;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.common.exception.ShutDownException;
-import com.google.common.base.Throwables;
-import java.util.concurrent.Callable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
  */
-public interface VoidCallable extends Callable<Void> {
+public interface EventLoop extends Runnable {
 
-  Logger logger = LoggerFactory.getLogger(VoidCallable.class);
+  Logger logger = LoggerFactory.getLogger(EventLoop.class);
 
   @Override
-  default Void call() throws Exception {
+  default void run() {
     try {
       loop();
     } catch (ShutDownException e) {
@@ -22,9 +21,8 @@ public interface VoidCallable extends Callable<Void> {
       throw e;
     } catch (Throwable e) {
       logger.error("Fail to loop: {}", getClass(), e);
-      Throwables.throwIfUnchecked(e);
+      ShutDownCenter.initShutDown();
     }
-    return null;
   }
 
   void loop();

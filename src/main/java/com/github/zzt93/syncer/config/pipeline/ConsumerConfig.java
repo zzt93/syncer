@@ -14,10 +14,9 @@ import java.util.List;
  * @author zzt
  */
 @ConfigurationProperties("syncer.consumer")
-// TODO: 18/9/1 rename ConsumerConfig
-public class PipelineConfig {
+public class ConsumerConfig {
 
-  private Logger logger = LoggerFactory.getLogger(PipelineConfig.class);
+  private Logger logger = LoggerFactory.getLogger(ConsumerConfig.class);
 
   private String version;
   private String consumerId;

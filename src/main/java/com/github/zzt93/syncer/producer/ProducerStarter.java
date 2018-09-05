@@ -79,7 +79,7 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
         }
         service.submit(masterConnector);
       } catch (InvalidConfigException e) {
-        logger.error("Invalid config for {}", masterSource);
+        logger.error("Invalid config for {}", masterSource, e);
         ShutDownCenter.initShutDown();
       } catch (IOException | SchemaUnavailableException e) {
         logger.error("Fail to connect to master source: {}", masterSource, e);

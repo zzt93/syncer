@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.config;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.RegexUtil;
-import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
+import com.github.zzt93.syncer.config.pipeline.ConsumerConfig;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
@@ -32,7 +32,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
   private static final String PRODUCER_CONFIG = "producerConfig";
   private static final String CONFIG = "config";
   private final YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
-  private final static ArrayList<PipelineConfig> configs = new ArrayList<>();
+  private final static ArrayList<ConsumerConfig> configs = new ArrayList<>();
 
   @Override
   public void postProcessEnvironment(ConfigurableEnvironment environment,
@@ -60,15 +60,15 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     }
   }
 
-  private PipelineConfig initPipelines(String fileName,
-      ConfigurableEnvironment environment) {
+  private ConsumerConfig initPipelines(String fileName,
+                                       ConfigurableEnvironment environment) {
     Resource path = FileUtil.getResource(fileName);
     Yaml yaml = new Yaml();
     try (InputStream in = path.getInputStream()) {
       // TODO 18/1/5 convert key to camel case & add prefix (`pipeline:`)
 //      CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, "key-name")
       String str = replaceEnv(environment, in);
-      return yaml.loadAs(str, PipelineConfig.class);
+      return yaml.loadAs(str, ConsumerConfig.class);
     } catch (IOException e) {
       logger.error("Fail to load/parse yml file", e);
       throw new InvalidConfigException(e);
@@ -102,7 +102,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     }
   }
 
-  public static ArrayList<PipelineConfig> getConfigs() {
+  public static ArrayList<ConsumerConfig> getConfigs() {
     return configs;
   }
 }

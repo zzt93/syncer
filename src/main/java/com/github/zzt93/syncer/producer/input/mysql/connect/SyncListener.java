@@ -51,6 +51,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
             ShutDownCenter.initShutDown();
           } catch (Throwable e) {
             logger.error("Fail to dispatch {}", event, e);
+            ShutDownCenter.initShutDown();
           }
         }
         logger.trace("Receive binlog event: {}", event);

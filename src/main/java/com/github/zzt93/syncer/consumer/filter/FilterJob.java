@@ -6,7 +6,7 @@ import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.exception.ShutDownException;
-import com.github.zzt93.syncer.common.thread.VoidCallable;
+import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
@@ -24,7 +24,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * @author zzt
  */
-public class FilterJob implements VoidCallable {
+public class FilterJob implements EventLoop {
 
   private static final ThreadLocal<StandardEvaluationContext> contexts = ThreadLocal.withInitial(
       EvaluationFactory::context);
@@ -86,7 +86,7 @@ public class FilterJob implements VoidCallable {
           "Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked",
           poll, e);
       Throwables.throwIfUnchecked(e);
-      return true;
+      return false;
     }
     ack.remove(poll.getSourceIdentifier(), poll.getDataId());
     return false;
