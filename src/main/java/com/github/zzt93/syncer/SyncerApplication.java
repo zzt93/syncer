@@ -27,7 +27,7 @@ import java.util.List;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class})
 public class SyncerApplication implements CommandLineRunner {
 
-  private final Logger logger = LoggerFactory.getLogger(SyncerApplication.class);
+  private static final Logger logger = LoggerFactory.getLogger(SyncerApplication.class);
 
   private final ProducerConfig producerConfig;
   private final SyncerConfig syncerConfig;
@@ -47,7 +47,12 @@ public class SyncerApplication implements CommandLineRunner {
     SpringApplication application = new SpringApplication(SyncerApplication.class);
     application.setWebApplicationType(WebApplicationType.NONE);
     application.setBannerMode(Banner.Mode.OFF);
-    application.run(args);
+    try {
+      application.run(args);
+    } catch (Throwable e) {
+      logger.error("", e);
+      ShutDownCenter.initShutDown();
+    }
   }
 
   @Override

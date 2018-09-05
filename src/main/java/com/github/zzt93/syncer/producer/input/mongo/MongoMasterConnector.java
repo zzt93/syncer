@@ -34,20 +34,38 @@ public class MongoMasterConnector implements MasterConnector {
   private final Logger logger = LoggerFactory.getLogger(MongoMasterConnector.class);
 
   private final String identifier;
-  private final MongoConnection connection;
-  private final ConsumerRegistry registry;
   private MongoCursor<Document> cursor;
   private MongoDispatcher mongoDispatcher;
   private MongoClient client;
+  private Document query;
 
 
   public MongoMasterConnector(MongoConnection connection, ConsumerRegistry registry) throws IOException {
     identifier = connection.initIdentifier();
 
-    this.connection = connection;
-    this.registry = registry;
     client = new MongoClient(new MongoClientURI(connection.toConnectionUrl(null)));
     configDispatch(connection, registry);
+    configQuery(connection, registry);
+  }
+
+  private void configQuery(MongoConnection connection, ConsumerRegistry registry) {
+    DocTimestamp docTimestamp = registry.votedMongoId(connection);
+    Pattern namespaces = getNamespaces(connection, registry);
+    query = new Document()
+        .append("ns", new BasicDBObject("$regex", namespaces));
+    // fromMigrate indicates the operation results from a shard re-balancing.
+    //.append("fromMigrate", new BasicDBObject("$exists", "false"))
+    if (docTimestamp.getTimestamp() != null) {
+      query.append("ts", new BasicDBObject("$gte", docTimestamp.getTimestamp()));
+    } else {
+      // initial export
+      logger.info("Start with initial export, may cost very long time");
+      query.append("ts", new BasicDBObject("$gt", new BsonTimestamp()));
+    }
+    // no need for capped collections:
+    // perform a find() on a capped collection with no ordering specified,
+    // MongoDB guarantees that the ordering of results is the same as the insertion order.
+    // BasicDBObject sort = new BasicDBObject("$natural", 1);
   }
 
   private void configDispatch(MongoConnection connection, ConsumerRegistry registry) {
@@ -56,33 +74,13 @@ public class MongoMasterConnector implements MasterConnector {
     mongoDispatcher = new MongoDispatcher(schemaSinkMap);
   }
 
-  private void configCursor(MongoConnection connection, ConsumerRegistry registry) {
-    this.cursor = getReplicaCursor(connection, registry, client);
+  private void configCursor() {
+    this.cursor = getReplicaCursor(client, query);
   }
 
-  private MongoCursor<Document> getReplicaCursor(MongoConnection connection,
-      ConsumerRegistry registry, MongoClient client) {
+  private MongoCursor<Document> getReplicaCursor(MongoClient client, Document query) {
     MongoDatabase db = client.getDatabase("local");
     MongoCollection<Document> coll = db.getCollection("oplog.rs");
-    DocTimestamp docTimestamp = registry.votedMongoId(connection);
-    Pattern namespaces = getNamespaces(connection, registry);
-    Document query = new Document()
-        .append("ns", new BasicDBObject("$regex", namespaces))
-        // fromMigrate indicates the operation results from a shard re-balancing.
-        //.append("fromMigrate", new BasicDBObject("$exists", "false"))
-        ;
-    if (docTimestamp.getTimestamp() != null) {
-      query.append("ts", new BasicDBObject("$gte", docTimestamp.getTimestamp()));
-    } else {
-      // initial export
-      logger.info("Start with initial export, may cost very long time");
-      query.append("ts", new BasicDBObject("$gt", new BsonTimestamp()));
-    }
-
-    // no need for capped collections:
-    // perform a find() on a capped collection with no ordering specified,
-    // MongoDB guarantees that the ordering of results is the same as the insertion order.
-    // BasicDBObject sort = new BasicDBObject("$natural", 1);
 
     return coll.find(query)
         .cursorType(CursorType.TailableAwait)
@@ -111,7 +109,7 @@ public class MongoMasterConnector implements MasterConnector {
     long sleepInSecond = 1;
     while (!Thread.interrupted()) {
       try {
-        configCursor(connection, registry);
+        configCursor();
         eventLoop();
       } catch (MongoTimeoutException | MongoSocketException e) {
         logger
@@ -138,7 +136,6 @@ public class MongoMasterConnector implements MasterConnector {
       } catch (InvalidConfigException e) {
         ShutDownCenter.initShutDown();
       } catch (Throwable e) {
-        // TODO 18/1/26 how to retry?
         logger.error("Fail to dispatch this doc {}", d, e);
         Throwables.throwIfUnchecked(e);
       }
