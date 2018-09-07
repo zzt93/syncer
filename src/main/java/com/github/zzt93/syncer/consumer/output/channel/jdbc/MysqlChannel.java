@@ -15,6 +15,17 @@ import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
+import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.sql.DataSource;
 import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.sql.BatchUpdateException;
@@ -22,16 +33,6 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
-import org.apache.tomcat.jdbc.pool.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceProperties;
-import org.springframework.boot.jdbc.DatabaseDriver;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.BadSqlGrammarException;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @author zzt
@@ -65,22 +66,12 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   private DataSource dataSource(MysqlConnection connection, String className) {
-    DataSourceProperties properties = new DataSourceProperties();
-    properties.setUrl(connection.toConnectionUrl());
-    properties.setUsername(connection.getUser());
-    properties.setPassword(connection.getPassword());
-//    properties.setDriverClassName(className);
-
-    DataSource dataSource = (DataSource) properties.initializeDataSourceBuilder()
-        .type(DataSource.class).build();
-    DatabaseDriver databaseDriver = DatabaseDriver
-        .fromJdbcUrl(properties.determineUrl());
-    String validationQuery = databaseDriver.getValidationQuery();
-    if (validationQuery != null) {
-      dataSource.setTestOnBorrow(true);
-      dataSource.setValidationQuery(validationQuery);
-    }
-    return dataSource;
+    HikariConfig config = connection.toConfig();
+    config.setDriverClassName(className);
+    // A value less than zero will not bypass any connection attempt and validation during startup,
+    // and therefore the pool will start immediately
+    config.setInitializationFailTimeout(-1);
+    return new HikariDataSource(config);
   }
 
   @Override

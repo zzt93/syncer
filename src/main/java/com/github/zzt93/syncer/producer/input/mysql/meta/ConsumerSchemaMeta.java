@@ -6,10 +6,11 @@ import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Lists;
+import com.mysql.jdbc.Driver;
 import com.mysql.jdbc.JDBC4Connection;
+import com.zaxxer.hikari.util.DriverDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.jdbc.datasource.DriverManagerDataSource;
 
 import javax.sql.DataSource;
 import java.sql.Connection;
@@ -72,6 +73,7 @@ public class ConsumerSchemaMeta {
 
   public static class MetaDataBuilder {
 
+    static final int TIMEOUT = 10;
     private final Logger logger = LoggerFactory.getLogger(MetaDataBuilder.class);
 
     private final DataSource dataSource;
@@ -79,13 +81,15 @@ public class ConsumerSchemaMeta {
     private final String calculatedSchemaName;
 
     public MetaDataBuilder(MysqlConnection connection,
-                           HashMap<Consumer, ProducerSink> consumerSink) {
+                           HashMap<Consumer, ProducerSink> consumerSink) throws SQLException {
       this.consumerSink = consumerSink;
       Set<String> merged = consumerSink.keySet().stream().map(Consumer::getSchemas)
           .flatMap(Set::stream).map(Schema::getConnectionName).collect(Collectors.toSet());
       calculatedSchemaName = getSchemaName(merged);
-      dataSource = new DriverManagerDataSource(connection.toConnectionUrl(calculatedSchemaName),
+      dataSource = new DriverDataSource(connection.toConnectionUrl(calculatedSchemaName),
+          Driver.class.getName(), new Properties(),
           connection.getUser(), connection.getPassword());
+      dataSource.setLoginTimeout(TIMEOUT);
     }
 
     private String getSchemaName(Set<String> schema) {
@@ -102,7 +106,7 @@ public class ConsumerSchemaMeta {
         Consumer consumer = entry.getKey();
         if (!def2data.containsKey(consumer)) {
           logger.error("Fail to fetch meta info for {}", consumer);
-          continue;
+          throw new InvalidConfigException("Fail to fetch meta info");
         }
         ConsumerSchemaMeta consumerSchemaMeta = new ConsumerSchemaMeta(consumer.getId());
         consumerSchemaMeta.schemaMetas.addAll(def2data.get(consumer));
@@ -113,6 +117,7 @@ public class ConsumerSchemaMeta {
 
     private HashMap<Consumer, List<SchemaMeta>> build(HashMap<Consumer, ProducerSink> consumerSink)
         throws SQLException {
+      logger.info("Getting connection, timeout in {}s", TIMEOUT);
       Connection connection = dataSource.getConnection();
       if (calculatedSchemaName.equals(MysqlConnection.DEFAULT_DB)) {
         // make it to get all databases
@@ -161,19 +166,14 @@ public class ConsumerSchemaMeta {
             // TODO 18/1/18 may opt to get all columns then use
             setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
             setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta);
-            if (schemaMeta.addTableMeta(tableName, tableMeta) == null) {
-              nowCount++;
-            } else {
-              assert false; // TODO: 18/9/2 verify and remove
-            }
+            schemaMeta.addTableMeta(tableName, tableMeta);
+            nowCount++;
           }
         }
       }
       if (tableCount < nowCount) {
-        InvalidConfigException e = new InvalidConfigException();
-        logger.error("Invalid schema config: want {} tables, only find {}", tableCount,
-            nowCount, e);
-        throw e;
+        logger.error("Invalid schema config: want {} tables, only find {}", tableCount, nowCount);
+        throw new InvalidConfigException("Invalid schema config");
       }
       return res;
     }
@@ -209,9 +209,8 @@ public class ConsumerSchemaMeta {
           tableMeta.addPrimaryKey(ordinalPosition);
         }
         if (primaryKeys.next()) {
-          InvalidConfigException e = new InvalidConfigException("Not support composite primary key");
-          logger.error("Not support composite primary key {}.{}", tableSchema, tableName, e);
-          throw e;
+          logger.error("Not support composite primary key {}.{}", tableSchema, tableName);
+          throw new InvalidConfigException("Not support composite primary key");
         }
       }
     }
