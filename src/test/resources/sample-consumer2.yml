@@ -1,10 +1,12 @@
+version: 1.1
+
+consumerId: searcher
+
 input:
   masters:
     - connection:
         address: 192.168.1.100
         port: 1234
-        user: root
-        passwordFile: password
       schemas:
         - name: "test_*"
           tables:
@@ -22,8 +24,6 @@ input:
     - connection:
         address: 192.168.1.200
         port: 1234
-        user: root
-        password-file: password
       schemas:
         - name: "test_*"
           tables:
@@ -53,13 +53,24 @@ input:
 #}
 
 filter:
+  - if:
+      condition: "containRecord('tags')"
+      ifBody:
+      - statement: ["updateRecord('tags', T(SyncUtil).fromJson(records['tags'], T(String[])))"]
+  - statement: ["#docType=table"]
+
+  - if:
+      condition: "table == 'task' && isWrite() && records[state] != 0"
+      ifBody:
+      - drop: {}
+
   - switcher:
       switch: "table"
       case: # support default branch
-        "affair": ["#suffix = '-' + row['id']","#type = 'INDEX_AFFAIR'", "renameColumn('xx', 'yy')" ]
+        "affair": ["#suffix = '-' + row['id']","#type = 'INDEX_AFFAIR'", "renameRecord('xx', 'yy')" ]
         "file": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '0')"]
         "folder": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '1')"]
-  - statement: [ "#tags = row['tags']", "updateColumn('tags', new java.util.ArrayList())", "removeColumns('id', 'xid')"]
+  - statement: [ "#tags = row['tags']", "updateRecord('tags', new java.util.ArrayList())", "removeRecords('id', 'xid')"]
   - foreach:
       var: "tag"
       in: "#tags?.split('\n')"
@@ -93,18 +104,36 @@ output:
       clusterNodes: ["192.168.1.100:9300"]
       user: elastic-user # optional if not enable security
       passwordFile: es-password # optional if not enable security
-    documentMapping: # mapping from input data to document json
-      index: "table + #suffix" # default schema
-      type: "table" # default table
-      documentId: "id" # default id
-      fieldsMapping: # rest row.* => row.*
-        "row": "row.*.flatten"
+    requestMapping: # mapping from input data to es request
+      enableExtraQuery: true
+      retryOnUpdateConflict: 3
+      index: "table + #suffix" # default: schema
+      type: "#docType" # default: table
+      documentId: "id" # default: id
+      fieldsMapping: # default: records.*.flatten
+        "records": "records.*.flatten"
+    batch:
+      size: 100
+      delay: 1000
+      maxRetry: 5
+    refreshInMillis: 1000
 
-  http:
+  mysql:
     connection:
-      address: 192.168.1.100
-      port: 9700
-    jsonMapping:
-      "data": "row.*"
-      "type": "extra['type']"
+      address: ${HOST_ADDRESS}
+      port: 3306
+      user: xxx
+      password: xxx
+    rowMapping:
+      schema: "'auth'"
+      table: "table"
+      id: "id"
+      rows:
+        "records": "records.*.flatten"
+    batch:
+      size: 100
+      delay: 100
+      maxRetry: 5
+    failureLog:
+      countLimit: 1000
 

@@ -52,7 +52,7 @@ public class ConsumerSchemaMeta {
       }
     }
     if (count > 1) {
-      logger.warn("Multiple configured schema match `{}`.`{}`. Check your config", database, table);
+      logger.error("Multiple configured schema match `{}`.`{}`. Check your config", database, table);
     }
     return res;
   }
