@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 
@@ -31,8 +32,8 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
   private static final String CONSUMER_CONFIG = "consumerConfig";
   private static final String PRODUCER_CONFIG = "producerConfig";
   private static final String CONFIG = "config";
+  private static final ArrayList<ConsumerConfig> configs = new ArrayList<>();
   private final YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
-  private final static ArrayList<ConsumerConfig> configs = new ArrayList<>();
 
   @Override
   public void postProcessEnvironment(ConfigurableEnvironment environment,
@@ -95,7 +96,12 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
   private PropertySource<?> loadYaml(String name) {
     Resource path = FileUtil.getResource(name);
     try {
-      return this.loader.load(name, path, null);
+      List<PropertySource<?>> load = this.loader.load(name, path);
+      if (load.size() != 1) {
+        throw new InvalidConfigException(
+            "Invalid yaml configuration file " + path);
+      }
+      return load.get(0);
     } catch (IOException ex) {
       throw new IllegalStateException(
           "Failed to load yaml configuration from " + path, ex);
