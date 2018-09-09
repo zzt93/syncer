@@ -2,59 +2,61 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.filter.ForeachConfig;
+import com.github.zzt93.syncer.consumer.filter.CompositeStatement;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
+import java.util.LinkedList;
+import java.util.List;
+import java.util.stream.Collectors;
+
 /**
  * @author zzt
  */
-public class ForeachFilter implements ExprFilter, IfBodyAction {
+public class ForeachFilter implements CompositeStatement {
   private final Logger logger = LoggerFactory.getLogger(ForeachFilter.class);
 
-  private final FilterActions iterable;
-  private final FilterActions statement;
   private final String var;
+  private final Statement iterable;
+  private final List<ExprFilter> statements;
 
   public ForeachFilter(SpelExpressionParser parser, ForeachConfig foreach) {
     var = foreach.getVar();
-    iterable = new FilterActions(parser, foreach.getIn());
-    statement = new FilterActions(parser, foreach.getStatement());
-  }
-
-
-  @Override
-  public Void decide(List<SyncData> dataList) {
-    for (SyncData syncData : dataList) {
-      execute(syncData);
-    }
-    return null;
+    iterable = new Statement(parser, foreach.getIn());
+    statements = foreach.getStatement()
+        .stream()
+        .map(c -> c.toFilter(parser))
+        .collect(Collectors.toList());
   }
 
   @Override
-  public Object execute(SyncData data) {
+  public void recurWithSingleElement(LinkedList<SyncData> tmp) {
+    assert tmp.size() == 1;
+    SyncData data = tmp.getFirst();
     StandardEvaluationContext context = data.getContext();
-    List<Object> res = iterable.execute(context);
-    if (!res.isEmpty()) {
-      Object collectionOrArray = res.get(0);
-      if (collectionOrArray instanceof Object[]) {
-        for (Object o : ((Object[]) collectionOrArray)) {
-          context.setVariable(var, o);
-          statement.execute(context);
+    Object collectionOrArray = iterable.execute(context).get(0);
+
+    if (collectionOrArray instanceof Object[]) {
+      for (Object o : ((Object[]) collectionOrArray)) {
+        context.setVariable(var, o);
+        for (ExprFilter filter : statements) {
+          filter.filter(tmp);
         }
-      } else if (collectionOrArray instanceof Iterable) {
-        for (Object o : ((Iterable) collectionOrArray)) {
-          context.setVariable(var, o);
-          statement.execute(context);
-        }
-      } else {
-        logger
-            .error("Impossible to iterate, have to use `Object[]` or `iterable` in `foreach.in`");
       }
+    } else if (collectionOrArray instanceof Iterable) {
+      for (Object o : ((Iterable) collectionOrArray)) {
+        context.setVariable(var, o);
+        for (ExprFilter filter : statements) {
+          filter.filter(tmp);
+        }
+      }
+    } else {
+      logger
+          .error("Impossible to iterate, have to use `Object[]` or `iterable` in `foreach.in`");
     }
-    return FilterRes.ACCEPT;
   }
+
 }

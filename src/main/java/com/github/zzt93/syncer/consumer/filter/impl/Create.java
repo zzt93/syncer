@@ -2,19 +2,20 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import com.github.zzt93.syncer.consumer.filter.ForkStatement;
+import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
-import org.springframework.expression.Expression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * @author zzt
  */
-public class Create implements ExprFilter, IfBodyAction {
+public class Create implements ForkStatement {
 
-  private final FilterActions newObjAction;
+  private final Statement newObjAction;
   private final List<Expression> copyValue;
 
   public Create(SpelExpressionParser parser, List<String> cp, ArrayList<String> single) {
@@ -22,21 +23,19 @@ public class Create implements ExprFilter, IfBodyAction {
     for (String s : cp) {
       copyValue.add(parser.parseExpression(s));
     }
-    newObjAction = new FilterActions(parser, single);
+    newObjAction = new Statement(parser, single);
   }
 
   @Override
-  public Void decide(List<SyncData> dataList) {
+  public void filter(List<SyncData> dataList) {
     LinkedList<SyncData> list = new LinkedList<>();
     for (SyncData src : dataList) {
-      list.add((SyncData) execute(src));
+      list.add(execute(src));
     }
     dataList.addAll(list);
-    return null;
   }
 
-  @Override
-  public Object execute(SyncData src) {
+  public SyncData execute(SyncData src) {
     SyncData create = new SyncData(src, Offset.CLONE.ordinal());
     for (Expression s : copyValue) {
       Object value = s.getValue(src.getContext());

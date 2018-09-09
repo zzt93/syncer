@@ -78,7 +78,7 @@ public class FilterJob implements EventLoop {
       poll.setContext(contexts.get());
 
       for (ExprFilter filter : filters) {
-        filter.decide(list);
+        filter.filter(list);
       }
     } catch (InvalidConfigException e) {
       logger.error("Invalid config for {}", poll, e);

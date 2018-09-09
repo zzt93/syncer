@@ -1,13 +1,14 @@
 package com.github.zzt93.syncer.config.pipeline.filter;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.consumer.filter.ForkStatement;
 import com.github.zzt93.syncer.consumer.filter.impl.Create;
 import com.github.zzt93.syncer.consumer.filter.impl.Dup;
-import com.github.zzt93.syncer.consumer.filter.impl.IfBodyAction;
 import com.google.common.collect.Lists;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+
 import java.util.ArrayList;
 import java.util.List;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * @author zzt
@@ -37,7 +38,7 @@ public class CreateConfig {
     this.postCreation = postCreation;
   }
 
-  public IfBodyAction toAction(SpelExpressionParser parser) throws NoSuchFieldException {
+  ForkStatement toAction(SpelExpressionParser parser) throws NoSuchFieldException {
     ArrayList<String> single = new ArrayList<>(postCreation.size());
     ArrayList<List<String>> multiple = new ArrayList<>(postCreation.size());
     for (Object o : postCreation) {

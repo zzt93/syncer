@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.pipeline;
 
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
@@ -62,7 +63,7 @@ public class ConsumerConfig {
 
   public void setFilter(List<FilterConfig> filter) {
     if (filter == null) {
-      logger.warn("No filter config content, but has `filter` key");
+      throw new InvalidConfigException("No filter config content, but has `filter` key");
     }
     this.filter = filter;
   }

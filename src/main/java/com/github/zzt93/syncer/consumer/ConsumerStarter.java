@@ -11,23 +11,11 @@ import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.pipeline.input.SyncMeta;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
-import com.github.zzt93.syncer.config.syncer.SyncerAck;
-import com.github.zzt93.syncer.config.syncer.SyncerConfig;
-import com.github.zzt93.syncer.config.syncer.SyncerFilter;
-import com.github.zzt93.syncer.config.syncer.SyncerInput;
-import com.github.zzt93.syncer.config.syncer.SyncerOutput;
+import com.github.zzt93.syncer.config.syncer.*;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
 import com.github.zzt93.syncer.consumer.filter.FilterJob;
-import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
-import com.github.zzt93.syncer.consumer.filter.impl.If;
-import com.github.zzt93.syncer.consumer.filter.impl.Statement;
-import com.github.zzt93.syncer.consumer.filter.impl.Switch;
-import com.github.zzt93.syncer.consumer.input.EventScheduler;
-import com.github.zzt93.syncer.consumer.input.LocalConsumerSource;
-import com.github.zzt93.syncer.consumer.input.PositionFlusher;
-import com.github.zzt93.syncer.consumer.input.Registrant;
-import com.github.zzt93.syncer.consumer.input.SchedulerBuilder;
+import com.github.zzt93.syncer.consumer.input.*;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.health.Health;
@@ -35,37 +23,33 @@ import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Preconditions;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import java.util.concurrent.*;
 
 /**
  * Abstraction of a consumer which is initiated by a pipeline config file
+ *
  * @author zzt
  */
 public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFilter>> {
 
   private final Logger logger = LoggerFactory.getLogger(ConsumerStarter.class);
+  private final String id;
+  private final List<OutputChannel> outputChannels;
   private ExecutorService filterOutputService;
   private FilterJob[] filterJobs;
   private int worker;
   private SyncerAck ackConfig;
   private Registrant registrant;
   private Ack ack;
-  private final String id;
-  private final List<OutputChannel> outputChannels;
   private OutputStarter outputStarter;
 
   public ConsumerStarter(ConsumerConfig pipeline, SyncerConfig syncer,
@@ -84,8 +68,8 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   }
 
   private HashMap<String, SyncInitMeta> initAckModule(String consumerId,
-      PipelineInput pipelineInput,
-      SyncerInput input, SyncerAck ackConfig) {
+                                                      PipelineInput pipelineInput,
+                                                      SyncerInput input, SyncerAck ackConfig) {
     Set<MasterSource> masterSet = pipelineInput.getMasterSet();
     HashMap<String, SyncInitMeta> id2SyncInitMeta = new HashMap<>();
     this.ack = Ack.build(consumerId, input.getInputMeta(), masterSet, id2SyncInitMeta);
@@ -94,13 +78,13 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   }
 
   private List<OutputChannel> initBatchOutputModule(String id, PipelineOutput pipeline,
-      SyncerOutput syncer) throws Exception {
+                                                    SyncerOutput syncer) throws Exception {
     outputStarter = new OutputStarter(id, pipeline, syncer, ack);
     return outputStarter.getOutputChannels();
   }
 
   private void initFilterModule(Ack ack, SyncerFilter module, List<FilterConfig> filters,
-      SchedulerBuilder schedulerBuilder, List<OutputChannel> outputChannels) {
+                                SchedulerBuilder schedulerBuilder, List<OutputChannel> outputChannels) {
     Preconditions
         .checkArgument(module.getWorker() <= Runtime.getRuntime().availableProcessors() * 3,
             "Too many worker thread");
@@ -123,9 +107,9 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   }
 
   private void initRegistrant(String consumerId, ConsumerRegistry consumerRegistry,
-      SchedulerBuilder schedulerBuilder,
-      PipelineInput input,
-      HashMap<String, SyncInitMeta> id2SyncInitMeta) {
+                              SchedulerBuilder schedulerBuilder,
+                              PipelineInput input,
+                              HashMap<String, SyncInitMeta> id2SyncInitMeta) {
     registrant = new Registrant(consumerRegistry);
     for (MasterSource masterSource : input.getMasterSet()) {
       String identifier = masterSource.getConnection().connectionIdentifier();
@@ -149,22 +133,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     SpelExpressionParser parser = new SpelExpressionParser();
     List<ExprFilter> res = new ArrayList<>();
     for (FilterConfig filter : filters) {
-      switch (filter.getType()) {
-        case SWITCH:
-          res.add(new Switch(parser, filter.getSwitcher()));
-          break;
-        case STATEMENT:
-          res.add(new Statement(parser, filter.getStatement()));
-          break;
-        case FOREACH:
-          res.add(new ForeachFilter(parser, filter.getForeach()));
-          break;
-        case IF:
-          res.add(new If(parser, filter.getIf()));
-          break;
-        default:
-          throw new IllegalArgumentException("Unknown filter type");
-      }
+      res.add(filter.toFilter(parser));
     }
     return res;
   }

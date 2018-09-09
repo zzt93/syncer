@@ -1,6 +1,12 @@
 package com.github.zzt93.syncer.config.pipeline.filter;
 
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import com.github.zzt93.syncer.consumer.filter.impl.*;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+
 import java.util.List;
+import java.util.Map;
 
 /**
  * @author zzt
@@ -8,10 +14,22 @@ import java.util.List;
 public class FilterConfig {
 
   private FilterType type;
+
   private Switcher switcher;
   private List<String> statement;
   private ForeachConfig foreach;
   private IfConfig If;
+  private Map drop;
+  private CreateConfig create;
+
+  public CreateConfig getCreate() {
+    return create;
+  }
+
+  public void setCreate(CreateConfig create) {
+    this.create = create;
+    type = FilterType.CREATE;
+  }
 
   public Switcher getSwitcher() {
     return switcher;
@@ -57,13 +75,40 @@ public class FilterConfig {
     type = FilterType.IF;
   }
 
-  private void typeCheck() {
-    if (type != null) {
-      throw new IllegalArgumentException("Invalid config to combine several filter type");
+  public Map getDrop() {
+    return drop;
+  }
+
+  public void setDrop(Map drop) {
+    this.drop = drop;
+    type = FilterType.DROP;
+  }
+
+  public ExprFilter toFilter(SpelExpressionParser parser) {
+    switch (getType()) {
+      case SWITCH:
+        return new Switch(parser, getSwitcher());
+      case STATEMENT:
+        return new Statement(parser, getStatement());
+      case FOREACH:
+        return new ForeachFilter(parser, getForeach());
+      case IF:
+        return new If(parser, getIf());
+      case DROP:
+        return new Drop();
+      case CREATE:
+        try {
+          return getCreate().toAction(parser);
+        } catch (NoSuchFieldException e) {
+          throw new InvalidConfigException("Unknown field of `SyncData` to copy", e);
+        }
+      default:
+        throw new InvalidConfigException("Unknown filter type");
     }
   }
 
+
   public enum FilterType {
-    SWITCH, STATEMENT, FOREACH, IF
+    SWITCH, STATEMENT, FOREACH, IF, DROP, CREATE
   }
 }

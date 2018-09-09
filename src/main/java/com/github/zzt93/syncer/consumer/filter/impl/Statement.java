@@ -2,35 +2,61 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
-import com.github.zzt93.syncer.consumer.filter.ExprFilter;
-import java.util.List;
+import com.github.zzt93.syncer.consumer.filter.SimpleStatement;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.expression.EvaluationContext;
+import org.springframework.expression.EvaluationException;
+import org.springframework.expression.Expression;
+import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author zzt
  */
-public class Statement implements ExprFilter, IfBodyAction {
+public class Statement implements SimpleStatement {
 
-  private final FilterActions filterActions;
+  private final Logger logger = LoggerFactory.getLogger(Statement.class);
+  private final List<Expression> action;
 
-  public Statement(SpelExpressionParser parser, List<String> statement) {
-    this.filterActions = new FilterActions(parser, statement);
+  public Statement(SpelExpressionParser parser, List<String> action) {
+    this.action = Collections.unmodifiableList(
+        action.stream().map(parser::parseExpression).collect(Collectors.toList()));
   }
 
-  @ThreadSafe(safe = {FilterActions.class, SpelExpressionParser.class})
+  public Statement(SpelExpressionParser parser, String expr) {
+    this.action = Collections.singletonList(parser.parseExpression(expr));
+  }
+
+  /**
+   * @return expression execution result, may has null value
+   */
+  @ThreadSafe(des = "immutable class")
+  public List<Object> execute(EvaluationContext context) {
+    ArrayList<Object> res = new ArrayList<>();
+    for (Expression s : action) {
+      try {
+        res.add(s.getValue(context));
+      } catch (EvaluationException | ParseException e) {
+        logger.error("Invalid expression {}, fail to parse", s.getExpressionString(), e);
+      }
+    }
+    return res;
+  }
+
+  @ThreadSafe(safe = {SpelExpressionParser.class})
   @Override
-  public Void decide(List<SyncData> dataList) {
+  public void filter(List<SyncData> dataList) {
     for (SyncData syncData : dataList) {
       StandardEvaluationContext context = syncData.getContext();
-      filterActions.execute(context);
+      execute(context);
     }
-    return null;
   }
 
-  @Override
-  public Object execute(SyncData data) {
-    filterActions.execute(data.getContext());
-    return FilterRes.ACCEPT;
-  }
 }

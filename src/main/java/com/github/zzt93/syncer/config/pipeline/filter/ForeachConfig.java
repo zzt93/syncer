@@ -9,7 +9,7 @@ public class ForeachConfig {
 
   private String var;
   private String in;
-  private List<String> statement;
+  private List<FilterConfig> statement;
 
   public String getVar() {
     return var;
@@ -27,11 +27,11 @@ public class ForeachConfig {
     this.in = in;
   }
 
-  public List<String> getStatement() {
+  public List<FilterConfig> getStatement() {
     return statement;
   }
 
-  public void setStatement(List<String> statement) {
+  public void setStatement(List<FilterConfig> statement) {
     this.statement = statement;
   }
 }

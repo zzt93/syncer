@@ -2,20 +2,21 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.IdGenerator.Offset;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import com.github.zzt93.syncer.consumer.filter.ForkStatement;
+import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.stream.Collectors;
-import org.springframework.expression.Expression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * @author zzt
  */
-public class Dup implements ExprFilter, IfBodyAction {
+public class Dup implements ForkStatement {
 
-  private final List<FilterActions> newObjAction;
+  private final List<Statement> newObjAction;
   private final List<Expression> copyValue;
 
 
@@ -25,31 +26,31 @@ public class Dup implements ExprFilter, IfBodyAction {
     for (String s : cp) {
       copyValue.add(parser.parseExpression(s));
     }
-    newObjAction = multiple.stream().map(action -> new FilterActions(parser, action)).collect(Collectors.toList());
+    newObjAction = multiple.stream().map(action -> new Statement(parser, action)).collect(Collectors.toList());
 
   }
 
-  @Override
-  public Object execute(SyncData src) {
+  public List<SyncData> execute(SyncData src) {
     LinkedList<SyncData> res = new LinkedList<>();
     for (int i = 0; i < newObjAction.size(); i++) {
-      FilterActions filterActions = newObjAction.get(i);
+      Statement statement = newObjAction.get(i);
       SyncData dup = new SyncData(src, Offset.DUP.ordinal() + i);
       for (Expression s : copyValue) {
         Object value = s.getValue(src.getContext());
         s.setValue(dup.getContext(), value);
       }
-      filterActions.execute(dup.getContext());
+      statement.execute(dup.getContext());
       res.add(dup);
     }
     return res;
   }
 
   @Override
-  public Void decide(List<SyncData> dataList) {
+  public void filter(List<SyncData> dataList) {
+    List<SyncData> res = new LinkedList<>();
     for (SyncData syncData : dataList) {
-      execute(syncData);
+      res.addAll(execute(syncData));
     }
-    return null;
+    dataList.addAll(res);
   }
 }
