@@ -20,7 +20,6 @@ public class ElasticsearchConnectionTest {
   /**
    * https://discuss.elastic.co/t/java-api-plainless-script-indexof-give-wrong-answer/139016/7
    */
-  @Test
   public void scriptIndexOf() throws Exception {
     ElasticsearchConnection elasticsearchConnection = new ElasticsearchConnection();
     elasticsearchConnection.setClusterName("searcher-integration");
@@ -67,7 +66,7 @@ public class ElasticsearchConnectionTest {
   }
 
   @Test
-  public void name() throws Exception {
+  public void name() {
     ArrayList<Long> l = Lists.newArrayList(1L, 2L);
     System.out.println(l.indexOf(1));
     System.out.println(l.indexOf(1L));
