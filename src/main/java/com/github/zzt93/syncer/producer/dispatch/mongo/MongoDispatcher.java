@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.producer.dispatch.mongo;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.Repo;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
@@ -32,12 +32,12 @@ public class MongoDispatcher implements Dispatcher {
 
   public MongoDispatcher(HashMap<Consumer, ProducerSink> schemaSinkMap) {
     for (Entry<Consumer, ProducerSink> entry : schemaSinkMap.entrySet()) {
-      for (Schema schema : entry.getKey().getSchemas()) {
-        if (schema.noNamePattern()) {
-          directOutput.computeIfAbsent(schema.getName(), k -> new ArrayList<>())
-              .add(new JsonKeyFilter(schema, entry.getValue()));
+      for (Repo repo : entry.getKey().getRepos()) {
+        if (repo.noNamePattern()) {
+          directOutput.computeIfAbsent(repo.getName(), k -> new ArrayList<>())
+              .add(new JsonKeyFilter(repo, entry.getValue()));
         } else {
-          regexOutput.put(schema.getNamePattern(), new JsonKeyFilter(schema, entry.getValue()));
+          regexOutput.put(repo.getNamePattern(), new JsonKeyFilter(repo, entry.getValue()));
         }
       }
     }

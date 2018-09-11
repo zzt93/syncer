@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.producer.dispatch.mongo;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.Repo;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 
 import java.util.HashMap;
@@ -15,16 +15,16 @@ import java.util.Set;
  */
 public class JsonKeyFilter {
 
-  private final Schema schema;
+  private final Repo repo;
   private final ProducerSink producerSink;
 
-  public JsonKeyFilter(Schema schema, ProducerSink producerSink) {
-    this.schema = schema;
+  public JsonKeyFilter(Repo repo, ProducerSink producerSink) {
+    this.repo = repo;
     this.producerSink = producerSink;
   }
 
   public boolean output(SyncData data) {
-    Set<String> tableRow = schema.getTableRow(data.getRepo(), data.getEntity());
+    Set<String> tableRow = repo.getTableRow(data.getRepo(), data.getEntity());
     HashMap<String, Object> fields = data.getFields();
     HashSet<String> tmp = new HashSet<>();
     for (Entry<String, Object> entry : fields.entrySet()) {

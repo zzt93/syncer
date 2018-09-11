@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.Repo;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 
 import java.util.Set;
@@ -15,10 +15,10 @@ public class MysqlLocalConsumerSource extends LocalConsumerSource implements Mys
 
   public MysqlLocalConsumerSource(String clientId,
                                   Connection connection,
-                                  Set<Schema> schemas,
+                                  Set<Repo> repos,
                                   BinlogInfo syncInitMeta,
                                   EventScheduler input) {
-    super(clientId, connection, schemas, syncInitMeta, input);
+    super(clientId, connection, repos, syncInitMeta, input);
     this.syncInitMeta = syncInitMeta;
   }
 

@@ -15,12 +15,12 @@ import java.util.regex.Pattern;
 /**
  * @author zzt
  */
-public class Schema implements Hashable {
+public class Repo implements Hashable {
 
-  private final Logger logger = LoggerFactory.getLogger(Schema.class);
+  private final Logger logger = LoggerFactory.getLogger(Repo.class);
 
   private String name;
-  private List<Table> entities;
+  private List<Entity> entities;
 
   private Pattern namePattern;
   private HashMap<String, Set<String>> nameToRows = new HashMap<>();
@@ -34,14 +34,14 @@ public class Schema implements Hashable {
     namePattern = RegexUtil.getRegex(name);
   }
 
-  public List<Table> getEntities() {
+  public List<Entity> getEntities() {
     return entities;
   }
 
-  public void setEntities(List<Table> entities) {
+  public void setEntities(List<Entity> entities) {
     this.entities = entities;
-    for (Table table : entities) {
-      nameToRows.put(table.getName(), new HashSet<>(table.getFields()));
+    for (Entity entity : entities) {
+      nameToRows.put(entity.getName(), new HashSet<>(entity.getFields()));
     }
     if (nameToRows.size() != entities.size()) {
       logger.warn("Duplicate table name definition: {}", entities);
@@ -71,7 +71,7 @@ public class Schema implements Hashable {
 
   @Override
   public String toString() {
-    return "Schema{" +
+    return "Repo{" +
         "name='" + name + '\'' +
         '}';
   }
@@ -109,9 +109,9 @@ public class Schema implements Hashable {
       return false;
     }
 
-    Schema schema = (Schema) o;
+    Repo repo = (Repo) o;
 
-    return name != null ? name.equals(schema.name) : schema.name == null;
+    return name != null ? name.equals(repo.name) : repo.name == null;
   }
 
   @Override

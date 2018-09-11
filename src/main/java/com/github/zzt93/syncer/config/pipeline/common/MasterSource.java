@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.pipeline.common;
 
 import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.Repo;
 import com.github.zzt93.syncer.config.pipeline.input.SyncMeta;
 import com.github.zzt93.syncer.consumer.input.SchedulerBuilder.SchedulerType;
 import org.slf4j.Logger;
@@ -18,12 +18,12 @@ import java.util.Set;
 public class MasterSource {
 
   private final Logger logger = LoggerFactory.getLogger(MasterSource.class);
-  private final Set<Schema> schemaSet = new HashSet<>();
+  private final Set<Repo> repoSet = new HashSet<>();
   private MasterSourceType type = MasterSourceType.MySQL;
   private SchedulerType scheduler = SchedulerType.hash;
   private SyncMeta syncMeta;
   private Connection connection;
-  private List<Schema> repos = new ArrayList<>();
+  private List<Repo> repos = new ArrayList<>();
 
   public Connection getConnection() {
     return connection;
@@ -33,21 +33,21 @@ public class MasterSource {
     this.connection = connection;
   }
 
-  public List<Schema> getRepos() {
+  public List<Repo> getRepos() {
     return repos;
   }
 
-  public void setRepos(List<Schema> repos) {
+  public void setRepos(List<Repo> repos) {
     this.repos = repos;
-    schemaSet.addAll(repos);
-    if (schemaSet.size() < repos.size()) {
+    repoSet.addAll(repos);
+    if (repoSet.size() < repos.size()) {
       logger.error("Duplicate repos: {}", repos);
       throw new InvalidConfigException("Duplicate repos");
     }
   }
 
-  public Set<Schema> getSchemaSet() {
-    return schemaSet;
+  public Set<Repo> getRepoSet() {
+    return repoSet;
   }
 
   public MasterSourceType getType() {

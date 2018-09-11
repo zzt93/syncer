@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.Repo;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
@@ -22,15 +22,17 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   private final EventScheduler scheduler;
   private final Logger logger = LoggerFactory.getLogger(LocalConsumerSource.class);
 
-  private final Set<Schema> schemas;
+  private final Set<Repo> repos;
   private final Connection connection;
   private final SyncInitMeta syncInitMeta;
   private final String clientId;
   private boolean isSent = true;
 
-  public LocalConsumerSource(String clientId, Connection connection, Set<Schema> schemas,
-      SyncInitMeta syncInitMeta, EventScheduler scheduler) {
-    this.schemas = schemas;
+  public LocalConsumerSource(
+      String clientId, Connection connection, Set<Repo> repos,
+      SyncInitMeta syncInitMeta,
+      EventScheduler scheduler) {
+    this.repos = repos;
     this.connection = connection;
     this.syncInitMeta = syncInitMeta;
     this.clientId = clientId;
@@ -45,13 +47,13 @@ public abstract class LocalConsumerSource implements ConsumerSource {
         Preconditions
             .checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is " + syncInitMeta);
         inputSource = new MongoLocalConsumerSource(consumerId, masterSource.getConnection(),
-            masterSource.getSchemaSet(), (DocTimestamp) syncInitMeta, scheduler);
+            masterSource.getRepoSet(), (DocTimestamp) syncInitMeta, scheduler);
         break;
       case MySQL:
         Preconditions
             .checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is " + syncInitMeta);
         inputSource = new MysqlLocalConsumerSource(consumerId, masterSource.getConnection(),
-            masterSource.getSchemaSet(), (BinlogInfo) syncInitMeta, scheduler);
+            masterSource.getRepoSet(), (BinlogInfo) syncInitMeta, scheduler);
         break;
       default:
         throw new IllegalStateException("Not implemented type");
@@ -68,8 +70,8 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   public abstract SyncInitMeta getSyncInitMeta();
 
   @Override
-  public Set<Schema> getSchemas() {
-    return schemas;
+  public Set<Repo> getRepos() {
+    return repos;
   }
 
   @Override
@@ -143,7 +145,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   @Override
   public String toString() {
     return "LocalConsumerSource{" +
-        "schemas=" + schemas +
+        "repos=" + repos +
         ", connection=" + connection +
         ", syncInitMeta=" + syncInitMeta +
         ", clientId='" + clientId + '\'' +

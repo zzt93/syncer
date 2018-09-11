@@ -1,24 +1,24 @@
 package com.github.zzt93.syncer.producer.input.mysql.meta;
 
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.Repo;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 import java.util.Objects;
 import java.util.Set;
 
 /**
- * All schemas a consumer requested for a remote DB.
+ * All repos a consumer requested for a remote DB.
  *
- * @see MasterSource#getSchemaSet()
+ * @see MasterSource#getRepoSet()
  * @author zzt
  */
 public class Consumer {
 
-  private final Set<Schema> schemas;
+  private final Set<Repo> repos;
   private final String id;
 
   public Consumer(ConsumerSource consumerSource) {
-    this.schemas = consumerSource.getSchemas();
+    this.repos = consumerSource.getRepos();
     id = consumerSource.clientId();
   }
 
@@ -39,20 +39,20 @@ public class Consumer {
     return Objects.hash(id);
   }
 
-  public Set<Schema> getSchemas() {
-    return schemas;
+  public Set<Repo> getRepos() {
+    return repos;
   }
 
   @Override
   public String toString() {
     return "Consumer{" +
-        "schemas=" + schemas +
+        "repos=" + repos +
         ", id='" + id + '\'' +
         '}';
   }
 
-  Schema matchedSchema(String tableSchema, String tableName) {
-    for (Schema aim : getSchemas()) {
+  Repo matchedSchema(String tableSchema, String tableName) {
+    for (Repo aim : getRepos()) {
       if (aim.contain(tableSchema, tableName)) {
         // a consumer should only match one table at one time
         return aim;

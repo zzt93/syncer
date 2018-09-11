@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.exception.ShutDownException;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
-import com.github.zzt93.syncer.config.pipeline.input.Table;
+import com.github.zzt93.syncer.config.pipeline.input.Entity;
 import com.github.zzt93.syncer.producer.dispatch.mongo.MongoDispatcher;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
@@ -93,11 +93,11 @@ public class MongoMasterConnector implements MasterConnector {
   private Pattern getNamespaces(MongoConnection connection, ConsumerRegistry registry) {
     StringJoiner joiner = new StringJoiner("|");
     registry.outputSink(connection)
-        .keySet().stream().map(Consumer::getSchemas).flatMap(Set::stream).flatMap(s -> {
-      List<Table> tables = s.getEntities();
-      ArrayList<String> res = new ArrayList<>(tables.size());
-      for (Table table : tables) {
-        res.add("(" + s.getName() + "\\." + table.getName() + ")");
+        .keySet().stream().map(Consumer::getRepos).flatMap(Set::stream).flatMap(s -> {
+      List<Entity> entities = s.getEntities();
+      ArrayList<String> res = new ArrayList<>(entities.size());
+      for (Entity entity : entities) {
+        res.add("(" + s.getName() + "\\." + entity.getName() + ")");
       }
       return res.stream();
     }).forEach(joiner::add);

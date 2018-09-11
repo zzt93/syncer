@@ -8,4 +8,4 @@ spring:
 
 ---
 
-syncer.version: 1.1
+syncer.version: 1.2

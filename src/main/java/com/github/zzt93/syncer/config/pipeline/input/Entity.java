@@ -5,15 +5,15 @@ import java.util.List;
 /**
  * @author zzt
  */
-public class Table {
+public class Entity {
 
   private String name;
   private List<String> fields;
 
-  public Table() {
+  public Entity() {
   }
 
-  public Table(String tableName) {
+  public Entity(String tableName) {
     this.name = tableName;
   }
 
@@ -42,9 +42,9 @@ public class Table {
       return false;
     }
 
-    Table table = (Table) o;
+    Entity entity = (Entity) o;
 
-    return name.equals(table.name);
+    return name.equals(entity.name);
   }
 
   @Override
@@ -54,7 +54,7 @@ public class Table {
 
   @Override
   public String toString() {
-    return "Table{" +
+    return "Entity{" +
         "name='" + name + '\'' +
         ", fields=" + fields +
         '}';

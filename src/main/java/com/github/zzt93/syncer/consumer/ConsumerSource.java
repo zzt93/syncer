@@ -3,7 +3,8 @@ package com.github.zzt93.syncer.consumer;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.Repo;
+
 import java.util.Set;
 
 /**
@@ -18,7 +19,7 @@ public interface ConsumerSource extends Hashable {
 
   SyncInitMeta getSyncInitMeta();
 
-  Set<Schema> getSchemas();
+  Set<Repo> getRepos();
 
   String clientId();
 

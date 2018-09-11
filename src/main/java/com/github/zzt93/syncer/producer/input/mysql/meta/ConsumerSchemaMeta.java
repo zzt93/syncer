@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.producer.input.mysql.meta;
 
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
-import com.github.zzt93.syncer.config.pipeline.input.Schema;
+import com.github.zzt93.syncer.config.pipeline.input.Repo;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Lists;
@@ -91,8 +91,8 @@ public class ConsumerSchemaMeta {
     public MetaDataBuilder(MysqlConnection connection,
                            HashMap<Consumer, ProducerSink> consumerSink) throws SQLException {
       this.consumerSink = consumerSink;
-      Set<String> merged = consumerSink.keySet().stream().map(Consumer::getSchemas)
-          .flatMap(Set::stream).map(Schema::getConnectionName).collect(Collectors.toSet());
+      Set<String> merged = consumerSink.keySet().stream().map(Consumer::getRepos)
+          .flatMap(Set::stream).map(Repo::getConnectionName).collect(Collectors.toSet());
       calculatedSchemaName = getSchemaName(merged);
       dataSource = new DriverDataSource(connection.toConnectionUrl(calculatedSchemaName),
           Driver.class.getName(), new Properties(),
@@ -114,7 +114,7 @@ public class ConsumerSchemaMeta {
         Consumer consumer = entry.getKey();
         List<SchemaMeta> metas = def2data.get(consumer);
         if (metas == null ||
-            consumer.getSchemas().size() != metas.size()) {
+            consumer.getRepos().size() != metas.size()) {
           logger.error("Fail to fetch meta info for {}, {}", consumer, metas);
           throw new InvalidConfigException("Fail to fetch meta info");
         }
@@ -153,17 +153,17 @@ public class ConsumerSchemaMeta {
       HashMap<Consumer, List<SchemaMeta>> res = new HashMap<>();
       int tableCount = 0, nowCount = 0;
       for (Consumer consumer : consumers) {
-        tableCount += consumer.getSchemas().stream().mapToInt(s -> s.getEntities().size()).sum();
+        tableCount += consumer.getRepos().stream().mapToInt(s -> s.getEntities().size()).sum();
       }
 
       // It is a mapping for each consumer (because diff consumer may have diff interested col, can't share),
       // so use IdentityHashMap (Map<Consumer, Map> is the same)
-      IdentityHashMap<Schema, SchemaMeta> metaOfEachConsumer = new IdentityHashMap<>();
+      IdentityHashMap<Repo, SchemaMeta> metaOfEachConsumer = new IdentityHashMap<>();
       while (tableCount > nowCount && tableResultSet.next()) { // for each table
         String tableSchema = tableResultSet.getString("TABLE_CAT");
         String tableName = tableResultSet.getString("TABLE_NAME");
         for (Consumer consumer : consumers) { // if any consumer interested in
-          Schema aim = consumer.matchedSchema(tableSchema, tableName);
+          Repo aim = consumer.matchedSchema(tableSchema, tableName);
           if (aim != null) {
             SchemaMeta schemaMeta = metaOfEachConsumer.computeIfAbsent(aim, k -> {
               SchemaMeta tmp = new SchemaMeta(aim.getName(), aim.getNamePattern());

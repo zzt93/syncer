@@ -34,7 +34,7 @@ way to make consistency promise because Syncer can only provide 'at least once' 
 
 - Support listening to both MySQL & MongoDB & DRDS of Aliyun (https://www.aliyun.com/product/drds)
 - MySQL master source filter:
-  - Schema filter, support regex
+  - Schema filter (naming as `repos`), support regex
   - Table name filter
   - Interested column filter
   - automatic primary key detection and set into `id`
@@ -47,7 +47,7 @@ way to make consistency promise because Syncer can only provide 'at least once' 
   - Support specify binlog file/position to start reading (`input.masters[x].syncMeta`)
 - MongoDB master source filter:
   - Version: 3.x
-  - Database filter, support regex
+  - Database filter (naming as `repos`), support regex
   - Collection name filter
   - automatic `_id` detection and set into `id`
   - If an event match multiple schema & table, we will use the first specific match to filter/output,
@@ -273,7 +273,7 @@ if I didn't listed.
   - `id`: data primary key or similar thing
   - `fields`: data content of this sync event converted from log content according to your `repo` config
   **Notice**:
-    - if your interested column config (`fields`) has name of `primary key`, fields will have it. Otherwise, it will only in `id` field;
+    - if your interested column config (`fields`) has name of `primary key`, records will have it. Otherwise, it will only in `id` field;
   - `extra`: an extra map to store extra info
 
 #### Output
@@ -347,7 +347,7 @@ and send to where
 #### In All
 More samples can be found under `src/test/resource/`
 ```yml
-version: 1.1
+version: 1.2
 
 consumerId: todomsg
 
@@ -518,6 +518,17 @@ java -server -XX:+UseG1GC -jar syncer.jar [--port=9999] [--config=/absolute/path
   - Maybe change to jackson
 
 ---
+
+## Upgrade
+
+### From 1.1 to 1.2
+
+- Replace in case sensitive
+  - "schemas" -> "repos"
+  - "tables" -> "entities"
+  - "rowName" -> "fields"
+  - "Record" -> "Field"
+  - "records" -> "fields"
 
 ## How to ?
 
