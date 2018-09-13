@@ -2,9 +2,10 @@ package com.github.zzt93.syncer.consumer.input;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import java.util.concurrent.BlockingDeque;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.BlockingDeque;
 
 /**
  * @author zzt
@@ -28,8 +29,9 @@ public class ModIdScheduler implements EventScheduler {
       Object dataId = syncData.getId();
       id = dataId instanceof Long ? (long) dataId : (int) dataId;
     } catch (Exception e) {
-      logger.error("Invalid [scheduler] config for {}, [id] is not Long nor Integer", syncData, e);
-      throw new InvalidConfigException("");
+      String msg = "Invalid [scheduler] config for {}, [id] is not Long nor Integer";
+      logger.error(msg, syncData, e);
+      throw new InvalidConfigException(msg);
     }
     deques[(int) (id % size)].addLast(syncData);
     return true;

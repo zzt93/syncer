@@ -1,9 +1,5 @@
 package com.github.zzt93.syncer.config.pipeline.common;
 
-import static org.apache.commons.lang.StringUtils.substringAfterLast;
-import static org.apache.commons.lang.StringUtils.substringBeforeLast;
-
-import java.net.InetAddress;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
@@ -13,6 +9,11 @@ import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
+
+import java.net.InetAddress;
+
+import static org.apache.commons.lang.StringUtils.substringAfterLast;
+import static org.apache.commons.lang.StringUtils.substringBeforeLast;
 
 /**
  * Created by zzt on 9/11/17. <h3></h3>
@@ -30,6 +31,7 @@ public class ElasticsearchConnection extends ClusterConnection {
       Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
       Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
       logger.info("Adding transport node : {}", clusterNode);
+      // TODO: 18/9/3 timeout
       client.addTransportAddress(
           new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
     }

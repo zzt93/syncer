@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.config;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.RegexUtil;
-import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
+import com.github.zzt93.syncer.config.pipeline.ConsumerConfig;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.google.common.base.Preconditions;
 import java.io.IOException;
@@ -22,6 +22,13 @@ import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.Resource;
 import org.yaml.snakeyaml.Yaml;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map.Entry;
+import java.util.regex.Matcher;
+
 /**
  * @author zzt
  */
@@ -32,7 +39,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
   private static final String PRODUCER_CONFIG = "producerConfig";
   private static final String CONFIG = "config";
   private final YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
-  private final static ArrayList<PipelineConfig> configs = new ArrayList<>();
+  private final static ArrayList<ConsumerConfig> configs = new ArrayList<>();
 
   @Override
   public void postProcessEnvironment(ConfigurableEnvironment environment,
@@ -60,15 +67,15 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     }
   }
 
-  private PipelineConfig initPipelines(String fileName,
-      ConfigurableEnvironment environment) {
+  private ConsumerConfig initPipelines(String fileName,
+                                       ConfigurableEnvironment environment) {
     Resource path = FileUtil.getResource(fileName);
     Yaml yaml = new Yaml();
     try (InputStream in = path.getInputStream()) {
       // TODO 18/1/5 convert key to camel case & add prefix (`pipeline:`)
 //      CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, "key-name")
       String str = replaceEnv(environment, in);
-      return yaml.loadAs(str, PipelineConfig.class);
+      return yaml.loadAs(str, ConsumerConfig.class);
     } catch (IOException e) {
       logger.error("Fail to load/parse yml file", e);
       throw new InvalidConfigException(e);
@@ -83,7 +90,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     while (matcher.find()) {
       String group = matcher.group(1);
       String property = environment.getProperty(group);
-      Preconditions.checkNotNull(property);
+      Preconditions.checkNotNull(property, "Fail to resolve env var: %s", group);
       rep.put(matcher.group(), property);
     }
     for (Entry<String, String> entry : rep.entrySet()) {
@@ -107,7 +114,7 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     }
   }
 
-  public static ArrayList<PipelineConfig> getConfigs() {
+  public static ArrayList<ConsumerConfig> getConfigs() {
     return configs;
   }
 }

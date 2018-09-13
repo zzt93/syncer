@@ -5,28 +5,29 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
-import com.github.zzt93.syncer.consumer.InputSource;
+import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.google.common.base.Preconditions;
-import java.util.Set;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Set;
 
 /**
  * @author zzt
  */
-public abstract class LocalInputSource implements InputSource {
+public abstract class LocalConsumerSource implements ConsumerSource {
 
   private final EventScheduler scheduler;
-  private final Logger logger = LoggerFactory.getLogger(LocalInputSource.class);
+  private final Logger logger = LoggerFactory.getLogger(LocalConsumerSource.class);
 
   private final Set<Schema> schemas;
   private final Connection connection;
   private final SyncInitMeta syncInitMeta;
   private final String clientId;
 
-  public LocalInputSource(
+  public LocalConsumerSource(
       String clientId, Connection connection, Set<Schema> schemas,
       SyncInitMeta syncInitMeta,
       EventScheduler scheduler) {
@@ -82,7 +83,7 @@ public abstract class LocalInputSource implements InputSource {
       return false;
     }
 
-    LocalInputSource that = (LocalInputSource) o;
+    LocalConsumerSource that = (LocalConsumerSource) o;
 
     return clientId.equals(that.clientId);
   }
@@ -94,7 +95,7 @@ public abstract class LocalInputSource implements InputSource {
 
   @Override
   public String toString() {
-    return "LocalInputSource{" +
+    return "LocalConsumerSource{" +
         "schemas=" + schemas +
         ", connection=" + connection +
         ", syncInitMeta=" + syncInitMeta +
@@ -102,20 +103,20 @@ public abstract class LocalInputSource implements InputSource {
         '}';
   }
 
-  public static LocalInputSource inputSource(String consumerId, MasterSource masterSource,
-      SyncInitMeta syncInitMeta, EventScheduler scheduler) {
-    LocalInputSource inputSource;
+  public static LocalConsumerSource inputSource(String consumerId, MasterSource masterSource,
+                                                SyncInitMeta syncInitMeta, EventScheduler scheduler) {
+    LocalConsumerSource inputSource;
     switch (masterSource.getType()) {
       case Mongo:
         Preconditions
             .checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is " + syncInitMeta);
-        inputSource = new MongoLocalInputSource(consumerId, masterSource.getConnection(),
+        inputSource = new MongoLocalConsumerSource(consumerId, masterSource.getConnection(),
             masterSource.getSchemaSet(), (DocTimestamp) syncInitMeta, scheduler);
         break;
       case MySQL:
         Preconditions
             .checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is " + syncInitMeta);
-        inputSource = new MysqlLocalInputSource(consumerId, masterSource.getConnection(),
+        inputSource = new MysqlLocalConsumerSource(consumerId, masterSource.getConnection(),
             masterSource.getSchemaSet(), (BinlogInfo) syncInitMeta, scheduler);
         break;
       default:

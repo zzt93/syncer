@@ -1,11 +1,12 @@
 package com.github.zzt93.syncer.consumer.filter;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.exception.ShutDownException;
-import com.github.zzt93.syncer.common.thread.VoidCallable;
+import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
@@ -25,7 +26,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
 /**
  * @author zzt
  */
-public class FilterJob implements VoidCallable {
+public class FilterJob implements EventLoop {
 
   private static final ThreadLocal<StandardEvaluationContext> contexts = ThreadLocal.withInitial(
       EvaluationFactory::context);
@@ -81,12 +82,15 @@ public class FilterJob implements VoidCallable {
       for (ExprFilter filter : filters) {
         filter.decide(list);
       }
+    } catch (InvalidConfigException e) {
+      logger.error("Invalid config for {}", poll, e);
+      shutdown(e, outputChannels);
     } catch (Throwable e) {
       logger.error(
           "Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked",
           poll, e);
       Throwables.throwIfUnchecked(e);
-      return true;
+      return false;
     }
     ack.remove(poll.getSourceIdentifier(), poll.getDataId());
     return false;
@@ -136,6 +140,11 @@ public class FilterJob implements VoidCallable {
     for (OutputChannel outputChannel : all) {
       outputChannel.close();
     }
-    throw new ShutDownException(e);
+    if (ShutDownCenter.inShutDown()) {
+      throw new ShutDownException(e);
+    } else {
+      ShutDownCenter.initShutDown();
+    }
   }
+
 }

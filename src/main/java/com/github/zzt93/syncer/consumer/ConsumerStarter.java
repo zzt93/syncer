@@ -4,7 +4,7 @@ import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
-import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
+import com.github.zzt93.syncer.config.pipeline.ConsumerConfig;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
@@ -53,8 +53,8 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   private final String id;
   private final List<OutputChannel> outputChannels;
 
-  public ConsumerStarter(PipelineConfig pipeline, SyncerConfig syncer,
-      ConsumerRegistry consumerRegistry) throws Exception {
+  public ConsumerStarter(ConsumerConfig pipeline, SyncerConfig syncer,
+                         ConsumerRegistry consumerRegistry) throws Exception {
 
     id = pipeline.getConsumerId();
     HashMap<String, SyncInitMeta> id2SyncInitMeta = initAckModule(id, pipeline.getInput(),
@@ -121,7 +121,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
       }
       EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler())
           .build();
-      LocalInputSource localInputSource = LocalInputSource
+      LocalConsumerSource localInputSource = LocalConsumerSource
           .inputSource(consumerId, masterSource, syncInitMeta, scheduler);
       registrant.addDatasource(localInputSource);
     }

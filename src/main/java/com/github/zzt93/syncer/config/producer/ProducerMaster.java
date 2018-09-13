@@ -62,6 +62,7 @@ public class ProducerMaster {
     return "ProducerMaster{" +
         "type=" + type +
         ", connection=" + connection +
+        ", file='" + file + '\'' +
         '}';
   }
 }

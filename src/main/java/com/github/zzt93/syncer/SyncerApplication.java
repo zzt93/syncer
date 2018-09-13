@@ -2,7 +2,7 @@ package com.github.zzt93.syncer;
 
 import com.github.zzt93.syncer.common.thread.WaitingAckHook;
 import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
-import com.github.zzt93.syncer.config.pipeline.PipelineConfig;
+import com.github.zzt93.syncer.config.pipeline.ConsumerConfig;
 import com.github.zzt93.syncer.config.pipeline.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.consumer.ConsumerStarter;
@@ -28,7 +28,7 @@ import java.util.List;
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class})
 public class SyncerApplication implements CommandLineRunner {
 
-  private final Logger logger = LoggerFactory.getLogger(SyncerApplication.class);
+  private static final Logger logger = LoggerFactory.getLogger(SyncerApplication.class);
 
   private final ProducerConfig producerConfig;
   private final SyncerConfig syncerConfig;
@@ -48,17 +48,22 @@ public class SyncerApplication implements CommandLineRunner {
     SpringApplication application = new SpringApplication(SyncerApplication.class);
     application.setWebApplicationType(WebApplicationType.NONE);
     application.setBannerMode(Banner.Mode.OFF);
-    application.run(args);
+    try {
+      application.run(args);
+    } catch (Throwable e) {
+      logger.error("", e);
+      ShutDownCenter.initShutDown();
+    }
   }
 
   @Override
   public void run(String... strings) throws Exception {
     List<Starter> starters = new LinkedList<>();
-    for (PipelineConfig pipelineConfig : YamlEnvironmentPostProcessor.getConfigs()) {
-      if (!validPipeline(pipelineConfig)) {
+    for (ConsumerConfig consumerConfig : YamlEnvironmentPostProcessor.getConfigs()) {
+      if (!validPipeline(consumerConfig)) {
         continue;
       }
-      starters.add(new ConsumerStarter(pipelineConfig, syncerConfig, consumerRegistry).start());
+      starters.add(new ConsumerStarter(consumerConfig, syncerConfig, consumerRegistry).start());
     }
     starters.add(ProducerStarter
         .getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry)
@@ -69,12 +74,12 @@ public class SyncerApplication implements CommandLineRunner {
     SyncerHealth.init(starters);
   }
 
-  private boolean validPipeline(PipelineConfig pipelineConfig) {
-    if (!supportedVersion(pipelineConfig.getVersion())) {
-      logger.error("Not supported version[{}] config file", pipelineConfig.getVersion());
+  private boolean validPipeline(ConsumerConfig consumerConfig) {
+    if (!supportedVersion(consumerConfig.getVersion())) {
+      logger.error("Not supported version[{}] config file", consumerConfig.getVersion());
       return false;
     }
-    String consumerId = pipelineConfig.getConsumerId();
+    String consumerId = consumerConfig.getConsumerId();
     if (consumerId == null) {
       logger.error("No `consumerId` specified");
       return false;

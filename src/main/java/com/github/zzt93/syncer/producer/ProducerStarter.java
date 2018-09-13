@@ -1,11 +1,9 @@
 package com.github.zzt93.syncer.producer;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
-import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
-import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
-import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
+import com.github.zzt93.syncer.config.pipeline.common.*;
 import com.github.zzt93.syncer.config.producer.ProducerInput;
 import com.github.zzt93.syncer.config.producer.ProducerMaster;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
@@ -82,8 +80,12 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
             break;
         }
         service.submit(masterConnector);
+      } catch (InvalidConfigException e) {
+        logger.error("Invalid config for {}", masterSource, e);
+        ShutDownCenter.initShutDown();
       } catch (IOException | SchemaUnavailableException e) {
         logger.error("Fail to connect to master source: {}", masterSource, e);
+        ShutDownCenter.initShutDown();
       }
     }
     if (!wanted.isEmpty()) {

@@ -206,7 +206,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     try {
       flush();
     } catch (InterruptedException e) {
-      logger.warn("Interrupt thread {}", Thread.currentThread().getName());
+      logger.warn("Interrupt ElasticsearchChannel#close");
     }
     // ack
     logger.info("Waiting for clear ack info");

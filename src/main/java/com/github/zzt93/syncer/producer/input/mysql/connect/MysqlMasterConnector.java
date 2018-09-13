@@ -14,28 +14,25 @@ import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
-import com.github.zzt93.syncer.producer.input.mysql.meta.ConnectionSchemaMeta;
-import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchema;
-import com.github.zzt93.syncer.producer.output.OutputSink;
+import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
+import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
+import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
 /**
  * @author zzt
@@ -84,17 +81,15 @@ public class MysqlMasterConnector implements MasterConnector {
 
   private SyncListener configEventListener(MysqlConnection connection, ConsumerRegistry registry)
       throws SchemaUnavailableException {
-    IdentityHashMap<ConsumerSchema, OutputSink> schemasConsumerMap = registry
-        .outputSink(connection);
-    IdentityHashMap<ConnectionSchemaMeta, OutputSink> sinkHashMap;
+    HashMap<Consumer, ProducerSink> consumerSink = registry.outputSink(connection);
+    HashMap<ConsumerSchemaMeta, ProducerSink> sinkMap;
     try {
-      sinkHashMap = new ConnectionSchemaMeta.MetaDataBuilder(connection, schemasConsumerMap)
-          .build();
+      sinkMap = new ConsumerSchemaMeta.MetaDataBuilder(connection, consumerSink).build();
     } catch (SQLException e) {
       logger.error("Fail to connect to master to retrieve schema metadata", e);
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkHashMap, binlogInfo));
+    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, binlogInfo));
     client.registerEventListener(eventListener);
     client.registerEventListener((event) -> binlogInfo
         .set(new BinlogInfo(client.getBinlogFilename(), client.getBinlogPosition())));
