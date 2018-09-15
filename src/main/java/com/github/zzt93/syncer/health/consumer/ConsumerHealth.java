@@ -47,12 +47,12 @@ public class ConsumerHealth {
     return outputs;
   }
 
-  public ConsumerHealth and(Health status) {
+  public ConsumerHealth filter(Health status) {
     filterStatus = status;
     return this;
   }
 
-  public ConsumerHealth and(String output, Health status) {
+  public ConsumerHealth output(String output, Health status) {
     outputs.compute(output, (k, v) -> {
       if (v == null) {
         return new OutputHealth(output, status);
@@ -62,4 +62,11 @@ public class ConsumerHealth {
     return this;
   }
 
+  public Health getHealth() {
+    Health health = filterStatus;
+    for (OutputHealth outputHealth : outputs.values()) {
+      health = health.and(outputHealth.getStatus());
+    }
+    return health;
+  }
 }

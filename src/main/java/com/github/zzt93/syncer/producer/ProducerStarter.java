@@ -111,7 +111,12 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
   @Override
   public void registerToHealthCenter() {
     for (ProducerMaster source : masterSources) {
-      SyncerHealth.producer(source.getConnection().connectionIdentifier(), Health.green());
+      Connection connection = source.getConnection();
+      if (consumerRegistry.outputSink(connection).isEmpty()) {
+        SyncerHealth.producer(connection.initIdentifier(), Health.inactive("No consumer registered"));
+      } else {
+        SyncerHealth.producer(connection.initIdentifier(), Health.green());
+      }
     }
   }
 }

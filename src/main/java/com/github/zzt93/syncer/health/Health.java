@@ -1,17 +1,16 @@
 package com.github.zzt93.syncer.health;
 
-import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
-import java.util.ArrayList;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 public class Health {
 
   private final HealthStatus status;
-  private final List<String> cause;
+  private final Set<String> cause;
 
-  private Health(HealthStatus status, List<String> cause) {
+  private Health(HealthStatus status, Set<String> cause) {
     this.status = status;
     this.cause = cause;
   }
@@ -20,23 +19,23 @@ public class Health {
     return new Health(HealthStatus.GREEN, null);
   }
 
+  public static Health inactive(String msg) {
+    return new Health(HealthStatus.INACTIVE, Sets.newHashSet(msg));
+  }
+
   public static Health yellow(String msg) {
-    LinkedList<String> cause = Lists.newLinkedList();
-    cause.add(msg);
-    return new Health(HealthStatus.YELLOW, cause);
+    return new Health(HealthStatus.YELLOW, Sets.newHashSet(msg));
   }
 
   public static Health red(String msg) {
-    LinkedList<String> cause = Lists.newLinkedList();
-    cause.add(msg);
-    return new Health(HealthStatus.RED, cause);
+    return new Health(HealthStatus.RED, Sets.newHashSet(msg));
   }
 
   public HealthStatus getStatus() {
     return status;
   }
 
-  public List<String> getCause() {
+  public Set<String> getCause() {
     return cause;
   }
 
@@ -44,21 +43,22 @@ public class Health {
     return new Health(status.and(health.getStatus()), merge(cause, health.cause));
   }
 
-  private List<String> merge(List<String> f, List<String> s) {
+  private Set<String> merge(Set<String> f, Set<String> s) {
     if (f == null) {
       return s;
     }
     if (s == null) {
       return f;
     }
-    ArrayList<String> cause = new ArrayList<>(f);
-    cause.addAll(s);
-    return cause;
+    HashSet<String> set = Sets.newHashSet(f);
+    set.addAll(s);
+    return set;
   }
 
   public enum HealthStatus {
-
-
+    // not active state
+    INACTIVE,
+    // active state
     GREEN,
     YELLOW,
     RED,

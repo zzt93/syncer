@@ -2,7 +2,6 @@ syncer:
   ack:
     flushPeriod: 100
   input:
-    max-retry: 5
     input-meta:
       last-run-metadata-dir: /data/syncer/input/last_position/
 
