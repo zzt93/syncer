@@ -3,7 +3,7 @@ syncer:
     flushPeriod: 100
   input:
     input-meta:
-      last-run-metadata-dir: /data/syncer/input/last_position/
+      last-run-metadata-dir: /Users/xiong//data/syncer/input/last_position/
 
   filter:
     worker: 12
@@ -13,4 +13,4 @@ syncer:
     batch:
       worker: 2
     output-meta:
-      failure-log-dir: /data/syncer/output/failure/
+      failure-log-dir: /Users/xiong//data/syncer/output/failure/
