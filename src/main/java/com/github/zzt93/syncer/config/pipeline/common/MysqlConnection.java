@@ -1,9 +1,12 @@
 package com.github.zzt93.syncer.config.pipeline.common;
 
 import com.google.common.base.Preconditions;
-import java.net.UnknownHostException;
+import com.zaxxer.hikari.HikariConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.net.UnknownHostException;
+import java.util.Properties;
 
 /**
  * @author zzt
@@ -32,8 +35,15 @@ public class MysqlConnection extends Connection {
     return "jdbc:mysql://" + super.toConnectionUrl(null) + "/" + schema + "?autoReconnect=true&useSSL=false&useUnicode=yes&characterEncoding=UTF-8";
   }
 
-  public String toConnectionUrl() {
+  private String toConnectionUrl() {
     return toConnectionUrl(DEFAULT_DB);
   }
 
+  public HikariConfig toConfig() {
+    Properties properties = new Properties();
+    properties.put("jdbcUrl", toConnectionUrl());
+    properties.put("username", getUser());
+    properties.put("password", getPassword());
+    return new HikariConfig(properties);
+  }
 }

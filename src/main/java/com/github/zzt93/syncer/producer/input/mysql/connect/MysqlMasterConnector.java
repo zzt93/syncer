@@ -89,7 +89,6 @@ public class MysqlMasterConnector implements MasterConnector {
     try {
       sinkMap = new ConsumerSchemaMeta.MetaDataBuilder(connection, consumerSink).build();
     } catch (SQLException e) {
-      logger.error("Fail to connect to master to retrieve schema metadata", e);
       throw new SchemaUnavailableException(e);
     }
     SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, binlogInfo));
@@ -156,7 +155,7 @@ public class MysqlMasterConnector implements MasterConnector {
         logger.warn("Dup serverId {} detected, reconnect again", client.getServerId());
         client.setServerId(random.nextInt(Integer.MAX_VALUE));
       } catch (IOException e) {
-        logger.error("Fail to connect to master. Reconnect to master in {}(s)", sleepInSecond, e);
+        logger.error("Fail to connect to master. Reconnect in {}(s)", sleepInSecond, e);
         try {
           sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
           TimeUnit.SECONDS.sleep(sleepInSecond);

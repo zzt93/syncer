@@ -22,6 +22,9 @@ public class ElasticsearchConnection extends ClusterConnection {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchConnection.class);
 
+  /**
+   * @see org.elasticsearch.transport.TcpTransport#TCP_CONNECT_TIMEOUT
+   */
   public AbstractClient esClient() throws Exception {
     TransportClient client = new PreBuiltXPackTransportClient(settings());
 //    TransportClient client = new PreBuiltTransportClient(settings());
@@ -30,8 +33,7 @@ public class ElasticsearchConnection extends ClusterConnection {
       String port = substringAfterLast(clusterNode, COLON);
       Assert.hasText(hostName, "[Assertion failed] missing host name in 'clusterNodes'");
       Assert.hasText(port, "[Assertion failed] missing port in 'clusterNodes'");
-      logger.info("Adding transport node : {}", clusterNode);
-      // TODO: 18/9/3 timeout
+      logger.info("Adding transport node : {}, timeout in 30s", clusterNode);
       client.addTransportAddress(
           new InetSocketTransportAddress(InetAddress.getByName(hostName), Integer.valueOf(port)));
     }

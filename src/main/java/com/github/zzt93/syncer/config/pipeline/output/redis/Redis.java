@@ -11,7 +11,7 @@ import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.redis.RedisChannel;
 import org.springframework.data.redis.connection.RedisPassword;
 import org.springframework.data.redis.connection.RedisStandaloneConfiguration;
-import org.springframework.data.redis.connection.jedis.JedisConnectionFactory;
+import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
 
 /**
  * @author zzt
@@ -83,9 +83,9 @@ public class Redis implements OutputChannelConfig {
     return condition;
   }
 
-  public JedisConnectionFactory getConnectionFactory() {
+  public LettuceConnectionFactory getConnectionFactory() {
     if (clusterConnection.valid()) {
-      return new JedisConnectionFactory(clusterConnection.getConfig());
+      return new LettuceConnectionFactory(clusterConnection.getConfig());
     }
     if (connection.valid()) {
       RedisStandaloneConfiguration standaloneConfig = new RedisStandaloneConfiguration(
@@ -94,7 +94,7 @@ public class Redis implements OutputChannelConfig {
       if (!connection.noPassword()) {
         standaloneConfig.setPassword(RedisPassword.of(connection.getPassword()));
       }
-      return new JedisConnectionFactory(standaloneConfig);
+      return new LettuceConnectionFactory(standaloneConfig);
     }
     throw new InvalidConfigException("No valid connection configured");
   }
