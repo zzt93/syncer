@@ -18,21 +18,24 @@ import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
-
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
 
 /**
  * @author zzt
@@ -148,12 +151,7 @@ public class MysqlMasterConnector implements MasterConnector {
         // this method is blocked
         client.connect();
       } catch (InvalidBinlogException e) {
-        logger.error("Invalid binlog file info {}@{}, reconnect to latest binlog",
-            client.getBinlogFilename(), client.getBinlogPosition(), e);
-        // fetch oldest binlog file, but can't ensure no data loss if syncer is closed too long
-        client.setBinlogFilename("");
-        // have to reset it to avoid exception
-        client.setBinlogPosition(0);
+        oldestLog(e);
       } catch (DupServerIdException | EOFException e) {
         logger.warn("Dup serverId {} detected, reconnect again", client.getServerId());
         client.setServerId(random.nextInt(Integer.MAX_VALUE));
@@ -169,4 +167,20 @@ public class MysqlMasterConnector implements MasterConnector {
       }
     }
   }
+
+  private void oldestLog(InvalidBinlogException e) {
+    logger.error("Invalid binlog file info {}@{}, reconnect to oldest binlog",
+        client.getBinlogFilename(), client.getBinlogPosition(), e);
+    // fetch oldest binlog file, but can't ensure no data loss if syncer is closed too long
+    client.setBinlogFilename("");
+    // have to reset it to avoid exception
+    client.setBinlogPosition(0);
+  }
+
+  private void latestLog(InvalidBinlogException e) {
+    logger.error("Invalid binlog file info {}@{}, reconnect to latest binlog",
+        client.getBinlogFilename(), client.getBinlogPosition(), e);
+    client.setBinlogFilename(null);
+  }
+
 }
