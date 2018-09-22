@@ -83,6 +83,22 @@ public class Schema implements Hashable {
     return null;
   }
 
+  public Set<String> removeTableRow(String tableSchema, String tableName) {
+    if (name.equals(tableSchema) ||
+        (namePattern != null && namePattern.matcher(tableSchema).find())) {
+      return nameToRows.remove(tableName);
+    }
+    return null;
+  }
+
+  public boolean contain(String tableSchema, String tableName) {
+    if (name.equals(tableSchema) ||
+        (namePattern != null && namePattern.matcher(tableSchema).find())) {
+      return nameToRows.containsKey(tableName);
+    }
+    return false;
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

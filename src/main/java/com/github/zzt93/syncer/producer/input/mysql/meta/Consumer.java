@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.producer.input.mysql.meta;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
-
 import java.util.Objects;
 import java.util.Set;
 
@@ -54,8 +53,7 @@ public class Consumer {
 
   Schema matchedSchema(String tableSchema, String tableName) {
     for (Schema aim : getSchemas()) {
-      Set<String> tableRow = aim.getTableRow(tableSchema, tableName);
-      if (tableRow != null) {
+      if (aim.contain(tableSchema, tableName)) {
         // a consumer should only match one table at one time
         return aim;
       }

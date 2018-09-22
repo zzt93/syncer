@@ -9,17 +9,22 @@ import com.google.common.collect.Lists;
 import com.mysql.jdbc.Driver;
 import com.mysql.jdbc.JDBC4Connection;
 import com.zaxxer.hikari.util.DriverDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * All schema metas {@link SchemaMeta} that a DB has.
@@ -161,7 +166,7 @@ public class ConsumerSchemaMeta {
               res.computeIfAbsent(consumer, key -> Lists.newLinkedList()).add(tmp);
               return tmp;
             });
-            Set<String> tableRow = aim.getTableRow(tableSchema, tableName);
+            Set<String> tableRow = aim.removeTableRow(tableSchema, tableName);
             TableMeta tableMeta = new TableMeta();
             // TODO 18/1/18 may opt to get all columns then use
             setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
