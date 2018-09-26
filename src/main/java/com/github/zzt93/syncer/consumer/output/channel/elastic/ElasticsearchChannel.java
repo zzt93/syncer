@@ -58,12 +58,14 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final PipelineBatchConfig batchConfig;
   private final long refreshInterval;
+  private final String id;
   private volatile boolean closed = false;
 
 
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
       throws Exception {
     ElasticsearchConnection connection = elasticsearch.getConnection();
+    id = connection.connectionIdentifier();
     client = connection.esClient();
     refreshInterval = elasticsearch.getRefreshInMillis();
     this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch());
@@ -211,6 +213,11 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
     // client
     client.close();
+  }
+
+  @Override
+  public String id() {
+    return id;
   }
 
   @Override

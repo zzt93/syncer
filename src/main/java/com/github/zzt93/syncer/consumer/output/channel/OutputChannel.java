@@ -21,4 +21,5 @@ public interface OutputChannel {
 
   void close();
 
+  String id();
 }

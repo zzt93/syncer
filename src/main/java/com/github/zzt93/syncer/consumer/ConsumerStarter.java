@@ -21,6 +21,8 @@ import com.github.zzt93.syncer.consumer.filter.impl.Switch;
 import com.github.zzt93.syncer.consumer.input.*;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Preconditions;
@@ -49,6 +51,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   private Registrant registrant;
   private Ack ack;
   private final String id;
+  private final List<OutputChannel> outputChannels;
 
   public ConsumerStarter(ConsumerConfig pipeline, SyncerConfig syncer,
                          ConsumerRegistry consumerRegistry) throws Exception {
@@ -57,7 +60,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     HashMap<String, SyncInitMeta> id2SyncInitMeta = initAckModule(id, pipeline.getInput(),
         syncer.getInput(), syncer.getAck());
 
-    List<OutputChannel> outputChannels = initBatchOutputModule(pipeline.getOutput(), syncer.getOutput());
+    outputChannels = initBatchOutputModule(pipeline.getOutput(), syncer.getOutput());
 
     SchedulerBuilder schedulerBuilder = new SchedulerBuilder();
     initFilterModule(ack, syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels);
@@ -96,7 +99,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     for (int i = 0; i < worker; i++) {
       deques[i] = new LinkedBlockingDeque<>();
       // TODO 18/8/15 new list?
-      filterJobs[i] = new FilterJob(ack, deques[i], new CopyOnWriteArrayList<>(outputChannels),
+      filterJobs[i] = new FilterJob(id, ack, deques[i], new CopyOnWriteArrayList<>(outputChannels),
           exprFilters);
     }
     schedulerBuilder.setDeques(deques);
@@ -161,6 +164,13 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     service.shutdownNow();
     if(!service.awaitTermination(5, TimeUnit.SECONDS)) {
       logger.error("Fail to shutdown consumer: {}", id);
+    }
+  }
+
+  @Override
+  public void registerToHealthCenter() {
+    for (OutputChannel outputChannel : outputChannels) {
+      SyncerHealth.consumer(id, outputChannel.id(), Health.green());
     }
   }
 

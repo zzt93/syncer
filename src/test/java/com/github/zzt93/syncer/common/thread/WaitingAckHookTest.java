@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.common.thread;
 
 import org.junit.Before;
-import org.junit.Test;
 
 public class WaitingAckHookTest {
 

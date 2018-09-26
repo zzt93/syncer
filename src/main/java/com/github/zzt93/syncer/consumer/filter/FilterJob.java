@@ -10,6 +10,8 @@ import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,10 +36,12 @@ public class FilterJob implements EventLoop {
   private final CopyOnWriteArrayList<OutputChannel> outputChannels;
   private final List<ExprFilter> filters;
   private final Ack ack;
+  private final String id;
 
-  public FilterJob(Ack ack, BlockingDeque<SyncData> fromInput,
-                   CopyOnWriteArrayList<OutputChannel> outputChannels,
-                   List<ExprFilter> filters) {
+  public FilterJob(String id, Ack ack, BlockingDeque<SyncData> fromInput,
+      CopyOnWriteArrayList<OutputChannel> outputChannels,
+      List<ExprFilter> filters) {
+    this.id = id;
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
     this.filters = filters;
@@ -107,7 +111,9 @@ public class FilterJob implements EventLoop {
           shutdown(e, outputChannels);
         } catch (FailureException e) {
           fromInput.addFirst(syncData);
-          logger.error("Failure log with too many failed items, aborting this output channel", e);
+          String err = "Failure log with too many failed items, aborting this output channel";
+          logger.error(err, e);
+          SyncerHealth.consumer(id, outputChannel.id(), Health.red(err));
           remove.add(outputChannel);
         } catch (Throwable e) {
           logger.error("Output {} failed", syncData, e);
@@ -130,6 +136,7 @@ public class FilterJob implements EventLoop {
   }
 
   private void shutdown(Exception e, List<OutputChannel> all) {
+    // TODO shutdown all, use shutdown hook?
     for (OutputChannel outputChannel : all) {
       outputChannel.close();
     }

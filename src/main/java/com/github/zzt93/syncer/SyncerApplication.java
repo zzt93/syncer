@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.config.pipeline.ConsumerConfig;
 import com.github.zzt93.syncer.config.pipeline.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.consumer.ConsumerStarter;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import org.slf4j.Logger;
@@ -14,11 +15,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.Banner;
 import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.SpringApplication;
 import org.springframework.boot.WebApplicationType;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
+import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -44,11 +45,13 @@ public class SyncerApplication implements CommandLineRunner {
   }
 
   public static void main(String[] args) {
-    SpringApplication application = new SpringApplication(SyncerApplication.class);
-    application.setWebApplicationType(WebApplicationType.NONE);
-    application.setBannerMode(Banner.Mode.OFF);
     try {
-      application.run(args);
+      new SpringApplicationBuilder()
+        .sources(SyncerApplication.class)
+        .web(WebApplicationType.SERVLET)
+        .bannerMode(Banner.Mode.OFF)
+        .properties()
+        .run(args);
     } catch (Throwable e) {
       logger.error("", e);
       ShutDownCenter.initShutDown();
@@ -67,7 +70,10 @@ public class SyncerApplication implements CommandLineRunner {
     starters.add(ProducerStarter
         .getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry)
         .start());
+
     Runtime.getRuntime().addShutdownHook(new WaitingAckHook(starters));
+
+    SyncerHealth.init(starters);
   }
 
   private boolean validPipeline(ConsumerConfig consumerConfig) {

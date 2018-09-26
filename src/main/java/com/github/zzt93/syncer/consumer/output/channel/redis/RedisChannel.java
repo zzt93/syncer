@@ -41,12 +41,14 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
   private final FailureLog<SyncData> request;
   private final RedisTemplate<String, Object> template;
   private final OperationMapper operationMapper;
+  private final String id;
   private Expression expression;
 
 
   public RedisChannel(Redis redis, SyncerOutputMeta outputMeta, Ack ack) {
     this.batch = redis.getBatch();
-    batchBuffer = new BatchBuffer<>(batch);
+    id = redis.connectionIdentifier();
+    this.batchBuffer = new BatchBuffer<>(batch);
     this.ack = ack;
     FailureLogConfig failureLog = redis.getFailureLog();
     try {
@@ -159,6 +161,11 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
   @Override
   public void close() {
 
+  }
+
+  @Override
+  public String id() {
+    return id;
   }
 
 }
