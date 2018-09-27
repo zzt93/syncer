@@ -1,11 +1,10 @@
 package com.github.zzt93.syncer.health.export;
 
 import com.google.common.base.Preconditions;
+import java.net.BindException;
 import org.apache.coyote.http11.Http11NioProtocol;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.net.BindException;
 
 public class ReconnectProtocol extends Http11NioProtocol {
   private static final Logger logger = LoggerFactory.getLogger(ReconnectProtocol.class);

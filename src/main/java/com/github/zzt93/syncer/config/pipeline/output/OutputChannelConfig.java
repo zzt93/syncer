@@ -10,7 +10,9 @@ import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
  */
 public interface OutputChannelConfig extends ConditionalChannel {
 
-  OutputChannel toChannel(Ack ack,
+  OutputChannel toChannel(String consumerId, Ack ack,
       SyncerOutputMeta outputMeta) throws Exception;
+
+  String getConsumerId();
 
 }

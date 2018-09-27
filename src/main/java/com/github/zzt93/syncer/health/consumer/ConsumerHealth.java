@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.health.consumer;
 
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.health.Health;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

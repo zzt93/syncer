@@ -20,13 +20,13 @@ public class OutputStarter {
 
   private final List<OutputChannel> outputChannels;
 
-  public OutputStarter(PipelineOutput pipelineOutput, SyncerOutput module,
+  public OutputStarter(String consumerId, PipelineOutput pipelineOutput, SyncerOutput module,
       Ack ack) throws Exception {
     workerCheck(module.getWorker());
     workerCheck(module.getBatch().getWorker());
 
 
-    outputChannels = pipelineOutput.toOutputChannels(ack, module.getOutputMeta());
+    outputChannels = pipelineOutput.toOutputChannels(consumerId, ack, module.getOutputMeta());
     ScheduledExecutorService batchService = Executors
         .newScheduledThreadPool(Math.min(module.getBatch().getWorker(), outputChannels.size()),
             new NamedThreadFactory("syncer-batch"));

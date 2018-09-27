@@ -13,15 +13,14 @@ import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.common.base.Throwables;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-
 import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.BlockingDeque;
 import java.util.concurrent.CopyOnWriteArrayList;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 /**
  * @author zzt
@@ -104,8 +103,6 @@ public class FilterJob implements EventLoop {
       for (OutputChannel outputChannel : this.outputChannels) {
         try {
           outputChannel.output(syncData);
-        } catch (InterruptedException e) {
-          throw e;
         } catch (InvalidConfigException e) {
           logger.error("Invalid config for {}", syncData, e);
           shutdown(e, outputChannels);
@@ -136,7 +133,6 @@ public class FilterJob implements EventLoop {
   }
 
   private void shutdown(Exception e, List<OutputChannel> all) {
-    // TODO shutdown all, use shutdown hook?
     for (OutputChannel outputChannel : all) {
       outputChannel.close();
     }

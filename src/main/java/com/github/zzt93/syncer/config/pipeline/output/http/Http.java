@@ -62,9 +62,17 @@ public class Http implements OutputChannelConfig {
     this.batch = batch;
   }
 
+  private String consumerId;
+
   @Override
-  public HttpChannel toChannel(Ack ack,
+  public String getConsumerId() {
+    return consumerId;
+  }
+
+  @Override
+  public HttpChannel toChannel(String consumerId, Ack ack,
       SyncerOutputMeta outputMeta) {
+    this.consumerId = consumerId;
     if (connection.valid()) {
       return new HttpChannel(connection, Collections.unmodifiableMap(getJsonMapping()), ack);
     }

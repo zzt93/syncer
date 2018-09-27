@@ -69,9 +69,17 @@ public class Redis implements OutputChannelConfig {
     this.connection = connection;
   }
 
+  private String consumerId;
+
   @Override
-  public RedisChannel toChannel(Ack ack,
+  public String getConsumerId() {
+    return consumerId;
+  }
+
+  @Override
+  public RedisChannel toChannel(String consumerId, Ack ack,
       SyncerOutputMeta outputMeta) throws Exception {
+    this.consumerId = consumerId;
     if (clusterConnection.valid() || connection.valid()) {
       return new RedisChannel(this, outputMeta, ack);
     }

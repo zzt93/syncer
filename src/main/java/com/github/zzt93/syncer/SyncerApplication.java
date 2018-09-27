@@ -9,6 +9,8 @@ import com.github.zzt93.syncer.consumer.ConsumerStarter;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import java.util.LinkedList;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,9 +22,6 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
 import org.springframework.boot.builder.SpringApplicationBuilder;
-
-import java.util.LinkedList;
-import java.util.List;
 
 
 @SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class})

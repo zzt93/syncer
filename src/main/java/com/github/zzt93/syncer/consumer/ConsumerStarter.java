@@ -10,7 +10,11 @@ import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.pipeline.input.SyncMeta;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
-import com.github.zzt93.syncer.config.syncer.*;
+import com.github.zzt93.syncer.config.syncer.SyncerAck;
+import com.github.zzt93.syncer.config.syncer.SyncerConfig;
+import com.github.zzt93.syncer.config.syncer.SyncerFilter;
+import com.github.zzt93.syncer.config.syncer.SyncerInput;
+import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
 import com.github.zzt93.syncer.consumer.filter.FilterJob;
@@ -18,7 +22,11 @@ import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.If;
 import com.github.zzt93.syncer.consumer.filter.impl.Statement;
 import com.github.zzt93.syncer.consumer.filter.impl.Switch;
-import com.github.zzt93.syncer.consumer.input.*;
+import com.github.zzt93.syncer.consumer.input.EventScheduler;
+import com.github.zzt93.syncer.consumer.input.LocalConsumerSource;
+import com.github.zzt93.syncer.consumer.input.PositionFlusher;
+import com.github.zzt93.syncer.consumer.input.Registrant;
+import com.github.zzt93.syncer.consumer.input.SchedulerBuilder;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.health.Health;
@@ -26,16 +34,21 @@ import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * Abstraction of a consumer which is initiated by a pipeline config file
@@ -60,7 +73,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     HashMap<String, SyncInitMeta> id2SyncInitMeta = initAckModule(id, pipeline.getInput(),
         syncer.getInput(), syncer.getAck());
 
-    outputChannels = initBatchOutputModule(pipeline.getOutput(), syncer.getOutput());
+    outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput());
 
     SchedulerBuilder schedulerBuilder = new SchedulerBuilder();
     initFilterModule(ack, syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels);
@@ -78,9 +91,9 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     return id2SyncInitMeta;
   }
 
-  private List<OutputChannel> initBatchOutputModule(PipelineOutput pipeline, SyncerOutput syncer)
-      throws Exception {
-    return new OutputStarter(pipeline, syncer, ack).getOutputChannels();
+  private List<OutputChannel> initBatchOutputModule(String id, PipelineOutput pipeline,
+      SyncerOutput syncer) throws Exception {
+    return new OutputStarter(id, pipeline, syncer, ack).getOutputChannels();
   }
 
   private void initFilterModule(Ack ack, SyncerFilter module, List<FilterConfig> filters,

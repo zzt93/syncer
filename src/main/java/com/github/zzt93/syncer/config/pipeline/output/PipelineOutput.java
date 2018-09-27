@@ -52,20 +52,21 @@ public class PipelineOutput {
     this.mysql = mysql;
   }
 
-  public List<OutputChannel> toOutputChannels(Ack ack, SyncerOutputMeta outputMeta)
+  public List<OutputChannel> toOutputChannels(String consumerId, Ack ack,
+      SyncerOutputMeta outputMeta)
       throws Exception {
     List<OutputChannel> res = new ArrayList<>();
     if (elasticsearch != null) {
-      res.add(elasticsearch.toChannel(ack, outputMeta));
+      res.add(elasticsearch.toChannel(consumerId, ack, outputMeta));
     }
     if (http != null) {
-      res.add(http.toChannel(ack, outputMeta));
+      res.add(http.toChannel(consumerId, ack, outputMeta));
     }
     if (mysql != null) {
-      res.add(mysql.toChannel(ack, outputMeta));
+      res.add(mysql.toChannel(consumerId, ack, outputMeta));
     }
     if (redis != null) {
-      res.add(redis.toChannel(ack, outputMeta));
+      res.add(redis.toChannel(consumerId, ack, outputMeta));
     }
     return res;
   }

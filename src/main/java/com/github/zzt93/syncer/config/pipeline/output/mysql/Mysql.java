@@ -53,8 +53,16 @@ public class Mysql implements OutputChannelConfig {
     this.rowMapping = rowMapping;
   }
 
+  private String consumerId;
+
   @Override
-  public OutputChannel toChannel(Ack ack, SyncerOutputMeta outputMeta) throws Exception {
+  public String getConsumerId() {
+    return consumerId;
+  }
+
+  @Override
+  public OutputChannel toChannel(String consumerId, Ack ack, SyncerOutputMeta outputMeta) throws Exception {
+    this.consumerId = consumerId;
     if (connection.valid()) {
       return new MysqlChannel(this, outputMeta, ack);
     }

@@ -13,11 +13,20 @@ import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.tomcat.jdbc.pool.DataSource;
+import java.io.FileNotFoundException;
+import java.nio.file.Paths;
+import java.sql.BatchUpdateException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -25,23 +34,6 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
-
-import javax.sql.DataSource;
-import java.io.FileNotFoundException;
-import java.nio.file.Paths;
-import java.sql.BatchUpdateException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import java.io.FileNotFoundException;
-import java.nio.file.Paths;
-import java.sql.BatchUpdateException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzt
@@ -55,11 +47,11 @@ public class MysqlChannel implements BufferedChannel<String> {
   private final SQLMapper sqlMapper;
   private final Ack ack;
   private final FailureLog<SyncWrapper<String>> sqlFailureLog;
-  private final String id;
+  private final String output;
+  private final String consumerId;
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
-    id = connection.connectionIdentifier();
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
     batchBuffer = new BatchBuffer<>(mysql.getBatch());
     sqlMapper = new NestedSQLMapper(mysql.getRowMapping(), jdbcTemplate);
@@ -74,6 +66,8 @@ public class MysqlChannel implements BufferedChannel<String> {
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);
     }
+    output = connection.connectionIdentifier();
+    consumerId = mysql.getConsumerId();
   }
 
   private DataSource dataSource(MysqlConnection connection, String className) {
@@ -109,7 +103,7 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   @Override
   public String id() {
-    return id;
+    return output;
   }
 
   @Override
@@ -141,7 +135,9 @@ public class MysqlChannel implements BufferedChannel<String> {
         ackSuccess(sqls);
         return;
       } catch (CannotGetJdbcConnectionException e) {
-        logger.error("Fail to connect to DB, will retry in {} second(s)", sleepInSecond, e);
+        String error = "Fail to connect to DB, will retry in {} second(s)";
+        logger.error(error, sleepInSecond, e);
+        SyncerHealth.consumer(consumerId, output, Health.red(error));
         sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
         TimeUnit.SECONDS.sleep(sleepInSecond);
       } catch (DataAccessException e) {
