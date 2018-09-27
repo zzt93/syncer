@@ -21,7 +21,7 @@ public class SyncerConfig {
 
   private static final String SERVER_PORT = "port";
   private static final Logger logger = LoggerFactory.getLogger(SyncerConfig.class);
-  private static final int DEFAULT_START = 10000;
+  private static final int DEFAULT_START = 40000;
   private static final String RETRY = "10";
 
   private int port;

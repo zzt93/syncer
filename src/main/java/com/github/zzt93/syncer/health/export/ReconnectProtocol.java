@@ -11,6 +11,9 @@ public class ReconnectProtocol extends Http11NioProtocol {
 
   private int retry;
 
+  /**
+   * @see com.github.zzt93.syncer.config.syncer.SyncerConfig
+   */
   public void setRetry(int retry) {
     Preconditions.checkArgument(retry > 0 && retry <= 16, "Invalid retry");
     this.retry = retry;

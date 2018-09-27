@@ -118,7 +118,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 ### Mis
 - Http Endpoints
   - Port decision:
-    - If no port config, `Syncer` will try ports between `[10000, 10010)`
+    - If no port config, `Syncer` will try ports between `[40000, 40010)`
     - If port is configured via either command line `port` or `syncer.port` in `config.yml`
     syncer will use that port
     - If port is configured both in command line and config file, command line option will override file config
