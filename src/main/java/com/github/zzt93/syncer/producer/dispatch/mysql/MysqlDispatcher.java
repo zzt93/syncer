@@ -9,15 +9,14 @@ import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * @author zzt
@@ -37,6 +36,7 @@ public class MysqlDispatcher implements Dispatcher {
       throw new InvalidConfigException("Invalid address & schema & table config");
     }
     for (Entry<ConsumerSchemaMeta, ProducerSink> entry : sinkHashMap.entrySet()) {
+      logger.info("Listening {}, dispatch to {}", entry.getKey(), entry.getValue());
       filterChains.add(new FilterChain(entry.getKey(), entry.getValue()));
     }
   }

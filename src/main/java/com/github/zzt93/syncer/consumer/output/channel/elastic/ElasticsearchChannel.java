@@ -16,6 +16,13 @@ import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.google.gson.reflect.TypeToken;
+import java.io.FileNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -33,14 +40,6 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
-import java.io.FileNotFoundException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzt
@@ -319,7 +318,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         bulkRequest.add(((DeleteRequest) request));
       }
     }
-    logger.info("Sending to Elasticsearch: {}", joiner);
+    logger.info("Sending {}", joiner);
     long sleepInSecond = 1;
     while (true) {
       try {

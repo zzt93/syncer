@@ -76,6 +76,14 @@ public class ConsumerSchemaMeta {
     return Objects.hash(id);
   }
 
+  @Override
+  public String toString() {
+    return "ConsumerSchemaMeta{" +
+        "schemaMetas=" + schemaMetas +
+        ", id='" + id + '\'' +
+        '}';
+  }
+
   public static class MetaDataBuilder {
 
     static final int TIMEOUT = 10;

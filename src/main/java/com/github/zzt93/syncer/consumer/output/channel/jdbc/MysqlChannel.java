@@ -17,7 +17,14 @@ import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.apache.tomcat.jdbc.pool.DataSource;
+import java.io.FileNotFoundException;
+import java.nio.file.Paths;
+import java.sql.BatchUpdateException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -26,22 +33,6 @@ import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
-import java.io.FileNotFoundException;
-import java.nio.file.Paths;
-import java.sql.BatchUpdateException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-
-import java.io.FileNotFoundException;
-import java.nio.file.Paths;
-import java.sql.BatchUpdateException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzt
@@ -59,7 +50,6 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
-    id = connection.connectionIdentifier();
     jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
     batchBuffer = new BatchBuffer<>(mysql.getBatch());
     sqlMapper = new NestedSQLMapper(mysql.getRowMapping(), jdbcTemplate);
@@ -74,6 +64,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);
     }
+    id = connection.connectionIdentifier();
   }
 
   private DataSource dataSource(MysqlConnection connection, String className) {
@@ -133,7 +124,7 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   private void batchAndRetry(List<SyncWrapper<String>> sqls) throws InterruptedException {
     String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
-    logger.info("Sending to {}", Arrays.toString(sqlStatement));
+    logger.info("Sending {}", Arrays.toString(sqlStatement));
     long sleepInSecond = 1;
     while (true) {
       try {
