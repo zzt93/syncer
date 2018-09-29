@@ -26,6 +26,9 @@ public class ElasticsearchConnection extends ClusterConnection {
    * @see org.elasticsearch.transport.TcpTransport#TCP_CONNECT_TIMEOUT
    */
   public AbstractClient esClient() throws Exception {
+    // https://discuss.elastic.co/t/getting-availableprocessors-is-already-set-to-1-rejecting-1-illegalstateexception-exception/103082
+    System.setProperty("es.set.netty.runtime.available.processors", "false");
+
     TransportClient client = new PreBuiltXPackTransportClient(settings());
 //    TransportClient client = new PreBuiltTransportClient(settings());
     for (String clusterNode : getClusterNodes()) {

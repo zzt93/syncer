@@ -20,7 +20,7 @@ public interface EventLoop extends Runnable {
       logger.info("Shutting down ...");
       throw e;
     } catch (Throwable e) {
-      logger.error("Fail to loop: {}", getClass(), e);
+      logger.error("Fail to loop: {}, init shut down", getClass(), e);
       ShutDownCenter.initShutDown();
     }
   }
