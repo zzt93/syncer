@@ -15,6 +15,8 @@ import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
 import java.io.FileNotFoundException;
 import java.nio.file.Path;
@@ -58,6 +60,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private final PipelineBatchConfig batchConfig;
   private final long refreshInterval;
   private final String id;
+  private final String consumerId;
   private volatile boolean closed = false;
 
 
@@ -65,6 +68,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       throws Exception {
     ElasticsearchConnection connection = elasticsearch.getConnection();
     id = connection.connectionIdentifier();
+    consumerId = elasticsearch.getConsumerId();
     client = connection.esClient();
     refreshInterval = elasticsearch.getRefreshInMillis();
     this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch());
@@ -324,7 +328,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       try {
         return bulkRequest.execute().actionGet();
       } catch (NoNodeAvailableException e) {
-        logger.error("Fail to connect to ES server, will retry in {}s", sleepInSecond, e);
+        String error = "Fail to connect to ES server, will retry in {}s";
+        logger.error(error, sleepInSecond, e);
+        SyncerHealth.consumer(consumerId, id, Health.red(error));
       }
       sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
       TimeUnit.SECONDS.sleep(sleepInSecond);

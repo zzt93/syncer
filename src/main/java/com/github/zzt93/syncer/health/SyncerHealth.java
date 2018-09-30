@@ -6,7 +6,6 @@ import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.health.consumer.ConsumerHealth;
 import com.github.zzt93.syncer.health.producer.ProducerHealth;
 import com.google.gson.Gson;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;

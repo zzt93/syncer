@@ -13,6 +13,8 @@ import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
@@ -33,7 +35,6 @@ import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-
 /**
  * @author zzt
  */
@@ -46,7 +47,8 @@ public class MysqlChannel implements BufferedChannel<String> {
   private final SQLMapper sqlMapper;
   private final Ack ack;
   private final FailureLog<SyncWrapper<String>> sqlFailureLog;
-  private final String id;
+  private final String output;
+  private final String consumerId;
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
@@ -64,7 +66,8 @@ public class MysqlChannel implements BufferedChannel<String> {
     } catch (FileNotFoundException e) {
       throw new IllegalStateException("Impossible", e);
     }
-    id = connection.connectionIdentifier();
+    output = connection.connectionIdentifier();
+    consumerId = mysql.getConsumerId();
   }
 
   private DataSource dataSource(MysqlConnection connection, String className) {
@@ -100,7 +103,7 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   @Override
   public String id() {
-    return id;
+    return output;
   }
 
   @Override
@@ -132,7 +135,9 @@ public class MysqlChannel implements BufferedChannel<String> {
         ackSuccess(sqls);
         return;
       } catch (CannotGetJdbcConnectionException e) {
-        logger.error("Fail to connect to DB, will retry in {} second(s)", sleepInSecond, e);
+        String error = "Fail to connect to DB, will retry in {} second(s)";
+        logger.error(error, sleepInSecond, e);
+        SyncerHealth.consumer(consumerId, output, Health.red(error));
         sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
         TimeUnit.SECONDS.sleep(sleepInSecond);
       } catch (DataAccessException e) {

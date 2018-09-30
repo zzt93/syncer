@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.health;
 
 import com.google.common.collect.Sets;
-
 import java.util.HashSet;
 import java.util.Set;
 
