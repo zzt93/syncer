@@ -9,22 +9,17 @@ import com.google.common.collect.Lists;
 import com.mysql.jdbc.Driver;
 import com.mysql.jdbc.JDBC4Connection;
 import com.zaxxer.hikari.util.DriverDataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
 import java.util.stream.Collectors;
-import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * All schema metas {@link SchemaMeta} that a DB has.
@@ -117,12 +112,14 @@ public class ConsumerSchemaMeta {
       HashMap<Consumer, List<SchemaMeta>> def2data = build(consumerSink);
       for (Entry<Consumer, ProducerSink> entry : consumerSink.entrySet()) {
         Consumer consumer = entry.getKey();
-        if (!def2data.containsKey(consumer)) {
-          logger.error("Fail to fetch meta info for {}", consumer);
+        List<SchemaMeta> metas = def2data.get(consumer);
+        if (metas == null ||
+            consumer.getSchemas().size() != metas.size()) {
+          logger.error("Fail to fetch meta info for {}, {}", consumer, metas);
           throw new InvalidConfigException("Fail to fetch meta info");
         }
         ConsumerSchemaMeta consumerSchemaMeta = new ConsumerSchemaMeta(consumer.getId());
-        consumerSchemaMeta.schemaMetas.addAll(def2data.get(consumer));
+        consumerSchemaMeta.schemaMetas.addAll(metas);
         res.put(consumerSchemaMeta, entry.getValue());
       }
       return res;
