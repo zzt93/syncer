@@ -18,13 +18,6 @@ import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
-import java.io.FileNotFoundException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.concurrent.TimeUnit;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -42,6 +35,15 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import java.io.FileNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author zzt
@@ -61,7 +63,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private final long refreshInterval;
   private final String id;
   private final String consumerId;
-  private volatile boolean closed = false;
+  private volatile AtomicBoolean closed = new AtomicBoolean(false);
 
 
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
@@ -115,7 +117,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) throws InterruptedException {
-    if (closed) return false;
+    if (closed.get()) return false;
     // TODO 18/3/25 remove following line, keep it for the time being
     event.removePrimaryKey();
     Object builder = esRequestMapper.map(event);
@@ -202,17 +204,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @Override
   public void close() {
-    // TODO 18/8/18 CAS?
-    if (closed) return;
-    closed = true;
+    if (!closed.compareAndSet(false, true)) return;
 
-    try {
-      flush();
-    } catch (InterruptedException e) {
-      logger.warn("Interrupt ElasticsearchChannel#close");
-    }
-    // ack
-    logger.info("Waiting for clear ack info");
+    BufferedChannel.super.close();
 
     // client
     client.close();
@@ -283,6 +277,11 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   @Override
   public boolean retriable(Exception e) {
     return true;
+  }
+
+  @Override
+  public boolean checkpoint() {
+    return ack.flush();
   }
 
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})

@@ -7,8 +7,8 @@ public class ShutDownCenter {
   private static AtomicBoolean shutdown = new AtomicBoolean(false);
 
   public static void initShutDown() {
-    boolean b = shutdown.compareAndSet(false, true);
-    if (b) {
+    boolean first = shutdown.compareAndSet(false, true);
+    if (first) {
       System.exit(1);
     }
   }

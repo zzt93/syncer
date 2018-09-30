@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.channel;
 
 import com.github.zzt93.syncer.common.data.SyncWrapper;
+
 import java.util.List;
 
 /**
@@ -13,5 +14,7 @@ public interface AckChannel<T> {
   void retryFailed(List<SyncWrapper<T>> aim, Exception e);
 
   boolean retriable(Exception e);
+
+  boolean checkpoint();
 
 }

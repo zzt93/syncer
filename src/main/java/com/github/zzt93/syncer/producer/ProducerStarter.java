@@ -3,11 +3,7 @@ package com.github.zzt93.syncer.producer;
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
-import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
-import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
-import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
+import com.github.zzt93.syncer.config.pipeline.common.*;
 import com.github.zzt93.syncer.config.producer.ProducerInput;
 import com.github.zzt93.syncer.config.producer.ProducerMaster;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
@@ -17,13 +13,14 @@ import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.connect.MysqlMasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -106,8 +103,9 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
   @Override
   public void close() throws Exception {
     service.shutdownNow();
-    if (!service.awaitTermination(5, TimeUnit.SECONDS)) {
-      logger.error("Fail to shutdown producer");
+    // TODO: 18/9/30 can finish binlog client?
+    while (!service.awaitTermination(SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+      logger.error("Shutting down producer");
     }
   }
 

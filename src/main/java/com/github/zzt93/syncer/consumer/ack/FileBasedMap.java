@@ -73,15 +73,16 @@ public class FileBasedMap<T extends Comparable<T>> {
     return map.computeIfPresent(data, (k, v) -> v.updateAndGet(x -> x - count) == 0 ? null : v);
   }
 
-  public void flush() {
+  public boolean flush() {
     if (map.isEmpty()) {
-      return;
+      return false;
     }
     T first = map.firstKey();
 //    logger.debug("Flushing ack info {}", first);
     byte[] bytes = first.toString().getBytes(StandardCharsets.UTF_8);
     putBytes(file, bytes);
     file.force();
+    return true;
   }
 
   private void putBytes(MappedByteBuffer file, byte[] bytes) {

@@ -6,6 +6,9 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.pipeline.common.MasterSource;
 import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
 import com.github.zzt93.syncer.config.syncer.SyncerInputMeta;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -14,8 +17,6 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt TODO 18/1/17 change string identifier to Class?
@@ -111,8 +112,12 @@ public class Ack {
     }
   }
 
-  public void flush() {
+  public boolean flush() {
     // TODO 18/8/20 If dataId is just removed and map is empty, add next dataId
-    ackMap.values().forEach(FileBasedMap::flush);
+    boolean res = true;
+    for (FileBasedMap<String> map : ackMap.values()) {
+      res = map.flush() && res;
+    }
+    return res;
   }
 }

@@ -19,14 +19,6 @@ import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.io.FileNotFoundException;
-import java.nio.file.Paths;
-import java.sql.BatchUpdateException;
-import java.sql.Statement;
-import java.util.Arrays;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
-import javax.sql.DataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -34,6 +26,16 @@ import org.springframework.dao.DuplicateKeyException;
 import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.sql.DataSource;
+import java.io.FileNotFoundException;
+import java.nio.file.Paths;
+import java.sql.BatchUpdateException;
+import java.sql.Statement;
+import java.util.Arrays;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author zzt
@@ -49,6 +51,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   private final FailureLog<SyncWrapper<String>> sqlFailureLog;
   private final String output;
   private final String consumerId;
+  private volatile AtomicBoolean closed = new AtomicBoolean(false);
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
@@ -81,6 +84,8 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   @Override
   public boolean output(SyncData event) throws InterruptedException {
+    if (closed.get()) return false;
+
     String sql = sqlMapper.map(event);
     logger.info("Convert event to sql: {}", sql);
     boolean add = batchBuffer
@@ -98,7 +103,9 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   @Override
   public void close() {
+    if (!closed.compareAndSet(false, true)) return;
 
+    BufferedChannel.super.close();
   }
 
   @Override
@@ -201,5 +208,10 @@ public class MysqlChannel implements BufferedChannel<String> {
      * 3. the data is sync to mysql but not receive response before syncer shutdown
      */
     return !(e instanceof DuplicateKeyException || e instanceof BadSqlGrammarException);
+  }
+
+  @Override
+  public boolean checkpoint() {
+    return ack.flush();
   }
 }

@@ -13,11 +13,6 @@ import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.google.gson.reflect.TypeToken;
-import java.io.FileNotFoundException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -27,6 +22,12 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.StringUtils;
+
+import java.io.FileNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzt
@@ -134,6 +135,11 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
   @Override
   public boolean retriable(Exception e) {
     return true;
+  }
+
+  @Override
+  public boolean checkpoint() {
+    return ack.flush();
   }
 
   @Override
