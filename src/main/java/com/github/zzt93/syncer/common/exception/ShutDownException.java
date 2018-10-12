@@ -5,7 +5,7 @@ package com.github.zzt93.syncer.common.exception;
  */
 public class ShutDownException extends RuntimeException {
 
-  public ShutDownException(Exception i) {
+  public ShutDownException(Throwable i) {
     super(i);
   }
 }

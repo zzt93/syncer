@@ -7,4 +7,8 @@ import com.github.zzt93.syncer.common.thread.EventLoop;
  */
 public interface MasterConnector extends EventLoop {
 
+  default void close() {
+    logger.info("[Shutting down] {}", getClass().getSimpleName());
+  }
+
 }

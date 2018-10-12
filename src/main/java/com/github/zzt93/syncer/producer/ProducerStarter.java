@@ -3,7 +3,11 @@ package com.github.zzt93.syncer.producer;
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
-import com.github.zzt93.syncer.config.pipeline.common.*;
+import com.github.zzt93.syncer.config.pipeline.common.Connection;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.pipeline.common.MongoConnection;
+import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
+import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.producer.ProducerInput;
 import com.github.zzt93.syncer.config.producer.ProducerMaster;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
@@ -13,14 +17,14 @@ import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.connect.MysqlMasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.IOException;
+import java.util.LinkedList;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -32,6 +36,7 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
   private final Set<ProducerMaster> masterSources;
   private final ExecutorService service;
   private final ConsumerRegistry consumerRegistry;
+  private final LinkedList<MasterConnector> connectors = new LinkedList<>();
 
   private ProducerStarter(ProducerInput input,
       SyncerInput syncerConfigInput, ConsumerRegistry consumerRegistry) {
@@ -79,13 +84,14 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
                 consumerRegistry);
             break;
         }
+        connectors.add(masterConnector);
         service.submit(masterConnector);
       } catch (InvalidConfigException e) {
-        logger.error("Invalid config for {}", masterSource, e);
-        ShutDownCenter.initShutDown();
+        logger.error("Invalid config for {}", masterSource);
+        ShutDownCenter.initShutDown(e);
       } catch (IOException | SchemaUnavailableException e) {
-        logger.error("Fail to connect to master source: {}", masterSource, e);
-        ShutDownCenter.initShutDown();
+        logger.error("Fail to connect to master source: {}", masterSource);
+        ShutDownCenter.initShutDown(e);
       }
     }
     if (!wanted.isEmpty()) {
@@ -102,10 +108,14 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
 
   @Override
   public void close() throws Exception {
+    for (MasterConnector connector : connectors) {
+      connector.close();
+    }
+
     service.shutdownNow();
-    // TODO: 18/9/30 can finish binlog client?
-    while (!service.awaitTermination(SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
-      logger.error("Shutting down producer");
+    // TODO: 18/9/30 can interrupt binlog client?
+    while (!service.awaitTermination(ShutDownCenter.SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+      logger.warn("[Shutting down] producer");
     }
   }
 

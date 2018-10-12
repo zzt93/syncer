@@ -6,8 +6,6 @@ package com.github.zzt93.syncer;
  */
 public interface Starter<I, O> {
 
-  int SHUTDOWN_TIMEOUT = 5;
-
   Starter start() throws Exception;
 
   O fromPipelineConfig(I input) throws Exception;

@@ -1,10 +1,10 @@
 package com.github.zzt93.syncer.common.thread;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.Starter;
+import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.List;
 
 /**
  * @author zzt
@@ -23,11 +23,13 @@ public class WaitingAckHook extends Thread {
 
   @Override
   public void run() {
+    ShutDownCenter.inShutdown();
+    logger.info("[Shutting down] started");
     for (Starter starter : starters) {
       try {
         starter.close();
       } catch (Throwable e) {
-        logger.error("Fail to close starter", e);
+        logger.error("[Shutting down] Fail to close starter", e);
       }
     }
   }

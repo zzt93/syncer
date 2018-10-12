@@ -18,7 +18,17 @@ import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
+import java.io.FileNotFoundException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.elasticsearch.action.ActionListener;
+import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -35,15 +45,6 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-
-import java.io.FileNotFoundException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 /**
  * @author zzt
@@ -231,7 +232,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   @Override
   public void flush() throws InterruptedException {
     List<SyncWrapper<WriteRequest>> aim = batchBuffer.flush();
-    buildAndSend(aim);
+    buildSendProcess(aim);
   }
 
   @Override
@@ -253,7 +254,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
       BulkItemResponse item = items[i];
       if (item.isFailed()) {
-        if (retriable(e)) {
+        if (level(e).retriable()) {
           logger.info("Retry request: {}", reqStr == null ? request : reqStr);
           if (wrapper.retryCount() < batchConfig.getMaxRetry()) {
             batchBuffer.addFirst(wrapper);
@@ -275,11 +276,6 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   }
 
   @Override
-  public boolean retriable(Exception e) {
-    return true;
-  }
-
-  @Override
   public boolean checkpoint() {
     return ack.flush();
   }
@@ -289,12 +285,12 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   public void flushIfReachSizeLimit() throws InterruptedException {
     @SuppressWarnings("unchecked")
     List<SyncWrapper<WriteRequest>> aim = batchBuffer.flushIfReachSizeLimit();
-    buildAndSend(aim);
+    buildSendProcess(aim);
   }
 
-  private void buildAndSend(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {
+  private void buildSendProcess(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {
     if (aim != null && aim.size() != 0) {
-      BulkResponse bulkResponse = buildRequest(aim);
+      BulkResponse bulkResponse = buildAndSend(aim);
       if (!bulkResponse.hasFailures()) {
         ackSuccess(aim);
       } else {
@@ -303,7 +299,15 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     }
   }
 
-  private BulkResponse buildRequest(List<SyncWrapper<WriteRequest>> aim)
+  /**
+   * Sending to ES in synchronous way to avoid disorder between events: e.g.
+   * <pre>
+   *   sending: [update 1], [insert 2]
+   *   sending: [delete 1] --> may arrive ES first
+   * </pre>
+   * @throws InterruptedException throw when shutdown
+   */
+  private BulkResponse buildAndSend(List<SyncWrapper<WriteRequest>> aim)
       throws InterruptedException {
     StringJoiner joiner = new StringJoiner(",", "[", "]");
     // BulkProcessor?
@@ -324,12 +328,17 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     logger.info("Sending {}", joiner);
     long sleepInSecond = 1;
     while (true) {
+      ListenableActionFuture<BulkResponse> future = bulkRequest.execute();
       try {
-        return bulkRequest.execute().actionGet();
-      } catch (NoNodeAvailableException e) {
+        return future.get();
+      } catch (NoNodeAvailableException|ExecutionException e) {
         String error = "Fail to connect to ES server, will retry in {}s";
         logger.error(error, sleepInSecond, e);
         SyncerHealth.consumer(consumerId, id, Health.red(error));
+      } catch (InterruptedException e) {
+        logger.info("Future interrupted");
+        Thread.currentThread().interrupt();
+        return future.actionGet();
       }
       sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
       TimeUnit.SECONDS.sleep(sleepInSecond);

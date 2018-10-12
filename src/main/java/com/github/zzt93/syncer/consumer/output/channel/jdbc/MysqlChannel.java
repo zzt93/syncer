@@ -19,15 +19,6 @@ import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.BadSqlGrammarException;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
-import org.springframework.jdbc.core.JdbcTemplate;
-
-import javax.sql.DataSource;
 import java.io.FileNotFoundException;
 import java.nio.file.Paths;
 import java.sql.BatchUpdateException;
@@ -36,6 +27,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @author zzt
@@ -84,7 +83,9 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   @Override
   public boolean output(SyncData event) throws InterruptedException {
-    if (closed.get()) return false;
+    if (closed.get()) {
+      return false;
+    }
 
     String sql = sqlMapper.map(event);
     logger.info("Convert event to sql: {}", sql);
@@ -103,7 +104,9 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   @Override
   public void close() {
-    if (!closed.compareAndSet(false, true)) return;
+    if (!closed.compareAndSet(false, true)) {
+      return;
+    }
 
     BufferedChannel.super.close();
   }
@@ -136,7 +139,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
     logger.info("Sending {}", Arrays.toString(sqlStatement));
     long sleepInSecond = 1;
-    while (true) {
+    while (!Thread.currentThread().isInterrupted()) {
       try {
         jdbcTemplate.batchUpdate(sqlStatement);
         ackSuccess(sqls);
@@ -173,41 +176,59 @@ public class MysqlChannel implements BufferedChannel<String> {
   @Override
   public void retryFailed(List<SyncWrapper<String>> sqls, Exception e) {
     Throwable cause = e.getCause();
-    if (cause instanceof BatchUpdateException) {
-      int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
-      for (int i = 0; i < updateCounts.length; i++) {
-        SyncWrapper<String> stringSyncWrapper = sqls.get(i);
-        if (updateCounts[i] == Statement.EXECUTE_FAILED) {
-          if (retriable(e)) {
-            if (stringSyncWrapper.retryCount() < batch.getMaxRetry()) {
-              batchBuffer.addFirst(stringSyncWrapper);
-            } else {
-              logger.error("Max retry exceed, write '{}' to failure log", stringSyncWrapper, cause);
-              sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
-              ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
-            }
-          } else {
-            logger.error("Met non-retriable error in {}, write to failure log", stringSyncWrapper,
-                cause);
-            sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
-            ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
-          }
+    if (!(cause instanceof BatchUpdateException)) {
+      logger.error("Unknown exception", e);
+      throw new IllegalStateException();
+    }
+
+    int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
+    for (int i = 0; i < updateCounts.length; i++) {
+      SyncWrapper<String> stringSyncWrapper = sqls.get(i);
+      if (succ(updateCounts[i])) {
+        ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
+        continue;
+      }
+      ErrorLevel level = level(e);
+      if (level.retriable()) {
+        if (stringSyncWrapper.retryCount() < batch.getMaxRetry()) {
+          batchBuffer.addFirst(stringSyncWrapper);
+          continue;
         } else {
-          ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
+          logger.error("Max retry exceed, write '{}' to failure log", stringSyncWrapper, cause);
+          sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
+        }
+      } else {
+        switch (level) {
+          case SYNCER_BUG: // count as failure then write a log, so no break
+            sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
+          case WARN: // not count WARN as failure item
+            logger.error("Met {} in {}", level, stringSyncWrapper, cause);
+            break;
         }
       }
+      ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
     }
   }
 
+  private boolean succ(int updateCount) {
+    return updateCount != Statement.EXECUTE_FAILED;
+  }
+
   @Override
-  public boolean retriable(Exception e) {
+  public ErrorLevel level(Exception e) {
     /*
      * Possible reasons for DuplicateKey
      * 1. the first failed, the second succeed. Then restart, then the second will send again and cause this
      * 2. duplicate entry in binlog file: load data into db multiple time
      * 3. the data is sync to mysql but not receive response before syncer shutdown
      */
-    return !(e instanceof DuplicateKeyException || e instanceof BadSqlGrammarException);
+    if (e instanceof DuplicateKeyException) {
+      return ErrorLevel.WARN;
+    }
+    if (e instanceof BadSqlGrammarException) {
+      return ErrorLevel.SYNCER_BUG;
+    }
+    return ErrorLevel.RETRIABLE_ERROR;
   }
 
   @Override

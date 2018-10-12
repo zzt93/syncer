@@ -11,23 +11,25 @@ import com.google.common.base.Preconditions;
 import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
  */
 public class OutputStarter {
 
-
+  private final Logger logger = LoggerFactory.getLogger(OutputStarter.class);
   private final List<OutputChannel> outputChannels;
+  private final ScheduledExecutorService batchService;
 
   public OutputStarter(String consumerId, PipelineOutput pipelineOutput, SyncerOutput module,
       Ack ack) throws Exception {
     workerCheck(module.getWorker());
     workerCheck(module.getBatch().getWorker());
 
-
     outputChannels = pipelineOutput.toOutputChannels(consumerId, ack, module.getOutputMeta());
-    ScheduledExecutorService batchService = Executors
+    batchService = Executors
         .newScheduledThreadPool(Math.min(module.getBatch().getWorker(), outputChannels.size()),
             new NamedThreadFactory("syncer-batch"));
 
@@ -51,4 +53,14 @@ public class OutputStarter {
     Preconditions.checkArgument(worker > 0, "Too few worker thread");
   }
 
+  public void close() {
+    logger.info("[Shutting down] Output channels");
+    for (OutputChannel outputChannel : outputChannels) {
+      outputChannel.close();
+    }
+
+    logger.info("[Shutting down] Batch service");
+    // batchService is not loop but scheduled task, just shutdown is enough to stop it
+    batchService.shutdown();
+  }
 }

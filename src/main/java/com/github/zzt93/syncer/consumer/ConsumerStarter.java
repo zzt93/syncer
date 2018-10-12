@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
@@ -10,7 +11,11 @@ import com.github.zzt93.syncer.config.pipeline.filter.FilterConfig;
 import com.github.zzt93.syncer.config.pipeline.input.PipelineInput;
 import com.github.zzt93.syncer.config.pipeline.input.SyncMeta;
 import com.github.zzt93.syncer.config.pipeline.output.PipelineOutput;
-import com.github.zzt93.syncer.config.syncer.*;
+import com.github.zzt93.syncer.config.syncer.SyncerAck;
+import com.github.zzt93.syncer.config.syncer.SyncerConfig;
+import com.github.zzt93.syncer.config.syncer.SyncerFilter;
+import com.github.zzt93.syncer.config.syncer.SyncerInput;
+import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
 import com.github.zzt93.syncer.consumer.filter.FilterJob;
@@ -18,7 +23,11 @@ import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.If;
 import com.github.zzt93.syncer.consumer.filter.impl.Statement;
 import com.github.zzt93.syncer.consumer.filter.impl.Switch;
-import com.github.zzt93.syncer.consumer.input.*;
+import com.github.zzt93.syncer.consumer.input.EventScheduler;
+import com.github.zzt93.syncer.consumer.input.LocalConsumerSource;
+import com.github.zzt93.syncer.consumer.input.PositionFlusher;
+import com.github.zzt93.syncer.consumer.input.Registrant;
+import com.github.zzt93.syncer.consumer.input.SchedulerBuilder;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.health.Health;
@@ -26,16 +35,21 @@ import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Preconditions;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 /**
  * Abstraction of a consumer which is initiated by a pipeline config file
@@ -44,7 +58,7 @@ import java.util.concurrent.*;
 public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFilter>> {
 
   private final Logger logger = LoggerFactory.getLogger(ConsumerStarter.class);
-  private ExecutorService service;
+  private ExecutorService filterOutputService;
   private FilterJob[] filterJobs;
   private int worker;
   private SyncerAck ackConfig;
@@ -52,6 +66,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   private Ack ack;
   private final String id;
   private final List<OutputChannel> outputChannels;
+  private OutputStarter outputStarter;
 
   public ConsumerStarter(ConsumerConfig pipeline, SyncerConfig syncer,
                          ConsumerRegistry consumerRegistry) throws Exception {
@@ -80,7 +95,8 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
 
   private List<OutputChannel> initBatchOutputModule(String id, PipelineOutput pipeline,
       SyncerOutput syncer) throws Exception {
-    return new OutputStarter(id, pipeline, syncer, ack).getOutputChannels();
+    outputStarter = new OutputStarter(id, pipeline, syncer, ack);
+    return outputStarter.getOutputChannels();
   }
 
   private void initFilterModule(Ack ack, SyncerFilter module, List<FilterConfig> filters,
@@ -89,7 +105,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
         .checkArgument(module.getWorker() <= Runtime.getRuntime().availableProcessors() * 3,
             "Too many worker thread");
     Preconditions.checkArgument(module.getWorker() > 0, "Invalid worker thread number config");
-    service = Executors
+    filterOutputService = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter-output"));
 
     List<ExprFilter> exprFilters = fromPipelineConfig(filters);
@@ -155,15 +171,18 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   public Starter start() throws InterruptedException, IOException {
     startAck();
     for (int i = 0; i < worker; i++) {
-      service.submit(filterJobs[i]);
+      filterOutputService.submit(filterJobs[i]);
     }
     return this;
   }
 
   public void close() throws InterruptedException {
-    service.shutdownNow();
-    while (!service.awaitTermination(SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
-      logger.error("Shutting down consumer: {}", id);
+    // close output channel first
+    outputStarter.close();
+    // stop filter-output threads
+    filterOutputService.shutdownNow();
+    while (!filterOutputService.awaitTermination(ShutDownCenter.SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+      logger.error("[Shutting down] consumer: {}", id);
     }
   }
 

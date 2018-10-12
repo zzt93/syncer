@@ -10,7 +10,6 @@ import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import java.util.LinkedList;
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -52,21 +51,21 @@ public class SyncerApplication implements CommandLineRunner {
         .properties()
         .run(args);
     } catch (Throwable e) {
-      logger.error("", e);
-      ShutDownCenter.initShutDown();
+      ShutDownCenter.initShutDown(e);
     }
   }
 
   @Override
   public void run(String... strings) throws Exception {
-    List<Starter> starters = new LinkedList<>();
+    LinkedList<Starter> starters = new LinkedList<>();
     for (ConsumerConfig consumerConfig : YamlEnvironmentPostProcessor.getConfigs()) {
       if (!validPipeline(consumerConfig)) {
         continue;
       }
       starters.add(new ConsumerStarter(consumerConfig, syncerConfig, consumerRegistry).start());
     }
-    starters.add(ProducerStarter
+    // add producer as first item, stop producer first
+    starters.addFirst(ProducerStarter
         .getInstance(producerConfig.getInput(), syncerConfig.getInput(), consumerRegistry)
         .start());
 

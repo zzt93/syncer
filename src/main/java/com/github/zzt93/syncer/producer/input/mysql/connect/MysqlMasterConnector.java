@@ -145,7 +145,7 @@ public class MysqlMasterConnector implements MasterConnector {
       client.setBinlogPosition(position);
     }
     long sleepInSecond = 1;
-    while (!Thread.interrupted()) {
+    while (!Thread.currentThread().isInterrupted()) {
       try {
         // this method is blocked
         client.connect();
@@ -165,6 +165,7 @@ public class MysqlMasterConnector implements MasterConnector {
         }
       }
     }
+    logger.info("[Shutting down] Mysql master connector closed");
   }
 
   private void oldestLog(InvalidBinlogException e) {
@@ -182,4 +183,13 @@ public class MysqlMasterConnector implements MasterConnector {
     client.setBinlogFilename(null);
   }
 
+  @Override
+  public void close() {
+    MasterConnector.super.close();
+    try {
+      client.disconnect();
+    } catch (IOException e) {
+      logger.error("[Shutting down] Fail to disconnect", e);
+    }
+  }
 }

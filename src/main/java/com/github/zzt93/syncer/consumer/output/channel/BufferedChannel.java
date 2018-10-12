@@ -1,10 +1,10 @@
 package com.github.zzt93.syncer.consumer.output.channel;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
+import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * Created by zzt on 9/24/17.
@@ -29,12 +29,13 @@ public interface BufferedChannel<T> extends OutputChannel, AckChannel<T> {
     try {
       flush();
       // waiting for response from remote to clear ack
-      while (checkpoint()) {
-        logger.info("Waiting for clear ack info ...");
+      int i = 0;
+      while (i++ < ShutDownCenter.SHUTDOWN_MAX_TRY && checkpoint()) {
+        logger.info("[Shutting down] Waiting {} clear ack info ...", getClass().getSimpleName());
         Thread.sleep(1000);
       }
     } catch (InterruptedException e) {
-      logger.warn("Interrupt {}#close", getClass().getSimpleName());
+      logger.warn("[Shutting down] Interrupt {}#close", getClass().getSimpleName());
     }
   }
 }

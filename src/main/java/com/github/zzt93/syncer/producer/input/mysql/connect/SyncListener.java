@@ -1,5 +1,12 @@
 package com.github.zzt93.syncer.producer.input.mysql.connect;
 
+import static com.github.shyiko.mysql.binlog.event.EventType.DELETE_ROWS;
+import static com.github.shyiko.mysql.binlog.event.EventType.UPDATE_ROWS;
+import static com.github.shyiko.mysql.binlog.event.EventType.WRITE_ROWS;
+import static com.github.shyiko.mysql.binlog.event.EventType.isDelete;
+import static com.github.shyiko.mysql.binlog.event.EventType.isUpdate;
+import static com.github.shyiko.mysql.binlog.event.EventType.isWrite;
+
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
@@ -9,8 +16,6 @@ import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import static com.github.shyiko.mysql.binlog.event.EventType.*;
 
 /**
  * @author zzt
@@ -48,10 +53,10 @@ public class SyncListener implements BinaryLogClient.EventListener {
             }
             mysqlDispatcher.dispatch(last, event);
           } catch (InvalidConfigException e) {
-            ShutDownCenter.initShutDown();
+            ShutDownCenter.initShutDown(e);
           } catch (Throwable e) {
-            logger.error("Fail to dispatch {}", event, e);
-            ShutDownCenter.initShutDown();
+            logger.error("Fail to dispatch {}", event);
+            ShutDownCenter.initShutDown(e);
           }
         }
         logger.trace("Receive binlog event: {}", event);

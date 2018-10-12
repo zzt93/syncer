@@ -5,7 +5,6 @@ import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
-import com.github.zzt93.syncer.common.exception.ShutDownException;
 import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
@@ -51,7 +50,7 @@ public class FilterJob implements EventLoop {
   public void loop() {
     LinkedList<SyncData> list = new LinkedList<>();
     List<OutputChannel> remove = new LinkedList<>();
-    while (!Thread.interrupted()) {
+    while (!Thread.currentThread().isInterrupted()) {
       try {
         SyncData poll = fromInput.takeFirst();
         MDC.put(IdGenerator.EID, poll.getEventId());
@@ -62,8 +61,8 @@ public class FilterJob implements EventLoop {
         }
         output(list, remove);
       } catch (InterruptedException e) {
-        logger.warn("Filter job interrupted");
-        shutdown(e, outputChannels);
+        logger.warn("[Shutting down] Filter job interrupted");
+        return;
       }
     }
   }
@@ -136,11 +135,7 @@ public class FilterJob implements EventLoop {
     for (OutputChannel outputChannel : all) {
       outputChannel.close();
     }
-    if (ShutDownCenter.inShutDown()) {
-      throw new ShutDownException(e);
-    } else {
-      ShutDownCenter.initShutDown();
-    }
+    ShutDownCenter.initShutDown(e);
   }
 
 }
