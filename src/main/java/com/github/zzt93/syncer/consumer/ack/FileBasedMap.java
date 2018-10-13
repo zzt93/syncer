@@ -2,9 +2,6 @@ package com.github.zzt93.syncer.consumer.ack;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.google.common.primitives.Bytes;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
@@ -19,6 +16,8 @@ import java.util.EnumSet;
 import java.util.LinkedList;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -31,6 +30,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FileBasedMap<T extends Comparable<T>> {
 
   private static final int _1K = 1024;
+  public static final AtomicInteger ZERO = new AtomicInteger();
   private final MappedByteBuffer file;
   private final ConcurrentSkipListMap<T, AtomicInteger> map = new ConcurrentSkipListMap<>();
   private final Logger logger = LoggerFactory.getLogger(FileBasedMap.class);
@@ -67,10 +67,10 @@ public class FileBasedMap<T extends Comparable<T>> {
   }
 
   public AtomicInteger remove(T data, int count) {
-    if (map.getOrDefault(data, new AtomicInteger()).get() < count) {
+    if (map.getOrDefault(data, ZERO).get() < count) {
       throw new IllegalStateException();
     }
-    return map.computeIfPresent(data, (k, v) -> v.updateAndGet(x -> x - count) == 0 ? null : v);
+    return map.computeIfPresent(data, (k, v) -> v.updateAndGet(c -> c - count) == 0 ? null : v);
   }
 
   public boolean flush() {

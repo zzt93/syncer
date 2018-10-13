@@ -12,6 +12,8 @@ import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
+import com.google.common.collect.Lists;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -35,6 +37,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
  */
 public class ESRequestMapper implements Mapper<SyncData, Object> {
 
+  public static final ArrayList<Object> NEW = new ArrayList<>();
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final ESRequestMapping esRequestMapping;
   private final AbstractClient client;
@@ -180,10 +183,10 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     HashMap<String, Object> upsert = new HashMap<>();
     ESScriptUpdate syncByQuery = (ESScriptUpdate) data.syncByQuery();
     for (String col : syncByQuery.getAppend().keySet()) {
-      upsert.put(col, "[]");
+      upsert.put(col, NEW);
     }
     for (Entry<String, Object> entry : syncByQuery.getRemove().entrySet()) {
-      upsert.put(entry.getKey(), "[" + entry.getValue() + "]");
+      upsert.put(entry.getKey(), Lists.newArrayList(entry.getValue()));
     }
     return upsert;
   }
