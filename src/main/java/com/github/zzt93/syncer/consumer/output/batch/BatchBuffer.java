@@ -29,17 +29,13 @@ public class BatchBuffer<T extends Retryable> {
     return true;
   }
 
-  public void addFirst(T data) {
-    data.inc();
-    deque.addFirst(data);
-    estimateSize.incrementAndGet();
-  }
-
-  public boolean addAll(List<T> data) {
-    data.forEach(T::inc);
-    boolean res = deque.addAll(data);
+  public boolean addAllInHead(List<T> data) {
+    for (T datum : data) {
+      datum.inc();
+      deque.addFirst(datum);
+    }
     estimateSize.addAndGet(data.size());
-    return res;
+    return true;
   }
 
   @ThreadSafe(safe = {ConcurrentLinkedDeque.class, AtomicInteger.class})

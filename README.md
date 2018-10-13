@@ -286,6 +286,7 @@ and send to where
       requestMapping: # mapping from input data to es request
         enableExtraQuery: true
         retryOnUpdateConflict: 3
+        upsert: false
         index: "table + #suffix" # default: schema
         type: "#docType" # default: table
         documentId: "id" # default: id

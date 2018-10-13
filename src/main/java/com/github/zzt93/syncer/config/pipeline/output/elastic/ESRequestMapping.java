@@ -16,6 +16,7 @@ public class ESRequestMapping {
   private boolean noUseIdForIndex = false;
   private boolean enableExtraQuery = false;
   private int retryOnUpdateConflict = 0;
+  private boolean upsert = false;
 
   public ESRequestMapping() {
     // default value of mapper
@@ -83,5 +84,13 @@ public class ESRequestMapping {
           "retry-on-update-conflict is set a invalid value: " + retryOnUpdateConflict);
     }
     this.retryOnUpdateConflict = retryOnUpdateConflict;
+  }
+
+  public boolean isUpsert() {
+    return upsert;
+  }
+
+  public void setUpsert(boolean upsert) {
+    this.upsert = upsert;
   }
 }

@@ -22,6 +22,7 @@ import java.io.FileNotFoundException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.StringJoiner;
 import java.util.concurrent.ExecutionException;
@@ -40,6 +41,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
@@ -118,7 +120,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
   public boolean output(SyncData event) throws InterruptedException {
-    if (closed.get()) return false;
+    if (closed.get()) {
+      return false;
+    }
     // TODO 18/3/25 remove following line, keep it for the time being
     event.removePrimaryKey();
     Object builder = esRequestMapper.map(event);
@@ -139,6 +143,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder,
       int count) {
+    if (closed.get()) {
+      return;
+    }
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
@@ -205,7 +212,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @Override
   public void close() {
-    if (!closed.compareAndSet(false, true)) return;
+    if (!closed.compareAndSet(false, true)) {
+      return;
+    }
 
     BufferedChannel.super.close();
 
@@ -245,32 +254,52 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   @Override
   public void retryFailed(List<SyncWrapper<WriteRequest>> aim, Exception e) {
     BulkItemResponse[] items = ((ElasticsearchBulkException) e).getBulkItemResponses().getItems();
+    LinkedList<SyncWrapper<WriteRequest>> tmp = new LinkedList<>();
     for (int i = 0; i < aim.size(); i++) {
-      SyncWrapper<WriteRequest> wrapper = aim.get(i);
-      WriteRequest request = wrapper.getData();
-      String reqStr = null;
-      if (request instanceof UpdateRequest) {
-        reqStr = toString((UpdateRequest) request);
-      }
       BulkItemResponse item = items[i];
-      if (item.isFailed()) {
-        if (level(e).retriable()) {
-          logger.info("Retry request: {}", reqStr == null ? request : reqStr);
-          if (wrapper.retryCount() < batchConfig.getMaxRetry()) {
-            batchBuffer.addFirst(wrapper);
-          } else {
-            logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, item.getFailure());
-            singleRequest.log(wrapper.getEvent(), item.getFailure().toString());
-            ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
-          }
+      SyncWrapper<WriteRequest> wrapper = aim.get(i);
+      if (!item.isFailed()) {
+        ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+        continue;
+      }
+
+      // failed item handle
+      if (level(e).retriable()) {
+        if (wrapper.retryCount() < batchConfig.getMaxRetry()) {
+          logger.info("Retry request: {}", requestStr(wrapper));
+          handle404(wrapper, item);
+          tmp.add(wrapper);
         } else {
-          logger.error("Met non-retriable error, write {} to fail.log: {}", wrapper,
-              item.getFailure());
+          logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, item.getFailure());
           singleRequest.log(wrapper.getEvent(), item.getFailure().toString());
           ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         }
       } else {
+        logger.error("Met non-retriable error, write {} to fail.log: {}", wrapper, item.getFailure());
+        singleRequest.log(wrapper.getEvent(), item.getFailure().toString());
         ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+      }
+    }
+    batchBuffer.addAllInHead(tmp);
+  }
+
+  private Object requestStr(SyncWrapper<WriteRequest> wrapper) {
+    WriteRequest request = wrapper.getData();
+    String reqStr = null;
+    if (request instanceof UpdateRequest) {
+      reqStr = toString((UpdateRequest) request);
+    }
+    return reqStr == null ? request : reqStr;
+  }
+
+  private void handle404(SyncWrapper<WriteRequest> wrapper, BulkItemResponse item) {
+    if (item.getFailure().getCause() instanceof DocumentMissingException) {
+      logger.warn("Make update request upsert to resolve DocumentMissingException");
+      UpdateRequest request = ((UpdateRequest) wrapper.getData());
+      if (request.doc() != null) {
+        request.docAsUpsert(true);
+      } else {
+        request.upsert(ESRequestMapper.getUpsert(wrapper.getEvent())).scriptedUpsert(true);
       }
     }
   }
@@ -305,6 +334,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
    *   sending: [update 1], [insert 2]
    *   sending: [delete 1] --> may arrive ES first
    * </pre>
+   *
    * @throws InterruptedException throw when shutdown
    */
   private BulkResponse buildAndSend(List<SyncWrapper<WriteRequest>> aim)
@@ -331,7 +361,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       ListenableActionFuture<BulkResponse> future = bulkRequest.execute();
       try {
         return future.get();
-      } catch (NoNodeAvailableException|ExecutionException e) {
+      } catch (NoNodeAvailableException | ExecutionException e) {
         String error = "Fail to connect to ES server, will retry in {}s";
         logger.error(error, sleepInSecond, e);
         SyncerHealth.consumer(consumerId, id, Health.red(error));

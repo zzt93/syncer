@@ -13,7 +13,9 @@ import com.github.zzt93.syncer.config.pipeline.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Map.Entry;
+import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
@@ -82,15 +84,20 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
             .filter(getFilter(data));
       case UPDATE_ROWS:
         // Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
-        // TODO 18/5/13 upsert & scripted_upsert
+        // TODO 18/5/13 scripted_upsert & doc_as_upsert
         if (id != null) { // update doc with `id`
-          if (needScript(data)) { // update using script
+          if (needScript(data)) { // scripted updates: update using script
             HashMap<String, Object> map = requestBodyMapper.map(data);
-            return client.prepareUpdate(index, type, id)
+            UpdateRequestBuilder builder = client.prepareUpdate(index, type, id)
                 .setScript(getScript(data, map))
                 .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
+            if (esRequestMapping.isUpsert()) {
+              builder.setUpsert(getUpsert(data)).setScriptedUpsert(true);
+            }
+            return builder;
           } else { // update with partial doc
             return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
+                .setDocAsUpsert(esRequestMapping.isUpsert())
                 .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
           }
         } else { // update doc by `query`
@@ -105,7 +112,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     }
   }
 
-  private boolean needScript(SyncData data) {
+  private static boolean needScript(SyncData data) {
     SyncByQuery syncByQuery = data.syncByQuery();
     return syncByQuery != null && ((ESScriptUpdate) syncByQuery).needScript();
   }
@@ -166,5 +173,18 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
       builder.filter(termQuery(entry.getKey(), entry.getValue()));
     }
     return builder;
+  }
+
+  static Map getUpsert(SyncData data) {
+    assert needScript(data);
+    HashMap<String, Object> upsert = new HashMap<>();
+    ESScriptUpdate syncByQuery = (ESScriptUpdate) data.syncByQuery();
+    for (String col : syncByQuery.getAppend().keySet()) {
+      upsert.put(col, "[]");
+    }
+    for (Entry<String, Object> entry : syncByQuery.getRemove().entrySet()) {
+      upsert.put(entry.getKey(), "[" + entry.getValue() + "]");
+    }
+    return upsert;
   }
 }

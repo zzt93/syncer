@@ -24,6 +24,7 @@ import java.nio.file.Paths;
 import java.sql.BatchUpdateException;
 import java.sql.Statement;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -181,6 +182,7 @@ public class MysqlChannel implements BufferedChannel<String> {
       throw new IllegalStateException();
     }
 
+    LinkedList<SyncWrapper<String>> tmp = new LinkedList<>();
     int[] updateCounts = ((BatchUpdateException) cause).getUpdateCounts();
     for (int i = 0; i < updateCounts.length; i++) {
       SyncWrapper<String> stringSyncWrapper = sqls.get(i);
@@ -191,7 +193,7 @@ public class MysqlChannel implements BufferedChannel<String> {
       ErrorLevel level = level(e);
       if (level.retriable()) {
         if (stringSyncWrapper.retryCount() < batch.getMaxRetry()) {
-          batchBuffer.addFirst(stringSyncWrapper);
+          tmp.add(stringSyncWrapper);
           continue;
         } else {
           logger.error("Max retry exceed, write '{}' to failure log", stringSyncWrapper, cause);
@@ -208,6 +210,7 @@ public class MysqlChannel implements BufferedChannel<String> {
       }
       ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
     }
+    batchBuffer.addAllInHead(tmp);
   }
 
   private boolean succ(int updateCount) {

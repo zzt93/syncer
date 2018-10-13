@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 public class ShutDownCenter {
 
   public static final int SHUTDOWN_TIMEOUT = 5;
-  public static final int SHUTDOWN_MAX_TRY = 10;
+  public static final int SHUTDOWN_MAX_TRY = 30;
   private static AtomicBoolean shutdown = new AtomicBoolean(false);
   private static final Logger logger = LoggerFactory.getLogger(ShutDownCenter.class);
 

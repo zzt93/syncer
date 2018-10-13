@@ -31,6 +31,7 @@ public class UpdateRowsEvent  {
     // TODO 17/10/10 may support different binlog row image, only 'full' now
     // If support 'minimal' format:
     // - it will only keep columns needed to identify rows (id) & updated fields, but not partition key in DRDS
+    // - it will disable upsert related function of ES output channel
     RowUpdateImageMapper mapper = new FullRowUpdateImageMapper(primaryKeys, includedColumns);
     List<Entry<Serializable[], Serializable[]>> rows = updateRowsEventData.getRows();
     for (Entry<Serializable[], Serializable[]> row : rows) {
