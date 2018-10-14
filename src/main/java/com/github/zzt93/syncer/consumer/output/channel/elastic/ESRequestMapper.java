@@ -87,20 +87,19 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
             .filter(getFilter(data));
       case UPDATE_ROWS:
         // Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
-        // TODO 18/5/13 scripted_upsert & doc_as_upsert
         if (id != null) { // update doc with `id`
           if (needScript(data)) { // scripted updates: update using script
             HashMap<String, Object> map = requestBodyMapper.map(data);
             UpdateRequestBuilder builder = client.prepareUpdate(index, type, id)
                 .setScript(getScript(data, map))
                 .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
-            if (esRequestMapping.isUpsert()) {
+            if (esRequestMapping.isUpsert()) { // scripted_upsert
               builder.setUpsert(getUpsert(data)).setScriptedUpsert(true);
             }
             return builder;
           } else { // update with partial doc
             return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
-                .setDocAsUpsert(esRequestMapping.isUpsert())
+                .setDocAsUpsert(esRequestMapping.isUpsert()) // doc_as_upsert
                 .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
           }
         } else { // update doc by `query`

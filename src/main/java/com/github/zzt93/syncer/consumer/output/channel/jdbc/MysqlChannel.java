@@ -51,7 +51,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   private final FailureLog<SyncWrapper<String>> sqlFailureLog;
   private final String output;
   private final String consumerId;
-  private volatile AtomicBoolean closed = new AtomicBoolean(false);
+  private final AtomicBoolean closed = new AtomicBoolean(false);
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();

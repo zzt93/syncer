@@ -78,7 +78,6 @@ public class FileBasedMap<T extends Comparable<T>> {
       return false;
     }
     T first = map.firstKey();
-//    logger.debug("Flushing ack info {}", first);
     byte[] bytes = first.toString().getBytes(StandardCharsets.UTF_8);
     putBytes(file, bytes);
     file.force();

@@ -183,10 +183,8 @@ public class SyncData {
     return this;
   }
 
-  public void removePrimaryKey() {
-    if (primaryKeyName!=null) {
-      records.remove(primaryKeyName);
-    }
+  public boolean removePrimaryKey() {
+    return primaryKeyName != null && records.remove(primaryKeyName) != null;
   }
 
   public SyncData removeRecords(String... keys) {

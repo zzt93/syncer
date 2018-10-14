@@ -66,7 +66,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private final long refreshInterval;
   private final String id;
   private final String consumerId;
-  private volatile AtomicBoolean closed = new AtomicBoolean(false);
+  private final AtomicBoolean closed = new AtomicBoolean(false);
 
 
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
@@ -123,8 +123,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     if (closed.get()) {
       return false;
     }
-    // TODO 18/3/25 remove following line, keep it for the time being
-    event.removePrimaryKey();
+    if (event.removePrimaryKey()) {
+      logger.warn("Include primary key in `_source` is usually not necessary, remove it");
+    }
     Object builder = esRequestMapper.map(event);
     if (buffered(builder)) {
       boolean addRes = batchBuffer.add(
@@ -153,7 +154,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         if (bulkByScrollResponse.getUpdated() == 0
             && bulkByScrollResponse.getDeleted() == 0) {
           if (count == 0) {// only log at first failure
-            logger.warn("No documents changed of {}: {}", builder.request(), builder.source());
+            logger.warn("No documents changed of {}:\n {}", builder.request(), builder.source());
           }
           try {
             waitRefresh();
@@ -164,7 +165,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
           retry(null, false);
         } else {
           if (count > 0) {
-            logger.warn("Finally succeed to {}: {}", builder.request(), builder.source());
+            logger.warn("Finally succeed to {}:\n {}", builder.request(), builder.source());
           }
           ack.remove(data.getSourceIdentifier(), data.getDataId());
         }
@@ -173,9 +174,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       @Override
       public void onFailure(Exception e) {
         MDC.put(IdGenerator.EID, data.getEventId());
-        if (count == 0) {// only log at first failure
-          logger.error("Fail to {}: {}", builder.request(), builder.source(), e);
-        }
+        logger.error("Fail to {}:\n {}", builder.request(), builder.source(), e);
         retry(e, true);
       }
 
@@ -183,6 +182,8 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         if (count + 1 >= batchConfig.getMaxRetry()) {
           if (log) {
             singleRequest.log(data, e.getMessage());
+          } else {
+            logger.warn("No documents updated/deleted by query: {}", data);
           }
           ack.remove(data.getSourceIdentifier(), data.getDataId());
           return;

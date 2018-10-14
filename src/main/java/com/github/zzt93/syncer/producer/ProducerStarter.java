@@ -113,7 +113,6 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
     }
 
     service.shutdownNow();
-    // TODO: 18/9/30 can interrupt binlog client?
     while (!service.awaitTermination(ShutDownCenter.SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
       logger.warn("[Shutting down] producer");
     }
