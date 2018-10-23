@@ -1,8 +1,11 @@
 package com.github.zzt93.syncer.consumer.output.batch;
 
+import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.exception.ShutDownException;
 import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -15,9 +18,11 @@ public class BatchJob implements EventLoop {
 
 
   private final BufferedChannel bufferedChannel;
+  private final String consumerId;
 
-  public BatchJob(BufferedChannel bufferedChannel) {
+  public BatchJob(String consumerId, BufferedChannel bufferedChannel) {
     this.bufferedChannel = bufferedChannel;
+    this.consumerId = consumerId;
   }
 
   @Override
@@ -27,6 +32,10 @@ public class BatchJob implements EventLoop {
     } catch (InterruptedException e) {
       logger.warn("Batch job interrupted");
       throw new ShutDownException(e);
+    } catch (FailureException e) {
+      String msg = "Failure log with too many failed items";
+      logger.error(msg, e);
+      SyncerHealth.consumer(consumerId, bufferedChannel.id(), Health.red(msg));
     }
   }
 }

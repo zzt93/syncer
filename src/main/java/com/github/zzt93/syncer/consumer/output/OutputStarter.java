@@ -37,7 +37,7 @@ public class OutputStarter {
       if (outputChannel instanceof BufferedChannel) {
         BufferedChannel bufferedChannel = (BufferedChannel) outputChannel;
         long delay = bufferedChannel.getDelay();
-        batchService.scheduleWithFixedDelay(new BatchJob(bufferedChannel), delay, delay,
+        batchService.scheduleWithFixedDelay(new BatchJob(consumerId, bufferedChannel), delay, delay,
             bufferedChannel.getDelayUnit());
       }
     }

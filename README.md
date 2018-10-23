@@ -464,6 +464,7 @@ java -server -XX:+UseG1GC -jar syncer.jar [--port=9999] [--config=/absolute/path
 ### Used In Production
 - For search data sync
 - For auth data sync
+- For data recovery: In case of drop table mistakenly, or you know where to start & end
 
 ## TODO
 [See Issue 1](https://github.com/zzt93/syncer/issues/1)
