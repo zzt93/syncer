@@ -98,6 +98,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 
 ### Output -- DataSink
 
+- If output channel meet too many failure/error (exceeds `countLimit`), it will abort and change health to `red` 
 - Elasticsearch
   - Version: 5.x
   - Bulk operation
@@ -107,11 +108,13 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
       - Support multiple extra dependent query via special mark `$var$`
     - One to many relationship (parent-child relationship in ES)for document in different index
     - Self referential relationship handle
+  - Add `upsert` support, fix `DocumentMissingException` use `upsert`
 
 - Http Endpoint
 - MySQL
   - Bulk operation
   - Simple nested sql: `insert into select`
+  - Ignore `DuplicateKeyException`, not count as failure
 
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
 

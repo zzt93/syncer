@@ -33,9 +33,9 @@ public class BatchJob implements EventLoop {
       logger.warn("Batch job interrupted");
       throw new ShutDownException(e);
     } catch (FailureException e) {
-      String msg = "Failure log with too many failed items";
-      logger.error(msg, e);
-      SyncerHealth.consumer(consumerId, bufferedChannel.id(), Health.red(msg));
+      String err = FailureException.getErr(bufferedChannel, consumerId);
+      logger.error(err, e);
+      SyncerHealth.consumer(consumerId, bufferedChannel.id(), Health.red(err));
     }
   }
 }

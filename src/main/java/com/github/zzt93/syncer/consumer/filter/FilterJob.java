@@ -107,9 +107,9 @@ public class FilterJob implements EventLoop {
           shutdown(e, outputChannels);
         } catch (FailureException e) {
           fromInput.addFirst(syncData);
-          String err = "Failure log with too many failed items, aborting this output channel";
+          String err = FailureException.getErr(outputChannel, id);
           logger.error(err, e);
-          SyncerHealth.consumer(id, outputChannel.id(), Health.red(err));
+          SyncerHealth.consumer(this.id, outputChannel.id(), Health.red(err));
           remove.add(outputChannel);
         } catch (Throwable e) {
           logger.error("Output {} failed", syncData, e);
