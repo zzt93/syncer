@@ -10,6 +10,7 @@ import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
+import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.config.pipeline.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
@@ -60,12 +61,12 @@ public class MysqlMasterConnector implements MasterConnector {
 
     connectorIdentifier = connection.initIdentifier();
 
-    configLogClient(connection, password, registry);
-    listener = configEventListener(connection, registry);
+    BinlogInfo remembered = configLogClient(connection, password, registry);
+    listener = configEventListener(connection, registry, remembered);
     this.file = file;
   }
 
-  private void configLogClient(MysqlConnection connection, String password,
+  private BinlogInfo configLogClient(MysqlConnection connection, String password,
       ConsumerRegistry registry) throws IOException {
     client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
         connection.getUser(), password);
@@ -80,9 +81,11 @@ public class MysqlMasterConnector implements MasterConnector {
     } else {
       logger.info("No binlog info provided by consumer, connect to latest binlog");
     }
+    return binlogInfo;
   }
 
-  private SyncListener configEventListener(MysqlConnection connection, ConsumerRegistry registry)
+  private SyncListener configEventListener(MysqlConnection connection, ConsumerRegistry registry,
+      BinlogInfo remembered)
       throws SchemaUnavailableException {
     HashMap<Consumer, ProducerSink> consumerSink = registry.outputSink(connection);
     HashMap<ConsumerSchemaMeta, ProducerSink> sinkMap;
@@ -91,16 +94,17 @@ public class MysqlMasterConnector implements MasterConnector {
     } catch (SQLException e) {
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, binlogInfo));
-    client.registerEventListener(eventListener);
-    client.registerEventListener((event) -> binlogInfo
+    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, remembered));
+    // Order of listener: client has the current event position (not next),
+    // so first have it, then use it in SyncListener
+    client.registerEventListener((event) -> this.binlogInfo
         .set(new BinlogInfo(client.getBinlogFilename(), client.getBinlogPosition())));
+    client.registerEventListener(eventListener);
     return eventListener;
   }
 
-  private long consumeFile(SyncListener listener, String fileOrDir) {
+  private void consumeFile(SyncListener listener, String fileOrDir) {
     logger.info("Consuming the old binlog from {}", fileOrDir);
-    long position = 0;
     Path path = Paths.get(fileOrDir);
     List<Path> files = Collections.singletonList(path);
     if (Files.isDirectory(path)) {
@@ -108,9 +112,9 @@ public class MysqlMasterConnector implements MasterConnector {
       try (Stream<Path> s = Files.list(path)) {
         files = s.sorted(Comparator.comparing(Path::getFileName))
             .collect(Collectors.toList());
-      } catch (IOException e1) {
-        logger.error("Fail to read file under {}", path, e1);
-        return position;
+      } catch (IOException e) {
+        logger.error("Fail to read file under {}", path, e);
+        throw new InvalidConfigException("Invalid producer.file config");
       }
     }
     EventDeserializer eventDeserializer = SyncDeserializer.defaultDeserialzer();
@@ -124,14 +128,13 @@ public class MysqlMasterConnector implements MasterConnector {
           binlogInfo
               .set(new BinlogInfo(file.getFileName().toString(), ((EventHeaderV4) e.getHeader()).getPosition()));
           listener.onEvent(e);
-          position = ((EventHeaderV4) e.getHeader()).getNextPosition();
         }
       } catch (Exception ex) {
         logger.error("Fail to read from {}", file, ex);
+        throw new InvalidConfigException("Invalid producer.file config");
       }
       logger.info("Finished consuming the old binlog from {}", file);
     }
-    return position;
   }
 
   @Override
@@ -139,10 +142,12 @@ public class MysqlMasterConnector implements MasterConnector {
     Thread.currentThread().setName(connectorIdentifier);
 
     if (file != null) {
-      long position = consumeFile(listener, file);
-      logger.info("Continue read binlog from server using {}@{}", file, position);
-      client.setBinlogFilename(file);
-      client.setBinlogPosition(position);
+      consumeFile(listener, file);
+      BinlogInfo binlogInfo = this.binlogInfo.get();
+      logger.info("Continue read binlog from server using {}@{}", binlogInfo.getBinlogFilename(),
+          binlogInfo.getBinlogPosition());
+      client.setBinlogFilename(binlogInfo.getBinlogFilename());
+      client.setBinlogPosition(binlogInfo.getBinlogPosition());
     }
     long sleepInSecond = 1;
     while (!Thread.currentThread().isInterrupted()) {

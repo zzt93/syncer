@@ -114,7 +114,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     BlockingDeque<SyncData>[] deques = new BlockingDeque[worker];
     for (int i = 0; i < worker; i++) {
       deques[i] = new LinkedBlockingDeque<>();
-      // TODO 18/8/15 new list?
+      // TODO 18/8/15 test remove in foreach & opt
       filterJobs[i] = new FilterJob(id, ack, deques[i], new CopyOnWriteArrayList<>(outputChannels),
           exprFilters);
     }
@@ -131,7 +131,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
       SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
       if (masterSource.hasSyncMeta()) {
         SyncMeta syncMeta = masterSource.getSyncMeta();
-        logger.info("Override syncer remembered position with config in file {}, watch out",
+        logger.warn("Override syncer remembered position with config in file {}, watch out",
             syncMeta);
         syncInitMeta = new BinlogInfo(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
       }

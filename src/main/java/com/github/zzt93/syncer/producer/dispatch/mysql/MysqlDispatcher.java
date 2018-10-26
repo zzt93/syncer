@@ -26,11 +26,13 @@ public class MysqlDispatcher implements Dispatcher {
   private final List<FilterChain> filterChains;
   private final AtomicReference<BinlogInfo> binlogInfo;
   private final Logger logger = LoggerFactory.getLogger(MysqlDispatcher.class);
+  private final BinlogInfo remembered;
 
   public MysqlDispatcher(HashMap<ConsumerSchemaMeta, ProducerSink> sinkHashMap,
-                         AtomicReference<BinlogInfo> binlogInfo) {
+      AtomicReference<BinlogInfo> binlogInfo, BinlogInfo remembered) {
     filterChains = new ArrayList<>(sinkHashMap.size());
     this.binlogInfo = binlogInfo;
+    this.remembered = remembered;
     if (sinkHashMap.isEmpty()) {
       logger.error("No dispatch info fetched: no meta info dispatcher & output sink");
       throw new InvalidConfigException("Invalid address & schema & table config");
@@ -45,6 +47,9 @@ public class MysqlDispatcher implements Dispatcher {
   public boolean dispatch(Object... data) {
     Preconditions.checkState(data.length == 2);
     Event[] events = new Event[]{(Event) data[0], (Event) data[1]};
+    if (sent()) {
+      return false;
+    }
     String eventId = IdGenerator.fromEvent(events, binlogInfo.get().getBinlogFilename());
     MDC.put(IdGenerator.EID, eventId);
     boolean res = true;
@@ -54,6 +59,13 @@ public class MysqlDispatcher implements Dispatcher {
     }
     MDC.remove(IdGenerator.EID);
     return res;
+  }
+
+  private boolean sent() {
+    BinlogInfo now = this.binlogInfo.get();
+    // remembered position is not synced in last run,
+    // if remembered.compareTo(now) == 0, is not sent
+    return remembered.compareTo(now) > 0;
   }
 
 }

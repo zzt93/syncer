@@ -28,9 +28,9 @@ public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
     if (timestamp == null && o.timestamp == null) {
       return 0;
     } else if (timestamp == null) {
-      return 1;
-    } else if (o.timestamp == null) {
       return -1;
+    } else if (o.timestamp == null) {
+      return 1;
     }
     return timestamp.compareTo(o.timestamp);
   }
