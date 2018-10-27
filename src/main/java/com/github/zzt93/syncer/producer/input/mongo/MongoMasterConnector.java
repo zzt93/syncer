@@ -40,6 +40,8 @@ import org.slf4j.LoggerFactory;
  */
 public class MongoMasterConnector implements MasterConnector {
 
+  public static final String NS = "ns";
+  public static final String TS = "ts";
   private final Logger logger = LoggerFactory.getLogger(MongoMasterConnector.class);
 
   private final String identifier;
@@ -61,15 +63,15 @@ public class MongoMasterConnector implements MasterConnector {
     DocTimestamp docTimestamp = registry.votedMongoId(connection);
     Pattern namespaces = getNamespaces(connection, registry);
     query = new Document()
-        .append("ns", new BasicDBObject("$regex", namespaces));
+        .append(NS, new BasicDBObject("$regex", namespaces));
     // fromMigrate indicates the operation results from a shard re-balancing.
     //.append("fromMigrate", new BasicDBObject("$exists", "false"))
     if (docTimestamp.getTimestamp() != null) {
-      query.append("ts", new BasicDBObject("$gte", docTimestamp.getTimestamp()));
+      query.append(TS, new BasicDBObject("$gte", docTimestamp.getTimestamp()));
     } else {
       // initial export
-      logger.info("Start with initial export, may cost very long time");
-      query.append("ts", new BasicDBObject("$gt", new BsonTimestamp()));
+      logger.warn("Start with initial export, may take a long time");
+      query.append(TS, new BasicDBObject("$gt", new BsonTimestamp()));
     }
     // no need for capped collections:
     // perform a find() on a capped collection with no ordering specified,

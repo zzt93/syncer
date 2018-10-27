@@ -133,7 +133,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
         SyncMeta syncMeta = masterSource.getSyncMeta();
         logger.warn("Override syncer remembered position with config in file {}, watch out",
             syncMeta);
-        syncInitMeta = new BinlogInfo(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
+        syncInitMeta = BinlogInfo.withFilenameCheck(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
       }
       EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler())
           .build();

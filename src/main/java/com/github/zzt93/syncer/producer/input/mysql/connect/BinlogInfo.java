@@ -19,13 +19,17 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
   }
 
   public BinlogInfo(String binlogFilename, long binlogPosition) {
-    // example: mysql-bin.000039
-    checkFilename(binlogFilename);
     this.binlogFilename = binlogFilename;
     this.binlogPosition = binlogPosition;
   }
 
-  private void checkFilename(String binlogFilename) {
+  public static BinlogInfo withFilenameCheck(String binlogFilename, long binlogPosition) {
+    // example: mysql-bin.000039
+    checkFilename(binlogFilename);
+    return new BinlogInfo(binlogFilename, binlogPosition);
+  }
+
+  private static void checkFilename(String binlogFilename) {
     try {
       Integer.parseInt(binlogFilename.split("\\.")[1]);
     } catch (NumberFormatException e) {
@@ -67,7 +71,7 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
     int seq = Integer.parseInt(binlogFilename.split("\\.")[1]);
     int oSeq = Integer.parseInt(o.binlogFilename.split("\\.")[1]);
     int compare = Integer.compare(seq, oSeq);
-    return compare != 0 ? compare : Long.compare(binlogPosition, binlogPosition);
+    return compare != 0 ? compare : Long.compare(binlogPosition, o.binlogPosition);
   }
 
   @Override

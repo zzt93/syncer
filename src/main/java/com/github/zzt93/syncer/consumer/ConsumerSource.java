@@ -4,7 +4,6 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
-
 import java.util.Set;
 
 /**
@@ -28,4 +27,7 @@ public interface ConsumerSource extends Hashable {
   boolean input(SyncData[] data);
 
   String toString();
+
+  boolean sent(SyncData data);
+
 }

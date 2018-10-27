@@ -5,20 +5,20 @@ import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.input.Schema;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
+import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.base.Preconditions;
-import org.bson.Document;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.regex.Pattern;
+import org.bson.Document;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.slf4j.MDC;
 
 /**
  * @author zzt
@@ -49,7 +49,7 @@ public class MongoDispatcher implements Dispatcher {
     String eventId = IdGenerator.fromDocument(document);
     MDC.put(IdGenerator.EID, eventId);
 
-    String[] namespace = document.getString("ns").split("\\.");
+    String[] namespace = document.getString(MongoMasterConnector.NS).split("\\.");
     SyncData syncData = fromDocument(document, eventId, namespace);
     if (syncData == null) {
       return false;
@@ -85,7 +85,8 @@ public class MongoDispatcher implements Dispatcher {
     switch (op) {
       case "u":
         type = EventType.UPDATE_ROWS;
-        row.putAll((Map) obj.get("$set"));
+        // see issue for format explanation: https://jira.mongodb.org/browse/SERVER-37306
+        row.putAll((Map) obj.getOrDefault("$set", obj));
         row.putAll((Map) document.get("o2"));
         break;
       case "i":

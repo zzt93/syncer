@@ -2,7 +2,9 @@ package com.github.zzt93.syncer.common;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
+import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
+import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
@@ -57,18 +59,30 @@ public class IdGenerator {
   public static BinlogInfo fromDataId(String dataId) {
     String[] split = dataId.split(SEP);
     if (split.length == 5 || split.length == 6) {
-      return new BinlogInfo(split[0], Long.parseLong(split[1]));
+      return BinlogInfo.withFilenameCheck(split[0], Long.parseLong(split[1]));
     }
     throw new IllegalArgumentException(dataId);
   }
 
   public static String fromDocument(Document document) {
-    BsonTimestamp timestamp = (BsonTimestamp) document.get("ts");
+    BsonTimestamp timestamp = (BsonTimestamp) document.get(MongoMasterConnector.TS);
     return timestamp.getTime() + SEP + timestamp.getInc();
   }
 
   public static DocTimestamp fromMongoDataId(String dataId) {
     String[] split = dataId.split(SEP);
+    if (split.length == 3) {
+      return new DocTimestamp(
+          new BsonTimestamp(Integer.parseInt(split[0]), Integer.parseInt(split[1])));
+    }
+    throw new IllegalArgumentException(dataId);
+  }
+
+  public static SyncInitMeta getSyncMeta(String dataId) {
+    String[] split = dataId.split(SEP);
+    if (split.length == 5 || split.length == 6) {
+      return new BinlogInfo(split[0], Long.parseLong(split[1]));
+    }
     if (split.length == 3) {
       return new DocTimestamp(
           new BsonTimestamp(Integer.parseInt(split[0]), Integer.parseInt(split[1])));
