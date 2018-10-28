@@ -10,6 +10,7 @@ import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -55,6 +56,7 @@ public class ElasticsearchConnectionTest {
       for (BulkItemResponse itemResponse : bulkItemResponses.getItems()) {
         System.out.println(itemResponse.getFailure());
       }
+      Assert.assertTrue(false);
     }
   }
 
@@ -68,7 +70,7 @@ public class ElasticsearchConnectionTest {
   @Test
   public void name() {
     ArrayList<Long> l = Lists.newArrayList(1L, 2L);
-    System.out.println(l.indexOf(1));
-    System.out.println(l.indexOf(1L));
+    Assert.assertTrue("should be -1", l.indexOf(1) == -1);
+    Assert.assertTrue("should be 0", l.indexOf(1L) == 0);
   }
 }

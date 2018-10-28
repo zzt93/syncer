@@ -108,10 +108,12 @@ public class MysqlMasterConnector implements MasterConnector {
     Path path = Paths.get(fileOrDir);
     List<Path> files = Collections.singletonList(path);
     if (Files.isDirectory(path)) {
-      logger.warn("Consuming binlog under {} in alphabetical order! Be careful.", path);
+      logger.warn("Consuming binlog under {} in numeric order of binlog suffix! Be careful.", path);
       try (Stream<Path> s = Files.list(path)) {
-        files = s.sorted(Comparator.comparing(Path::getFileName))
-            .collect(Collectors.toList());
+        files = s.sorted(Comparator.comparingInt((p) -> {
+          String filename = p.getFileName().toString();
+          return BinlogInfo.checkFilename(filename);
+        })).collect(Collectors.toList());
       } catch (IOException e) {
         logger.error("Fail to read file under {}", path, e);
         throw new InvalidConfigException("Invalid producer.file config");
@@ -122,6 +124,7 @@ public class MysqlMasterConnector implements MasterConnector {
     eventDeserializer.setChecksumType(ChecksumType.CRC32);
     Event e;
     for (Path file : files) {
+      logger.info("Consuming the binlog {}", file);
       try (BinaryLogFileReader reader = new BinaryLogFileReader(
           FileUtil.getResource(file.toString()).getInputStream(), eventDeserializer)) {
         while ((e = reader.readEvent()) != null) {

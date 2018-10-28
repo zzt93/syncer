@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.util;
 
 import com.github.zzt93.syncer.common.data.CommonTypeLocator;
 import com.github.zzt93.syncer.common.data.SyncUtil;
+import com.google.common.collect.Lists;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.Map;
@@ -26,8 +27,9 @@ public class SpringELTest {
     Tmp rootObject = new Tmp(1, "asd");
     StandardEvaluationContext context = new StandardEvaluationContext(rootObject);
 
-    System.out.println(parser.parseExpression("#tmp = a").getValue(context, Integer.class));
-    System.out.println(parser.parseExpression("b").getValue(context, String.class));
+    long value = parser.parseExpression("#tmp = a").getValue(context, Integer.class);
+    Assert.assertEquals(value, 1L);
+    Assert.assertEquals(parser.parseExpression("b").getValue(context, String.class), "asd");
   }
 
   @Test
@@ -53,7 +55,7 @@ public class SpringELTest {
 
     ArrayList<Integer> list = parser.parseExpression("o.?[true]").getValue(context,
         ArrayList.class);
-    System.out.println(list);
+    Assert.assertEquals(list, Lists.newArrayList(1, 2, 3));
   }
 
   @Test

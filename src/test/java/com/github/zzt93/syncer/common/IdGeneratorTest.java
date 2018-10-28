@@ -11,7 +11,6 @@ public class IdGeneratorTest {
   @Test
   public void fromEventId() throws Exception {
     String asd = IdGenerator.fromEventId("asd", 10);
-//    System.out.println(asd);
     Assert.assertEquals(asd, "asd/10");
   }
 

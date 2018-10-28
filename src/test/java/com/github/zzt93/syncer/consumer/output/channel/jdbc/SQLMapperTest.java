@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
 import java.util.HashMap;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -18,11 +19,12 @@ public class SQLMapperTest {
     map.put("4", 4);
     map.put("5", -1);
     String s = map.toString();
-    System.out.println(ParameterReplace.orderedParam("(?0)", s.substring(1, s.length() - 1)));
-    String s1 = map.keySet().toString();
-    String s2 = map.values().toString();
-    System.out.println(ParameterReplace.orderedParam("(?0), (?1)",
-        s1.substring(1, s1.length() - 1), s2.substring(1, s2.length() - 1)));
+    Assert.assertEquals(ParameterReplace.orderedParam("(?0)", s.substring(1, s.length() - 1)),
+        "(1=1, 2=1, 3=3, 4=4, 5=-1)");
+    String key = map.keySet().toString();
+    String value = map.values().toString();
+    Assert.assertEquals(ParameterReplace.orderedParam("(?0), (?1)",
+        key.substring(1, key.length() - 1), value.substring(1, value.length() - 1)), "(1, 2, 3, 4, 5), (1, 1, 3, 4, -1)");
   }
 
 }

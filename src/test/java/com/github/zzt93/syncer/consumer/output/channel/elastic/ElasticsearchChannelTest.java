@@ -13,6 +13,7 @@ import org.elasticsearch.common.xcontent.XContentParser;
 import org.elasticsearch.common.xcontent.json.JsonXContent;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
+import org.junit.Assert;
 import org.junit.Test;
 
 /**
@@ -34,9 +35,11 @@ public class ElasticsearchChannelTest {
   public void toStr() throws Exception {
     UpdateRequest request = new UpdateRequest("test", "type1", "1")
         .script(mockInlineScript("ctx._source.body = \"foo\""));
-    System.out.println(ElasticsearchChannel.toString(request));
+    Assert.assertEquals(ElasticsearchChannel.toString(request),
+        "update {[test][type1][1], script[Script{type=inline, lang='mock', idOrCode='ctx._source.body = \"foo\"', options={}, params={}}], detect_noop[true]}");
     request = new UpdateRequest("test", "type1", "1").fromXContent(
         createParser(JsonXContent.jsonXContent, new BytesArray("{\"doc\": {\"body\": \"bar\"}}")));
-    System.out.println(ElasticsearchChannel.toString(request));
+    Assert.assertEquals(ElasticsearchChannel.toString(request),
+        "update {[test][type1][1], doc[index {[null][null][null], source[{\"body\":\"bar\"}]}], detect_noop[true]}");
   }
 }

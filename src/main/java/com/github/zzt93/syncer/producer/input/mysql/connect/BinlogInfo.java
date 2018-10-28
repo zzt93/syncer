@@ -24,15 +24,14 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
   }
 
   public static BinlogInfo withFilenameCheck(String binlogFilename, long binlogPosition) {
-    // example: mysql-bin.000039
     checkFilename(binlogFilename);
     return new BinlogInfo(binlogFilename, binlogPosition);
   }
 
-  private static void checkFilename(String binlogFilename) {
+  static int checkFilename(String binlogFilename) {
     try {
-      Integer.parseInt(binlogFilename.split("\\.")[1]);
-    } catch (NumberFormatException e) {
+      return Integer.parseInt(binlogFilename.split("\\.")[1]);
+    } catch (NumberFormatException|ArrayIndexOutOfBoundsException e) {
       throw new InvalidBinlogException(e, binlogFilename, 0);
     }
   }
@@ -50,11 +49,15 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
   }
 
   /**
-   * If some consumer is {@link #isEmpty()}, i.e. fresh start,
-   * try retrieve oldest log to sync.
+   * <p>If some consumer is {@link #isEmpty()}, i.e. fresh start, try retrieve oldest log to sync.
+   * </p> If we need to sync even earlier log than oldest log possible, try to config {@link
+   * com.github.zzt93.syncer.config.producer.ProducerMaster#file}
    *
-   * If need to sync even earlier log than oldest log possible,
-   * try to config {@link com.github.zzt93.syncer.config.producer.ProducerMaster#file}
+   * <p><a href='https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#option_mysqld_log-bin'>
+   * Binary log naming: base_name.number, e.g. mysql-bin.000042</a> </p>
+   * <p>We can't compare using string
+   * because number suffix will inc, as <a href='https://dba.stackexchange.com/questions/94286/what-will-happen-to-the-binary-log-if-it-reaches-its-maximum-value-does-it-res'>here</a>
+   * said</p>
    *
    * @see LocalConsumerRegistry#register(Connection, ConsumerSource)
    * @see MysqlMasterConnector#oldestLog(InvalidBinlogException)

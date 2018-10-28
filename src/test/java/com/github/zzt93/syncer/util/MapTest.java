@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.util;
 
-import org.junit.Test;
-
 import java.util.HashMap;
+import org.junit.Assert;
+import org.junit.Test;
 
 public class MapTest {
 
@@ -10,8 +10,8 @@ public class MapTest {
   public void compute() {
     HashMap<Integer, String> map = new HashMap<>();
     map.computeIfAbsent(1, k->"1");
-    System.out.println(map.get(1));
+    Assert.assertEquals(map.get(1), "1");
     map.computeIfAbsent(1, k->"2");
-    System.out.println(map.get(1));
+    Assert.assertEquals(map.get(1), "1");
   }
 }

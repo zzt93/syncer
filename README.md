@@ -141,7 +141,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 
 - Don't update/delete use `syncer` and other way (REST api or Java api) at the same time, it may cause version conflict and fail the change
 - Update/Delete by query will be executed at once, i.e. will not be buffered or use batch
-- Don't change the default naming of binlog, or it will fail the voting of binlog
+- Don't change the numeric suffix naming of binlog, or it will fail the voting of binlog
 
 ## Use Syncer
 

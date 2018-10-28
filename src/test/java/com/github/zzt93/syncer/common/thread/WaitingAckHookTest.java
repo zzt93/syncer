@@ -1,20 +1,18 @@
 package com.github.zzt93.syncer.common.thread;
 
-import org.junit.Before;
-
 public class WaitingAckHookTest {
 
-  @Before
-  public void setUp() throws Exception {
+  public static void main(String[] args) {
+
   }
 
   public void exit() {
-    Runtime.getRuntime().addShutdownHook(new Thread(()-> System.out.println("exit")));
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> System.out.println("exit")));
     System.exit(0);
   }
 
   public void exitMulti() {
-    Runtime.getRuntime().addShutdownHook(new Thread(()-> {
+    Runtime.getRuntime().addShutdownHook(new Thread(() -> {
       System.out.println("exit");
       // deadlock
 //      System.exit(0);

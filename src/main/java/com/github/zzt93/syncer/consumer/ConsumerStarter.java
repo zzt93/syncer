@@ -112,11 +112,12 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     worker = module.getWorker();
     filterJobs = new FilterJob[worker];
     BlockingDeque<SyncData>[] deques = new BlockingDeque[worker];
+    // this list shared by multiple thread, and some channels may be removed when other threads iterate
+    // see CopyOnWriteListTest for sanity test
+    CopyOnWriteArrayList<OutputChannel> channels = new CopyOnWriteArrayList<>(outputChannels);
     for (int i = 0; i < worker; i++) {
       deques[i] = new LinkedBlockingDeque<>();
-      // TODO 18/8/15 test remove in foreach & opt
-      filterJobs[i] = new FilterJob(id, ack, deques[i], new CopyOnWriteArrayList<>(outputChannels),
-          exprFilters);
+      filterJobs[i] = new FilterJob(id, ack, deques[i], channels, exprFilters);
     }
     schedulerBuilder.setDeques(deques);
   }
