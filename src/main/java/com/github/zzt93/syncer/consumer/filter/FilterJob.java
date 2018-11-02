@@ -34,12 +34,12 @@ public class FilterJob implements EventLoop {
   private final CopyOnWriteArrayList<OutputChannel> outputChannels;
   private final List<ExprFilter> filters;
   private final Ack ack;
-  private final String id;
+  private final String consumerId;
 
-  public FilterJob(String id, Ack ack, BlockingDeque<SyncData> fromInput,
+  public FilterJob(String consumerId, Ack ack, BlockingDeque<SyncData> fromInput,
       CopyOnWriteArrayList<OutputChannel> outputChannels,
       List<ExprFilter> filters) {
-    this.id = id;
+    this.consumerId = consumerId;
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
     this.filters = filters;
@@ -107,9 +107,9 @@ public class FilterJob implements EventLoop {
           shutdown(e, outputChannels);
         } catch (FailureException e) {
           fromInput.addFirst(syncData);
-          String err = FailureException.getErr(outputChannel, id);
+          String err = FailureException.getErr(outputChannel, consumerId);
           logger.error(err, e);
-          SyncerHealth.consumer(this.id, outputChannel.id(), Health.red(err));
+          SyncerHealth.consumer(this.consumerId, outputChannel.id(), Health.red(err));
           remove.add(outputChannel);
         } catch (Throwable e) {
           logger.error("Output {} failed", syncData, e);

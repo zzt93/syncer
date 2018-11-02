@@ -11,7 +11,7 @@ public class FailureException extends RuntimeException {
     super(message);
   }
 
-  public static String getErr(OutputChannel outputChannel, String id) {
-    return "Failure log with too many failed items, aborting " + outputChannel.id() + "@" + id;
+  public static String getErr(OutputChannel outputChannel, String consumerId) {
+    return "Failure log with too many failed items, aborting " + outputChannel.id() + "@" + consumerId;
   }
 }
