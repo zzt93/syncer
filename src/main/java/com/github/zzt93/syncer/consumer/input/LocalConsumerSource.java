@@ -80,6 +80,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   @Override
   public boolean input(SyncData data) {
     if (sent(data)) {
+      logger.info("Consumer({}) skip {} from {}", clientId, data, connection.connectionIdentifier());
       return false;
     }
     logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data, data.hashCode());
@@ -95,6 +96,8 @@ public abstract class LocalConsumerSource implements ConsumerSource {
         res = scheduler.schedule(datum.setSourceIdentifier(connection.connectionIdentifier())) && res;
         logger.debug("add list: data id: {}, {}, {} in {}", datum.getDataId(), datum, datum.hashCode(),
             data);
+      } else {
+        logger.info("Consumer({}) skip {} from {}", clientId, datum, connection.connectionIdentifier());
       }
     }
     return res;

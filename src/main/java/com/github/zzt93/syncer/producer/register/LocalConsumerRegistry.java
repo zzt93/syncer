@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.producer.register;
 
+import static com.google.common.base.Preconditions.checkState;
+
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.consumer.input.MongoInputSource;
@@ -10,17 +12,14 @@ import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
 import com.github.zzt93.syncer.producer.output.LocalProducerSink;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Sets;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
-
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentSkipListSet;
-
-import static com.google.common.base.Preconditions.checkState;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.stereotype.Component;
 
 /**
  * @author zzt
@@ -72,14 +71,18 @@ public class LocalConsumerRegistry implements ConsumerRegistry {
   public BinlogInfo votedBinlogInfo(Connection connection) {
     checkState(olderBinlog.containsKey(connection), "no input source registered");
     voted.add(connection);
-    return olderBinlog.get(connection);
+    BinlogInfo binlogInfo = olderBinlog.get(connection);
+    logger.info("Voted {} for {}", binlogInfo, connection);
+    return binlogInfo;
   }
 
   @Override
   public DocTimestamp votedMongoId(Connection connection) {
     checkState(smallerId.containsKey(connection), "no input source registered");
     voted.add(connection);
-    return smallerId.get(connection);
+    DocTimestamp docTimestamp = smallerId.get(connection);
+    logger.info("Voted {} for {}", docTimestamp, connection);
+    return docTimestamp;
   }
 
   @Override
