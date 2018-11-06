@@ -65,6 +65,7 @@ way to make consistency promise because Syncer can only provide 'at least once' 
   can't handle it and cause duplicate data soon or later.
 - Multiple consumer can share a common connection to same data source, i.e. MySQL/MongoDB, to reduce the
 burden of remote master
+- Automatically skip synced item for consumers according to register info 
 
 ---
 
@@ -265,10 +266,10 @@ if I didn't listed.
 #### Output
 
 - Special expression to do output mapping:
-  - "records.*": all key value in `records`
-  - "records.*.flatten":
-  - "extra.*"
-  - "extra.*.flatten"
+  - "records.*": map.put('your_key', `records`)
+  - "records.*.flatten": map.putAll(records)
+  - "extra.*": map.put('your_key', `extra`)
+  - "extra.*.flatten": map.putAll(`extra`)
 - `batch`: support output change in batch
   - `size`: flush if reach this size
   - `delay`: flush if every this time in `MILLISECONDS`
@@ -374,14 +375,14 @@ filter:
       switch: "table"
       case:
         "user": ["renameRecord('xxx', 'yyy')"]
-    - if:
-        condition: "table == 'user' && isUpdate()"
-        ifBody:
-          - create:
-              copy: ["id", "table", "#suffix", "#title", "#docType"]
-              postCreation: ["addRecord('ownerTitle', #title)", "syncByQuery().filter('ownerId', id)", "id = null"]
-        elseBody:
-          - drop: {}
+  - if:
+      condition: "table == 'user' && isUpdate()"
+      ifBody:
+        - create:
+            copy: ["id", "table", "#suffix", "#title", "#docType"]
+            postCreation: ["addRecord('ownerTitle', #title)", "syncByQuery().filter('ownerId', id)", "id = null"]
+      elseBody:
+        - drop: {}
 
 
 
