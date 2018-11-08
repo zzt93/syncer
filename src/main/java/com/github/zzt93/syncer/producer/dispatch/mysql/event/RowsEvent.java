@@ -15,6 +15,8 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
 
 /**
@@ -25,20 +27,25 @@ import org.springframework.util.Assert;
  */
 public abstract class RowsEvent {
 
+  private static final Logger logger = LoggerFactory.getLogger(RowsEvent.class);
+
   public static boolean filterData(List<HashMap<Integer, Object>> indexedRow,
-      List<Integer> interested, EventType eventType) {
+      List<Integer> interestedAndPkIndex, EventType eventType) {
     Assert.isTrue(!indexedRow.isEmpty(), "Assertion Failure: no row to filter");
-    List<HashMap<Integer, Object>> tmp = new ArrayList<>();
+    List<HashMap<Integer, Object>> tmp = new LinkedList<>();
     for (HashMap<Integer, Object> row : indexedRow) {
       HashMap<Integer, Object> map = new HashMap<>();
-      for (Integer integer : interested) {
+      for (Integer integer : interestedAndPkIndex) {
         if (row.containsKey(integer)) {
           map.put(integer, row.get(integer));
         }
       }
       if (map.size() > 1 || (map.size() == 1 && eventType != EventType.UPDATE_ROWS)) {
-        // discard event which only has id (size is 1) && event type is UPDATE_ROWS
         tmp.add(map);
+      } else {
+        Assert.isTrue(!map.isEmpty(), "Assertion Failure: should at least has primary key");
+        // discard event which only has id && event type is UPDATE_ROWS
+        logger.debug("Discard {} for {}", row, eventType);
       }
     }
     indexedRow.clear();

@@ -9,17 +9,22 @@ import com.google.common.collect.Lists;
 import com.mysql.jdbc.Driver;
 import com.mysql.jdbc.JDBC4Connection;
 import com.zaxxer.hikari.util.DriverDataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
-import javax.sql.DataSource;
 import java.sql.Connection;
 import java.sql.DatabaseMetaData;
 import java.sql.ResultSet;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
+import javax.sql.DataSource;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * All schema metas {@link SchemaMeta} that a DB has.
@@ -215,8 +220,10 @@ public class ConsumerSchemaMeta {
             tableMeta.noPrimaryKey();
             logger.info("Not config primary key as interested column, can be accessed only in `id` but not in `record`");
           }
-          tableMeta.addInterestedCol(columnName, ordinalPosition);
-          tableMeta.addPrimaryKey(ordinalPosition);
+          tableMeta.addPrimaryKey(columnName, ordinalPosition);
+        } else {
+          logger.error("Fail to fetch primary key or no primary key for {}.{}", tableSchema, tableName);
+          throw new InvalidConfigException("Not support table without primary key");
         }
         if (primaryKeys.next()) {
           logger.error("Not support composite primary key {}.{}", tableSchema, tableName);

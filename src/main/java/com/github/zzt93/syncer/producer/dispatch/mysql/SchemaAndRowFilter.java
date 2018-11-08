@@ -7,7 +7,6 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.RowsEvent;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
 import com.github.zzt93.syncer.producer.input.mysql.meta.TableMeta;
-
 import java.util.HashMap;
 import java.util.List;
 
@@ -32,22 +31,23 @@ public class SchemaAndRowFilter {
     EventType eventType = e[1].getHeader().getEventType();
     List<HashMap<Integer, Object>> indexedRow = RowsEvent
         .getIndexedRows(eventType, e[1].getData(), table.getPrimaryKeys());
-    boolean hasMore = RowsEvent.filterData(indexedRow, table.getInterestedColIndex(), eventType);
+    boolean hasMore = RowsEvent.filterData(indexedRow, table.getInterestedAndPkIndex(), eventType);
     if (!hasMore) {
       return null;
     }
 
     List<HashMap<String, Object>> namedRow = RowsEvent
-        .getNamedRows(indexedRow, table.getIndexToName());
-    String primaryKey = RowsEvent.getPrimaryKey(table.getIndexToName(), table.getPrimaryKeys());
+        .getNamedRows(indexedRow, table.getInterestedAndPkIndexToName());
+    String primaryKey = RowsEvent.getPrimaryKey(table.getInterestedAndPkIndexToName(), table.getPrimaryKeys());
     SyncData[] res = new SyncData[namedRow.size()];
     for (int i = 0; i < res.length; i++) {
       HashMap<String, Object> row = namedRow.get(i);
-      res[i] = new SyncData(eventId, i, tableMap.getDatabase(), tableMap.getTable(), primaryKey,
-          row.get(primaryKey), row, eventType);
+      Object pk = row.get(primaryKey);
       if (!table.isInterestedPK()) {
         row.remove(primaryKey);
       }
+      res[i] = new SyncData(eventId, i, tableMap.getDatabase(), tableMap.getTable(), primaryKey,
+          pk, row, eventType);
     }
     return res;
   }

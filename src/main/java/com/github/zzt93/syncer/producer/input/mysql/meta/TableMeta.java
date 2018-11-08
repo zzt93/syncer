@@ -13,26 +13,27 @@ import java.util.Set;
  */
 public class TableMeta {
 
-  private final List<Integer> index = new ArrayList<>();
-  private final HashMap<Integer, String> indexToName = new HashMap<>();
+  private final List<Integer> interestedAndPkIndex = new ArrayList<>();
+  private final HashMap<Integer, String> interestedAndPkIndexToName = new HashMap<>();
   private final Set<Integer> primaryKeys = new HashSet<>();
   private boolean interestedPK;
 
   void addInterestedCol(String columnName, int ordinalPosition) {
-    index.add(ordinalPosition);
-    indexToName.put(ordinalPosition, columnName);
+    interestedAndPkIndex.add(ordinalPosition);
+    interestedAndPkIndexToName.put(ordinalPosition, columnName);
   }
 
-  void addPrimaryKey(int position) {
+  void addPrimaryKey(String columnName, int position) {
     primaryKeys.add(position);
+    addInterestedCol(columnName, position);
   }
 
-  public List<Integer> getInterestedColIndex() {
-    return Collections.unmodifiableList(index);
+  public List<Integer> getInterestedAndPkIndex() {
+    return Collections.unmodifiableList(interestedAndPkIndex);
   }
 
-  public Map<Integer, String> getIndexToName() {
-    return Collections.unmodifiableMap(indexToName);
+  public Map<Integer, String> getInterestedAndPkIndexToName() {
+    return Collections.unmodifiableMap(interestedAndPkIndexToName);
   }
 
   public Set<Integer> getPrimaryKeys() {
@@ -42,7 +43,10 @@ public class TableMeta {
   @Override
   public String toString() {
     return "TableMeta{" +
-        "indexToName=" + indexToName +
+        "interestedAndPkIndex=" + interestedAndPkIndex +
+        ", interestedAndPkIndexToName=" + interestedAndPkIndexToName +
+        ", primaryKeys=" + primaryKeys +
+        ", interestedPK=" + interestedPK +
         '}';
   }
 
