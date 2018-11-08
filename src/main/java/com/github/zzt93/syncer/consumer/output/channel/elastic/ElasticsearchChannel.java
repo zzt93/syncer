@@ -28,6 +28,7 @@ import java.util.StringJoiner;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -133,9 +134,18 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       flushIfReachSizeLimit();
       return addRes;
     } else {
-      bulkByScrollRequest(event, ((AbstractBulkByScrollRequestBuilder) builder), 0);
+      return sleepInConnectionLost((sleepInSecond) -> {
+        try {
+          bulkByScrollRequest(event, ((AbstractBulkByScrollRequestBuilder) builder), 0);
+          return true;
+        } catch (NoNodeAvailableException e) {
+          String error = "Fail to connect to ES server, will retry in {}s";
+          logger.error(error, sleepInSecond, e);
+          SyncerHealth.consumer(consumerId, id, Health.red(error));
+          return null;
+        }
+      });
     }
-    return true;
   }
 
   private boolean buffered(Object builder) {
@@ -357,8 +367,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
     }
     logger.info("Sending {}", joiner);
-    long sleepInSecond = 1;
-    while (true) {
+    return sleepInConnectionLost((sleepInSecond) -> {
       ListenableActionFuture<BulkResponse> future = bulkRequest.execute();
       try {
         return future.get();
@@ -370,6 +379,21 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         logger.info("Future interrupted");
         Thread.currentThread().interrupt();
         return future.actionGet();
+      }
+      return null;
+    });
+  }
+
+  /**
+   *
+   * @param supplier return null if it fails to connect to ES
+   */
+  private <R> R sleepInConnectionLost(Function<Long, R> supplier) throws InterruptedException {
+    long sleepInSecond = 1;
+    while (true) {
+      R apply = supplier.apply(sleepInSecond);
+      if (apply != null) {
+        return apply;
       }
       sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
       TimeUnit.SECONDS.sleep(sleepInSecond);
