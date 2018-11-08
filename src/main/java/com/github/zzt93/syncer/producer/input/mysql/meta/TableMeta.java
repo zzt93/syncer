@@ -16,7 +16,7 @@ public class TableMeta {
   private final List<Integer> interestedAndPkIndex = new ArrayList<>();
   private final HashMap<Integer, String> interestedAndPkIndexToName = new HashMap<>();
   private final Set<Integer> primaryKeys = new HashSet<>();
-  private boolean interestedPK;
+  private boolean interestedPK = true;
 
   void addInterestedCol(String columnName, int ordinalPosition) {
     interestedAndPkIndex.add(ordinalPosition);
