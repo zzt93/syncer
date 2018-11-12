@@ -8,11 +8,10 @@ import com.github.zzt93.syncer.consumer.output.Resource;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import java.io.BufferedWriter;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.io.*;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -21,8 +20,6 @@ import java.util.List;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.atomic.AtomicInteger;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -69,7 +66,9 @@ public class FailureLog<T> implements Resource {
     } catch (IOException e) {
       logger.error("Fail to convert to json {}", data, e);
     }
-    if (itemCount.get() > countLimit) {
+    int count = itemCount.get();
+    if (count > countLimit) {
+      logger.error("Too many failure: {} > {}", count, countLimit);
       throw new FailureException("Too many failed items, abort and need human influence");
     }
     return true;
