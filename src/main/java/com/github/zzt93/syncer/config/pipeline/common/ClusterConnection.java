@@ -1,9 +1,10 @@
 package com.github.zzt93.syncer.config.pipeline.common;
 
-import java.util.List;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
+
+import java.util.List;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
@@ -25,7 +26,7 @@ public class ClusterConnection extends Connection {
     this.clusterName = clusterName;
   }
 
-  List<String> getClusterNodes() {
+  public List<String> getClusterNodes() {
     return clusterNodes;
   }
 

@@ -2,11 +2,13 @@ package com.github.zzt93.syncer.config.pipeline.output;
 
 import com.github.zzt93.syncer.config.pipeline.output.elastic.Elasticsearch;
 import com.github.zzt93.syncer.config.pipeline.output.http.Http;
+import com.github.zzt93.syncer.config.pipeline.output.kafka.Kafka;
 import com.github.zzt93.syncer.config.pipeline.output.mysql.Mysql;
 import com.github.zzt93.syncer.config.pipeline.output.redis.Redis;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -19,6 +21,7 @@ public class PipelineOutput {
   private Http http;
   private Mysql mysql;
   private Redis redis;
+  private Kafka kafka;
 
   public Redis getRedis() {
     return redis;
@@ -52,8 +55,16 @@ public class PipelineOutput {
     this.mysql = mysql;
   }
 
+  public Kafka getKafka() {
+    return kafka;
+  }
+
+  public void setKafka(Kafka kafka) {
+    this.kafka = kafka;
+  }
+
   public List<OutputChannel> toOutputChannels(String consumerId, Ack ack,
-      SyncerOutputMeta outputMeta)
+                                              SyncerOutputMeta outputMeta)
       throws Exception {
     List<OutputChannel> res = new ArrayList<>();
     if (elasticsearch != null) {
@@ -67,6 +78,9 @@ public class PipelineOutput {
     }
     if (redis != null) {
       res.add(redis.toChannel(consumerId, ack, outputMeta));
+    }
+    if (kafka != null) {
+      res.add(kafka.toChannel(consumerId, ack, outputMeta));
     }
     return res;
   }

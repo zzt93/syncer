@@ -18,17 +18,6 @@ import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
-import java.io.FileNotFoundException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.StringJoiner;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Function;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -48,6 +37,17 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.StringJoiner;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.function.Function;
 
 /**
  * @author zzt
@@ -82,14 +82,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
     this.ack = ack;
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
-    try {
-      Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
-      singleRequest = new FailureLog<>(path,
-          failureLog, new TypeToken<FailureEntry<SyncData>>() {
-      });
-    } catch (FileNotFoundException e) {
-      throw new IllegalStateException("Impossible", e);
-    }
+    Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
+    singleRequest = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncData>>() {
+    });
   }
 
   static String toString(UpdateRequest request) {
@@ -263,7 +258,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   }
 
   @Override
-  public void retryFailed(List<SyncWrapper<WriteRequest>> aim, Exception e) {
+  public void retryFailed(List<SyncWrapper<WriteRequest>> aim, Throwable e) {
     BulkItemResponse[] items = ((ElasticsearchBulkException) e).getBulkItemResponses().getItems();
     LinkedList<SyncWrapper<WriteRequest>> tmp = new LinkedList<>();
     for (int i = 0; i < aim.size(); i++) {
@@ -275,20 +270,22 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
 
       // failed item handle
-      if (level(e).retriable()) {
-        if (wrapper.retryCount() < batchConfig.getMaxRetry()) {
-          logger.info("Retry request: {}", requestStr(wrapper));
-          handle404(wrapper, item);
-          tmp.add(wrapper);
-        } else {
-          logger.error("Max retry exceed, write {} to fail.log: {}", wrapper, item.getFailure());
-          singleRequest.log(wrapper.getEvent(), item.getFailure().toString());
-          ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
-        }
+      ErrorLevel level = level(e, wrapper, batchConfig.getMaxRetry());
+      if (level.retriable()) {
+        logger.info("Retry request: {}", requestStr(wrapper));
+        handle404(wrapper, item);
+        tmp.add(wrapper);
       } else {
-        logger.error("Met non-retriable error, write {} to fail.log: {}", wrapper, item.getFailure());
-        singleRequest.log(wrapper.getEvent(), item.getFailure().toString());
-        ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+        logger.error("Met {} in {}", level, wrapper, item.getFailure());
+        switch (level) {
+          case MAX_TRY_EXCEED:
+          case SYNCER_BUG:
+          case WARN:
+            singleRequest.log(wrapper.getEvent(), item.getFailure().toString());
+            ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+            break;
+        }
+
       }
     }
     batchBuffer.addAllInHead(tmp);

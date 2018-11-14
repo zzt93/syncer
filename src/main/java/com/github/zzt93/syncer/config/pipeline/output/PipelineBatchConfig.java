@@ -1,8 +1,9 @@
 package com.github.zzt93.syncer.config.pipeline.output;
 
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzt
@@ -22,6 +23,12 @@ public class PipelineBatchConfig {
   private int delay = 100;
 
   private int maxRetry = 5;
+
+  /**
+   * Total bytes of memory the producer can use to buffer records waiting to be sent
+   * to the server.
+   */
+  private Long bufferMemory;
 
   public int getSize() {
     return size;
@@ -61,5 +68,13 @@ public class PipelineBatchConfig {
 
   public TimeUnit getDelayTimeUnit() {
     return delayTimeUnit;
+  }
+
+  public Long getBufferMemory() {
+    return bufferMemory;
+  }
+
+  public void setBufferMemory(Long bufferMemory) {
+    this.bufferMemory = bufferMemory;
   }
 }

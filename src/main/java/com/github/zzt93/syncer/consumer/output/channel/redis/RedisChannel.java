@@ -13,11 +13,6 @@ import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.google.gson.reflect.TypeToken;
-import java.io.FileNotFoundException;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
-import java.util.concurrent.TimeUnit;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -27,6 +22,11 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.util.StringUtils;
+
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzt
@@ -50,13 +50,9 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
     this.batchBuffer = new BatchBuffer<>(batch);
     this.ack = ack;
     FailureLogConfig failureLog = redis.getFailureLog();
-    try {
-      Path path = Paths.get(outputMeta.getFailureLogDir(), redis.connectionIdentifier());
-      request = new FailureLog<>(path, failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
-      });
-    } catch (FileNotFoundException e) {
-      throw new IllegalStateException("Impossible", e);
-    }
+    Path path = Paths.get(outputMeta.getFailureLogDir(), redis.connectionIdentifier());
+    request = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
+    });
     template = new RedisTemplate<>();
     LettuceConnectionFactory factory = redis.getConnectionFactory();
     factory.afterPropertiesSet();
@@ -121,7 +117,7 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
   }
 
   @Override
-  public void retryFailed(List<SyncWrapper<RedisCallback>> aim, Exception e) {
+  public void retryFailed(List<SyncWrapper<RedisCallback>> aim, Throwable e) {
     for (SyncWrapper wrapper : aim) {
       wrapper.inc();
       if (wrapper.retryCount() > batch.getMaxRetry()) {

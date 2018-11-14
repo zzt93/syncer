@@ -3,9 +3,7 @@ package com.github.zzt93.syncer.config.pipeline.output.redis;
 import com.github.zzt93.syncer.config.pipeline.common.Connection;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.pipeline.common.RedisClusterConnection;
-import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
-import com.github.zzt93.syncer.config.pipeline.output.OutputChannelConfig;
-import com.github.zzt93.syncer.config.pipeline.output.PipelineBatchConfig;
+import com.github.zzt93.syncer.config.pipeline.output.BufferedOutputChannelConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.redis.RedisChannel;
@@ -16,22 +14,12 @@ import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactor
 /**
  * @author zzt
  */
-public class Redis implements OutputChannelConfig {
+public class Redis extends BufferedOutputChannelConfig {
 
   private RedisClusterConnection clusterConnection = new RedisClusterConnection();
   private Connection connection = new Connection();
   private OperationMapping mapping = new OperationMapping();
-  private PipelineBatchConfig batch = new PipelineBatchConfig();
-  private FailureLogConfig failureLog = new FailureLogConfig();
   private String condition;
-
-  public FailureLogConfig getFailureLog() {
-    return failureLog;
-  }
-
-  public void setFailureLog(FailureLogConfig failureLog) {
-    this.failureLog = failureLog;
-  }
 
   public RedisClusterConnection getClusterConnection() {
     return clusterConnection;
@@ -51,14 +39,6 @@ public class Redis implements OutputChannelConfig {
 
   public void setCondition(String condition) {
     this.condition = condition;
-  }
-
-  public PipelineBatchConfig getBatch() {
-    return batch;
-  }
-
-  public void setBatch(PipelineBatchConfig batch) {
-    this.batch = batch;
   }
 
   public Connection getConnection() {

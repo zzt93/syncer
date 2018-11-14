@@ -35,7 +35,7 @@ public class FailureLog<T> implements Resource {
   private final int countLimit;
   private final ScheduledExecutorService service;
 
-  public FailureLog(Path path, FailureLogConfig limit, TypeToken token)
+  private FailureLog(Path path, FailureLogConfig limit, TypeToken token)
       throws FileNotFoundException {
     countLimit = limit.getCountLimit();
     service = Executors.newScheduledThreadPool(1, new NamedThreadFactory("syncer-failure-log-timer"));
@@ -78,5 +78,13 @@ public class FailureLog<T> implements Resource {
   public void cleanup() throws IOException {
     service.shutdown();
     writer.close();
+  }
+
+  public static <T> FailureLog<T> getLogger(Path path, FailureLogConfig limit, TypeToken token) {
+    try {
+      return new FailureLog<>(path, limit, token);
+    } catch (FileNotFoundException e) {
+      throw new IllegalStateException("Impossible state", e);
+    }
   }
 }

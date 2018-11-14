@@ -1,44 +1,23 @@
-package com.github.zzt93.syncer.common.data;
+package com.github.zzt93.syncer.data;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
-import com.github.zzt93.syncer.common.IdGenerator;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.util.Assert;
 
-import java.io.Serializable;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * @author zzt
  */
-public class SyncData implements Serializable {
+public class SyncData {
 
-  private final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
 
   private static class Meta {
-    private final String eventId;
-    private final String dataId;
-    private final int ordinal;
+    private String eventId;
+    private String dataId;
+    private int ordinal;
     private EventType type;
-    private transient StandardEvaluationContext context;
     private boolean hasExtra = false;
     private String connectionIdentifier;
-
-    Meta(String eventId, int ordinal, int offset, EventType type, String connectionIdentifier) {
-      this.eventId = eventId;
-      this.connectionIdentifier = connectionIdentifier;
-      if (offset < 0) {
-        dataId = IdGenerator.fromEventId(eventId, ordinal);
-      } else {
-        dataId = IdGenerator.fromEventId(eventId, ordinal, offset);
-      }
-      this.ordinal = ordinal;
-      setType(type);
-    }
 
     @Override
     public String toString() {
@@ -47,7 +26,6 @@ public class SyncData implements Serializable {
           ", dataId='" + dataId + '\'' +
           ", ordinal=" + ordinal +
           ", type=" + type +
-          ", context=" + context +
           ", hasExtra=" + hasExtra +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
           '}';
@@ -59,7 +37,7 @@ public class SyncData implements Serializable {
   }
   private SyncByQuery syncByQuery;
 
-  private final Meta inner;
+  private Meta inner;
   /*
    * The following is data field
    */
@@ -75,30 +53,6 @@ public class SyncData implements Serializable {
    */
   private Object id;
   private String primaryKeyName;
-
-
-  public SyncData(String eventId, int ordinal, String database, String table, String primaryKeyName,
-      Object id, Map<String, Object> row, EventType type) {
-    inner = new Meta(eventId, ordinal, -1, type, null);
-
-    this.primaryKeyName = primaryKeyName;
-    if (id != null) {
-      this.id = id;
-    } else {
-      logger.error("{} without primary key", type);
-    }
-    schema = database;
-    this.table = table;
-    records.putAll(row);
-  }
-
-  public SyncData(SyncData syncData, int offset) {
-    inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, offset,
-        syncData.getType(),
-        syncData.getSourceIdentifier());
-    inner.context = EvaluationFactory.context();
-    inner.context.setRootObject(this);
-  }
 
   public Object getId() {
     return id;
@@ -163,9 +117,6 @@ public class SyncData implements Serializable {
   }
 
   public SyncData addRecord(String key, Object value) {
-    if (value == null) {
-      logger.warn("Adding column({}) with null, discarded", key);
-    }
     records.put(key, value);
     return this;
   }
@@ -174,8 +125,6 @@ public class SyncData implements Serializable {
     if (records.containsKey(oldKey)) {
       records.put(newKey, records.get(oldKey));
       records.remove(oldKey);
-    } else {
-      logger.warn("No such record name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, schema, table);
     }
     return this;
   }
@@ -204,27 +153,9 @@ public class SyncData implements Serializable {
     if (records.containsKey(key)) {
       if (value != null) {
         records.put(key, value);
-      } else {
-        logger.warn("update record[{}] with null", key);
       }
-    } else {
-      logger.warn("No such record name (check your config): {} in {}.{}", key, schema, table);
     }
     return this;
-  }
-
-  public StandardEvaluationContext getContext() {
-    return inner.context;
-  }
-
-  public void setContext(StandardEvaluationContext context) {
-    inner.context = context;
-    context.setRootObject(this);
-  }
-
-  public void recycleParseContext(ThreadLocal<StandardEvaluationContext> contexts) {
-    inner.context = null;
-    contexts.remove();
   }
 
   public HashMap<String, Object> getRecords() {
@@ -236,7 +167,6 @@ public class SyncData implements Serializable {
   }
 
   public Object getRecordValue(String key) {
-    Assert.isTrue(records.containsKey(key), records.toString() + "[No such record]: " + key);
     return records.get(key);
   }
 
@@ -275,9 +205,6 @@ public class SyncData implements Serializable {
   }
 
   public ExtraQuery extraQuery(String indexName, String typeName) {
-    if (inner.hasExtra) {
-      logger.warn("Multiple insert by query, not supported for mysql output channel: old query will be override");
-    }
     inner.hasExtra = true;
     return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
   }

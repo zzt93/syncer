@@ -19,7 +19,15 @@ import com.google.gson.reflect.TypeToken;
 import com.mysql.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
-import java.io.FileNotFoundException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.dao.DataAccessException;
+import org.springframework.dao.DuplicateKeyException;
+import org.springframework.jdbc.BadSqlGrammarException;
+import org.springframework.jdbc.CannotGetJdbcConnectionException;
+import org.springframework.jdbc.core.JdbcTemplate;
+
+import javax.sql.DataSource;
 import java.nio.file.Paths;
 import java.sql.BatchUpdateException;
 import java.sql.Statement;
@@ -28,14 +36,6 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
-import javax.sql.DataSource;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataAccessException;
-import org.springframework.dao.DuplicateKeyException;
-import org.springframework.jdbc.BadSqlGrammarException;
-import org.springframework.jdbc.CannotGetJdbcConnectionException;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 /**
  * @author zzt
@@ -61,14 +61,9 @@ public class MysqlChannel implements BufferedChannel<String> {
     this.batch = mysql.getBatch();
     this.ack = ack;
     FailureLogConfig failureLog = mysql.getFailureLog();
-    try {
-      sqlFailureLog = new FailureLog<>(
-          Paths.get(outputMeta.getFailureLogDir(), connection.initIdentifier()),
-          failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
-      });
-    } catch (FileNotFoundException e) {
-      throw new IllegalStateException("Impossible", e);
-    }
+    sqlFailureLog = FailureLog.getLogger(Paths.get(outputMeta.getFailureLogDir(), connection.initIdentifier()),
+        failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
+        });
     output = connection.connectionIdentifier();
     consumerId = mysql.getConsumerId();
   }
@@ -175,7 +170,8 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   @Override
-  public void retryFailed(List<SyncWrapper<String>> sqls, Exception e) {
+  public void retryFailed(List<SyncWrapper<String>> sqls, Throwable e) {
+    // TODO 18/11/14 multiple sql has different errors, what spring behavior
     Throwable cause = e.getCause();
     if (!(cause instanceof BatchUpdateException)) {
       logger.error("Unknown exception", e);
@@ -190,17 +186,13 @@ public class MysqlChannel implements BufferedChannel<String> {
         ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
         continue;
       }
-      ErrorLevel level = level(e);
+      ErrorLevel level = level(e, stringSyncWrapper, batch.getMaxRetry());
       if (level.retriable()) {
-        if (stringSyncWrapper.retryCount() < batch.getMaxRetry()) {
-          tmp.add(stringSyncWrapper);
-          continue;
-        } else {
-          logger.error("Max retry exceed, write '{}' to failure log", stringSyncWrapper, cause);
-          sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
-        }
+        tmp.add(stringSyncWrapper);
+        continue;
       } else {
         switch (level) {
+          case MAX_TRY_EXCEED:
           case SYNCER_BUG: // count as failure then write a log, so no break
             sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
           case WARN: // not count WARN as failure item
@@ -218,7 +210,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   @Override
-  public ErrorLevel level(Exception e) {
+  public ErrorLevel level(Throwable e, SyncWrapper wrapper, int maxTry) {
     /*
      * Possible reasons for DuplicateKey
      * 1. the first failed, the second succeed. Then restart, then the second will send again and cause this
@@ -231,7 +223,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     if (e instanceof BadSqlGrammarException) {
       return ErrorLevel.SYNCER_BUG;
     }
-    return ErrorLevel.RETRIABLE_ERROR;
+    return BufferedChannel.super.level(e, wrapper, maxTry);
   }
 
   @Override
