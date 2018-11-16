@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.google.common.base.Preconditions;
+import org.springframework.util.StringUtils;
 
 /**
  * @author zzt
@@ -53,7 +54,7 @@ public class Elasticsearch extends BufferedOutputChannelConfig {
   public ElasticsearchChannel toChannel(String consumerId, Ack ack,
       SyncerOutputMeta outputMeta) throws Exception {
     this.consumerId = consumerId;
-    if (connection.valid()) {
+    if (!StringUtils.isEmpty(connection) && connection.valid()) {
       return new ElasticsearchChannel(this, outputMeta, ack);
     }
     throw new InvalidConfigException("Invalid connection configuration: " + connection);

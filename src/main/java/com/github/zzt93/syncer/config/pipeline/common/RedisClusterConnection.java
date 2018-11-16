@@ -15,8 +15,4 @@ public class RedisClusterConnection extends ClusterConnection {
     return configuration;
   }
 
-  @Override
-  public boolean valid() {
-    return getClusterNodes() != null && !getClusterNodes().isEmpty();
-  }
 }

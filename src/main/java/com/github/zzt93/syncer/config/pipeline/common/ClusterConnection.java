@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.config.pipeline.common;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
 import java.util.List;
 
@@ -39,7 +38,7 @@ public class ClusterConnection extends Connection {
 
   @Override
   public boolean valid() {
-    return !StringUtils.isEmpty(clusterName) && !clusterNodes.isEmpty();
+    return clusterNodes != null && !clusterNodes.isEmpty();
   }
 
   @Override

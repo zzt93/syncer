@@ -33,6 +33,10 @@ public class Kafka extends BufferedOutputChannelConfig {
     return msgMapping;
   }
 
+  public void setMsgMapping(MsgMapping msgMapping) {
+    this.msgMapping = msgMapping;
+  }
+
   @Override
   public KafkaChannel toChannel(String consumerId, Ack ack, SyncerOutputMeta outputMeta) throws Exception {
     this.consumerId = consumerId;
@@ -57,7 +61,7 @@ public class Kafka extends BufferedOutputChannelConfig {
      * Number of acknowledgments the producer requires the leader to have received
      * before considering a request complete.
      */
-    properties.put(ProducerConfig.ACKS_CONFIG, batch.getSize());
+    properties.put(ProducerConfig.ACKS_CONFIG, "" + batch.getSize());
     if (batch.getBufferMemory() != null) {
       properties.put(ProducerConfig.BUFFER_MEMORY_CONFIG, batch.getBufferMemory());
     }
