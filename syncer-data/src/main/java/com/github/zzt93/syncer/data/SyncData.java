@@ -41,9 +41,9 @@ public class SyncData {
    * The following is data field
    */
   /**
-   * records have to use `LinkedHashMap` to be in order to support multiple dependent extraQuery
+   * fields have to use `LinkedHashMap` to be in order to support multiple dependent extraQuery
    */
-  private final HashMap<String, Object> records = new LinkedHashMap<>();
+  private final HashMap<String, Object> fields = new LinkedHashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
   private String schema;
   private String table;
@@ -115,58 +115,58 @@ public class SyncData {
     extra.put(key, value);
   }
 
-  public SyncData addRecord(String key, Object value) {
-    records.put(key, value);
+  public SyncData addField(String key, Object value) {
+    fields.put(key, value);
     return this;
   }
 
-  public SyncData renameRecord(String oldKey, String newKey) {
-    if (records.containsKey(oldKey)) {
-      records.put(newKey, records.get(oldKey));
-      records.remove(oldKey);
+  public SyncData renameField(String oldKey, String newKey) {
+    if (fields.containsKey(oldKey)) {
+      fields.put(newKey, fields.get(oldKey));
+      fields.remove(oldKey);
     }
     return this;
   }
 
-  public SyncData removeRecord(String key) {
-    records.remove(key);
+  public SyncData removeField(String key) {
+    fields.remove(key);
     return this;
   }
 
   public boolean removePrimaryKey() {
-    return primaryKeyName != null && records.remove(primaryKeyName) != null;
+    return primaryKeyName != null && fields.remove(primaryKeyName) != null;
   }
 
-  public SyncData removeRecords(String... keys) {
+  public SyncData removeFields(String... keys) {
     for (String colName : keys) {
-      records.remove(colName);
+      fields.remove(colName);
     }
     return this;
   }
 
-  public boolean containRecord(String key) {
-    return records.containsKey(key);
+  public boolean containField(String key) {
+    return fields.containsKey(key);
   }
 
-  public SyncData updateRecord(String key, Object value) {
-    if (records.containsKey(key)) {
+  public SyncData updateField(String key, Object value) {
+    if (fields.containsKey(key)) {
       if (value != null) {
-        records.put(key, value);
+        fields.put(key, value);
       }
     }
     return this;
   }
 
-  public HashMap<String, Object> getRecords() {
-    return records;
+  public HashMap<String, Object> getFields() {
+    return fields;
   }
 
   public HashMap<String, Object> getExtra() {
     return extra;
   }
 
-  public Object getRecordValue(String key) {
-    return records.get(key);
+  public Object getField(String key) {
+    return fields.get(key);
   }
 
   public String getEventId() {
@@ -217,7 +217,7 @@ public class SyncData {
     return "SyncData{" +
         "syncByQuery=" + syncByQuery +
         ", inner=" + inner +
-        ", records=" + records +
+        ", fields=" + fields +
         ", extra=" + extra +
         ", schema='" + schema + '\'' +
         ", table='" + table + '\'' +

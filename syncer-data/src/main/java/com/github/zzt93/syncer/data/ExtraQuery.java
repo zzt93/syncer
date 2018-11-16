@@ -44,13 +44,13 @@ public class ExtraQuery {
     return this;
   }
 
-  public ExtraQuery addRecord(String... cols) {
+  public ExtraQuery addField(String... cols) {
     if (cols.length != select.length) {
       throw new InvalidConfigException("Column length is not same as query select result");
     }
     this.as = cols;
     for (String col : cols) {
-      data.getRecords().put(col, this);
+      data.getFields().put(col, this);
     }
     return this;
   }
@@ -84,8 +84,8 @@ public class ExtraQuery {
     return queryResult.get(key);
   }
 
-  public Object getRecord(String s) {
-    return data.getRecordValue(s);
+  public Object getField(String s) {
+    return data.getField(s);
   }
 
   @Override
