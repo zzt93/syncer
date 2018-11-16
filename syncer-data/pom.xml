@@ -11,7 +11,7 @@
 
     <artifactId>syncer-data</artifactId>
     <name>${project.groupId}:${project.artifactId}</name>
-    <version>1.0</version>
+    <!--<version>1.0</version>-->
     <description>Syncer Data Library</description>
     <url>https://github.com/zzt93/syncer/</url>
     <licenses>
