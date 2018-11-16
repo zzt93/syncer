@@ -33,7 +33,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
   private final Logger logger = LoggerFactory.getLogger(KafkaChannel.class);
   private final KafkaTemplate<String, Object> kafkaTemplate;
   private final Ack ack;
-  private final FailureLog<Object> request;
+  private final FailureLog<SyncWrapper<String>> request;
   private final String consumerId;
   private final MsgMapper msgMapper;
 
@@ -47,7 +47,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
     ClusterConnection connection = kafka.getConnection();
     FailureLogConfig failureLog = kafka.getFailureLog();
     Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
-    this.request = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncData>>() {
+    this.request = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
     });
   }
 
@@ -84,7 +84,16 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
 
   private void doSend(String topic, SyncWrapper<String> wrapper) {
     final SyncData event = wrapper.getEvent();
-    ListenableFuture<SendResult<String, Object>> future = kafkaTemplate.send(topic, null);
+    // require that messages with the same key (for instance, a unique id) are always seen in the correct order,
+    // attaching a key to messages will ensure messages with the same key always go to the same partition in a topic
+    ListenableFuture<SendResult<String, Object>> future;
+    if (event.getId() != null) {
+      String key = event.getId().toString();
+      future = kafkaTemplate.send(topic, key, event);
+    } else {
+      logger.warn("Send {} to {} without key", event, topic);
+      future = kafkaTemplate.send(topic, event);
+    }
     ListenableFutureCallback<SendResult<String, Object>> callback = new ListenableFutureCallback<SendResult<String, Object>>() {
 
       @Override

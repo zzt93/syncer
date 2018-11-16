@@ -116,7 +116,10 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Bulk operation
   - Simple nested sql: `insert into select`
   - Ignore `DuplicateKeyException`, not count as failure
-
+- Kafka
+  - Bulk operation
+  
+  
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
 
 ### Mis
