@@ -64,9 +64,9 @@ public class SyncData implements Serializable {
    * The following is data field
    */
   /**
-   * records have to use `LinkedHashMap` to be in order to support multiple dependent extraQuery
+   * {@link #fields} have to use `LinkedHashMap` to has order so as to support multiple dependent extraQuery
    */
-  private final HashMap<String, Object> records = new LinkedHashMap<>();
+  private final HashMap<String, Object> fields = new LinkedHashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
   private String schema;
   private String table;
@@ -89,7 +89,7 @@ public class SyncData implements Serializable {
     }
     schema = database;
     this.table = table;
-    records.putAll(row);
+    fields.putAll(row);
   }
 
   public SyncData(SyncData syncData, int offset) {
@@ -162,53 +162,53 @@ public class SyncData implements Serializable {
     extra.put(key, value);
   }
 
-  public SyncData addRecord(String key, Object value) {
+  public SyncData addField(String key, Object value) {
     if (value == null) {
       logger.warn("Adding column({}) with null, discarded", key);
     }
-    records.put(key, value);
+    fields.put(key, value);
     return this;
   }
 
-  public SyncData renameRecord(String oldKey, String newKey) {
-    if (records.containsKey(oldKey)) {
-      records.put(newKey, records.get(oldKey));
-      records.remove(oldKey);
+  public SyncData renameField(String oldKey, String newKey) {
+    if (fields.containsKey(oldKey)) {
+      fields.put(newKey, fields.get(oldKey));
+      fields.remove(oldKey);
     } else {
-      logger.warn("No such record name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, schema, table);
+      logger.warn("No such field name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, schema, table);
     }
     return this;
   }
 
-  public SyncData removeRecord(String key) {
-    records.remove(key);
+  public SyncData removeField(String key) {
+    fields.remove(key);
     return this;
   }
 
   public boolean removePrimaryKey() {
-    return primaryKeyName != null && records.remove(primaryKeyName) != null;
+    return primaryKeyName != null && fields.remove(primaryKeyName) != null;
   }
 
-  public SyncData removeRecords(String... keys) {
+  public SyncData removeFields(String... keys) {
     for (String colName : keys) {
-      records.remove(colName);
+      fields.remove(colName);
     }
     return this;
   }
 
-  public boolean containRecord(String key) {
-    return records.containsKey(key);
+  public boolean containField(String key) {
+    return fields.containsKey(key);
   }
 
-  public SyncData updateRecord(String key, Object value) {
-    if (records.containsKey(key)) {
+  public SyncData updateField(String key, Object value) {
+    if (fields.containsKey(key)) {
       if (value != null) {
-        records.put(key, value);
+        fields.put(key, value);
       } else {
-        logger.warn("update record[{}] with null", key);
+        logger.warn("update field[{}] with null", key);
       }
     } else {
-      logger.warn("No such record name (check your config): {} in {}.{}", key, schema, table);
+      logger.warn("No such field name (check your config): {} in {}.{}", key, schema, table);
     }
     return this;
   }
@@ -227,17 +227,17 @@ public class SyncData implements Serializable {
     contexts.remove();
   }
 
-  public HashMap<String, Object> getRecords() {
-    return records;
+  public HashMap<String, Object> getFields() {
+    return fields;
   }
 
   public HashMap<String, Object> getExtra() {
     return extra;
   }
 
-  public Object getRecordValue(String key) {
-    Assert.isTrue(records.containsKey(key), records.toString() + "[No such record]: " + key);
-    return records.get(key);
+  public Object getField(String key) {
+    Assert.isTrue(fields.containsKey(key), fields.toString() + "[No such field]: " + key);
+    return fields.get(key);
   }
 
   public String getEventId() {
@@ -291,7 +291,7 @@ public class SyncData implements Serializable {
     return "SyncData{" +
         "syncByQuery=" + syncByQuery +
         ", inner=" + inner +
-        ", records=" + records +
+        ", fields=" + fields +
         ", extra=" + extra +
         ", schema='" + schema + '\'' +
         ", table='" + table + '\'' +

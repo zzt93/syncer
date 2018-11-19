@@ -1,8 +1,5 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
-
 import com.github.zzt93.syncer.common.data.ESScriptUpdate;
 import com.github.zzt93.syncer.common.data.SyncByQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
@@ -13,10 +10,6 @@ import com.github.zzt93.syncer.config.pipeline.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
@@ -31,6 +24,14 @@ import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
+import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 /**
  * @author zzt
@@ -107,7 +108,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
           return UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
               .source(index)
               .filter(getFilter(data))
-              .script(getScript(data, data.getRecords()));
+              .script(getScript(data, data.getFields()));
         }
       default:
         throw new IllegalArgumentException("Unsupported row event type: " + data);

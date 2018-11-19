@@ -4,14 +4,15 @@ import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Map.Entry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
+
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.Map;
+import java.util.Map.Entry;
 
 /**
  * @author zzt
@@ -88,13 +89,13 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
         String expr = (String) value;
         switch (expr) {
           case ROW_ALL:
-            mapObj(src, res, key, src.getRecords(), false);
+            mapObj(src, res, key, src.getFields(), false);
             break;
           case EXTRA_ALL:
             res.put(key, src.getExtra());
             break;
           case ROW_FLATTEN:
-            mapToRes(src, src.getRecords(), res, false);
+            mapToRes(src, src.getFields(), res, false);
             break;
           case EXTRA_FLATTEN:
             res.putAll(src.getExtra());

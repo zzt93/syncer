@@ -25,7 +25,7 @@ public class JsonKeyFilter {
 
   public boolean output(SyncData data) {
     Set<String> tableRow = schema.getTableRow(data.getSchema(), data.getTable());
-    HashMap<String, Object> records = data.getRecords();
+    HashMap<String, Object> records = data.getFields();
     HashSet<String> tmp = new HashSet<>();
     for (Entry<String, Object> entry : records.entrySet()) {
       if (!tableRow.contains(entry.getKey())) {

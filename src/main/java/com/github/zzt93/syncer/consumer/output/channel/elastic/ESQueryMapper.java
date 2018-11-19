@@ -2,11 +2,6 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Optional;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.support.AbstractClient;
@@ -17,6 +12,12 @@ import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Optional;
 
 /**
  * @author zzt
@@ -84,7 +85,7 @@ public class ESQueryMapper implements ExtraQueryMapper {
       Optional<String> placeholderValue = getPlaceholderValue(str);
       if (placeholderValue.isPresent()) {
         String key = placeholderValue.get();
-        Object record = extraQuery.getRecord(key);
+        Object record = extraQuery.getField(key);
         if (!(record instanceof ExtraQuery) || ((ExtraQuery) record).getQueryResult(key) == null) {
           logger.error("Dependent extra query {} has no result of {} from {}", record, key, value);
           return Optional.empty();
