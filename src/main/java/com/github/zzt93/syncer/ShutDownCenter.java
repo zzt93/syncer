@@ -1,9 +1,10 @@
 package com.github.zzt93.syncer;
 
 import com.github.zzt93.syncer.common.exception.ShutDownException;
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.util.concurrent.atomic.AtomicBoolean;
 
 public class ShutDownCenter {
 
@@ -15,8 +16,10 @@ public class ShutDownCenter {
   public static void initShutDown(Throwable e) {
     boolean first = shutdown.compareAndSet(false, true);
     if (first) {
-      logger.error("[Shutting down] Init", e);
-      System.exit(1);
+      new Thread(() -> {
+        logger.error("[Shutting down] Init", e);
+        System.exit(1);
+      }, "syncer-shutdown").start();
     } else {
       logger.warn("[Shutting down]", e);
       throw new ShutDownException(e);

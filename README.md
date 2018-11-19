@@ -134,6 +134,16 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 - JMX Endpoints
   - Use `jconsole` to connect to `Syncer`, you can [change the logging level](https://logback.qos.ch/manual/jmxConfig.html) dynamically;
 
+- Shutdown process
+  - Producer starter shutdown
+    - Connector shutdown
+    - Starter service shutdown
+  - Consumer starter shutdown
+    - Output stater shutdown
+      - Output channel shutdown
+      - Batch service shutdown
+    - Filter-output service shutdown
+  
 ### Limitation
 - MySQL:
   - Supported version: depend on this [binlog connector lib](https://github.com/shyiko/mysql-binlog-connector-java)
