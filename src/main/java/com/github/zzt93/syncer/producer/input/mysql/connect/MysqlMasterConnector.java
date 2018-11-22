@@ -19,24 +19,21 @@ import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.util.StringUtils;
+
 import java.io.EOFException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.StringUtils;
 
 /**
  * @author zzt
@@ -79,7 +76,8 @@ public class MysqlMasterConnector implements MasterConnector {
       client.setBinlogFilename(binlogInfo.getBinlogFilename());
       client.setBinlogPosition(binlogInfo.getBinlogPosition());
     } else {
-      logger.info("No binlog info provided by consumer, connect to latest binlog");
+      logger.info("No binlog info provided by consumer, connect to oldest binlog");
+      setOldestLog();
     }
     return binlogInfo;
   }
@@ -179,6 +177,10 @@ public class MysqlMasterConnector implements MasterConnector {
   private void oldestLog(InvalidBinlogException e) {
     logger.error("Invalid binlog file info {}@{}, reconnect to oldest binlog",
         client.getBinlogFilename(), client.getBinlogPosition(), e);
+    setOldestLog();
+  }
+
+  private void setOldestLog() {
     // fetch oldest binlog file, but can't ensure no data loss if syncer is closed too long
     client.setBinlogFilename("");
     // have to reset it to avoid exception

@@ -13,8 +13,11 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
   private final String binlogFilename;
   private final long binlogPosition;
 
+  /**
+   * @see MysqlMasterConnector#oldestLog(InvalidBinlogException)
+   */
   public BinlogInfo() {
-    binlogFilename = null;
+    binlogFilename = "";
     binlogPosition = 0;
   }
 
