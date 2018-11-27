@@ -3,13 +3,14 @@ package com.github.zzt93.syncer.config.pipeline.input;
 import com.github.zzt93.syncer.common.util.RegexUtil;
 import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
 import com.github.zzt93.syncer.consumer.Hashable;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * @author zzt
@@ -19,7 +20,7 @@ public class Schema implements Hashable {
   private final Logger logger = LoggerFactory.getLogger(Schema.class);
 
   private String name;
-  private List<Table> tables;
+  private List<Table> entities;
 
   private Pattern namePattern;
   private HashMap<String, Set<String>> nameToRows = new HashMap<>();
@@ -33,17 +34,17 @@ public class Schema implements Hashable {
     namePattern = RegexUtil.getRegex(name);
   }
 
-  public List<Table> getTables() {
-    return tables;
+  public List<Table> getEntities() {
+    return entities;
   }
 
-  public void setTables(List<Table> tables) {
-    this.tables = tables;
-    for (Table table : tables) {
+  public void setEntities(List<Table> entities) {
+    this.entities = entities;
+    for (Table table : entities) {
       nameToRows.put(table.getName(), new HashSet<>(table.getRowName()));
     }
-    if (nameToRows.size() != tables.size()) {
-      logger.warn("Duplicate table name definition: {}", tables);
+    if (nameToRows.size() != entities.size()) {
+      logger.warn("Duplicate table name definition: {}", entities);
     }
   }
 

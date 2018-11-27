@@ -23,7 +23,7 @@ public class MasterSource {
   private SchedulerType scheduler = SchedulerType.hash;
   private SyncMeta syncMeta;
   private Connection connection;
-  private List<Schema> schemas = new ArrayList<>();
+  private List<Schema> repos = new ArrayList<>();
 
   public Connection getConnection() {
     return connection;
@@ -33,16 +33,16 @@ public class MasterSource {
     this.connection = connection;
   }
 
-  public List<Schema> getSchemas() {
-    return schemas;
+  public List<Schema> getRepos() {
+    return repos;
   }
 
-  public void setSchemas(List<Schema> schemas) {
-    this.schemas = schemas;
-    schemaSet.addAll(schemas);
-    if (schemaSet.size() < schemas.size()) {
-      logger.error("Duplicate schemas: {}", schemas);
-      throw new InvalidConfigException("Duplicate schemas");
+  public void setRepos(List<Schema> repos) {
+    this.repos = repos;
+    schemaSet.addAll(repos);
+    if (schemaSet.size() < repos.size()) {
+      logger.error("Duplicate repos: {}", repos);
+      throw new InvalidConfigException("Duplicate repos");
     }
   }
 
@@ -101,7 +101,7 @@ public class MasterSource {
   public String toString() {
     return "MasterSource{" +
         "connection=" + connection +
-        ", schemas=" + schemas +
+        ", repos=" + repos +
         ", type=" + type +
         '}';
   }

@@ -47,11 +47,11 @@ way to make consistency promise because Syncer can only provide 'at least once' 
   - Support specify binlog file/position to start reading (`input.masters[x].syncMeta`)
 - MongoDB master source filter:
   - Version: 3.x
-  - Schema filter, support regex
+  - Database filter, support regex
   - Collection name filter
   - automatic `_id` detection and set into `id`
   - If an event match multiple schema & table, we will use the first specific match to filter/output,
-  i.e. the specific schema config will override the regex schema config
+  i.e. the specific `repo` config will override the regex `repo` config
   - If an event go through column filter, and only primary key is left:
     - If event type is `UPDATE`, then discard this event -- because not support update id now;
     - Other event type, keep it.
@@ -81,20 +81,20 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 - `switcher`
 - `foreach`
 - all public method in `SyncData`:
-  - `addRecord(String key, Object value)` 
-  - `renameRecord(String oldKey, String newKey)` 
-  - `removeRecord(String key)`
-  - `removeRecords(String... keys)` 
-  - `containRecord(String key)` 
-  - `updateRecord(String key, Object value)` 
+  - `addField(String key, Object value)` 
+  - `renameField(String oldKey, String newKey)` 
+  - `removeField(String key)`
+  - `removeFields(String... keys)` 
+  - `containField(String key)` 
+  - `updateField(String key, Object value)` 
   - ...
   - `syncByQuery()`
   - `extraQuery(String schemaName, String tableName)`
 - all data field in `SyncData`:
-  - `schema`
-  - `table`
+  - `repo`
+  - `entity`
   - `id`
-  - `records`
+  - `fields`
   - `extra`
 
 ### Output -- DataSink
@@ -201,9 +201,9 @@ syncer.producer.input:
  - `syncMeta`:
    - `binlogFilename`: string name of remote master's binlog file name
    - `binlogPosition`: position you want to start listening
- - `schemas[x]`:
-   - `name`: schema name, allow regex
-   - `tables[x]`:
+ - `repos[x]`:
+   - `name`: repo name, allow regex
+   - `entities[x]`:
      - `name`: entity name
      - `rowName`: entity fields list
  - `scheduler`:
@@ -217,7 +217,7 @@ if I didn't listed.
 - `statement`: list of String code to be executed.
   - e.g.
   ```yml
-    - statement: ["#type=table", "isWrite()"]
+    - statement: ["#type=entity", "isWrite()"]
   ```
 - `switcher`
   - support `default` case
@@ -225,10 +225,10 @@ if I didn't listed.
   - e.g.
   ```yml
     - switcher:
-        switch: "table"
+        switch: "entity"
         case:
-          "file": ["#docType='plain'", "renameRecord('uploader_id', 'uploaderId').renameRecord('parent_id', 'parentId')"]
-          "user": ["#suffix='' ", "renameRecord('superid', 'superId')"]
+          "file": ["#docType='plain'", "renameField('uploader_id', 'uploaderId').renameField('parent_id', 'parentId')"]
+          "user": ["#suffix='' ", "renameField('superid', 'superId')"]
 
   ```
 - `foreach`: in most cases, you can use [Spring EL's collection projection](https://docs.spring.io/spring/docs/5.0.0.M5/spring-framework-reference/html/expressions.html#expressions-collection-projection) rather than this feature
@@ -240,11 +240,11 @@ if I didn't listed.
   - `foreach`
   ```yml
     - if:
-        condition: "table == 'user' && isUpdate()"
+        condition: "entity == 'user' && isUpdate()"
         ifBody:
           - create:
-              copy: ["id", "table", "#suffix", "#title", "#docType"]
-              postCreation: ["addRecord('ownerTitle', #title)", "syncByQuery().filter('ownerId', id)", "id = null"]
+              copy: ["id", "entity", "#suffix", "#title", "#docType"]
+              postCreation: ["addField('ownerTitle', #title)", "syncByQuery().filter('ownerId', id)", "id = null"]
         elseBody:
           - drop: {}
   ```
@@ -255,32 +255,32 @@ if I didn't listed.
   - `toWrite()`
   - `toUpdate()`
   - `toDelete()`
-  - `getRecordValue(String key)`
+  - `getField(String key)`
   - `addExtra(String key, Object value)`
-  - `addRecord(String key, Object value)`
-  - `renameRecord(String oldKey, String newKey)`
-  - `removeRecord(String key)`
-  - `removeRecords(String... keys)` 
-  - `containRecord(String key)` 
-  - `updateRecord(String key, Object value)` 
+  - `addField(String key, Object value)`
+  - `renameField(String oldKey, String newKey)`
+  - `removeField(String key)`
+  - `removeFields(String... keys)` 
+  - `containField(String key)` 
+  - `updateField(String key, Object value)` 
   - `syncByQuery()`: update/delete by query, supported by ES/MySQL output channel
     - `SyncByQueryES`
   - `extraQuery(String schemaName, String tableName)`: usually work with `create` to convert one event to multiple events
     - `ExtraQuery`: enhance syncer with multiple dependent query;
 - all data field in `SyncData`:
-  - `schema`: schema/db/index
-  - `table`: table or collection
+  - `repo`: repo/db/index
+  - `entity`: entity or collection
   - `id`: data primary key or similar thing
-  - `records`: data content of this sync event converted from log content according to your `schema` config
+  - `fields`: data content of this sync event converted from log content according to your `repo` config
   **Notice**:
-    - if your interested column config (`rowName`) has name of `primary key`, records will have it. Otherwise, it will only in `id` field;
+    - if your interested column config (`rowName`) has name of `primary key`, fields will have it. Otherwise, it will only in `id` field;
   - `extra`: an extra map to store extra info
 
 #### Output
 
 - Special expression to do output mapping:
-  - "records.*": map.put('your_key', `records`)
-  - "records.*.flatten": map.putAll(records)
+  - "fields.*": map.put('your_key', `fields`)
+  - "fields.*.flatten": map.putAll(fields)
   - "extra.*": map.put('your_key', `extra`)
   - "extra.*.flatten": map.putAll(`extra`)
 - `batch`: support output change in batch
@@ -305,11 +305,11 @@ and send to where
         enableExtraQuery: true
         retryOnUpdateConflict: 3
         upsert: false
-        index: "table + #suffix" # default: schema
-        type: "#docType" # default: table
+        index: "entity + #suffix" # default: repo
+        type: "#docType" # default: entity
         documentId: "id" # default: id
-        fieldsMapping: # default: records.*.flatten
-          "records": "records.*.flatten"
+        fieldsMapping: # default: fields.*.flatten
+          "fields": "fields.*.flatten"
       batch:
         size: 100
         delay: 1000
@@ -331,10 +331,10 @@ and send to where
         password: xxx
       rowMapping:
         schema: "'test'"
-        table: "table"
+        table: "'someTable'"
         id: "id"
         rows:
-          "records": "records.*.flatten"
+          "fields": "fields.*.flatten"
       batch:
         size: 100
         delay: 100
@@ -358,24 +358,24 @@ input:
         port: 27017
       type: Mongo
       scheduler: direct
-      schemas:
+      repos:
         - name: "test"
-          tables:
+          entities:
           - name: test
             rowName: [createTime, content]
     - connection:
         address: ${HOST_ADDRESS}
         port: 3306
       scheduler: mod
-      schemas:
+      repos:
         - name: "test_${ACTIVE_PROFILE}.*"
-          tables:
+          entities:
           - name: user
             rowName: [user_id, title]
           - name: addr
             rowName: [address]
         - name: "file_${ACTIVE_PROFILE}.*"
-          tables:
+          entities:
           - name: file
             rowName: [name]
 
@@ -385,15 +385,15 @@ input:
 
 filter:
   - switcher:
-      switch: "table"
+      switch: "entity"
       case:
-        "user": ["renameRecord('xxx', 'yyy')"]
+        "user": ["renameField('xxx', 'yyy')"]
   - if:
-      condition: "table == 'user' && isUpdate()"
+      condition: "entity == 'user' && isUpdate()"
       ifBody:
         - create:
-            copy: ["id", "table", "#suffix", "#title", "#docType"]
-            postCreation: ["addRecord('ownerTitle', #title)", "syncByQuery().filter('ownerId', id)", "id = null"]
+            copy: ["id", "entity", "#suffix", "#title", "#docType"]
+            postCreation: ["addField('ownerTitle', #title)", "syncByQuery().filter('ownerId', id)", "id = null"]
       elseBody:
         - drop: {}
 
@@ -409,11 +409,11 @@ output:
       user: root 
       passwordFile: mysql-password
     rowMapping:
-      schema: "schema"
-      table: "table"
+      schema: "'someSchema'"
+      table: "'someTable'"
       id: "id"
       rows:
-        "records": "records.*.flatten"
+        "fields": "fields.*.flatten"
     batch:
       size: 100
       delay: 100
@@ -482,7 +482,7 @@ java -server -XX:+UseG1GC -jar syncer.jar [--port=9999] [--config=/absolute/path
 ### Used In Production
 - For search data sync
 - For auth data sync
-- For data recovery: In case of drop table mistakenly, or you know where to start & end
+- For data recovery: In case of drop entity mistakenly, or you know where to start & end
 
 ## TODO
 [See Issue 1](https://github.com/zzt93/syncer/issues/1)

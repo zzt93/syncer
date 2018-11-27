@@ -24,16 +24,16 @@ public class JsonKeyFilter {
   }
 
   public boolean output(SyncData data) {
-    Set<String> tableRow = schema.getTableRow(data.getSchema(), data.getTable());
-    HashMap<String, Object> records = data.getFields();
+    Set<String> tableRow = schema.getTableRow(data.getRepo(), data.getEntity());
+    HashMap<String, Object> fields = data.getFields();
     HashSet<String> tmp = new HashSet<>();
-    for (Entry<String, Object> entry : records.entrySet()) {
+    for (Entry<String, Object> entry : fields.entrySet()) {
       if (!tableRow.contains(entry.getKey())) {
         tmp.add(entry.getKey());
       }
     }
-    tmp.forEach(records::remove);
-    if (records.isEmpty() && data.getType() == EventType.UPDATE_ROWS) {
+    tmp.forEach(fields::remove);
+    if (fields.isEmpty() && data.getType() == EventType.UPDATE_ROWS) {
       return false;
     }
     return producerSink.output(data);

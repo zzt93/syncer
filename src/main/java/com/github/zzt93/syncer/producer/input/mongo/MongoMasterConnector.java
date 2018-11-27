@@ -12,28 +12,19 @@ import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Throwables;
-import com.mongodb.BasicDBObject;
-import com.mongodb.CursorType;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoInterruptedException;
-import com.mongodb.MongoSocketException;
-import com.mongodb.MongoTimeoutException;
+import com.mongodb.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Set;
-import java.util.StringJoiner;
-import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.*;
+import java.util.concurrent.TimeUnit;
+import java.util.regex.Pattern;
 
 /**
  * @author zzt
@@ -103,7 +94,7 @@ public class MongoMasterConnector implements MasterConnector {
     StringJoiner joiner = new StringJoiner("|");
     registry.outputSink(connection)
         .keySet().stream().map(Consumer::getSchemas).flatMap(Set::stream).flatMap(s -> {
-      List<Table> tables = s.getTables();
+      List<Table> tables = s.getEntities();
       ArrayList<String> res = new ArrayList<>(tables.size());
       for (Table table : tables) {
         res.add("(" + s.getName() + "\\." + table.getName() + ")");

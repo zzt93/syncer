@@ -19,8 +19,8 @@ import java.util.Map.Entry;
  */
 public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
 
-  public static final String ROW_ALL = "records.*";
-  public static final String ROW_FLATTEN = "records.*.flatten";
+  public static final String ROW_ALL = "fields.*";
+  public static final String ROW_FLATTEN = "fields.*.flatten";
   public static final String EXTRA_ALL = "extra.*";
   public static final String EXTRA_FLATTEN = "extra.*.flatten";
   public static final String FAKE_KEY = "any.Key";

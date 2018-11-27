@@ -68,8 +68,8 @@ public class SyncData implements Serializable {
    */
   private final HashMap<String, Object> fields = new LinkedHashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
-  private String schema;
-  private String table;
+  private String repo;
+  private String entity;
   /**
    * table primary key
    */
@@ -77,8 +77,8 @@ public class SyncData implements Serializable {
   private String primaryKeyName;
 
 
-  public SyncData(String eventId, int ordinal, String database, String table, String primaryKeyName,
-      Object id, Map<String, Object> row, EventType type) {
+  public SyncData(String eventId, int ordinal, String database, String entity, String primaryKeyName,
+                  Object id, Map<String, Object> row, EventType type) {
     inner = new Meta(eventId, ordinal, -1, type, null);
 
     this.primaryKeyName = primaryKeyName;
@@ -87,8 +87,8 @@ public class SyncData implements Serializable {
     } else {
       logger.error("{} without primary key", type);
     }
-    schema = database;
-    this.table = table;
+    repo = database;
+    this.entity = entity;
     fields.putAll(row);
   }
 
@@ -108,8 +108,8 @@ public class SyncData implements Serializable {
     this.id = id;
   }
 
-  public String getTable() {
-    return table;
+  public String getEntity() {
+    return entity;
   }
 
   public boolean isWrite() {
@@ -142,16 +142,16 @@ public class SyncData implements Serializable {
     return res;
   }
 
-  public void setTable(String table) {
-    this.table = table;
+  public void setEntity(String entity) {
+    this.entity = entity;
   }
 
-  public String getSchema() {
-    return schema;
+  public String getRepo() {
+    return repo;
   }
 
-  public void setSchema(String schema) {
-    this.schema = schema;
+  public void setRepo(String repo) {
+    this.repo = repo;
   }
 
   public EventType getType() {
@@ -175,7 +175,7 @@ public class SyncData implements Serializable {
       fields.put(newKey, fields.get(oldKey));
       fields.remove(oldKey);
     } else {
-      logger.warn("No such field name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, schema, table);
+      logger.warn("No such field name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, repo, entity);
     }
     return this;
   }
@@ -208,7 +208,7 @@ public class SyncData implements Serializable {
         logger.warn("update field[{}] with null", key);
       }
     } else {
-      logger.warn("No such field name (check your config): {} in {}.{}", key, schema, table);
+      logger.warn("No such field name (check your config): {} in {}.{}", key, repo, entity);
     }
     return this;
   }
@@ -293,8 +293,8 @@ public class SyncData implements Serializable {
         ", inner=" + inner +
         ", fields=" + fields +
         ", extra=" + extra +
-        ", schema='" + schema + '\'' +
-        ", table='" + table + '\'' +
+        ", repo='" + repo + '\'' +
+        ", table='" + entity + '\'' +
         ", id=" + id +
         ", primaryKeyName='" + primaryKeyName + '\'' +
         '}';

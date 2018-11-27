@@ -9,9 +9,9 @@ input:
         address: 192.168.1.100
         port: 1234
       scheduler: mod
-      schemas:
+      repos:
         - name: "test_*"
-          tables:
+          entities:
           - name: affair
             rowName: [id, name] # default id is not null, other can be null
           - name: file
@@ -19,16 +19,16 @@ input:
           - name: folder
             rowName: [id, name, uploader]
         - name: "simple"
-          tables:
+          entities:
           - name: test
             rowName: [id, test]
 
     - connection:
         address: 192.168.1.100
         port: 1235
-      schemas:
+      repos:
         - name: "*_test"
-          tables:
+          entities:
           - name: affair
             rowName: [id, name]
           - name: file
@@ -38,10 +38,10 @@ input:
 
 # input result class: com.github.zzt93.syncer.common.data.SyncData
 #{
-#  schemas: xxx
-#  table: xxx
+#  repo: xxx
+#  entity: xxx
 #  id: xid
-#  row: {
+#  field: {
 #    id: xid
 #    ...
 #  }
@@ -54,10 +54,10 @@ filter:
   - switcher:
       switch: "table"
       case: # support default branch
-        "affair": ["#suffix = '-' + row['id']","#type = 'INDEX_AFFAIR'", "renameRecord('xx', 'yy')" ]
+        "affair": ["#suffix = '-' + row['id']","#type = 'INDEX_AFFAIR'", "renameField('xx', 'yy')" ]
         "file": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '0')"]
         "folder": ["#suffix = '-' + row['id']","#type = 'INDEX_FILE'", "addRow('type', '1')"]
-  - statement: [ "#tags = row['tags']", "updateRecord('tags', new java.util.ArrayList())", "removeRecords('id', 'xid')"]
+  - statement: [ "#tags = row['tags']", "updateField('tags', new java.util.ArrayList())", "removeFields('id', 'xid')"]
   - foreach:
       var: "tag"
       in: "#tags?.split('\n')"
@@ -73,10 +73,10 @@ filter:
 
 # filter result class: com.github.zzt93.syncer.common.data.SyncData
 #{
-#  schemas: xxx
-#  table: xxx
+#  repo: xxx
+#  entity: xxx
 #  id: xid
-#  row: {
+#  field: {
 #    id: xid
 #    ...
 #  }
@@ -86,8 +86,8 @@ filter:
 #}
 
 # Special expression
-# "row.*"
-# "row.*.flatten"
+# "field.*"
+# "field.*.flatten"
 # "extra.*"
 # "extra.*.flatten"
 

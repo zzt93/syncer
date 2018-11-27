@@ -26,6 +26,6 @@ public class SyncDataTest {
     String s = gson.toJson(data);
     SyncData syncData = gson.fromJson(s, SyncData.class);
     assertEquals(data.getEventId(), syncData.getEventId());
-    assertEquals(data.getSchema(), syncData.getSchema());
+    assertEquals(data.getRepo(), syncData.getRepo());
   }
 }
