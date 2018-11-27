@@ -57,7 +57,7 @@ way to make consistency promise because Syncer can only provide 'at least once' 
     - Other event type, keep it.
 - DRDS:
   - Same config as MySQL, but need to connect directly to RDS's MySQL because DRDS not support binlog dump
-  - Remember to fetch partition key in `rowName`
+  - Remember to fetch partition key in `fields`
 
 - Remember where we leave last time by writing file/position of binlog/oplog, and resume from there so as to avoid any data loss
   - More than once (at-least-once): we can ensure the at least once semantics now, so you need to make sure your `SyncData`
@@ -205,7 +205,7 @@ syncer.producer.input:
    - `name`: repo name, allow regex
    - `entities[x]`:
      - `name`: entity name
-     - `rowName`: entity fields list
+     - `fields`: entity fields list
  - `scheduler`:
 
 
@@ -273,7 +273,7 @@ if I didn't listed.
   - `id`: data primary key or similar thing
   - `fields`: data content of this sync event converted from log content according to your `repo` config
   **Notice**:
-    - if your interested column config (`rowName`) has name of `primary key`, fields will have it. Otherwise, it will only in `id` field;
+    - if your interested column config (`fields`) has name of `primary key`, fields will have it. Otherwise, it will only in `id` field;
   - `extra`: an extra map to store extra info
 
 #### Output
@@ -293,7 +293,7 @@ if I didn't listed.
 - `requestMapping`, `rowMapping`: how to convert `SyncData` to suitable format
 and send to where
 - `elasticsearch`
-  - When using this channel, you may prefer to not include `id` like field in interested column config (`rowName`),
+  - When using this channel, you may prefer to not include `id` like field in interested column config (`fields`),
   because it is always no need to include it in data field for ES and we will auto detect it and set it for you.
   - e.g.
   ```yml
@@ -362,7 +362,7 @@ input:
         - name: "test"
           entities:
           - name: test
-            rowName: [createTime, content]
+            fields: [createTime, content]
     - connection:
         address: ${HOST_ADDRESS}
         port: 3306
@@ -371,13 +371,13 @@ input:
         - name: "test_${ACTIVE_PROFILE}.*"
           entities:
           - name: user
-            rowName: [user_id, title]
+            fields: [user_id, title]
           - name: addr
-            rowName: [address]
+            fields: [address]
         - name: "file_${ACTIVE_PROFILE}.*"
           entities:
           - name: file
-            rowName: [name]
+            fields: [name]
 
 
 

@@ -41,7 +41,7 @@ public class Schema implements Hashable {
   public void setEntities(List<Table> entities) {
     this.entities = entities;
     for (Table table : entities) {
-      nameToRows.put(table.getName(), new HashSet<>(table.getRowName()));
+      nameToRows.put(table.getName(), new HashSet<>(table.getFields()));
     }
     if (nameToRows.size() != entities.size()) {
       logger.warn("Duplicate table name definition: {}", entities);

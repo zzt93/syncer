@@ -11,15 +11,15 @@ input:
         - name: "test_*"
           entities:
           - name: affair
-            rowName: [id, name] # default id is not null, other can be null
+            fields: [id, name] # default id is not null, other can be null
           - name: file
-            rowName: [id, name, uploader]
+            fields: [id, name, uploader]
           - name: folder
-            rowName: [id, name, uploader]
+            fields: [id, name, uploader]
         - name: "simple"
           entities:
           - name: test
-            rowName: [id, test]
+            fields: [id, test]
 
     - connection:
         address: 192.168.1.200
@@ -28,15 +28,15 @@ input:
         - name: "test_*"
           entities:
           - name: affair
-            rowName: [id, name] # default id is not null, other can be null
+            fields: [id, name] # default id is not null, other can be null
           - name: file
-            rowName: [id, name, uploader]
+            fields: [id, name, uploader]
           - name: folder
-            rowName: [id, name, uploader]
+            fields: [id, name, uploader]
         - name: "simple"
           entities:
           - name: test
-            rowName: [id, test]
+            fields: [id, test]
 
 # input result class: com.github.zzt93.syncer.common.data.SyncData
 #{

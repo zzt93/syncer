@@ -8,7 +8,7 @@ import java.util.List;
 public class Table {
 
   private String name;
-  private List<String> rowName;
+  private List<String> fields;
 
   public Table() {
   }
@@ -25,12 +25,12 @@ public class Table {
     this.name = name;
   }
 
-  public List<String> getRowName() {
-    return rowName;
+  public List<String> getFields() {
+    return fields;
   }
 
-  public void setRowName(List<String> rowName) {
-    this.rowName = rowName;
+  public void setFields(List<String> fields) {
+    this.fields = fields;
   }
 
   @Override
@@ -56,7 +56,7 @@ public class Table {
   public String toString() {
     return "Table{" +
         "name='" + name + '\'' +
-        ", rowName=" + rowName +
+        ", fields=" + fields +
         '}';
   }
 }
