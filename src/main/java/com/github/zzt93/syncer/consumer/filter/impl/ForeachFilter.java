@@ -37,7 +37,7 @@ public class ForeachFilter implements CompositeStatement {
     assert tmp.size() == 1;
     SyncData data = tmp.getFirst();
     StandardEvaluationContext context = data.getContext();
-    Object collectionOrArray = iterable.execute(context).get(0);
+    Object collectionOrArray = iterable.execute(data).get(0);
 
     if (collectionOrArray instanceof Object[]) {
       for (Object o : ((Object[]) collectionOrArray)) {

@@ -39,7 +39,7 @@ public class Dup implements ForkStatement {
         Object value = s.getValue(src.getContext());
         s.setValue(dup.getContext(), value);
       }
-      statement.execute(dup.getContext());
+      statement.execute(dup);
       res.add(dup);
     }
     return res;

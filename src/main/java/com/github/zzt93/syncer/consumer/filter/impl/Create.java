@@ -41,7 +41,7 @@ public class Create implements ForkStatement {
       Object value = s.getValue(src.getContext());
       s.setValue(create.getContext(), value);
     }
-    newObjAction.execute(create.getContext());
+    newObjAction.execute(create);
     return create;
   }
 }
