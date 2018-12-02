@@ -1,4 +1,4 @@
-# Syncer: sync & manipulate data from MySQL/MongoDB to Elasticsearch/MySQL/Http Endpoint
+# Syncer: sync & manipulate data from MySQL/MongoDB to Elasticsearch/MySQL/Http/Kafka Endpoint
 
 ## Features
 
@@ -118,6 +118,8 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Ignore `DuplicateKeyException`, not count as failure
 - Kafka
   - Bulk operation
+  - Using `id` of data source as `key` of record, making sure the [orders between records](https://stackoverflow.com/questions/29511521/is-key-required-as-part-of-sending-messages-to-kafka)
+  - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
   
   
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
