@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.producer.dispatch.mongo;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.input.Repo;
+import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 
 import java.util.HashMap;

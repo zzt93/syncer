@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.output.mapper;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

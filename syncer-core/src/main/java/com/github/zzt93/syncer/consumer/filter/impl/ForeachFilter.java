@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.filter.ForeachConfig;
+import com.github.zzt93.syncer.config.consumer.filter.ForeachConfig;
 import com.github.zzt93.syncer.consumer.filter.CompositeStatement;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
 import org.slf4j.Logger;

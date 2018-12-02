@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.common.data;
 
 
-import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
+import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 

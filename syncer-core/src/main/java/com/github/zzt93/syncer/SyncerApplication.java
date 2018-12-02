@@ -2,8 +2,8 @@ package com.github.zzt93.syncer;
 
 import com.github.zzt93.syncer.common.thread.WaitingAckHook;
 import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
-import com.github.zzt93.syncer.config.pipeline.ConsumerConfig;
-import com.github.zzt93.syncer.config.pipeline.ProducerConfig;
+import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
+import com.github.zzt93.syncer.config.consumer.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.consumer.ConsumerStarter;
 import com.github.zzt93.syncer.health.SyncerHealth;

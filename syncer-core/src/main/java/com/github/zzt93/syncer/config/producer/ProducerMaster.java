@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.producer;
 
-import com.github.zzt93.syncer.config.pipeline.common.Connection;
-import com.github.zzt93.syncer.config.pipeline.input.MasterSourceType;
+import com.github.zzt93.syncer.config.consumer.common.Connection;
+import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**

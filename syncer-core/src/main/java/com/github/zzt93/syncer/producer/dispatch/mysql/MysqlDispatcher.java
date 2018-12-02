@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.producer.dispatch.mysql;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.IdGenerator;
-import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;

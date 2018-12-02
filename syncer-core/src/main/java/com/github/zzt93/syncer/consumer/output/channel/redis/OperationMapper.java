@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.consumer.output.channel.redis;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.pipeline.output.redis.OperationMapping;
+import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.consumer.output.redis.OperationMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.producer.register;
 
-import com.github.zzt93.syncer.config.pipeline.common.Connection;
+import com.github.zzt93.syncer.config.consumer.common.Connection;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.consumer.input.MongoInputSource;
 import com.github.zzt93.syncer.consumer.input.MysqlInputSource;

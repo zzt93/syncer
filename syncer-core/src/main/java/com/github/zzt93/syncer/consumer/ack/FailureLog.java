@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.ack;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
-import com.github.zzt93.syncer.config.pipeline.output.FailureLogConfig;
+import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.consumer.output.Resource;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;

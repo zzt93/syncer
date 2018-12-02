@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.filter.IfConfig;
+import com.github.zzt93.syncer.config.consumer.filter.IfConfig;
 import com.github.zzt93.syncer.consumer.filter.ConditionalStatement;
 import com.github.zzt93.syncer.consumer.filter.ExprFilter;
 import org.springframework.expression.spel.standard.SpelExpressionParser;

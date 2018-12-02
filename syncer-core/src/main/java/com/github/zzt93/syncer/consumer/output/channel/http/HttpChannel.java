@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.channel.http;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.pipeline.common.HttpConnection;
+import com.github.zzt93.syncer.config.consumer.common.HttpConnection;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;

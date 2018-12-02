@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.producer.register;
 
-import com.github.zzt93.syncer.config.pipeline.common.Connection;
+import com.github.zzt93.syncer.config.consumer.common.Connection;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;

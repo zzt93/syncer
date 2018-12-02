@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.producer.input.mysql.meta;
 
-import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.pipeline.common.MysqlConnection;
-import com.github.zzt93.syncer.config.pipeline.input.Repo;
+import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.consumer.common.MysqlConnection;
+import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Lists;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
  *
  * @author zzt
  * @see SchemaMeta
- * @see com.github.zzt93.syncer.config.pipeline.common.Connection#connectionIdentifier()
+ * @see com.github.zzt93.syncer.config.consumer.common.Connection#connectionIdentifier()
  */
 public class ConsumerSchemaMeta {
 

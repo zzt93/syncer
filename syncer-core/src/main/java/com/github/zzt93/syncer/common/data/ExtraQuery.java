@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.github.zzt93.syncer.config.pipeline.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
