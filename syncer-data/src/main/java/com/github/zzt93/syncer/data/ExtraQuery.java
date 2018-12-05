@@ -21,7 +21,7 @@ public class ExtraQuery {
   private String[] as;
   private final HashMap<String, Object> queryResult = new HashMap<>();
 
-  ExtraQuery(SyncData data) {
+  public ExtraQuery(SyncData data) {
     this.data = data;
   }
 

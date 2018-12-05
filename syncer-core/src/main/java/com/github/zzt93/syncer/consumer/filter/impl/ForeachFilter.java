@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.consumer.filter.ForeachConfig;
 import com.github.zzt93.syncer.consumer.filter.CompositeStatement;
-import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import com.github.zzt93.syncer.data.SyncFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -21,7 +21,7 @@ public class ForeachFilter implements CompositeStatement {
 
   private final String var;
   private final Statement iterable;
-  private final List<ExprFilter> statements;
+  private final List<SyncFilter> statements;
 
   public ForeachFilter(SpelExpressionParser parser, ForeachConfig foreach) {
     var = foreach.getVar();
@@ -42,14 +42,14 @@ public class ForeachFilter implements CompositeStatement {
     if (collectionOrArray instanceof Object[]) {
       for (Object o : ((Object[]) collectionOrArray)) {
         context.setVariable(var, o);
-        for (ExprFilter filter : statements) {
+        for (SyncFilter filter : statements) {
           filter.filter(tmp);
         }
       }
     } else if (collectionOrArray instanceof Iterable) {
       for (Object o : ((Iterable) collectionOrArray)) {
         context.setVariable(var, o);
-        for (ExprFilter filter : statements) {
+        for (SyncFilter filter : statements) {
           filter.filter(tmp);
         }
       }

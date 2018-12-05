@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.consumer.filter.IfConfig;
 import com.github.zzt93.syncer.consumer.filter.ConditionalStatement;
-import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import com.github.zzt93.syncer.data.SyncFilter;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
@@ -15,8 +15,8 @@ import java.util.List;
 public class If implements ConditionalStatement {
 
   private final Condition ifCondition;
-  private final List<ExprFilter> ifAction;
-  private final List<ExprFilter> elseAction;
+  private final List<SyncFilter> ifAction;
+  private final List<SyncFilter> elseAction;
 
   public If(SpelExpressionParser parser, IfConfig ifConfig) {
     ifConfig.checkConfig();
@@ -29,10 +29,10 @@ public class If implements ConditionalStatement {
    * @see ConditionalStatement#filter(List)
    */
   @Override
-  public List<ExprFilter> conditional(SyncData syncData) {
+  public List<SyncFilter> conditional(SyncData syncData) {
     StandardEvaluationContext context = syncData.getContext();
     Boolean conditionRes = ifCondition.execute(context);
-    List<ExprFilter> action;
+    List<SyncFilter> action;
     if (conditionRes) {
       action = ifAction;
     } else {

@@ -13,7 +13,7 @@ import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.*;
 import com.github.zzt93.syncer.consumer.ack.Ack;
-import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import com.github.zzt93.syncer.data.SyncFilter;
 import com.github.zzt93.syncer.consumer.filter.FilterJob;
 import com.github.zzt93.syncer.consumer.input.*;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
@@ -39,7 +39,7 @@ import java.util.concurrent.*;
  *
  * @author zzt
  */
-public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFilter>> {
+public class ConsumerStarter implements Starter<List<FilterConfig>, List<SyncFilter>> {
 
   private final Logger logger = LoggerFactory.getLogger(ConsumerStarter.class);
   private final String id;
@@ -92,7 +92,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     filterOutputService = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter-output"));
 
-    List<ExprFilter> exprFilters = fromPipelineConfig(filters);
+    List<SyncFilter> syncFilters = fromPipelineConfig(filters);
     worker = module.getWorker();
     filterJobs = new FilterJob[worker];
     BlockingDeque<SyncData>[] deques = new BlockingDeque[worker];
@@ -101,7 +101,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
     CopyOnWriteArrayList<OutputChannel> channels = new CopyOnWriteArrayList<>(outputChannels);
     for (int i = 0; i < worker; i++) {
       deques[i] = new LinkedBlockingDeque<>();
-      filterJobs[i] = new FilterJob(id, ack, deques[i], channels, exprFilters);
+      filterJobs[i] = new FilterJob(id, ack, deques[i], channels, syncFilters);
     }
     schedulerBuilder.setDeques(deques);
   }
@@ -129,9 +129,9 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<ExprFil
   }
 
   @Override
-  public List<ExprFilter> fromPipelineConfig(List<FilterConfig> filters) {
+  public List<SyncFilter> fromPipelineConfig(List<FilterConfig> filters) {
     SpelExpressionParser parser = new SpelExpressionParser();
-    List<ExprFilter> res = new ArrayList<>();
+    List<SyncFilter> res = new ArrayList<>();
     for (FilterConfig filter : filters) {
       res.add(filter.toFilter(parser));
     }

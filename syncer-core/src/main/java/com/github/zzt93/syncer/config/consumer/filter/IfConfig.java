@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.filter;
 
 import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
-import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import com.github.zzt93.syncer.data.SyncFilter;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import java.util.ArrayList;
@@ -33,22 +33,22 @@ public class IfConfig {
     this.ifBody = ifBody;
   }
 
-  public List<ExprFilter> getIfAction(
+  public List<SyncFilter> getIfAction(
       SpelExpressionParser parser) {
     return getBodyAction(ifBody, parser);
   }
 
-  public List<ExprFilter> getElseAction(
+  public List<SyncFilter> getElseAction(
       SpelExpressionParser parser) {
     return getBodyAction(elseBody, parser);
   }
 
-  private List<ExprFilter> getBodyAction(List<FilterConfig> body,
+  private List<SyncFilter> getBodyAction(List<FilterConfig> body,
                                          SpelExpressionParser parser) {
     if (body == null) {
       return Collections.emptyList();
     }
-    List<ExprFilter> res = new ArrayList<>();
+    List<SyncFilter> res = new ArrayList<>();
     for (FilterConfig statement : body) {
       res.add(statement.toFilter(parser));
     }

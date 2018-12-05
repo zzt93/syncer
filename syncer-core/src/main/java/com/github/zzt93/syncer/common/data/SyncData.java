@@ -15,7 +15,7 @@ import java.util.Map;
 /**
  * @author zzt
  */
-public class SyncData implements Serializable {
+public class SyncData extends com.github.zzt93.syncer.data.SyncData implements Serializable {
 
   private final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
 

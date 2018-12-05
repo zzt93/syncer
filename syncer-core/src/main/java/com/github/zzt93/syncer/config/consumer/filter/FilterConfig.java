@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.filter;
 
 import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
-import com.github.zzt93.syncer.consumer.filter.ExprFilter;
+import com.github.zzt93.syncer.data.SyncFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.*;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
@@ -21,6 +21,7 @@ public class FilterConfig {
   private IfConfig If;
   private Map drop;
   private CreateConfig create;
+  private String method;
 
   public CreateConfig getCreate() {
     return create;
@@ -84,7 +85,16 @@ public class FilterConfig {
     type = FilterType.DROP;
   }
 
-  public ExprFilter toFilter(SpelExpressionParser parser) {
+  public String getMethod() {
+    return method;
+  }
+
+  public void setMethod(String method) {
+    this.method = method;
+    type = FilterType.METHOD;
+  }
+
+  public SyncFilter toFilter(SpelExpressionParser parser) {
     switch (getType()) {
       case SWITCH:
         return new Switch(parser, getSwitcher());
@@ -102,6 +112,8 @@ public class FilterConfig {
         } catch (NoSuchFieldException e) {
           throw new InvalidConfigException("Unknown field of `SyncData` to copy", e);
         }
+      case METHOD:
+        return JavaMethod.build(getMethod());
       default:
         throw new InvalidConfigException("Unknown filter type");
     }
@@ -109,6 +121,6 @@ public class FilterConfig {
 
 
   public enum FilterType {
-    SWITCH, STATEMENT, FOREACH, IF, DROP, CREATE
+    SWITCH, STATEMENT, FOREACH, IF, DROP, CREATE, METHOD;
   }
 }

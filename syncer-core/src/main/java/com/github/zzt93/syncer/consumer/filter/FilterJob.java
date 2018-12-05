@@ -9,6 +9,7 @@ import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.data.SyncFilter;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.common.base.Throwables;
@@ -33,13 +34,13 @@ public class FilterJob implements EventLoop {
   private final Logger logger = LoggerFactory.getLogger(FilterJob.class);
   private final BlockingDeque<SyncData> fromInput;
   private final CopyOnWriteArrayList<OutputChannel> outputChannels;
-  private final List<ExprFilter> filters;
+  private final List<SyncFilter> filters;
   private final Ack ack;
   private final String consumerId;
 
   public FilterJob(String consumerId, Ack ack, BlockingDeque<SyncData> fromInput,
       CopyOnWriteArrayList<OutputChannel> outputChannels,
-      List<ExprFilter> filters) {
+      List<SyncFilter> filters) {
     this.consumerId = consumerId;
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
@@ -78,7 +79,7 @@ public class FilterJob implements EventLoop {
       // one thread share one context to save much memory
       poll.setContext(contexts.get());
 
-      for (ExprFilter filter : filters) {
+      for (SyncFilter filter : filters) {
         filter.filter(list);
       }
     } catch (InvalidConfigException e) {

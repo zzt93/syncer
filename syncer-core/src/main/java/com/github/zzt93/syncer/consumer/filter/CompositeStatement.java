@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.common.thread.ThreadSafe;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -10,7 +9,6 @@ public interface CompositeStatement extends ExprFilter {
 
 
 
-  @ThreadSafe(safe = {ExprFilter.class})
   @Override
   default void filter(List<SyncData> data) {
     LinkedList<SyncData> res = new LinkedList<>();

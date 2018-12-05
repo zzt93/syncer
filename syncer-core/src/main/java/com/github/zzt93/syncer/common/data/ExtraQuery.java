@@ -12,7 +12,7 @@ import java.util.Map;
  * ----------- index/insert by query ------------
  * @see SyncByQuery
  */
-public class ExtraQuery {
+public class ExtraQuery extends com.github.zzt93.syncer.data.ExtraQuery {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtraQuery.class);
   private final HashMap<String, Object> queryBy = new HashMap<>();
@@ -25,6 +25,7 @@ public class ExtraQuery {
   private final HashMap<String, Object> queryResult = new HashMap<>();
 
   ExtraQuery(SyncData data) {
+    super(data);
     this.data = data;
   }
 
