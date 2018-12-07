@@ -36,6 +36,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
   private final FailureLog<SyncWrapper<String>> request;
   private final String consumerId;
   private final MsgMapper msgMapper;
+  private final String identifier;
 
   public KafkaChannel(Kafka kafka, SyncerOutputMeta outputMeta, Ack ack) {
     DefaultKafkaProducerFactory<String, Object> factory = new DefaultKafkaProducerFactory<>(
@@ -46,7 +47,8 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
     this.msgMapper = new MsgMapper(kafka.getMsgMapping());
     ClusterConnection connection = kafka.getConnection();
     FailureLogConfig failureLog = kafka.getFailureLog();
-    Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
+    identifier = connection.connectionIdentifier();
+    Path path = Paths.get(outputMeta.getFailureLogDir(), identifier);
     this.request = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
     });
   }
@@ -127,7 +129,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
 
   @Override
   public String id() {
-    return consumerId;
+    return identifier;
   }
 
 

@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.config.consumer.common.Connection;
 import com.github.zzt93.syncer.health.consumer.ConsumerHealth;
 import com.github.zzt93.syncer.health.producer.ProducerHealth;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -14,7 +15,7 @@ import java.util.concurrent.ConcurrentHashMap;
 
 public class SyncerHealth {
 
-  private static Gson gson = new Gson();
+  private static final Gson pretty = new GsonBuilder().setPrettyPrinting().create();
   /**
    * key is producer's connection id
    * @see Connection#connectionIdentifier()
@@ -77,7 +78,7 @@ public class SyncerHealth {
     obj.put("overall", overall);
     obj.put("producer", producer);
     obj.put("consumer", consumer);
-    return gson.toJson(obj);
+    return pretty.toJson(obj);
   }
 
 }
