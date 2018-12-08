@@ -1,10 +1,9 @@
-import com.github.zzt93.syncer.data.MethodFilter;
-import com.github.zzt93.syncer.data.SyncData;
+import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.data.SyncFilter;
 
-import java.util.LinkedList;
 import java.util.List;
 
-public class MethodFilterTemplate implements MethodFilter {
+public class MethodFilterTemplate implements SyncFilter<SyncData> {
 
 
   @Override

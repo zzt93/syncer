@@ -10,7 +10,7 @@ public class SyncerOutput {
 
   private int worker;
   private SyncerBatch batch;
-  private SyncerOutputMeta outputMeta;
+  private SyncerOutputMeta outputMeta = new SyncerOutputMeta();
 
   public SyncerOutputMeta getOutputMeta() {
     return outputMeta;

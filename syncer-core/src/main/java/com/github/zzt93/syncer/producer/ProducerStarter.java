@@ -26,7 +26,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author zzt
  */
-public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaster>> {
+public class ProducerStarter implements Starter {
 
   private static ProducerStarter starter;
   private final Logger logger = LoggerFactory.getLogger(ProducerStarter.class);
@@ -98,8 +98,7 @@ public class ProducerStarter implements Starter<ProducerInput, Set<ProducerMaste
   }
 
 
-  @Override
-  public Set<ProducerMaster> fromPipelineConfig(ProducerInput input) {
+  private Set<ProducerMaster> fromPipelineConfig(ProducerInput input) {
     return input.masterSet();
   }
 

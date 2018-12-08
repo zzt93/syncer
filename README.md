@@ -77,6 +77,7 @@ to multiple `SyncData`s.
 
 Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeline Config](#consumer_config)*):
 
+- `method`: write a java method to handle `SyncData`
 - `if`
 - `switcher`
 - `foreach`
@@ -118,6 +119,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Ignore `DuplicateKeyException`, not count as failure
 - Kafka
   - Bulk operation
+  - **Notice**: Kafka msg consumer has to handle event idempotent;
   
   
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
@@ -519,7 +521,7 @@ java -server -XX:+UseG1GC -jar syncer.jar [--port=9999] [--config=/absolute/path
 
 ---
 
-## Upgrade
+## Config File Upgrade Guide
 
 ### From 1.1 to 1.2
 

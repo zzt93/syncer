@@ -9,6 +9,15 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SyncerFilter {
 
   private int worker;
+  private SyncerFilterMeta filterMeta = new SyncerFilterMeta();
+
+  public SyncerFilterMeta getFilterMeta() {
+    return filterMeta;
+  }
+
+  public void setFilterMeta(SyncerFilterMeta filterMeta) {
+    this.filterMeta = filterMeta;
+  }
 
   public int getWorker() {
     return worker;

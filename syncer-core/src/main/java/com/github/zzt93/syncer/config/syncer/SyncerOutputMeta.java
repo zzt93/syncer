@@ -6,7 +6,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * @author zzt
  */
 @ConfigurationProperties(prefix = "syncer.output.outputMeta")
-
 public class SyncerOutputMeta {
 
   private String failureLogDir = "./failure/";

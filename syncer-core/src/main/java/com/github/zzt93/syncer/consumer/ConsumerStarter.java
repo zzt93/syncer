@@ -39,7 +39,7 @@ import java.util.concurrent.*;
  *
  * @author zzt
  */
-public class ConsumerStarter implements Starter<List<FilterConfig>, List<SyncFilter>> {
+public class ConsumerStarter implements Starter {
 
   private final Logger logger = LoggerFactory.getLogger(ConsumerStarter.class);
   private final String id;
@@ -92,7 +92,7 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<SyncFil
     filterOutputService = Executors
         .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter-output"));
 
-    List<SyncFilter> syncFilters = fromPipelineConfig(filters);
+    List<SyncFilter> syncFilters = fromPipelineConfig(filters, module);
     worker = module.getWorker();
     filterJobs = new FilterJob[worker];
     BlockingDeque<SyncData>[] deques = new BlockingDeque[worker];
@@ -128,12 +128,12 @@ public class ConsumerStarter implements Starter<List<FilterConfig>, List<SyncFil
     }
   }
 
-  @Override
-  public List<SyncFilter> fromPipelineConfig(List<FilterConfig> filters) {
+  private List<SyncFilter> fromPipelineConfig(List<FilterConfig> filters, SyncerFilter syncerFilter) {
+    SyncerFilterMeta filterMeta = syncerFilter.getFilterMeta();
     SpelExpressionParser parser = new SpelExpressionParser();
     List<SyncFilter> res = new ArrayList<>();
     for (FilterConfig filter : filters) {
-      res.add(filter.toFilter(parser));
+      res.add(filter.addMeta(id, filterMeta).toFilter(parser));
     }
     return res;
   }

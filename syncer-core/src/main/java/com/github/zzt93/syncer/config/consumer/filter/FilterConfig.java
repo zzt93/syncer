@@ -1,8 +1,10 @@
 package com.github.zzt93.syncer.config.consumer.filter;
 
 import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
 import com.github.zzt93.syncer.data.SyncFilter;
 import com.github.zzt93.syncer.consumer.filter.impl.*;
+import com.google.common.base.Preconditions;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import java.util.List;
@@ -22,6 +24,10 @@ public class FilterConfig {
   private Map drop;
   private CreateConfig create;
   private String method;
+
+  /*---the following field is not configured---*/
+  private SyncerFilterMeta filterMeta;
+  private String consumerId;
 
   public CreateConfig getCreate() {
     return create;
@@ -113,10 +119,17 @@ public class FilterConfig {
           throw new InvalidConfigException("Unknown field of `SyncData` to copy", e);
         }
       case METHOD:
-        return JavaMethod.build(getMethod());
+        Preconditions.checkState(filterMeta != null, "Not set filterMeta for method");
+        return JavaMethod.build(consumerId, filterMeta, getMethod());
       default:
         throw new InvalidConfigException("Unknown filter type");
     }
+  }
+
+  public FilterConfig addMeta(String consumerId, SyncerFilterMeta filterMeta) {
+    this.filterMeta = filterMeta;
+    this.consumerId = consumerId;
+    return this;
   }
 
 

@@ -9,7 +9,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 public class SyncerInput {
 
   private int maxRetry;
-  private SyncerInputMeta inputMeta;
+  private SyncerInputMeta inputMeta = new SyncerInputMeta();
 
   public SyncerInputMeta getInputMeta() {
     return inputMeta;
