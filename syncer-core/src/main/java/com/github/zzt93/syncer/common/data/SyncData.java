@@ -5,7 +5,6 @@ import com.github.zzt93.syncer.common.IdGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.util.Assert;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -236,7 +235,10 @@ public class SyncData extends com.github.zzt93.syncer.data.SyncData implements S
   }
 
   public Object getField(String key) {
-    Assert.isTrue(fields.containsKey(key), fields.toString() + "[No such field]: " + key);
+    if (!fields.containsKey(key)) {
+      logger.info("[No such field]: {}, {}", key, fields.toString());
+      return null;
+    }
     return fields.get(key);
   }
 
