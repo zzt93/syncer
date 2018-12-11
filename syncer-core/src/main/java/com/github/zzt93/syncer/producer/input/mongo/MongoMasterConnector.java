@@ -144,4 +144,15 @@ public class MongoMasterConnector implements MasterConnector {
     }
   }
 
+  @Override
+  public void close() {
+    try {
+      cursor.close();
+      client.close();
+    } catch (Throwable e){
+      logger.error("", e);
+      return;
+    }
+    MasterConnector.super.close();
+  }
 }

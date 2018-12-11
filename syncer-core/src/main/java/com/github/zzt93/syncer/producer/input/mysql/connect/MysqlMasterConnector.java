@@ -155,6 +155,8 @@ public class MysqlMasterConnector implements MasterConnector {
       try {
         // this method is blocked
         client.connect();
+        logger.info("[Shutting down] Closing connection to mysql master");
+        return;
       } catch (InvalidBinlogException e) {
         oldestLog(e);
       } catch (DupServerIdException | EOFException e) {
@@ -195,11 +197,12 @@ public class MysqlMasterConnector implements MasterConnector {
 
   @Override
   public void close() {
-    MasterConnector.super.close();
     try {
       client.disconnect();
     } catch (IOException e) {
       logger.error("[Shutting down] Fail to disconnect", e);
+      return;
     }
+    MasterConnector.super.close();
   }
 }

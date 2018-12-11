@@ -213,7 +213,7 @@ public class ConsumerSchemaMeta {
           String columnName = primaryKeys.getString("COLUMN_NAME");
           if (!tableRow.contains(columnName)) {
             tableMeta.noPrimaryKey();
-            logger.info("Not config primary key as interested column, can be accessed only in `id` but not in `record`");
+            logger.info("Not config primary key as interested column, can be accessed only in `id` but not in `field`");
           }
           tableMeta.addPrimaryKey(columnName, ordinalPosition);
         } else {

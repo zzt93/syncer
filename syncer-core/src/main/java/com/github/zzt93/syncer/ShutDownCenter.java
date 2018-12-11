@@ -19,7 +19,7 @@ public class ShutDownCenter {
       new Thread(() -> {
         logger.error("[Shutting down] Init", e);
         System.exit(1);
-      }, "syncer-shutdown").start();
+      }, "syncer-shutdown-starter").start();
     } else {
       logger.warn("[Shutting down]", e);
       throw new ShutDownException(e);

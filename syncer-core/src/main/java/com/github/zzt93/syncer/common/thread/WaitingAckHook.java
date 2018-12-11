@@ -24,6 +24,7 @@ public class WaitingAckHook extends Thread {
 
   @Override
   public void run() {
+    Thread.currentThread().setName("syncer-shutdown-runner");
     ShutDownCenter.inShutdown();
     logger.info("[Shutting down] Hook started");
     for (Starter starter : starters) {
