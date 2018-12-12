@@ -78,6 +78,8 @@ to multiple `SyncData`s.
 Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeline Config](#consumer_config)*):
 
 - `method`: write a java method to handle `SyncData`
+  - can use `logger` to do logging
+  - import
 - `if`
 - `switcher`
 - `foreach`

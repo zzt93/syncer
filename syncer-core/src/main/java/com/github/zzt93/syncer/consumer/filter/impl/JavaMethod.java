@@ -23,12 +23,17 @@ public class JavaMethod {
   public static SyncFilter build(String consumerId, SyncerFilterMeta filterMeta, String method) {
     String source =
         "import com.github.zzt93.syncer.common.data.SyncData;\n" +
+        "import com.github.zzt93.syncer.data.MethodFilter;\n" +
         "import com.github.zzt93.syncer.data.SyncFilter;\n" +
         "\n" +
         "import java.util.List;\n" +
         "\n" +
+        "import org.slf4j.Logger;\n" +
+        "import org.slf4j.LoggerFactory;\n" +
+        "\n" +
         "public class MethodFilterTemplate implements SyncFilter<SyncData> {\n" +
         "\n" +
+        "  private final Logger logger = LoggerFactory.getLogger(MethodFilter.class);\n" +
         "\n" +
         "  @Override\n" +
         method +
