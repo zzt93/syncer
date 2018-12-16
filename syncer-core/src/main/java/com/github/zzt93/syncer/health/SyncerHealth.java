@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.health;
 
 import com.github.zzt93.syncer.Starter;
+import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
-import com.github.zzt93.syncer.config.consumer.common.Connection;
 import com.github.zzt93.syncer.health.consumer.ConsumerHealth;
 import com.github.zzt93.syncer.health.producer.ProducerHealth;
 import com.google.gson.Gson;

@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.consumer.common;
+package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.Repo;

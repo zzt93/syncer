@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.health.consumer;
 
-import com.github.zzt93.syncer.config.consumer.common.Connection;
+import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.health.Health;
 
 import java.util.Map;

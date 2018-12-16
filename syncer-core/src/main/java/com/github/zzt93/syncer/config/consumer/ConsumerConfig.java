@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.consumer;
 
-import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.input.PipelineInput;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;

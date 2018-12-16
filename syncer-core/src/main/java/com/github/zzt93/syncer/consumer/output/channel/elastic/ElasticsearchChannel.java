@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
-import com.github.zzt93.syncer.config.consumer.common.ElasticsearchConnection;
+import com.github.zzt93.syncer.config.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.consumer.output.elastic.Elasticsearch;

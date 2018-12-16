@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.consumer.filter;
 
-import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.data.SyncFilter;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 

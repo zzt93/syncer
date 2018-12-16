@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.producer.input.mysql.meta;
 
-import com.github.zzt93.syncer.config.consumer.common.MasterSource;
+import com.github.zzt93.syncer.config.common.MasterSource;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 

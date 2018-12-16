@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.consumer.common;
+package com.github.zzt93.syncer.config.common;
 
 import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;

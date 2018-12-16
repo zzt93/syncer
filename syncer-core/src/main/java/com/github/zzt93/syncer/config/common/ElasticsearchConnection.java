@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.consumer.common;
+package com.github.zzt93.syncer.config.common;
 
 import org.apache.commons.lang.StringUtils;
 import org.elasticsearch.client.support.AbstractClient;

@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
-import com.github.zzt93.syncer.config.consumer.common.Connection;
+import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 
 import java.util.Set;

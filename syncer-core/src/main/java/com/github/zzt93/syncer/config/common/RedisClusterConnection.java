@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.config.consumer.common;
+package com.github.zzt93.syncer.config.common;
 
 import org.springframework.data.redis.connection.RedisClusterConfiguration;
 import org.springframework.data.redis.connection.RedisPassword;

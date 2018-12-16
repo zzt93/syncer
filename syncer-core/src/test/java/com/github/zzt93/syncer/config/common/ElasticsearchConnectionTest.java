@@ -1,8 +1,6 @@
-package com.github.zzt93.syncer.config.consumer.common;
+package com.github.zzt93.syncer.config.common;
 
 import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.HashMap;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -12,6 +10,9 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.junit.Assert;
 import org.junit.Test;
+
+import java.util.ArrayList;
+import java.util.HashMap;
 
 /**
  * @author zzt

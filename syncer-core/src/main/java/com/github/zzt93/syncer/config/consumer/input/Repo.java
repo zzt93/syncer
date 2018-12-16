@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.input;
 
 import com.github.zzt93.syncer.common.util.RegexUtil;
-import com.github.zzt93.syncer.config.consumer.common.MysqlConnection;
+import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.consumer.Hashable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

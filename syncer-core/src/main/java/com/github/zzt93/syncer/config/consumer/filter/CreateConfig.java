@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.consumer.filter;
 
-import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.filter.ForkStatement;
 import com.github.zzt93.syncer.consumer.filter.impl.Create;
 import com.github.zzt93.syncer.consumer.filter.impl.Dup;

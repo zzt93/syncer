@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.output.mysql;
 
-import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.consumer.common.MysqlConnection;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.config.consumer.output.BufferedOutputChannelConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;

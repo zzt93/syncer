@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.config.consumer.input;
 
 
-import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.consumer.common.MasterSource;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.MasterSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 

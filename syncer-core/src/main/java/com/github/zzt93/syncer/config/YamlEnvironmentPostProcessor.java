@@ -2,8 +2,8 @@ package com.github.zzt93.syncer.config;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.RegexUtil;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
-import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

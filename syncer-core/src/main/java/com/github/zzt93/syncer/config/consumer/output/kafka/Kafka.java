@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.output.kafka;
 
-import com.github.zzt93.syncer.config.consumer.common.ClusterConnection;
-import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.ClusterConnection;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.BufferedOutputChannelConfig;
 import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;

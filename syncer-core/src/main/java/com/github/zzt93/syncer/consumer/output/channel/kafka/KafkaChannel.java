@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.kafka;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncWrapper;
-import com.github.zzt93.syncer.config.consumer.common.ClusterConnection;
+import com.github.zzt93.syncer.config.common.ClusterConnection;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.consumer.output.kafka.Kafka;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;

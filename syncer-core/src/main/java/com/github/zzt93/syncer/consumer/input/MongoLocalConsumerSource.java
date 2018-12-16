@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.input;
 
-import com.github.zzt93.syncer.config.consumer.common.Connection;
+import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 

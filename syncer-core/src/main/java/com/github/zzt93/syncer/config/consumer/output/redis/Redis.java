@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.config.consumer.output.redis;
 
-import com.github.zzt93.syncer.config.consumer.common.Connection;
-import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.consumer.common.RedisClusterConnection;
+import com.github.zzt93.syncer.config.common.Connection;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.RedisClusterConnection;
 import com.github.zzt93.syncer.config.consumer.output.BufferedOutputChannelConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;

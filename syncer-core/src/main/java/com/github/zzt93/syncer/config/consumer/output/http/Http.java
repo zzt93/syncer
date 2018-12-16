@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.output.http;
 
 
-import com.github.zzt93.syncer.config.consumer.common.HttpConnection;
+import com.github.zzt93.syncer.config.common.HttpConnection;
 import com.github.zzt93.syncer.config.consumer.output.OutputChannelConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
