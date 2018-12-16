@@ -13,6 +13,7 @@ import com.github.zzt93.syncer.consumer.output.channel.AckChannel;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
+import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
@@ -62,13 +63,25 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
 
   @Override
   public void retryFailed(List<SyncWrapper<String>> aim, Throwable e) {
+    SyncWrapper<String> wrapper = aim.get(0);
+    ErrorLevel level = level(e, wrapper, wrapper.retryCount());
+    if (level.retriable()) {
+      doSend(wrapper.getData(), wrapper);
+      return;
+    }
     // TODO 18/11/14 test producer retry
     // because kafka template has configured to retry
-    for (SyncWrapper<String> wrapper : aim) {
-      logger.error("Max retry exceed, write '{}' to failure log", wrapper, e);
-      request.log(wrapper, e.getMessage());
-      ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+    logger.error("Max retry exceed, write '{}' to failure log", wrapper, e);
+    request.log(wrapper, e.getMessage());
+    ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+  }
+
+  @Override
+  public ErrorLevel level(Throwable e, SyncWrapper wrapper, int maxTry) {
+    if (e instanceof TimeoutException) {
+      return AckChannel.super.level(e, wrapper, maxTry);
     }
+    return ErrorLevel.MAX_TRY_EXCEED;
   }
 
   @Override

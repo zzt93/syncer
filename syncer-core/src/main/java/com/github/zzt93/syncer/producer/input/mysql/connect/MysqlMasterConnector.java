@@ -12,7 +12,7 @@ import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.config.consumer.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.common.MysqlConnection;
 import com.github.zzt93.syncer.config.consumer.common.SchemaUnavailableException;
-import com.github.zzt93.syncer.config.pipeline.InvalidPasswordException;
+import com.github.zzt93.syncer.config.consumer.InvalidPasswordException;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;

@@ -78,8 +78,11 @@ to multiple `SyncData`s.
 Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeline Config](#consumer_config)*):
 
 - `method`: write a java method to handle `SyncData`
-  - can use `logger` to do logging
-  - import
+  - Global variable:
+    - `logger` to do logging
+  - Already imported (**May add more in future**):
+    - `java.util.List`
+    - `org.slf4j.Logger`
 - `if`
 - `switcher`
 - `foreach`
@@ -116,13 +119,16 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 
 - Http Endpoint
 - MySQL
+  - [Version](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-versions.html): 5.5, 5.6, 5.7, 8.0
   - Bulk operation
   - Simple nested sql: `insert into select`
   - Ignore `DuplicateKeyException`, not count as failure
 - Kafka
+  - Version:
   - Bulk operation
   - **Notice**: Kafka msg consumer has to handle event idempotent;
-  
+  - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
+
   
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
 
