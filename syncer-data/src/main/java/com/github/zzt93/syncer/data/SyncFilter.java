@@ -14,6 +14,6 @@ import java.util.List;
  */
 public interface SyncFilter<T extends SyncData> {
 
-  void filter(List<T> e);
+  void filter(List<T> list);
 
 }

@@ -45,10 +45,10 @@ public class SyncData {
    */
   private final HashMap<String, Object> fields = new LinkedHashMap<>();
   private final HashMap<String, Object> extra = new HashMap<>();
-  private String schema;
-  private String table;
+  private String repo;
+  private String entity;
   /**
-   * table primary key
+   * entity primary key
    */
   private Object id;
   private String primaryKeyName;
@@ -61,8 +61,8 @@ public class SyncData {
     this.id = id;
   }
 
-  public String getTable() {
-    return table;
+  public String getEntity() {
+    return entity;
   }
 
   public boolean isWrite() {
@@ -95,16 +95,16 @@ public class SyncData {
     return res;
   }
 
-  public void setTable(String table) {
-    this.table = table;
+  public void setEntity(String entity) {
+    this.entity = entity;
   }
 
-  public String getSchema() {
-    return schema;
+  public String getRepo() {
+    return repo;
   }
 
-  public void setSchema(String schema) {
-    this.schema = schema;
+  public void setRepo(String repo) {
+    this.repo = repo;
   }
 
   public EventType getType() {
@@ -219,8 +219,8 @@ public class SyncData {
         ", inner=" + inner +
         ", fields=" + fields +
         ", extra=" + extra +
-        ", schema='" + schema + '\'' +
-        ", table='" + table + '\'' +
+        ", repo='" + repo + '\'' +
+        ", entity='" + entity + '\'' +
         ", id=" + id +
         ", primaryKeyName='" + primaryKeyName + '\'' +
         '}';

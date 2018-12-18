@@ -124,8 +124,10 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Simple nested sql: `insert into select`
   - Ignore `DuplicateKeyException`, not count as failure
 - Kafka
-  - Version:
+  - Version: 1.0.0
   - Bulk operation
+  - Using `id` of data source as `key` of record, making sure the [orders between records](https://stackoverflow.com/questions/29511521/is-key-required-as-part-of-sending-messages-to-kafka)
+  - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
   - **Notice**: Kafka msg consumer has to handle event idempotent;
   - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
 
