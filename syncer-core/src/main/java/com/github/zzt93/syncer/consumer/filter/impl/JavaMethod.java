@@ -26,7 +26,7 @@ public class JavaMethod {
         "import com.github.zzt93.syncer.data.MethodFilter;\n" +
         "import com.github.zzt93.syncer.data.SyncFilter;\n" +
         "\n" +
-        "import java.util.List;\n" +
+        "import java.util.*;\n" +
         "\n" +
         "import org.slf4j.Logger;\n" +
         "import org.slf4j.LoggerFactory;\n" +
@@ -35,7 +35,6 @@ public class JavaMethod {
         "\n" +
         "  private final Logger logger = LoggerFactory.getLogger(MethodFilter.class);\n" +
         "\n" +
-        "  @Override\n" +
         method +
         "\n" +
         "}\n";

@@ -81,8 +81,10 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Global variable:
     - `logger` to do logging
   - Already imported (**May add more in future**):
-    - `java.util.List`
+    - `java.util.*`
     - `org.slf4j.Logger`
+    - `com.github.zzt93.syncer.data.SyncData`
+    - Use full class name if you need other class, like `java.util.function.Function`
 - `if`
 - `switcher`
 - `foreach`
@@ -124,7 +126,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Simple nested sql: `insert into select`
   - Ignore `DuplicateKeyException`, not count as failure
 - Kafka
-  - Version: 1.0.0
+  - [Version](https://www.confluent.io/blog/upgrading-apache-kafka-clients-just-got-easier/): 0.10.0 or later
   - Bulk operation
   - Using `id` of data source as `key` of record, making sure the [orders between records](https://stackoverflow.com/questions/29511521/is-key-required-as-part-of-sending-messages-to-kafka)
   - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
