@@ -19,7 +19,7 @@ public class SyncUtil {
     return gson.toJson(o);
   }
 
-  public static Object fromJson(String json, Class<?> clazz) {
+  public static <T> T fromJson(String json, Class<T> clazz) {
     if (json == null) {
       return null;
     }
@@ -30,7 +30,7 @@ public class SyncUtil {
     }
   }
 
-  public static Object fromJson(String json) {
+  public static Map fromJson(String json) {
     return fromJson(json, Map.class);
   }
 

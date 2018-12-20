@@ -1,6 +1,5 @@
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.data.MethodFilter;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.*;
 
 import java.util.*;
 

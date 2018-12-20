@@ -14,7 +14,7 @@ import java.util.List;
 /**
  * @author zzt
  */
-@ConfigurationProperties("syncer.consumer")
+@ConfigurationProperties
 public class ConsumerConfig {
 
   private Logger logger = LoggerFactory.getLogger(ConsumerConfig.class);

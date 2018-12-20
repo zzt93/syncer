@@ -22,7 +22,9 @@ public class JavaMethod {
 
   public static SyncFilter build(String consumerId, SyncerFilterMeta filterMeta, String method) {
     String source =
-        "import com.github.zzt93.syncer.common.data.SyncData;\n" +
+        // User write config using com.github.zzt93.syncer.data,
+        // syncer run config using com.github.zzt93.syncer.common.data
+        "import com.github.zzt93.syncer.common.data.*;\n" +
         "import com.github.zzt93.syncer.data.MethodFilter;\n" +
         "import com.github.zzt93.syncer.data.SyncFilter;\n" +
         "\n" +
