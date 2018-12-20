@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
+import com.github.zzt93.syncer.data.SQLFunction;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +26,8 @@ public class SQLHelper {
       if (value instanceof String || value instanceof Timestamp) {
         value = "'" + StringEscapeUtils.escapeSql(value.toString()) + "'";
       }
+    } else if (SQLFunction.class.isAssignableFrom(aClass)) {
+      value = value.toString();
     } else {
       logger.error("Unhandled complex type: {}, value: {}", aClass, value);
     }
