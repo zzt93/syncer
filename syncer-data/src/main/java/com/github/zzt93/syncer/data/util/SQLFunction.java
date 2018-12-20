@@ -12,7 +12,7 @@ public class SQLFunction {
   }
 
   public static SQLFunction geomfromtext(String param) {
-    return new SQLFunction("geomfromtext(" + param + ")");
+    return new SQLFunction("geomfromtext('" + param + "')");
   }
 
   @Override
