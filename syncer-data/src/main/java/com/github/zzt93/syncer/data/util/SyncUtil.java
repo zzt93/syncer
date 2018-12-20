@@ -1,7 +1,9 @@
-package com.github.zzt93.syncer.data;
+package com.github.zzt93.syncer.data.util;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.Map;
 
@@ -9,6 +11,7 @@ import java.util.Map;
  * @author zzt
  */
 public class SyncUtil {
+  private static final Logger logger = LoggerFactory.getLogger(SyncUtil.class);
 
   private static final Gson gson = new Gson();
 
@@ -26,6 +29,7 @@ public class SyncUtil {
     try {
       return gson.fromJson(json, clazz);
     } catch (JsonSyntaxException e) {
+      logger.error("Fail to parse json string {} to {}", json, clazz);
       return null;
     }
   }

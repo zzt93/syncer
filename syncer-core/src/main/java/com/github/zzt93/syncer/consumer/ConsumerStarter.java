@@ -17,7 +17,7 @@ import com.github.zzt93.syncer.consumer.filter.FilterJob;
 import com.github.zzt93.syncer.consumer.input.*;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.util.SyncFilter;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;

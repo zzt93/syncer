@@ -1,5 +1,7 @@
-package com.github.zzt93.syncer.data;
+package com.github.zzt93.syncer.data.util;
 
+
+import com.github.zzt93.syncer.data.SyncData;
 
 import java.util.List;
 

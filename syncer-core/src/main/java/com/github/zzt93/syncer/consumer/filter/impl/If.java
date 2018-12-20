@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.consumer.filter.IfConfig;
 import com.github.zzt93.syncer.consumer.filter.ConditionalStatement;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.util.SyncFilter;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 

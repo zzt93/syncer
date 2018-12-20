@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.util.SyncFilter;
 
 import java.util.LinkedList;
 import java.util.List;

@@ -3,13 +3,11 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.util.SyncFilter;
 import com.google.common.collect.Lists;
 import org.junit.Test;
 
 import java.util.Collections;
-
-import static org.junit.Assert.*;
 
 public class JavaMethodTest {
 

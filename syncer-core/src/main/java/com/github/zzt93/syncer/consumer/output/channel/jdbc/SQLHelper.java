@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
-import com.github.zzt93.syncer.data.SQLFunction;
+import com.github.zzt93.syncer.data.util.SQLFunction;
 import org.apache.commons.lang.StringEscapeUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

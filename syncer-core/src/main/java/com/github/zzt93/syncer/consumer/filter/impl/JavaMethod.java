@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.util.SyncFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -25,8 +25,7 @@ public class JavaMethod {
         // User write config using com.github.zzt93.syncer.data,
         // syncer run config using com.github.zzt93.syncer.common.data
         "import com.github.zzt93.syncer.common.data.*;\n" +
-        "import com.github.zzt93.syncer.data.MethodFilter;\n" +
-        "import com.github.zzt93.syncer.data.SyncFilter;\n" +
+        "import com.github.zzt93.syncer.data.util.*;\n" +
         "\n" +
         "import java.util.*;\n" +
         "\n" +

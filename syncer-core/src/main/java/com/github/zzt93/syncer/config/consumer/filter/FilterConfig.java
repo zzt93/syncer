@@ -3,8 +3,9 @@ package com.github.zzt93.syncer.config.consumer.filter;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
 import com.github.zzt93.syncer.consumer.filter.impl.*;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.util.SyncFilter;
 import com.google.common.base.Preconditions;
+import com.google.gson.annotations.SerializedName;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import java.util.List;
@@ -20,6 +21,7 @@ public class FilterConfig {
   private Switcher switcher;
   private List<String> statement;
   private ForeachConfig foreach;
+  @SerializedName(value = "if", alternate = {"If", "IF"})
   private IfConfig If;
   private Map drop;
   private CreateConfig create;

@@ -1,9 +1,11 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.filter.Switcher;
 import com.github.zzt93.syncer.consumer.filter.ConditionalStatement;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.util.SyncFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -20,6 +22,7 @@ import java.util.stream.Collectors;
  */
 public class Switch implements ConditionalStatement {
 
+  private static final ObjectMapper mapper = new ObjectMapper();
   private final Logger logger = LoggerFactory.getLogger(Switch.class);
   private final SwitchCondition switchCondition;
   private final Map<String, List<SyncFilter>> actionsMap;
@@ -30,7 +33,7 @@ public class Switch implements ConditionalStatement {
     filter.getCase()
         .forEach((k, v) ->
             tmp.put(k, v.stream()
-                .map(c -> c.toFilter(parser))
+                .map(c -> mapper.convertValue(c, FilterConfig.class).toFilter(parser))
                 .collect(Collectors.toList())));
     actionsMap = Collections.unmodifiableMap(tmp);
   }

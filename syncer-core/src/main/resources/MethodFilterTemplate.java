@@ -1,5 +1,5 @@
-import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.data.*;
+import com.github.zzt93.syncer.common.data.*;
+import com.github.zzt93.syncer.data.util.*;
 
 import java.util.*;
 

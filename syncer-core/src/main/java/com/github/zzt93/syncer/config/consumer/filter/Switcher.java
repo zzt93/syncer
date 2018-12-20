@@ -11,7 +11,7 @@ public class Switcher {
 
   public static final String DEFAULT = "default";
   private String Switch;
-  private Map<String, List<FilterConfig>> Case = new HashMap<>();
+  private Map<String, List<Map>> Case = new HashMap<>();
 
   public String getSwitch() {
     return Switch;
@@ -21,11 +21,11 @@ public class Switcher {
     this.Switch = aSwitch;
   }
 
-  public Map<String, List<FilterConfig>> getCase() {
+  public Map<String, List<Map>> getCase() {
     return Case;
   }
 
-  public void setCase(Map<String, List<FilterConfig>> aCase) {
+  public void setCase(Map<String, List<Map>> aCase) {
     this.Case = aCase;
   }
 }

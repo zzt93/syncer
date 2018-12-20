@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.filter.impl;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.consumer.filter.ForeachConfig;
 import com.github.zzt93.syncer.consumer.filter.CompositeStatement;
-import com.github.zzt93.syncer.data.SyncFilter;
+import com.github.zzt93.syncer.data.util.SyncFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;

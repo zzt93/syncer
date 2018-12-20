@@ -84,6 +84,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
     - `java.util.*`
     - `org.slf4j.Logger`
     - `com.github.zzt93.syncer.data.*`
+    - `com.github.zzt93.syncer.data.util.*`
     - Use full class name if you need other class, like `java.util.function.Function`
 - `if`
 - `switcher`
