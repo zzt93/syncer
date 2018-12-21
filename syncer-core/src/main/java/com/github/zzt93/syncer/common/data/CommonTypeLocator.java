@@ -14,7 +14,7 @@ public class CommonTypeLocator implements TypeLocator {
   public CommonTypeLocator() {
     locator = new StandardTypeLocator();
     locator.registerImport("java.util");
-    locator.registerImport("com.github.zzt93.syncer.common.data");
+    locator.registerImport("com.github.zzt93.syncer.data.util");
   }
 
   @Override

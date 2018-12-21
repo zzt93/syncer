@@ -36,7 +36,7 @@ public class JavaMethod {
         "\n" +
         "  private final Logger logger = LoggerFactory.getLogger(MethodFilter.class);\n" +
         "\n" +
-        method +
+        addNewline(method) +
         "\n" +
         "}\n";
 
@@ -54,12 +54,31 @@ public class JavaMethod {
 
     Class<?> cls;
     try {
-      URLClassLoader classLoader = URLClassLoader.newInstance(new URL[] { path.getParent().toUri().toURL() }, JavaMethod.class.getClassLoader());
+      URLClassLoader classLoader = URLClassLoader.newInstance(new URL[]{path.getParent().toUri().toURL()}, JavaMethod.class.getClassLoader());
       cls = Class.forName(className, true, classLoader);
       return (SyncFilter) cls.newInstance();
     } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | MalformedURLException e) {
       logger.error("Syncer bug", e);
       return null;
     }
+  }
+
+  private static String addNewline(String method) {
+    char[] cs = method.toCharArray();
+    StringBuilder sb = new StringBuilder(method.length() + 50);
+    boolean inQuote = false;
+    for (char c : cs) {
+      sb.append(c);
+      switch (c) {
+        case '"':
+          inQuote = !inQuote;
+          break;
+        case ';':
+        case '{':
+          if (!inQuote) sb.append('\n');
+          break;
+      }
+    }
+    return sb.toString();
   }
 }

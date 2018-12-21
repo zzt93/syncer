@@ -50,7 +50,8 @@ public class Switch implements ConditionalStatement {
     if (caseClause == null &&
         actionsMap.containsKey(Switcher.DEFAULT)) {
       caseClause = actionsMap.get(Switcher.DEFAULT);
-    } else {
+    }
+    if (caseClause == null) {
       logger.error("Unknown switch result and no default config : {}", conditionRes);
       return null;
     }
