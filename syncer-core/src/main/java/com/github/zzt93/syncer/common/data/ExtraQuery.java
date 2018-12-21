@@ -12,7 +12,7 @@ import java.util.Map;
  * ----------- index/insert by query ------------
  * @see SyncByQuery
  */
-public class ExtraQuery extends com.github.zzt93.syncer.data.ExtraQuery {
+public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtraQuery.class);
   private final HashMap<String, Object> queryBy = new HashMap<>();
@@ -25,7 +25,6 @@ public class ExtraQuery extends com.github.zzt93.syncer.data.ExtraQuery {
   private final HashMap<String, Object> queryResult = new HashMap<>();
 
   ExtraQuery(SyncData data) {
-    super(data);
     this.data = data;
   }
 
@@ -33,7 +32,7 @@ public class ExtraQuery extends com.github.zzt93.syncer.data.ExtraQuery {
     return typeName;
   }
 
-  ExtraQuery setTypeName(String typeName) {
+  public ExtraQuery setTypeName(String typeName) {
     this.typeName = typeName;
     return this;
   }
@@ -63,7 +62,7 @@ public class ExtraQuery extends com.github.zzt93.syncer.data.ExtraQuery {
     return indexName;
   }
 
-  ExtraQuery setIndexName(String indexName) {
+  public ExtraQuery setIndexName(String indexName) {
     this.indexName = indexName;
     return this;
   }

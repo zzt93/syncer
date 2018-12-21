@@ -72,12 +72,12 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     String type = eval(typeExpr, context);
     String id = eval(idExpr, context);
     switch (data.getType()) {
-      case WRITE_ROWS:
+      case WRITE:
         if (esRequestMapping.getNoUseIdForIndex()) {
           return client.prepareIndex(index, type).setSource(requestBodyMapper.map(data));
         }
         return client.prepareIndex(index, type, id).setSource(requestBodyMapper.map(data));
-      case DELETE_ROWS:
+      case DELETE:
         logger.info("Deleting doc from Elasticsearch, may affect performance");
         if (id != null) {
           return client.prepareDelete(index, type, id);
@@ -86,7 +86,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
         return DeleteByQueryAction.INSTANCE.newRequestBuilder(client)
             .source(index)
             .filter(getFilter(data));
-      case UPDATE_ROWS:
+      case UPDATE:
         // Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
         if (id != null) { // update doc with `id`
           if (needScript(data)) { // scripted updates: update using script

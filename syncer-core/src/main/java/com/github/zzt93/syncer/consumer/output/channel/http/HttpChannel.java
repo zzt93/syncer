@@ -53,11 +53,11 @@ public class HttpChannel implements OutputChannel {
     HashMap<String, Object> res = mapper.map(event);
     logger.debug("Mapping table row {} to {}", event.getFields(), res);
     switch (event.getType()) {
-      case UPDATE_ROWS:
+      case UPDATE:
         return execute(res, POST).is2xxSuccessful();
-      case DELETE_ROWS:
+      case DELETE:
         return execute(res, DELETE).is2xxSuccessful();
-      case WRITE_ROWS:
+      case WRITE:
         return execute(res, PUT).is2xxSuccessful();
       default:
         return false;

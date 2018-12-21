@@ -1,12 +1,12 @@
 package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.InvalidSyncDataException;
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
 import com.github.zzt93.syncer.config.consumer.output.mysql.RowMapping;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
 import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
+import com.github.zzt93.syncer.data.SimpleEventType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;
@@ -53,13 +53,13 @@ public class SQLMapper implements Mapper<SyncData, String> {
     logger.debug("Convert SyncData to {}", map);
     // TODO 18/1/24 replace with `PreparedStatement`?
     switch (data.getType()) {
-      case WRITE_ROWS:
+      case WRITE:
         String[] entry = join(map, data.getType());
         return ParameterReplace
             .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1]);
-      case DELETE_ROWS:
+      case DELETE:
         return ParameterReplace.orderedParam(DELETE_FROM_WHERE_ID, schema, table, id);
-      case UPDATE_ROWS:
+      case UPDATE:
         if (id != null) {
           return ParameterReplace.orderedParam(UPDATE_SET_WHERE_ID, schema, table, id, join(map,
               data.getType())[0]);
@@ -68,7 +68,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
           if (syncBy == null) {
             throw new InvalidSyncDataException("Ignore invalid SyncData: update row without [id] and/or [syncByQuery].", data);
           }
-          String filterCondition = join(syncBy, EventType.UPDATE_ROWS)[0];
+          String filterCondition = join(syncBy, SimpleEventType.UPDATE)[0];
           return ParameterReplace.orderedParam(UPDATE_SET_WHERE, schema, table, filterCondition, join(map,
               data.getType())[0]);
         }
@@ -77,9 +77,9 @@ public class SQLMapper implements Mapper<SyncData, String> {
     }
   }
 
-  private String[] join(HashMap<String, Object> map, EventType type) {
+  private String[] join(HashMap<String, Object> map, SimpleEventType type) {
     switch (type) {
-      case WRITE_ROWS:
+      case WRITE:
         StringJoiner keys = new StringJoiner(",");
         StringJoiner values = new StringJoiner(",");
         for (Entry<String, Object> entry : map.entrySet()) {
@@ -87,7 +87,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
           values.add(SQLHelper.inSQL(entry.getValue()));
         }
         return new String[]{keys.toString(), values.toString()};
-      case UPDATE_ROWS:
+      case UPDATE:
         StringJoiner kv = new StringJoiner(",");
         for (Entry<String, Object> entry : map.entrySet()) {
           String condition = "" + entry.getKey() + "=" + SQLHelper.inSQL(entry.getValue());

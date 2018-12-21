@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.producer.dispatch.mongo;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
+import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 
 import java.util.HashMap;
@@ -36,7 +36,7 @@ public class JsonKeyFilter {
       }
     }
     tmp.forEach(fields::remove);
-    if (fields.isEmpty() && data.getType() == EventType.UPDATE_ROWS) {
+    if (fields.isEmpty() && data.getType() == SimpleEventType.UPDATE) {
       return false;
     }
     return producerSink.output(data);

@@ -1,96 +1,41 @@
 package com.github.zzt93.syncer.data;
 
-import com.github.zzt93.syncer.data.exception.InvalidConfigException;
-
-import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
 
 /**
  * ----------- index/insert by query ------------
+ *
  * @see SyncByQuery
  */
-public class ExtraQuery {
+public interface ExtraQuery {
 
-  private final HashMap<String, Object> queryBy = new HashMap<>();
-  private final SyncData data;
-  private String queryId;
-  private String indexName;
-  private String typeName;
-  private String[] select;
-  private String[] as;
-  private final HashMap<String, Object> queryResult = new HashMap<>();
+  String getTypeName();
 
-  public ExtraQuery(SyncData data) {
-    this.data = data;
-  }
+  ExtraQuery setTypeName(String typeName);
 
-  public String getTypeName() {
-    return typeName;
-  }
+  ExtraQuery filter(String field, Object value);
 
-  ExtraQuery setTypeName(String typeName) {
-    this.typeName = typeName;
-    return this;
-  }
+  ExtraQuery select(String... field);
 
-  public ExtraQuery filter(String field, Object value) {
-    queryBy.put(field, value);
-    return this;
-  }
+  ExtraQuery addField(String... cols);
 
-  public ExtraQuery select(String... field) {
-    select = field;
-    return this;
-  }
+  String getIndexName();
 
-  public ExtraQuery addField(String... cols) {
-    if (cols.length != select.length) {
-      throw new InvalidConfigException("Column length is not same as query select result");
-    }
-    this.as = cols;
-    for (String col : cols) {
-      data.getFields().put(col, this);
-    }
-    return this;
-  }
+  ExtraQuery setIndexName(String indexName);
 
-  public String getIndexName() {
-    return indexName;
-  }
+  HashMap<String, Object> getQueryBy();
 
-  ExtraQuery setIndexName(String indexName) {
-    this.indexName = indexName;
-    return this;
-  }
+  String[] getSelect();
 
-  public HashMap<String, Object> getQueryBy() {
-    return queryBy;
-  }
+  String getAs(int i);
 
-  public String[] getSelect() {
-    return select;
-  }
+  void addQueryResult(Map<String, Object> result);
 
-  public String getAs(int i) {
-    return as[i];
-  }
+  Object getQueryResult(String key);
 
-  public void addQueryResult(Map<String, Object> result) {
-    queryResult.putAll(result);
-  }
-
-  public Object getQueryResult(String key) {
-    return queryResult.get(key);
-  }
-
-  public Object getField(String s) {
-    return data.getField(s);
-  }
+  Object getField(String s);
 
   @Override
-  public String toString() {
-    return "ExtraQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
-        + " from " + indexName + "." + typeName + " where " + queryBy +"}" + (!queryResult.isEmpty() ? queryResult : "");
-  }
+  String toString();
 }

@@ -2,212 +2,179 @@ package com.github.zzt93.syncer.common.data;
 
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.data.SimpleEventType;
+import com.github.zzt93.syncer.data.SyncResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
  * @author zzt
  */
-public class SyncData extends com.github.zzt93.syncer.data.SyncData implements Serializable {
+public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializable {
 
   private final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
-
-  private static class Meta {
-    private final String eventId;
-    private final String dataId;
-    private final int ordinal;
-    private EventType type;
-    private transient StandardEvaluationContext context;
-    private boolean hasExtra = false;
-    private String connectionIdentifier;
-
-    Meta(String eventId, int ordinal, int offset, EventType type, String connectionIdentifier) {
-      this.eventId = eventId;
-      this.connectionIdentifier = connectionIdentifier;
-      if (offset < 0) {
-        dataId = IdGenerator.fromEventId(eventId, ordinal);
-      } else {
-        dataId = IdGenerator.fromEventId(eventId, ordinal, offset);
-      }
-      this.ordinal = ordinal;
-      setType(type);
-    }
-
-    @Override
-    public String toString() {
-      return "Meta{" +
-          "eventId='" + eventId + '\'' +
-          ", dataId='" + dataId + '\'' +
-          ", ordinal=" + ordinal +
-          ", type=" + type +
-          ", context=" + context +
-          ", hasExtra=" + hasExtra +
-          ", connectionIdentifier='" + connectionIdentifier + '\'' +
-          '}';
-    }
-
-    private void setType(EventType type) {
-      this.type = type;
-    }
-  }
-  private SyncByQuery syncByQuery;
-
   private final Meta inner;
-  /*
-   * The following is data field
-   */
+  private SyncByQuery syncByQuery;
   /**
-   * {@link #fields} have to use `LinkedHashMap` to has order so as to support multiple dependent extraQuery
+   * sync result data fields
    */
-  private final HashMap<String, Object> fields = new LinkedHashMap<>();
-  private final HashMap<String, Object> extra = new HashMap<>();
-  private String repo;
-  private String entity;
-  /**
-   * table primary key
-   */
-  private Object id;
-  private String primaryKeyName;
-
+  private SyncResult result = new SyncResult();
 
   public SyncData(String eventId, int ordinal, String database, String entity, String primaryKeyName,
                   Object id, Map<String, Object> row, EventType type) {
-    inner = new Meta(eventId, ordinal, -1, type, null);
+    inner = new Meta(eventId, ordinal, -1, null);
 
-    this.primaryKeyName = primaryKeyName;
+    setEventType(get(type));
+    setPrimaryKeyName(primaryKeyName);
     if (id != null) {
-      this.id = id;
+      setId(id);
     } else {
       logger.error("{} without primary key", type);
     }
-    repo = database;
-    this.entity = entity;
-    fields.putAll(row);
+    setRepo(database);
+    setEntity(entity);
+    getFields().putAll(row);
   }
 
   public SyncData(SyncData syncData, int offset) {
     inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, offset,
-        syncData.getType(),
         syncData.getSourceIdentifier());
     inner.context = EvaluationFactory.context();
     inner.context.setRootObject(this);
+    result.setEventType(syncData.getType());
   }
 
+
+  @Override
   public Object getId() {
-    return id;
+    return result.getId();
   }
 
-  public void setId(Object id) {
-    this.id = id;
+  @Override
+  public SyncData setId(Object id) {
+    result.setId(id);
+    return this;
   }
 
+  private void setEventType(SimpleEventType eventType) {
+    result.setEventType(eventType);
+  }
+
+  @Override
   public String getEntity() {
-    return entity;
+    return result.getEntity();
   }
 
+  @Override
+  public SyncData setEntity(String entity) {
+    result.setEntity(entity);
+    return this;
+  }
+
+  @Override
   public boolean isWrite() {
-    return EventType.isWrite(inner.type);
+    return result.isWrite();
   }
 
+  @Override
   public boolean isUpdate() {
-    return EventType.isUpdate(inner.type);
+    return result.isUpdate();
   }
 
+  @Override
   public boolean isDelete() {
-    return EventType.isDelete(inner.type);
+    return result.isDelete();
   }
 
+  @Override
   public boolean toWrite() {
-    return updateType(EventType.WRITE_ROWS);
+    return result.toWrite();
   }
 
+  @Override
   public boolean toUpdate() {
-    return updateType(EventType.UPDATE_ROWS);
+    return result.toUpdate();
   }
 
+  @Override
   public boolean toDelete() {
-    return updateType(EventType.DELETE_ROWS);
+    return result.toDelete();
   }
 
-  private boolean updateType(EventType type) {
-    boolean res = inner.type == type;
-    inner.setType(type);
-    return res;
-  }
-
-  public void setEntity(String entity) {
-    this.entity = entity;
-  }
-
+  @Override
   public String getRepo() {
-    return repo;
+    return result.getRepo();
   }
 
-  public void setRepo(String repo) {
-    this.repo = repo;
+  @Override
+  public SyncData setRepo(String repo) {
+    result.setRepo(repo);
+    return this;
   }
 
-  public EventType getType() {
-    return inner.type;
+  @Override
+  public Object getExtra(String key) {
+    return result.getExtra(key);
   }
 
-  public void addExtra(String key, Object value) {
-    extra.put(key, value);
+  @Override
+  public SyncData addExtra(String key, Object value) {
+    result.addExtra(key, value);
+    return this;
   }
 
   public SyncData addField(String key, Object value) {
     if (value == null) {
       logger.warn("Adding column({}) with null, discarded", key);
     }
-    fields.put(key, value);
+    getFields().put(key, value);
     return this;
   }
 
   public SyncData renameField(String oldKey, String newKey) {
-    if (fields.containsKey(oldKey)) {
-      fields.put(newKey, fields.get(oldKey));
-      fields.remove(oldKey);
+    if (containField(oldKey)) {
+      getFields().put(newKey, getFields().get(oldKey));
+      getFields().remove(oldKey);
     } else {
-      logger.warn("No such field name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, repo, entity);
+      logger.warn("No such field name (maybe filtered out): `{}` in `{}`.`{}`", oldKey, getRepo(), getEntity());
     }
     return this;
   }
 
   public SyncData removeField(String key) {
-    fields.remove(key);
+    getFields().remove(key);
     return this;
   }
 
   public boolean removePrimaryKey() {
-    return primaryKeyName != null && fields.remove(primaryKeyName) != null;
+    return getPrimaryKeyName() != null && getFields().remove(getPrimaryKeyName()) != null;
   }
 
   public SyncData removeFields(String... keys) {
     for (String colName : keys) {
-      fields.remove(colName);
+      getFields().remove(colName);
     }
     return this;
   }
 
   public boolean containField(String key) {
-    return fields.containsKey(key);
+    return result.containField(key);
   }
 
   public SyncData updateField(String key, Object value) {
-    if (fields.containsKey(key)) {
+    if (containField(key)) {
       if (value != null) {
-        fields.put(key, value);
+        getFields().put(key, value);
       } else {
         logger.warn("update field[{}] with null", key);
       }
     } else {
-      logger.warn("No such field name (check your config): {} in {}.{}", key, repo, entity);
+      logger.warn("No such field name (check your config): {} in {}.{}", key, getRepo(), getEntity());
     }
     return this;
   }
@@ -226,20 +193,22 @@ public class SyncData extends com.github.zzt93.syncer.data.SyncData implements S
     contexts.remove();
   }
 
+  @Override
   public HashMap<String, Object> getFields() {
-    return fields;
+    return result.getFields();
   }
 
+  @Override
   public HashMap<String, Object> getExtra() {
-    return extra;
+    return result.getExtra();
   }
 
   public Object getField(String key) {
-    if (!fields.containsKey(key)) {
-      logger.info("[No such field]: {}, {}", key, fields.toString());
+    if (result.getField(key) == null) {
+      logger.info("[No such field]: {}, {}", key, getFields().toString());
       return null;
     }
-    return fields.get(key);
+    return result.getField(key);
   }
 
   public String getEventId() {
@@ -250,13 +219,13 @@ public class SyncData extends com.github.zzt93.syncer.data.SyncData implements S
     return inner.dataId;
   }
 
+  public String getSourceIdentifier() {
+    return inner.connectionIdentifier;
+  }
+
   public SyncData setSourceIdentifier(String identifier) {
     inner.connectionIdentifier = identifier;
     return this;
-  }
-
-  public String getSourceIdentifier() {
-    return inner.connectionIdentifier;
   }
 
   public HashMap<String, Object> getSyncBy() {
@@ -288,17 +257,75 @@ public class SyncData extends com.github.zzt93.syncer.data.SyncData implements S
     return inner.hasExtra;
   }
 
+  public String getPrimaryKeyName() {
+    return result.getPrimaryKeyName();
+  }
+
+  public void setPrimaryKeyName(String primaryKeyName) {
+    result.setPrimaryKeyName(primaryKeyName);
+  }
+
+  public SimpleEventType getType() {
+    return result.getType();
+  }
+
   @Override
   public String toString() {
     return "SyncData{" +
         "syncByQuery=" + syncByQuery +
         ", inner=" + inner +
-        ", fields=" + fields +
-        ", extra=" + extra +
-        ", repo='" + repo + '\'' +
-        ", table='" + entity + '\'' +
-        ", id=" + id +
-        ", primaryKeyName='" + primaryKeyName + '\'' +
+        ", fields=" + getFields() +
+        ", extra=" + getExtra() +
+        ", repo='" + getRepo() + '\'' +
+        ", table='" + getEntity() + '\'' +
+        ", id=" + getId() +
+        ", primaryKeyName='" + getPrimaryKeyName() + '\'' +
         '}';
+  }
+
+  public static SimpleEventType get(EventType type) {
+    if (EventType.isDelete(type)) {
+      return SimpleEventType.DELETE;
+    }
+    if (EventType.isUpdate(type)) {
+      return SimpleEventType.UPDATE;
+    }
+    if (EventType.isWrite(type)) {
+      return SimpleEventType.WRITE;
+    }
+    throw new IllegalArgumentException("Unknown " + type);
+  }
+
+  private static class Meta {
+    private final String eventId;
+    private final String dataId;
+    private final int ordinal;
+    private transient StandardEvaluationContext context;
+    private boolean hasExtra = false;
+    private String connectionIdentifier;
+
+    Meta(String eventId, int ordinal, int offset, String connectionIdentifier) {
+      this.eventId = eventId;
+      this.connectionIdentifier = connectionIdentifier;
+      if (offset < 0) {
+        dataId = IdGenerator.fromEventId(eventId, ordinal);
+      } else {
+        dataId = IdGenerator.fromEventId(eventId, ordinal, offset);
+      }
+      this.ordinal = ordinal;
+    }
+
+    @Override
+    public String toString() {
+      return "Meta{" +
+          "eventId='" + eventId + '\'' +
+          ", dataId='" + dataId + '\'' +
+          ", ordinal=" + ordinal +
+          ", context=" + context +
+          ", hasExtra=" + hasExtra +
+          ", connectionIdentifier='" + connectionIdentifier + '\'' +
+          '}';
+    }
+
   }
 }

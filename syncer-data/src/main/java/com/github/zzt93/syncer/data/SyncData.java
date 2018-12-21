@@ -1,228 +1,82 @@
 package com.github.zzt93.syncer.data;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
-
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 
 /**
+ * Config operation interface
  * @author zzt
  */
-public class SyncData {
+public interface SyncData {
 
-  private static class Meta {
-    private String eventId;
-    private String dataId;
-    private int ordinal;
-    private EventType type;
-    private boolean hasExtra = false;
-    private String connectionIdentifier;
+  Object getId();
 
-    @Override
-    public String toString() {
-      return "Meta{" +
-          "eventId='" + eventId + '\'' +
-          ", dataId='" + dataId + '\'' +
-          ", ordinal=" + ordinal +
-          ", type=" + type +
-          ", hasExtra=" + hasExtra +
-          ", connectionIdentifier='" + connectionIdentifier + '\'' +
-          '}';
-    }
+  SyncData setId(Object id);
 
-    private void setType(EventType type) {
-      this.type = type;
-    }
-  }
-  private SyncByQuery syncByQuery;
+  String getEntity();
 
-  private Meta inner;
-  /*
-   * The following is data field
-   */
-  /**
-   * fields have to use `LinkedHashMap` to be in order to support multiple dependent extraQuery
-   */
-  private final HashMap<String, Object> fields = new LinkedHashMap<>();
-  private final HashMap<String, Object> extra = new HashMap<>();
-  private String repo;
-  private String entity;
-  /**
-   * entity primary key
-   */
-  private Object id;
-  private String primaryKeyName;
+  boolean isWrite();
 
-  public Object getId() {
-    return id;
-  }
+  boolean isUpdate();
 
-  public void setId(Object id) {
-    this.id = id;
-  }
+  boolean isDelete();
 
-  public String getEntity() {
-    return entity;
-  }
+  boolean toWrite();
 
-  public boolean isWrite() {
-    return EventType.isWrite(inner.type);
-  }
+  boolean toUpdate();
 
-  public boolean isUpdate() {
-    return EventType.isUpdate(inner.type);
-  }
+  boolean toDelete();
 
-  public boolean isDelete() {
-    return EventType.isDelete(inner.type);
-  }
+  SyncData setEntity(String entity);
 
-  public boolean toWrite() {
-    return updateType(EventType.WRITE_ROWS);
-  }
+  String getRepo();
 
-  public boolean toUpdate() {
-    return updateType(EventType.UPDATE_ROWS);
-  }
+  SyncData setRepo(String repo);
 
-  public boolean toDelete() {
-    return updateType(EventType.DELETE_ROWS);
-  }
+  SimpleEventType getType();
 
-  private boolean updateType(EventType type) {
-    boolean res = inner.type == type;
-    inner.setType(type);
-    return res;
-  }
+  SyncData addExtra(String key, Object value);
 
-  public void setEntity(String entity) {
-    this.entity = entity;
-  }
+  SyncData addField(String key, Object value);
 
-  public String getRepo() {
-    return repo;
-  }
+  SyncData renameField(String oldKey, String newKey);
 
-  public void setRepo(String repo) {
-    this.repo = repo;
-  }
+  SyncData removeField(String key);
 
-  public EventType getType() {
-    return inner.type;
-  }
+  boolean removePrimaryKey();
 
-  public void addExtra(String key, Object value) {
-    extra.put(key, value);
-  }
+  SyncData removeFields(String... keys);
 
-  public SyncData addField(String key, Object value) {
-    fields.put(key, value);
-    return this;
-  }
+  boolean containField(String key);
 
-  public SyncData renameField(String oldKey, String newKey) {
-    if (fields.containsKey(oldKey)) {
-      fields.put(newKey, fields.get(oldKey));
-      fields.remove(oldKey);
-    }
-    return this;
-  }
+  SyncData updateField(String key, Object value);
 
-  public SyncData removeField(String key) {
-    fields.remove(key);
-    return this;
-  }
+  HashMap<String, Object> getFields();
 
-  public boolean removePrimaryKey() {
-    return primaryKeyName != null && fields.remove(primaryKeyName) != null;
-  }
+  HashMap<String, Object> getExtra();
 
-  public SyncData removeFields(String... keys) {
-    for (String colName : keys) {
-      fields.remove(colName);
-    }
-    return this;
-  }
+  Object getField(String key);
 
-  public boolean containField(String key) {
-    return fields.containsKey(key);
-  }
+  String getEventId();
 
-  public SyncData updateField(String key, Object value) {
-    if (fields.containsKey(key)) {
-      if (value != null) {
-        fields.put(key, value);
-      }
-    }
-    return this;
-  }
+  String getDataId();
 
-  public HashMap<String, Object> getFields() {
-    return fields;
-  }
+  SyncData setSourceIdentifier(String identifier);
 
-  public HashMap<String, Object> getExtra() {
-    return extra;
-  }
+  String getSourceIdentifier();
 
-  public Object getField(String key) {
-    return fields.get(key);
-  }
-
-  public String getEventId() {
-    return inner.eventId;
-  }
-
-  public String getDataId() {
-    return inner.dataId;
-  }
-
-  public SyncData setSourceIdentifier(String identifier) {
-    inner.connectionIdentifier = identifier;
-    return this;
-  }
-
-  public String getSourceIdentifier() {
-    return inner.connectionIdentifier;
-  }
-
-  public HashMap<String, Object> getSyncBy() {
-    if (syncByQuery == null) {
-      return null;
-    }
-    return syncByQuery.getSyncBy();
-  }
+  HashMap<String, Object> getSyncBy();
 
   /**
    * update/delete by query
    */
-  public SyncByQuery syncByQuery() {
-    if (syncByQuery == null) {
-      syncByQuery = new ESScriptUpdate(this);
-    }
-    return syncByQuery;
-  }
+  SyncByQuery syncByQuery();
 
-  public ExtraQuery extraQuery(String indexName, String typeName) {
-    inner.hasExtra = true;
-    return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
-  }
+  ExtraQuery extraQuery(String indexName, String typeName);
 
-  public boolean hasExtra() {
-    return inner.hasExtra;
-  }
+  boolean hasExtra();
+
+  Object getExtra(String key);
 
   @Override
-  public String toString() {
-    return "SyncData{" +
-        "syncByQuery=" + syncByQuery +
-        ", inner=" + inner +
-        ", fields=" + fields +
-        ", extra=" + extra +
-        ", repo='" + repo + '\'' +
-        ", entity='" + entity + '\'' +
-        ", id=" + id +
-        ", primaryKeyName='" + primaryKeyName + '\'' +
-        '}';
-  }
+  String toString();
 }

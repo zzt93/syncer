@@ -70,7 +70,7 @@ public class NestedSQLMapper extends SQLMapper {
     HashMap<String, Object> map = kvMapper.map(data);
     logger.debug("Convert SyncData to {}", map);
     switch (data.getType()) {
-      case WRITE_ROWS:
+      case WRITE:
         String[] entry = join(map);
         return ParameterReplace
             .orderedParam(INSERT_INTO_SELECT, schema, table, entry[0], entry[1]);
