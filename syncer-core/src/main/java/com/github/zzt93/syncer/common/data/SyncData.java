@@ -29,7 +29,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
                   Object id, Map<String, Object> row, EventType type) {
     inner = new Meta(eventId, ordinal, -1, null);
 
-    setEventType(get(type));
+    result.setEventType(toSimpleEvent(type));
     setPrimaryKeyName(primaryKeyName);
     if (id != null) {
       setId(id);
@@ -61,10 +61,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return this;
   }
 
-  private void setEventType(SimpleEventType eventType) {
-    result.setEventType(eventType);
-  }
-
   @Override
   public String getEntity() {
     return result.getEntity();
@@ -78,33 +74,40 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public boolean isWrite() {
-    return result.isWrite();
+    return result.getEventType() == SimpleEventType.WRITE;
   }
 
   @Override
   public boolean isUpdate() {
-    return result.isUpdate();
+    return result.getEventType() == SimpleEventType.UPDATE;
   }
 
   @Override
   public boolean isDelete() {
-    return result.isDelete();
+    return result.getEventType() == SimpleEventType.DELETE;
   }
 
   @Override
   public boolean toWrite() {
-    return result.toWrite();
+    return updateType(SimpleEventType.WRITE);
   }
 
   @Override
   public boolean toUpdate() {
-    return result.toUpdate();
+    return updateType(SimpleEventType.UPDATE);
   }
 
   @Override
   public boolean toDelete() {
-    return result.toDelete();
+    return updateType(SimpleEventType.DELETE);
   }
+
+  private boolean updateType(SimpleEventType type) {
+    boolean res = result.getEventType() == type;
+    result.setEventType(type);
+    return res;
+  }
+
 
   @Override
   public String getRepo() {
@@ -272,18 +275,17 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   @Override
   public String toString() {
     return "SyncData{" +
-        "syncByQuery=" + syncByQuery +
-        ", inner=" + inner +
-        ", fields=" + getFields() +
-        ", extra=" + getExtra() +
-        ", repo='" + getRepo() + '\'' +
-        ", table='" + getEntity() + '\'' +
-        ", id=" + getId() +
-        ", primaryKeyName='" + getPrimaryKeyName() + '\'' +
+        "inner=" + inner +
+        ", syncByQuery=" + syncByQuery +
+        ", result=" + result +
         '}';
   }
 
-  public static SimpleEventType get(EventType type) {
+  public SyncResult getResult() {
+    return result;
+  }
+
+  public static SimpleEventType toSimpleEvent(EventType type) {
     if (EventType.isDelete(type)) {
       return SimpleEventType.DELETE;
     }

@@ -39,34 +39,8 @@ public class SyncResult {
     this.eventType = eventType;
   }
 
-  public boolean isWrite() {
-    return eventType == SimpleEventType.WRITE;
-  }
-
-  public boolean isUpdate() {
-    return eventType == SimpleEventType.UPDATE;
-  }
-
-  public boolean isDelete() {
-    return eventType == SimpleEventType.DELETE;
-  }
-
-  public boolean toWrite() {
-    return updateType(SimpleEventType.WRITE);
-  }
-
-  public boolean toUpdate() {
-    return updateType(SimpleEventType.UPDATE);
-  }
-
-  public boolean toDelete() {
-    return updateType(SimpleEventType.DELETE);
-  }
-
-  private boolean updateType(SimpleEventType type) {
-    boolean res = eventType == type;
-    eventType = type;
-    return res;
+  public SimpleEventType getEventType() {
+    return eventType;
   }
 
   public String getRepo() {
@@ -74,7 +48,7 @@ public class SyncResult {
   }
 
   public SimpleEventType getType() {
-    return eventType;
+    return getEventType();
   }
 
   public boolean containField(String key) {
@@ -114,7 +88,7 @@ public class SyncResult {
   @Override
   public String toString() {
     return "SyncData{" +
-        ", fields=" + fields +
+        "fields=" + fields +
         ", extra=" + extra +
         ", repo='" + repo + '\'' +
         ", entity='" + entity + '\'' +

@@ -26,10 +26,10 @@ public class ESScriptUpdate extends SyncByQuery implements Serializable {
 
   public ESScriptUpdate updateList(String listField, Object delta) {
     switch (outer.getType()) {
-      case DELETE_ROWS:
+      case DELETE:
         remove.put(listField, delta);
         break;
-      case WRITE_ROWS:
+      case WRITE:
         append.put(listField, delta);
         break;
       default:
