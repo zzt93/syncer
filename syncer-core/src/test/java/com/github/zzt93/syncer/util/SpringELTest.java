@@ -1,16 +1,17 @@
 package com.github.zzt93.syncer.util;
 
 import com.github.zzt93.syncer.common.data.CommonTypeLocator;
-import com.github.zzt93.syncer.common.data.SyncUtil;
+import com.github.zzt93.syncer.data.util.SyncUtil;
 import com.google.common.collect.Lists;
-import java.util.ArrayList;
-import java.util.Iterator;
-import java.util.Map;
 import org.junit.Assert;
 import org.junit.Test;
 import org.springframework.context.expression.MapAccessor;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
+
+import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.Map;
 
 /**
  * Created by zzt on 10/19/17.

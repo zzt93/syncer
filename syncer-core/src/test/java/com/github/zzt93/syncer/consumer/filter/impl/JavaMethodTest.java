@@ -11,10 +11,15 @@ import java.util.Collections;
 
 public class JavaMethodTest {
 
+  private static SyncData data = new SyncData("asdf", 1, "test", "test", "id", 1L, Collections.emptyMap(), EventType.UPDATE_ROWS);
+
   @Test
   public void build() {
-    SyncFilter searcher = JavaMethod.build("searcher", new SyncerFilterMeta(), "  public void filter(List<SyncData> list) {System.out.println(\"asfd\");/*TODO*/}\n");
-    SyncData data = new SyncData("asdf", 1, "test", "test", "id", 1L, Collections.emptyMap(), EventType.UPDATE_ROWS);
+    SyncFilter searcher = JavaMethod.build("searcher", new SyncerFilterMeta(), "    public void filter(List<SyncData> list) {\n" +
+        "      for (SyncData d : list) {\n" +
+        "        assert d.getEventId().equals(\"asdf\");\n" +
+        "      }\n" +
+        "    }\n");
     searcher.filter(Lists.newArrayList(data));
   }
 }

@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.common.data;
 
+import com.github.zzt93.syncer.data.util.SyncUtil;
 import org.junit.Assert;
 import org.junit.Test;
 

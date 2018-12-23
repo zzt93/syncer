@@ -1,11 +1,15 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
+import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
 import com.github.zzt93.syncer.data.util.SyncFilter;
+import com.google.common.collect.Lists;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.tools.JavaCompiler;
+import javax.tools.JavaFileObject;
+import javax.tools.StandardJavaFileManager;
 import javax.tools.ToolProvider;
 import java.io.IOException;
 import java.net.MalformedURLException;
@@ -15,6 +19,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.List;
 
 public class JavaMethod {
 
@@ -50,7 +57,8 @@ public class JavaMethod {
     }
 
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
-    compiler.run(null, null, null, path.toString());
+    compile(path.toString());
+//    compiler.run(null, null, null, path.toString());
 
     Class<?> cls;
     try {
@@ -58,9 +66,27 @@ public class JavaMethod {
       cls = Class.forName(className, true, classLoader);
       return (SyncFilter) cls.newInstance();
     } catch (ClassNotFoundException | IllegalAccessException | InstantiationException | MalformedURLException e) {
-      logger.error("Syncer bug", e);
+      ShutDownCenter.initShutDown(e);
       return null;
     }
+  }
+
+  private static void compile(String s) {
+    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+//    DiagnosticCollector<JavaFileObject> diagnostics = new DiagnosticCollector<>();
+    StandardJavaFileManager fm = compiler.getStandardFileManager(null, null, null);
+//    try {
+//      fm.setLocation(StandardLocation.CLASS_PATH, Arrays.asList(new File(System.getProperty("java.class.path"))));
+//    } catch (IOException e) {
+//      logger.error("", e);
+//    }
+//    return compiler;
+    List<String> optionList = new ArrayList<>();
+    optionList.addAll(Arrays.asList("-classpath",System.getProperty("java.class.path")));
+//    JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
+    Iterable<? extends JavaFileObject> fileObjects = fm.getJavaFileObjectsFromStrings(Lists.newArrayList(s));
+    JavaCompiler.CompilationTask task = compiler.getTask(null, null, null, optionList, null, fileObjects);
+    task.call();
   }
 
   private static String addNewline(String method) {
