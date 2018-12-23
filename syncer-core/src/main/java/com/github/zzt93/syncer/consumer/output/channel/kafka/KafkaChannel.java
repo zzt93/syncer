@@ -104,10 +104,10 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
     ListenableFuture<SendResult<String, Object>> future;
     if (event.getId() != null) {
       String key = event.getId().toString();
-      future = kafkaTemplate.send(topic, key, event);
+      future = kafkaTemplate.send(topic, key, event.getResult());
     } else {
       logger.warn("Send {} to {} without key", event, topic);
-      future = kafkaTemplate.send(topic, event);
+      future = kafkaTemplate.send(topic, event.getResult());
     }
     ListenableFutureCallback<SendResult<String, Object>> callback = new ListenableFutureCallback<SendResult<String, Object>>() {
 
