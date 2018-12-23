@@ -1,11 +1,2 @@
-spring.application.name: syncer
-
-
-spring:
-  profiles:
-    active: ${ACTIVE_PROFILE:dev}
-
-
----
 
 syncer.version: 1.2

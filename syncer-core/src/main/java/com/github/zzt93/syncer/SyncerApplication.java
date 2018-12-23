@@ -11,55 +11,42 @@ import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.boot.Banner;
-import org.springframework.boot.CommandLineRunner;
-import org.springframework.boot.WebApplicationType;
-import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
-import org.springframework.boot.autoconfigure.mongo.MongoAutoConfiguration;
-import org.springframework.boot.builder.SpringApplicationBuilder;
 
 import java.util.LinkedList;
+import java.util.List;
 
 
-@SpringBootApplication(exclude = {DataSourceAutoConfiguration.class, MongoAutoConfiguration.class})
-public class SyncerApplication implements CommandLineRunner {
+public class SyncerApplication {
 
   private static final Logger logger = LoggerFactory.getLogger(SyncerApplication.class);
 
   private final ProducerConfig producerConfig;
   private final SyncerConfig syncerConfig;
   private final ConsumerRegistry consumerRegistry;
-  @Value("${syncer.version}")
-  private String version;
+  private final List<ConsumerConfig> consumerConfigs;
+  private final String version;
 
-  @Autowired
   public SyncerApplication(ProducerConfig producerConfig, SyncerConfig syncerConfig,
-      ConsumerRegistry consumerRegistry) {
+                           ConsumerRegistry consumerRegistry, List<ConsumerConfig> consumerConfigs, String version) {
     this.producerConfig = producerConfig;
     this.syncerConfig = syncerConfig;
     this.consumerRegistry = consumerRegistry;
+    this.consumerConfigs = consumerConfigs;
+    this.version = version;
   }
 
   public static void main(String[] args) {
     try {
-      new SpringApplicationBuilder()
-        .sources(SyncerApplication.class)
-        .web(WebApplicationType.SERVLET)
-        .bannerMode(Banner.Mode.OFF)
-        .properties()
-        .run(args);
+      SyncerApplication syncer = YamlEnvironmentPostProcessor.processEnvironment(args);
+      syncer.run();
     } catch (Throwable e) {
       ShutDownCenter.initShutDown(e);
     }
   }
 
-  @Override
-  public void run(String... strings) throws Exception {
+  public void run() throws Exception {
     LinkedList<Starter> starters = new LinkedList<>();
-    for (ConsumerConfig consumerConfig : YamlEnvironmentPostProcessor.getConfigs()) {
+    for (ConsumerConfig consumerConfig : consumerConfigs) {
       if (!validPipeline(consumerConfig)) {
         continue;
       }

@@ -2,12 +2,10 @@ package com.github.zzt93.syncer.config.producer;
 
 import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
  * @author zzt
  */
-@ConfigurationProperties("syncer.producer.input.masters[]")
 public class ProducerMaster {
 
   private MasterSourceType type = MasterSourceType.MySQL;

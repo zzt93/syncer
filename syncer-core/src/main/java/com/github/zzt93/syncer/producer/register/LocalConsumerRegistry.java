@@ -12,7 +12,6 @@ import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Component;
 
 import java.util.HashMap;
 import java.util.HashSet;
@@ -25,7 +24,6 @@ import static com.google.common.base.Preconditions.checkState;
 /**
  * @author zzt
  */
-@Component
 public class LocalConsumerRegistry implements ConsumerRegistry {
 
   private Logger logger = LoggerFactory.getLogger(LocalConsumerRegistry.class);

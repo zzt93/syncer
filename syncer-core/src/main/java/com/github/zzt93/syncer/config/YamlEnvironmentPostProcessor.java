@@ -1,19 +1,22 @@
 package com.github.zzt93.syncer.config;
 
+import com.github.zzt93.syncer.SyncerApplication;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.RegexUtil;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
+import com.github.zzt93.syncer.config.consumer.ProducerConfig;
+import com.github.zzt93.syncer.config.syncer.SyncerConfig;
+import com.github.zzt93.syncer.producer.register.LocalConsumerRegistry;
+import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.SpringApplication;
-import org.springframework.boot.env.EnvironmentPostProcessor;
-import org.springframework.boot.env.YamlPropertySourceLoader;
-import org.springframework.core.env.ConfigurableEnvironment;
-import org.springframework.core.env.PropertySource;
 import org.springframework.core.io.Resource;
 import org.yaml.snakeyaml.Yaml;
+import org.yaml.snakeyaml.constructor.Constructor;
+import org.yaml.snakeyaml.introspector.Property;
+import org.yaml.snakeyaml.introspector.PropertyUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -25,41 +28,72 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 
+import static com.google.common.base.Preconditions.checkArgument;
+
 /**
  * @author zzt
  */
-public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
+public class YamlEnvironmentPostProcessor {
 
   private static final Logger logger = LoggerFactory.getLogger(YamlEnvironmentPostProcessor.class);
   private static final String CONSUMER_CONFIG = "consumerConfig";
   private static final String PRODUCER_CONFIG = "producerConfig";
   private static final String CONFIG = "config";
-  private static final ArrayList<ConsumerConfig> configs = new ArrayList<>();
-  private final YamlPropertySourceLoader loader = new YamlPropertySourceLoader();
+  private static final String APPLICATION = "application.yml";
 
-  @Override
-  public void postProcessEnvironment(ConfigurableEnvironment environment,
-      SpringApplication application) {
-    String producer = environment.getProperty(PRODUCER_CONFIG);
+  public static SyncerApplication processEnvironment(String[] args) {
+    HashMap<String, String> argKV = toMap(args);
+
+    String configFile = argKV.get(CONFIG);
+    if (configFile == null) {
+      configFile = "config.yml";
+    }
+    SyncerConfig syncerConfig = initConfig(configFile, SyncerConfig.class);
+
+    String producer = argKV.get(PRODUCER_CONFIG);
     if (producer == null) {
       throw new IllegalArgumentException(
           "No producer config file specified, try '--" + PRODUCER_CONFIG
               + "=producer.yml");
     }
-    Set<String> filePaths = getFilePaths(environment);
-    String configFile = environment.getProperty(CONFIG);
-    if (configFile == null) {
-      configFile = "config.yml";
-    }
-    environment.getPropertySources().addLast(loadYaml(producer));
-    environment.getPropertySources().addLast(loadYaml(configFile));
+    ProducerConfig producerConfig = initConfig(producer, ProducerConfig.class);
+
+    Set<String> filePaths = getFilePaths(argKV.get(CONSUMER_CONFIG));
+    ArrayList<ConsumerConfig> configs = new ArrayList<>();
     for (String fileName : filePaths) {
-      configs.add(initPipelines(fileName, environment));
+      configs.add(initConfig(fileName, ConsumerConfig.class));
     }
+
+    String version = getVersion();
+    return new SyncerApplication(producerConfig, syncerConfig, new LocalConsumerRegistry(), configs, version);
   }
 
-  private Set<String> getFilePaths(ConfigurableEnvironment environment) {
-    String pipelineNames = environment.getProperty(CONSUMER_CONFIG);
+  private static String getVersion() {
+    String str;
+    try {
+      str = FileUtil.readAll(FileUtil.getResource(APPLICATION).getInputStream());
+    } catch (IOException e) {
+      logger.error("Fail to load/parse {} file", APPLICATION, e);
+      throw new InvalidConfigException(e);
+    }
+    Yaml yaml = new Yaml();
+    Map map = yaml.loadAs(str, Map.class);
+    return map.get("syncer.version").toString();
+  }
+
+  private static HashMap<String, String> toMap(String[] args) {
+    HashMap<String, String> argKV = new HashMap<>();
+    for (String arg : args) {
+      String[] split = arg.split("=");
+      checkArgument(split.length == 2, "Invalid arg format");
+      String dash = split[0].substring(0, 2);
+      checkArgument(dash.equals("--") && split[0].length() > 2, "Invalid arg format");
+      argKV.put(split[0].substring(2), split[1]);
+    }
+    return argKV;
+  }
+
+  private static Set<String> getFilePaths(String pipelineNames) {
     if (pipelineNames == null) {
       throw new IllegalArgumentException(
           "No consumer config file specified, try '--" + CONSUMER_CONFIG
@@ -70,9 +104,10 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
       Path path = Paths.get(name);
       if (Files.isDirectory(path)) {
         try (DirectoryStream<Path> paths = Files.newDirectoryStream(path, "*.{yml,yaml}")) {
-          paths.iterator().forEachRemaining(p->res.add(p.toString()));
+          paths.iterator().forEachRemaining(p -> res.add(p.toString()));
         } catch (IOException e) {
-          logger.error("Fail to load/parse yml file", e);
+          logger.error("Fail to travel {}", path, e);
+          throw new InvalidConfigException(e);
         }
       } else {
         res.add(name);
@@ -81,29 +116,40 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     return res;
   }
 
-  private ConsumerConfig initPipelines(String fileName,
-                                       ConfigurableEnvironment environment) {
+  private static <T> T initConfig(String fileName, Class<T> tClass) {
     Resource path = FileUtil.getResource(fileName);
-    Yaml yaml = new Yaml();
+    Yaml yaml = getYaml(tClass);
     try (InputStream in = path.getInputStream()) {
-      // TODO 18/1/5 convert key to camel case & add prefix (`pipeline:`)
-//      CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, "key-name")
-      String str = replaceEnv(environment, in);
-      return yaml.loadAs(str, ConsumerConfig.class);
+      String str = replaceEnv(in);
+      return yaml.loadAs(str, tClass);
     } catch (IOException e) {
       logger.error("Fail to load/parse yml file", e);
       throw new InvalidConfigException(e);
     }
   }
 
-  private String replaceEnv(ConfigurableEnvironment environment, InputStream in)
+  private static <T> Yaml getYaml(Class<T> tClass) {
+    Constructor c = new Constructor(tClass);
+    c.setPropertyUtils(new PropertyUtils() {
+      @Override
+      public Property getProperty(Class<?> type, String name) {
+        if (name.indexOf('-') > -1) {
+          name = CaseFormat.LOWER_HYPHEN.to(CaseFormat.LOWER_CAMEL, name);
+        }
+        return super.getProperty(type, name);
+      }
+    });
+    return new Yaml(c);
+  }
+
+  private static String replaceEnv(InputStream in)
       throws IOException {
     String str = FileUtil.readAll(in);
     Matcher matcher = RegexUtil.env().matcher(str);
     HashMap<String, String> rep = new HashMap<>();
     while (matcher.find()) {
       String group = matcher.group(1);
-      String property = environment.getProperty(group);
+      String property = System.getenv(group);
       Preconditions.checkNotNull(property, "Fail to resolve env var: %s", group);
       rep.put(matcher.group(), property);
     }
@@ -113,23 +159,5 @@ public class YamlEnvironmentPostProcessor implements EnvironmentPostProcessor {
     return str;
   }
 
-  private PropertySource<?> loadYaml(String name) {
-    Resource path = FileUtil.getResource(name);
-    try {
-      List<PropertySource<?>> load = this.loader.load(name, path);
-      if (load.size() != 1) {
-        throw new InvalidConfigException(
-            "Invalid yaml configuration file " + path);
-      }
-      return load.get(0);
-    } catch (IOException ex) {
-      throw new IllegalStateException(
-          "Failed to load yaml configuration from " + path, ex);
-    }
-  }
-
-  public static ArrayList<ConsumerConfig> getConfigs() {
-    return configs;
-  }
 }
 

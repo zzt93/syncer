@@ -3,8 +3,6 @@ package com.github.zzt93.syncer.config.producer;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.NestedConfigurationProperty;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -14,16 +12,13 @@ import java.util.Set;
 /**
  * @author zzt
  */
-@ConfigurationProperties("syncer.producer.input")
 public class ProducerInput {
 
   private Logger logger = LoggerFactory.getLogger(ProducerInput.class);
 
-  @NestedConfigurationProperty
   private List<ProducerMaster> masters = new ArrayList<>();
   private Set<ProducerMaster> masterSet = new HashSet<>();
 
-  @ConfigurationProperties("syncer.producer.input.masters")
   public List<ProducerMaster> getMasters() {
     return masters;
   }

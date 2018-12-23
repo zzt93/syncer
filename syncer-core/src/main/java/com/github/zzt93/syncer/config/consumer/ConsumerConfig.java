@@ -6,7 +6,6 @@ import com.github.zzt93.syncer.config.consumer.input.PipelineInput;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,7 +13,6 @@ import java.util.List;
 /**
  * @author zzt
  */
-@ConfigurationProperties
 public class ConsumerConfig {
 
   private Logger logger = LoggerFactory.getLogger(ConsumerConfig.class);
