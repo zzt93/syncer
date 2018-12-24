@@ -122,12 +122,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public Object getExtra(String key) {
-    return result.getExtra(key);
+    return result.getExtra().get(key);
   }
 
   @Override
   public SyncData addExtra(String key, Object value) {
-    result.addExtra(key, value);
+    result.getExtra().put(key, value);
     return this;
   }
 
@@ -166,7 +166,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public boolean containField(String key) {
-    return result.containField(key);
+    return result.getFields().containsKey(key);
   }
 
   public SyncData updateField(String key, Object value) {
@@ -207,11 +207,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public Object getField(String key) {
-    if (result.getField(key) == null) {
+    if (result.getFields().get(key) == null) {
       logger.info("[No such field]: {}, {}", key, getFields().toString());
       return null;
     }
-    return result.getField(key);
+    return result.getFields().get(key);
   }
 
   public String getEventId() {
@@ -269,7 +269,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public SimpleEventType getType() {
-    return result.getType();
+    return result.getEventType();
   }
 
   @Override

@@ -47,14 +47,6 @@ public class SyncResult {
     return repo;
   }
 
-  public SimpleEventType getType() {
-    return getEventType();
-  }
-
-  public boolean containField(String key) {
-    return fields.containsKey(key);
-  }
-
   public HashMap<String, Object> getFields() {
     return fields;
   }
@@ -63,22 +55,16 @@ public class SyncResult {
     return extra;
   }
 
-  public Object getField(String key) {
-    return fields.get(key);
-  }
-
   public String getPrimaryKeyName() {
     return primaryKeyName;
   }
 
-  public SyncResult setRepo(String repo) {
+  public void setRepo(String repo) {
     this.repo = repo;
-    return this;
   }
 
-  public SyncResult setId(Object id) {
+  public void setId(Object id) {
     this.id = id;
-    return this;
   }
 
   public void setPrimaryKeyName(String primaryKeyName) {
@@ -95,14 +81,6 @@ public class SyncResult {
         ", id=" + id +
         ", primaryKeyName='" + primaryKeyName + '\'' +
         '}';
-  }
-
-  public void addExtra(String key, Object value) {
-    extra.put(key, value);
-  }
-
-  public Object getExtra(String key) {
-    return extra.get(key);
   }
 
 }
