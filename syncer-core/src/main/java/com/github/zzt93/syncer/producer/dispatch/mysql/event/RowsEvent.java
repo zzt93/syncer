@@ -35,7 +35,7 @@ public abstract class RowsEvent {
       } else {
         Assert.isTrue(!map.isEmpty(), "Assertion Failure: should at least has primary key");
         // discard event which only has id && event type is UPDATE_ROWS
-        logger.debug("Discard {} for {}", row, eventType);
+        logger.info("Discard {} because nothing to update", row);
       }
     }
     indexedRow.clear();

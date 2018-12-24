@@ -26,7 +26,7 @@ import java.util.regex.Pattern;
  */
 public class MongoDispatcher implements Dispatcher {
 
-  private static final String ID = "_id";
+  static final String ID = "_id";
   private final Logger logger = LoggerFactory.getLogger(MongoDispatcher.class);
   private final HashMap<String, List<JsonKeyFilter>> directOutput = new HashMap<>();
   private final HashMap<Pattern, JsonKeyFilter> regexOutput = new HashMap<>();
