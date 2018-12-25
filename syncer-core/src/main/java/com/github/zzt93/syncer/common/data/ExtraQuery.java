@@ -16,7 +16,7 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtraQuery.class);
   private final HashMap<String, Object> queryBy = new HashMap<>();
-  private final SyncData data;
+  private final transient SyncData data;
   private String queryId;
   private String indexName;
   private String typeName;

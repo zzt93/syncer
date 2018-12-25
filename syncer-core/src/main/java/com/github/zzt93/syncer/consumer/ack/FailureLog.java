@@ -65,6 +65,9 @@ public class FailureLog<T> implements Resource {
       writer.flush();
     } catch (IOException e) {
       logger.error("Fail to convert to json {}", data, e);
+    } catch (StackOverflowError e) {
+      logger.error("Fail to convert to json {}", data);
+      throw e;
     }
     int count = itemCount.get();
     if (count > countLimit) {

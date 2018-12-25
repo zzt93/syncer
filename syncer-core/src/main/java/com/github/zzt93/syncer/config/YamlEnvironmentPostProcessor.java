@@ -46,7 +46,7 @@ public class YamlEnvironmentPostProcessor {
 
     String configFile = argKV.get(CONFIG);
     if (configFile == null) {
-      configFile = "config.yml";
+      configFile = "syncer.yml";
     }
     SyncerConfig syncerConfig = initConfig(configFile, SyncerConfig.class);
 

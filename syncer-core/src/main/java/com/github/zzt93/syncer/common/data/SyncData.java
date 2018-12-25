@@ -17,7 +17,7 @@ import java.util.Map;
  */
 public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializable {
 
-  private final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
+  private static final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
   private final Meta inner;
   private SyncByQuery syncByQuery;
   /**
