@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.health.consumer.ConsumerHealth;
+import com.github.zzt93.syncer.health.export.ExportResult;
 import com.github.zzt93.syncer.health.producer.ProducerHealth;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
@@ -64,7 +65,7 @@ public class SyncerHealth {
     });
   }
 
-  public static String toJson() {
+  public static ExportResult export() {
     Health overall = Health.green();
     ArrayList<ProducerHealth> producer = new ArrayList<>(producers.values());
     for (ProducerHealth p : producer) {
@@ -78,7 +79,7 @@ public class SyncerHealth {
     obj.put("overall", overall);
     obj.put("producer", producer);
     obj.put("consumer", consumer);
-    return pretty.toJson(obj);
+    return new ExportResult(pretty.toJson(obj), overall.getStatus());
   }
 
 }

@@ -141,7 +141,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 - Http Endpoints
   - Port decision:
     - If no port config, `Syncer` will try ports between `[40000, 40010)`
-    - If port is configured via either command line `port` or `syncer.port` in `config.yml`
+    - If port is configured via either command line (or env) `port` or `port` in `config.yml`
     syncer will use that port
     - If port is configured both in command line and config file, command line option will override file config
   - `http://ip:port/health`: report `Syncer` status dynamically;
