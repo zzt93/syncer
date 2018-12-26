@@ -130,15 +130,8 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       return addRes;
     } else {
       return sleepInConnectionLost((sleepInSecond) -> {
-        try {
-          bulkByScrollRequest(event, ((AbstractBulkByScrollRequestBuilder) builder), 0);
-          return true;
-        } catch (NoNodeAvailableException e) {
-          String error = "Fail to connect to ES server, will retry in {}s";
-          logger.error(error, sleepInSecond, e);
-          SyncerHealth.consumer(consumerId, id, Health.red(error));
-          return null;
-        }
+        bulkByScrollRequest(event, ((AbstractBulkByScrollRequestBuilder) builder), 0);
+        return true;
       });
     }
   }
@@ -368,16 +361,15 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       ListenableActionFuture<BulkResponse> future = bulkRequest.execute();
       try {
         return future.get();
-      } catch (NoNodeAvailableException | ExecutionException e) {
-        String error = "Fail to connect to ES server, will retry in {}s";
-        logger.error(error, sleepInSecond, e);
-        SyncerHealth.consumer(consumerId, id, Health.red(error));
+      } catch (ExecutionException e) {
+        logger.error("", e);
+        SyncerHealth.consumer(consumerId, id, Health.red(e.getMessage()));
+        return null;
       } catch (InterruptedException e) {
         logger.info("Future interrupted");
         Thread.currentThread().interrupt();
         return future.actionGet();
       }
-      return null;
     });
   }
 
@@ -388,7 +380,14 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private <R> R sleepInConnectionLost(Function<Long, R> supplier) throws InterruptedException {
     long sleepInSecond = 1;
     while (true) {
-      R apply = supplier.apply(sleepInSecond);
+      R apply = null;
+      try {
+        apply = supplier.apply(sleepInSecond);
+      } catch (NoNodeAvailableException e) {
+        String error = "Fail to connect to ES server, will retry in {}s";
+        logger.error(error, sleepInSecond, e);
+        SyncerHealth.consumer(consumerId, id, Health.red(error));
+      }
       if (apply != null) {
         return apply;
       }
