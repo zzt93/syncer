@@ -40,6 +40,7 @@ public class YamlEnvironmentPostProcessor {
   private static final String PRODUCER_CONFIG = "producerConfig";
   private static final String CONFIG = "config";
   private static final String APPLICATION = "application.yml";
+  private static final String DASH = "--";
 
   public static SyncerApplication processEnvironment(String[] args) {
     HashMap<String, String> argKV = toMap(args);
@@ -84,11 +85,15 @@ public class YamlEnvironmentPostProcessor {
   private static HashMap<String, String> toMap(String[] args) {
     HashMap<String, String> argKV = new HashMap<>();
     for (String arg : args) {
-      String[] split = arg.split("=");
-      checkArgument(split.length == 2, "Invalid arg format");
-      String dash = split[0].substring(0, 2);
-      checkArgument(dash.equals("--") && split[0].length() > 2, "Invalid arg format");
-      argKV.put(split[0].substring(2), split[1]);
+      if (arg.startsWith(DASH)) {
+        String[] split = arg.split("=");
+        checkArgument(split.length == 2, "Invalid arg format: %s", arg);
+        String dash = split[0].substring(0, 2);
+        checkArgument(dash.equals(DASH) && split[0].length() > 2, "Invalid arg format: %s", arg);
+        argKV.put(split[0].substring(2), split[1]);
+      } else {
+        logger.error("Unsupported arg: {}", arg);
+      }
     }
     return argKV;
   }
@@ -123,7 +128,7 @@ public class YamlEnvironmentPostProcessor {
       String str = replaceEnv(in);
       return yaml.loadAs(str, tClass);
     } catch (IOException e) {
-      logger.error("Fail to load/parse yml file", e);
+      logger.error("Fail to load/parse {} as {}", fileName, tClass, e);
       throw new InvalidConfigException(e);
     }
   }

@@ -34,6 +34,7 @@ public class DispatchHandler extends SimpleChannelInboundHandler<HttpRequest> {
         response.headers().set(CONTENT_TYPE, "text/plain");
         response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
         ctx.write(response);
+        break;
     }
   }
 
