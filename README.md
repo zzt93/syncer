@@ -34,7 +34,7 @@ way to make consistency promise because Syncer can only provide 'at least once' 
 
 - Support listening to both MySQL & MongoDB & DRDS of Aliyun (https://www.aliyun.com/product/drds)
 - MySQL master source filter:
-  - Schema filter, support regex
+  - Schema filter (naming as `repos`), support regex
   - Table name filter
   - Interested column filter
   - automatic primary key detection and set into `id`
@@ -47,7 +47,7 @@ way to make consistency promise because Syncer can only provide 'at least once' 
   - Support specify binlog file/position to start reading (`input.masters[x].syncMeta`)
 - MongoDB master source filter:
   - Version: 3.x
-  - Database filter, support regex
+  - Database filter (naming as `repos`), support regex
   - Collection name filter
   - automatic `_id` detection and set into `id`
   - If an event match multiple schema & table, we will use the first specific match to filter/output,
@@ -77,6 +77,15 @@ to multiple `SyncData`s.
 
 Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeline Config](#consumer_config)*):
 
+- `method`: write a java method to handle `SyncData`
+  - Global variable:
+    - `logger` to do logging
+  - Already imported (**May add more in future**):
+    - `java.util.*`
+    - `org.slf4j.Logger`
+    - `com.github.zzt93.syncer.data.*`
+    - `com.github.zzt93.syncer.data.util.*`
+    - Use full class name if you need other class, like `java.util.function.Function`
 - `if`
 - `switcher`
 - `foreach`
@@ -113,14 +122,18 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 
 - Http Endpoint
 - MySQL
+  - [Version](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-versions.html): 5.5, 5.6, 5.7, 8.0
   - Bulk operation
   - Simple nested sql: `insert into select`
   - Ignore `DuplicateKeyException`, not count as failure
 - Kafka
+  - [Version](https://www.confluent.io/blog/upgrading-apache-kafka-clients-just-got-easier/): 0.10.0 or later
   - Bulk operation
   - Using `id` of data source as `key` of record, making sure the [orders between records](https://stackoverflow.com/questions/29511521/is-key-required-as-part-of-sending-messages-to-kafka)
   - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
-  
+  - **Notice**: Kafka msg consumer has to handle event idempotent;
+  - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
+
   
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
 
@@ -128,7 +141,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 - Http Endpoints
   - Port decision:
     - If no port config, `Syncer` will try ports between `[40000, 40010)`
-    - If port is configured via either command line `port` or `syncer.port` in `config.yml`
+    - If port is configured via either command line (or env) `port` or `port` in `config.yml`
     syncer will use that port
     - If port is configured both in command line and config file, command line option will override file config
   - `http://ip:port/health`: report `Syncer` status dynamically;
@@ -275,7 +288,7 @@ if I didn't listed.
   - `id`: data primary key or similar thing
   - `fields`: data content of this sync event converted from log content according to your `repo` config
   **Notice**:
-    - if your interested column config (`fields`) has name of `primary key`, fields will have it. Otherwise, it will only in `id` field;
+    - if your interested column config (`fields`) has name of `primary key`, records will have it. Otherwise, it will only in `id` field;
   - `extra`: an extra map to store extra info
 
 #### Output
@@ -349,7 +362,7 @@ and send to where
 #### In All
 More samples can be found under `src/test/resource/`
 ```yml
-version: 1.1
+version: 1.2
 
 consumerId: todomsg
 
@@ -520,6 +533,17 @@ java -server -XX:+UseG1GC -jar syncer.jar [--port=9999] [--config=/absolute/path
   - Maybe change to jackson
 
 ---
+
+## Config File Upgrade Guide
+
+### From 1.1 to 1.2
+
+- Replace in case sensitive
+  - "schemas" -> "repos"
+  - "tables" -> "entities"
+  - "rowName" -> "fields"
+  - "Record" -> "Field"
+  - "records" -> "fields"
 
 ## How to ?
 

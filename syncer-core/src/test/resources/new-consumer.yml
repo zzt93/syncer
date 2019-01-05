@@ -1,0 +1,221 @@
+version: 1.2
+
+consumerId: searcher
+
+input:
+  masters:
+  - connection:
+      address: ${HOST_ADDRESS}
+      port: 3306
+    scheduler: mod
+    repos:
+    - name: "simu_file_${ACTIVE_PROFILE}.*"
+      entities:
+      - name: file
+        fields: [name, uploader_role_id, affair_id, file_set_id]
+      - name: folder
+        fields: [name, uploader_role_id, affair_id, file_set_id]
+    - name: "simu_affair_${ACTIVE_PROFILE}.*"
+      entities:
+      - name: affair
+        fields: [parent_id, name, superid, tags, state, alliance_id]
+      - name: role
+        fields: [user_id, title, belong_affair_id, tags, alliance_id, type, owner_role_id]
+    - name: "simu_ann_${ACTIVE_PROFILE}.*"
+      entities:
+      - name: announcement
+        fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type, target_id]
+      - name: announcement_member
+        fields: [announcement_id, role_id, alliance_id]
+    - name: "simu_task_${ACTIVE_PROFILE}.*"
+      entities:
+      - name: task
+        fields: [title, modify_time, off_time, create_time, state, alliance_id, type, announcement_id, affair_id, target_id]
+      - name: task_member
+        fields: [task_id, role_id, alliance_id, state]
+      - name: task_owner_history
+        fields: [task_id, owner_role_id, alliance_id]
+
+    - name: "simu_user_${ACTIVE_PROFILE}.*"
+      entities:
+      - name: user
+        fields: [username, superid, tags, email, mobile]
+    - name: "target.*"
+      entities:
+      - name: target
+        fields: [id, name, state, affair_id, alliance_id]
+
+
+
+# input result class: com.github.zzt93.syncer.common.data.SyncData
+
+filter:
+- if:
+    condition: "containField('tags')"
+    ifBody:
+    - statement: ["updateField('tags', T(SyncUtil).fromJson(fields['tags'], T(String[])))"]
+
+- if:
+    condition: "table == 'task_owner_history'"
+    ifBody:
+    - statement: ["table = 'task_member'", "renameField('owner_role_id', 'role_id')"]
+
+- statement: ["#docType=table"]
+
+
+- switcher:
+    switch: "table"
+    case: # support default
+      "affair":
+        - statement: ["#suffix = '-' + fields['alliance_id']/500", "#name=fields['name']", "renameField('parent_id', 'parentId').renameField('superid', 'superId')" ]
+        - if:
+            condition: "containField('name') && isUpdate() && id != null"
+            ifBody:
+            - create:
+                copy: ["id", "fields['alliance_id']", "#name"]
+                postCreation:
+                - ["table = 'role'", "#suffix = '-' + fields['alliance_id']/1000", "#docType='role'", "addField('affairName', #name)","syncByQuery().filter('affairId', id)", "id=null"]
+                - ["table = 'task'", "#suffix = '-' + fields['alliance_id']/1000000", "#docType='task'", "addField('fromName', #name).addField('type', 1)","syncByQuery().filter('affairId', id)", "id=null"]
+
+      "file":
+        - statement: ["#suffix = '-' + fields['affair_id']/500", "#docType='plain'",
+               "renameField('uploader_role_id', 'uploaderRoleId').renameField('affair_id', 'affairId').renameField('file_set_id', 'fileSetId')"]
+      "folder":
+        - statement: ["table='file'", "#suffix = '-' + fields['affair_id']/500", "#docType='folder'",
+                 "renameField('uploader_role_id', 'uploaderRoleId').renameField('affair_id', 'affairId').renameField('file_set_id', 'fileSetId')"]
+      "user":
+        - statement: ["#suffix='' ", "renameField('superid', 'superId')"]
+      "role":
+        - statement: ["#suffix = '-' + fields['alliance_id']/1000", "#title=fields['title']",
+               "renameField('belong_affair_id', 'affairId').renameField('owner_role_id', 'ownerRoleId').renameField('user_id', 'userId')"]
+        - if:
+            condition: "isWrite()"
+            ifBody:
+            - statement: ["extraQuery('affair' + '-' + fields['alliance_id']/500, 'affair').filter('_id', fields['affairId']).select('name').addField('affairName')"]
+            - if:
+                condition: "fields['ownerRoleId'] != 0"
+                ifBody:
+                - statement: ["extraQuery('role-*', 'role').filter('_id', fields['ownerRoleId']).select('title').addField('ownerRoleTitle')",]
+        - if:
+            condition: "containField('title') && isUpdate() && id != null"
+            ifBody:
+            - create:
+                copy: ["id", "table", "#suffix", "#title", "#docType"]
+                postCreation: ["addField('ownerRoleTitle', #title)", "syncByQuery().filter('ownerRoleId', id)", "id = null"]
+
+      "material":
+        - statement: ["#suffix = '-' + fields['alliance_id']/100", "renameField('affair_id', 'affairId').renameField('warehouse_id', 'warehouseId')"]
+
+      "announcement":
+        - if:
+            condition: "isWrite()"
+            ifBody:
+            - statement: ["addField('roles', new ArrayList())"]
+        - statement: ["#suffix = '-' + fields['alliance_id']/100",
+                       "renameField('affair_id','affairId').renameField('modify_time','modifyTime').renameField('thumb_content', 'thumbContent')
+        .renameField('plate_type', 'plateType').renameField('plate_sub_type', 'plateSubType').renameField('target_id', 'targetId')",
+                       "updateField('content', T(SyncUtil).fromJson(new String(fields['content']),T(Map))['blocks'].![text])",
+                       "updateField('thumbContent', new String(fields['thumbContent']))"]
+        - if:
+            condition: "isUpdate() && containField('title')"
+            ifBody:
+            - create:
+                copy: ["id", "fields['alliance_id']", "fields['title']"]
+                postCreation: ["table = 'task'", "#suffix = '-' + fields['alliance_id']/1000000", "#docType='task'", "renameField('title', 'fromName').addField('type', 0)","syncByQuery().filter('annId', id)", "id=null"]
+
+
+      "announcement_member":
+        - statement: ["table = 'announcement'", "#docType='announcement'", "#suffix = '-' + fields['alliance_id']/100",
+                              "id = fields['announcement_id']", "syncByQuery().updateList('roles', fields['role_id'])",
+                              "removeFields('announcement_id', 'role_id', 'alliance_id')"]
+      "task":
+        - statement: ["#suffix = '-' + fields['alliance_id']/1000000",
+               "renameField('modify_time', 'modifyTime').renameField('off_time', 'offTime').renameField('create_time', 'createTime').renameField('announcement_id', 'annId').renameField('affair_id', 'affairId').renameField('target_id', 'targetId')"]
+        - if:
+            condition: "isWrite()"
+            ifBody:
+            - statement: ["addField('roles', new ArrayList())"]
+            - switcher:
+                switch: "type"
+                case:
+                  "0":
+                    - statement: ["extraQuery('announcement' + '-' + fields['alliance_id']/100, 'announcement').filter('_id', fields['annId']).select('title').addField('fromName')"]
+                  "1":
+                    - statement: ["extraQuery('affair' + '-' + fields['alliance_id']/500, 'affair').filter('_id', fields['affairId']).select('name').addField('fromName')"]
+                  "2":
+                    - statement: ["extraQuery('target' + '-' + fields['alliance_id']/1000000, 'target').filter('_id', fields['targetId']).select('name').addField('fromName')"]
+
+      "task_member":
+        - if:
+            condition: "isWrite() && fields[state] != 0"
+            ifBody:
+            - drop: {}
+        - if:
+            condition: "isUpdate()"
+            ifBody:
+            - if:
+                condition: "fields[state] != 0"
+                ifBody:
+                  - statement: ["toDelete()"]
+                elseBody:
+                  - statement: ["toWrite()"]
+
+        - statement: ["table = 'task'", "#docType='task'", "#suffix = '-' + fields['alliance_id']/1000000",
+                      "id = fields['task_id']", "syncByQuery().updateList('roles', fields['role_id'] < T(Integer).MAX_VALUE ? fields['role_id'].intValue() : fields['role_id'])",
+                      "removeFields('task_id', 'role_id', 'alliance_id', 'state')",]
+
+      "target":
+        - statement: ["#suffix = '-' + fields['affair_id']/1000000", "renameField('affair_id', 'affairId')"]
+        - if:
+            condition: "isUpdate() && containField('name')"
+            ifBody:
+            - create:
+                copy: ["id", "fields['alliance_id']", "fields['name']"]
+                postCreation: ["table = 'task'", "#suffix = '-' + fields['alliance_id']/1000000", "#docType='task'", "renameField('name', 'fromName').addField('type', 2)","syncByQuery().filter('targetId', id)", "id=null"]
+
+
+- statement: ["renameField('alliance_id', 'allianceId')"]
+
+
+# filter result class: com.github.zzt93.syncer.common.data.SyncData
+
+#  schema: xxx
+#  table: xxx
+#  id: xid
+#  fields: {
+#    id: xid
+#    ...
+#
+#  extra: {
+#    ...
+#  }
+#}
+
+# Special expression
+# "fields.*"
+# "fields.*.flatten"
+# "extra.*"
+# "extra.*.flatten"
+
+output:
+  elasticsearch:
+    connection:
+      clusterName: test-${ACTIVE_PROFILE}
+      clusterNodes: ["${HOST_ADDRESS}:9302"]
+    requestMapping: # mapping from input data to es request
+      enableExtraQuery: true
+      retryOnUpdateConflict: 3
+      index: "table + #suffix" # default: schema
+      type: "#docType" # default: table
+      documentId: "id" # default: id
+      fieldsMapping: # default: fields.*.flatten
+        "fields": "fields.*.flatten"
+    batch:
+      size: 100
+      delay: 1000
+      maxRetry: 5
+    refreshInMillis: 1000
+
+
+
+

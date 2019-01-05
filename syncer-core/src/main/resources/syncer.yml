@@ -1,0 +1,18 @@
+ack:
+  flushPeriod: 100
+
+input:
+  input-meta:
+    last-run-metadata-dir: /data/syncer/input/last_position/
+
+filter:
+  worker: 6
+  filter-meta:
+    src: /data/syncer/filter/src
+
+output:
+  worker: 2
+  batch:
+    worker: 2
+  output-meta:
+    failure-log-dir: /data/syncer/output/failure/

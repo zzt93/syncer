@@ -1,0 +1,22 @@
+version: 1.2
+
+syncer.producer.input:
+  masters:
+
+  - connection:
+      address: ${HOST_ADDRESS}
+      port: 3306
+      user: xxx
+      password: yyy
+
+  - connection:
+      address: ${HOST_ADDRESS}
+      port: 27018
+    type: mongo
+
+  - connection:
+      address: ${HOST_ADDRESS}
+      port: 27017
+    type: mongo
+
+

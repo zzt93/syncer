@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<configuration>
+
+  <property name="application" value="syncer"/>
+
+  <jmxConfigurator />
+
+  <appender name="console" class="ch.qos.logback.core.ConsoleAppender">
+    <Target>System.out</Target>
+    <encoder>
+      <pattern>%d %5p [%X{eid}] [${application}@${ACTIVE_PROFILE}@${HOST_ADDRESS}] --- [%t] %-40.40c{39} : %m%n%ex</pattern>
+    </encoder>
+    <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+      <level>WARN</level>
+    </filter>
+  </appender>
+
+  <appender name="file" class="ch.qos.logback.core.rolling.RollingFileAppender">
+    <File>log/${application}@${ACTIVE_PROFILE}.log</File>
+    <Append>true</Append>
+    <encoder>
+      <pattern>%d %5p [%X{eid}] [${application}@${ACTIVE_PROFILE}@${HOST_ADDRESS}] --- [%t] %-40.40c{39} : %m%n%ex</pattern>
+    </encoder>
+    <rollingPolicy class="ch.qos.logback.core.rolling.TimeBasedRollingPolicy">
+      <fileNamePattern>log/${application}@${ACTIVE_PROFILE}.%d{yyyy-MM-dd}.log</fileNamePattern>
+      <maxHistory>30</maxHistory>
+      <totalSizeCap>6GB</totalSizeCap>
+    </rollingPolicy>
+  </appender>
+
+  <root level="info">
+    <appender-ref ref="file"/>
+    <appender-ref ref="console"/>
+  </root>
+
+
+</configuration>
