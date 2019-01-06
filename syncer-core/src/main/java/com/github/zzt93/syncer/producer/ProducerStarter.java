@@ -111,6 +111,7 @@ public class ProducerStarter implements Starter {
     service.shutdownNow();
     while (!service.awaitTermination(ShutDownCenter.SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
       logger.warn("[Shutting down] producer");
+      service.shutdownNow();
     }
   }
 
