@@ -461,11 +461,11 @@ syncer:
 ### Run
 ```
 git clone https://github.com/zzt93/syncer
-mvn package
+cd syncer/ && mvn package
 # /path/to/config/: producer.yml, consumer.yml, password-file
 # use `-XX:+UseParallelOldGC` if you have less memory and lower input pressure
 # use `-XX:+UseG1GC` if you have at least 4g memory and event input rate larger than 2*10^4/s
-java -server -XX:+UseG1GC -jar syncer.jar [--port=9999] [--config=/absolute/path/to/syncerConfig.yml] --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
+java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar [--port=40000] [--config=/absolute/path/to/syncerConfig.yml] --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
 ```
 
 ## Test
