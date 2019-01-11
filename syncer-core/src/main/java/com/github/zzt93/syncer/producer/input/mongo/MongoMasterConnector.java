@@ -150,7 +150,7 @@ public class MongoMasterConnector implements MasterConnector {
       cursor.close();
       client.close();
     } catch (Throwable e){
-      logger.error("", e);
+      logger.error("[Shutting down] failed", e);
       return;
     }
     MasterConnector.super.close();
