@@ -101,7 +101,7 @@ public class MongoDispatcher implements Dispatcher {
       default:
         return null;
     }
-    Preconditions.checkState(row.containsKey("_id"));
+    Preconditions.checkState(row.containsKey(ID));
     return new SyncData(eventId, 0, namespace[0], namespace[1], ID, row.get(ID), row, type);
   }
 }
