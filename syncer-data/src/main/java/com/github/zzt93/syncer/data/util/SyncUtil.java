@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.data.util;
 
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,6 +31,18 @@ public class SyncUtil {
       return gson.fromJson(json, clazz);
     } catch (JsonSyntaxException e) {
       logger.error("Fail to parse json string {} to {}", json, clazz);
+      return null;
+    }
+  }
+
+  public static <T> T fromJson(String json, TypeToken<T> token) {
+    if (json == null) {
+      return null;
+    }
+    try {
+      return gson.fromJson(json, token.getType());
+    } catch (JsonSyntaxException e) {
+      logger.error("Fail to parse json string {} to {}", json, token.getType());
       return null;
     }
   }

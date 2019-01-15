@@ -84,7 +84,7 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
         res.put(key, ((Expression) value).getValue(src.getContext()));
       } else if (value instanceof Map) {
         Map map = (Map) value;
-        mapObj(src, res, key, map, true);
+        mapObj(src, res, key, map, interpretSpecialString);
       } else if (value instanceof String && interpretSpecialString) {
         String expr = (String) value;
         switch (expr) {

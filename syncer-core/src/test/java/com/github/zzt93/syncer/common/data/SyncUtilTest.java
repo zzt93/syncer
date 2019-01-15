@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.common.data;
 
 import com.github.zzt93.syncer.data.util.SyncUtil;
+import com.google.gson.reflect.TypeToken;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -36,4 +37,12 @@ public class SyncUtilTest {
     String text = (String) map.get("text");
     Assert.assertEquals(text, "Test");
   }
+
+  @Test
+  public void testWithToken() {
+    Map<String, String> map = SyncUtil.fromJson("{ \"_id\" : \"EuFB$vwXpMPb\", \"_key\" : \"L76y$\", \"tp\" : 3, \"sub\" : 0, \"name\" : \"测试-熊大飞\", \"time\" : 1547535531778, \"fromUserId\" : NumberLong(260404), \"index\" : 95, \"content\" : \"{\\\"code\\\":2500,\\\"data\\\":\\\"Duplicate key cn.superid.live.form.StartLiveForm$StreamLayout@44f3346f\\\"}\", \"groupId\" : NumberLong(12143021), \"fromRoleId\" : NumberLong(13000005), \"apns\" : \"[]\", \"state\" : 0, \"options\" : \"{\\\"announcementId\\\":13150624}\" }", new TypeToken<Map<String, String>>() {
+    });
+    Assert.assertTrue(map.containsKey("content"));
+  }
+
 }
