@@ -37,7 +37,6 @@ public class FilterConfig {
 
   public void setCreate(CreateConfig create) {
     this.create = create;
-    type = FilterType.CREATE;
   }
 
   public Switcher getSwitcher() {
@@ -46,7 +45,6 @@ public class FilterConfig {
 
   public void setSwitcher(Switcher switcher) {
     this.switcher = switcher;
-    type = FilterType.SWITCH;
   }
 
   public List<String> getStatement() {
@@ -55,10 +53,32 @@ public class FilterConfig {
 
   public void setStatement(List<String> statement) {
     this.statement = statement;
-    type = FilterType.STATEMENT;
   }
 
   public FilterType getType() {
+    if (type == null) {
+      if (create != null) {
+        type = FilterType.CREATE;
+      }
+      if (switcher != null) {
+        type = FilterType.SWITCH;
+      }
+      if (statement != null) {
+        type = FilterType.STATEMENT;
+      }
+      if (foreach != null) {
+        type = FilterType.FOREACH;
+      }
+      if (If != null) {
+        type = FilterType.IF;
+      }
+      if (drop != null) {
+        type = FilterType.DROP;
+      }
+      if (method != null) {
+        type = FilterType.METHOD;
+      }
+    }
     return type;
   }
 
@@ -72,7 +92,6 @@ public class FilterConfig {
 
   public void setForeach(ForeachConfig foreach) {
     this.foreach = foreach;
-    type = FilterType.FOREACH;
   }
 
   public IfConfig getIf() {
@@ -81,7 +100,6 @@ public class FilterConfig {
 
   public void setIf(IfConfig anIf) {
     this.If = anIf;
-    type = FilterType.IF;
   }
 
   public Map getDrop() {
@@ -90,7 +108,6 @@ public class FilterConfig {
 
   public void setDrop(Map drop) {
     this.drop = drop;
-    type = FilterType.DROP;
   }
 
   public String getMethod() {
@@ -99,7 +116,6 @@ public class FilterConfig {
 
   public void setMethod(String method) {
     this.method = method;
-    type = FilterType.METHOD;
   }
 
   public SyncFilter toFilter(SpelExpressionParser parser) {
