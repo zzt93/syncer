@@ -18,10 +18,19 @@ public class Http implements OutputChannelConfig {
 
   private HttpConnection connection;
   private LinkedHashMap<String, Object> jsonMapping = new LinkedHashMap<>();
+  private String path;
 
   public Http() {
     // default value of json mapper
     jsonMapping.put(KVMapper.FAKE_KEY, KVMapper.ROW_FLATTEN);
+  }
+
+  public String getPath() {
+    return path;
+  }
+
+  public void setPath(String path) {
+    this.path = path;
   }
 
   public HttpConnection getConnection() {
@@ -55,7 +64,7 @@ public class Http implements OutputChannelConfig {
       SyncerOutputMeta outputMeta) {
     this.consumerId = consumerId;
     if (connection.valid()) {
-      return new HttpChannel(connection, Collections.unmodifiableMap(getJsonMapping()), ack);
+      return new HttpChannel(this, Collections.unmodifiableMap(getJsonMapping()), ack);
     }
     throw new IllegalArgumentException();
   }

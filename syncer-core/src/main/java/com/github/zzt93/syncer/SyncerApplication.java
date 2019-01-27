@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.config.consumer.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.consumer.ConsumerStarter;
 import com.github.zzt93.syncer.health.SyncerHealth;
-import com.github.zzt93.syncer.health.export.NettyServer;
+import com.github.zzt93.syncer.health.export.ExportServer;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import org.slf4j.Logger;
@@ -61,7 +61,7 @@ public class SyncerApplication {
     Runtime.getRuntime().addShutdownHook(new WaitingAckHook(starters));
 
     SyncerHealth.init(starters);
-    NettyServer.init(args);
+    ExportServer.init(args);
   }
 
   private boolean validPipeline(ConsumerConfig consumerConfig) {

@@ -87,7 +87,7 @@ public class Connection implements Comparable<Connection> {
     if (this == o) {
       return true;
     }
-    if (o == null || !(o instanceof Connection)) {
+    if (!(o instanceof Connection)) {
       return false;
     }
 

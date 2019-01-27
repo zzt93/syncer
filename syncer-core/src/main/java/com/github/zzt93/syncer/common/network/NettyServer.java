@@ -1,11 +1,13 @@
-package com.github.zzt93.syncer.health.export;
+package com.github.zzt93.syncer.common.network;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.channel.*;
+import io.netty.channel.ChannelFuture;
+import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelOption;
+import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.codec.http.HttpServerCodec;
 import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 
@@ -14,10 +16,7 @@ import io.netty.handler.logging.LoggingHandler;
  */
 public class NettyServer {
 
-
-  private static final int PORT = Integer.parseInt(System.getProperty("port", "40000"));
-
-  public static void init(String[] args) throws Exception {
+  public static void startAndSync(ChannelInitializer<SocketChannel> initializer, int port) throws InterruptedException {
     EventLoopGroup bossGroup = new NioEventLoopGroup(1);
     EventLoopGroup workerGroup = new NioEventLoopGroup();
     try {
@@ -26,17 +25,9 @@ public class NettyServer {
           .channel(NioServerSocketChannel.class)
           .option(ChannelOption.SO_BACKLOG, 100)
           .handler(new LoggingHandler(LogLevel.INFO))
-          .childHandler(new ChannelInitializer<SocketChannel>() {
-            @Override
-            protected void initChannel(SocketChannel ch) throws Exception {
-              ChannelPipeline p = ch.pipeline();
-              p.addLast(new LoggingHandler(LogLevel.INFO));
-              p.addLast(new HttpServerCodec());
-              p.addLast(new DispatchHandler());
-            }
-          });
-      // start server
-      ChannelFuture f = b.bind(PORT).sync();
+          .childHandler(initializer);
+
+      ChannelFuture f = b.bind(port).sync();
       // wait until the server socket is closed
       f.channel().closeFuture().sync();
     } finally {
