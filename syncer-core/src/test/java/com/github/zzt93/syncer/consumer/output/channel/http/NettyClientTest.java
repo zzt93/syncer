@@ -2,16 +2,13 @@ package com.github.zzt93.syncer.consumer.output.channel.http;
 
 import com.github.zzt93.syncer.common.network.NettyServer;
 import com.github.zzt93.syncer.config.common.HttpConnection;
-import com.github.zzt93.syncer.health.Health;
-import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.health.export.DispatchHandler;
-import com.github.zzt93.syncer.health.export.ExportResult;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import io.netty.handler.codec.http.*;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -21,7 +18,6 @@ import java.util.function.BiConsumer;
 
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static org.jboss.netty.handler.codec.rtsp.RtspHeaders.Names.CONTENT_LENGTH;
 
 /**
  * @author zzt
@@ -29,31 +25,15 @@ import static org.jboss.netty.handler.codec.rtsp.RtspHeaders.Names.CONTENT_LENGT
 public class NettyClientTest {
 
   private static final int PORT = 50000;
+  private static final String TEST_NETTY_CLIENT = "/test/netty/client";
   private NettyHttpClient nettyClient;
+  private Thread thread;
 
   @Before
   public void setUp() throws Exception {
-    HttpConnection connection = new HttpConnection();
-    connection.setAddress("localhost");
-    connection.setPort(PORT);
-    connection.setPath("/test/netty/client");
-    nettyClient = new NettyHttpClient(connection, new HttpClientInitializer());
-
-    new Thread(()->{
+    thread = new Thread(() -> {
       Map<String, BiConsumer<ChannelHandlerContext, HttpRequest>> mapping = new HashMap<>();
-      mapping.put("/health", (channelHandlerContext, request) -> {
-        ExportResult result = SyncerHealth.export();
-        String json = result.getJson();
-        Health.HealthStatus overall = result.getOverall();
-
-        FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1,
-            overall == Health.HealthStatus.GREEN ? HttpResponseStatus.OK : HttpResponseStatus.INTERNAL_SERVER_ERROR,
-            Unpooled.wrappedBuffer(json.getBytes()));
-        response.headers().set(CONTENT_TYPE, "text/plain");
-        response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
-        channelHandlerContext.write(response);
-      });
-      mapping.put("/test/netty/client", (channelHandlerContext, request) -> {
+      mapping.put(TEST_NETTY_CLIENT, (channelHandlerContext, request) -> {
         HttpResponseStatus status;
         if (request.method() == HttpMethod.POST) {
           status = HttpResponseStatus.INTERNAL_SERVER_ERROR;
@@ -80,13 +60,25 @@ public class NettyClientTest {
       } catch (InterruptedException e) {
         e.printStackTrace();
       }
-    }).start();
+    });
+    thread.start();
+
+    Thread.sleep(2000);
+
+    HttpConnection connection = new HttpConnection();
+    connection.setAddress("localhost");
+    connection.setPort(PORT);
+    connection.setPath(TEST_NETTY_CLIENT);
+    nettyClient = new NettyHttpClient(connection, new HttpClientInitializer());
   }
 
   @Test
   public void write() throws InterruptedException {
-    boolean post = nettyClient.write(HttpMethod.POST, "", "{}");
-    boolean put = nettyClient.write(HttpMethod.PUT, "", "{}");
-    boolean delete = nettyClient.write(HttpMethod.DELETE, "", "{}");
+    boolean post = nettyClient.write(HttpMethod.POST, TEST_NETTY_CLIENT, "{'a':1}");
+    boolean put = nettyClient.write(HttpMethod.PUT, TEST_NETTY_CLIENT, "{'b':'c'}");
+    boolean delete = nettyClient.write(HttpMethod.DELETE, TEST_NETTY_CLIENT, "{'d':4}");
+    Assert.assertTrue(post);
+    Assert.assertTrue(put);
+    Assert.assertTrue(delete);
   }
 }
