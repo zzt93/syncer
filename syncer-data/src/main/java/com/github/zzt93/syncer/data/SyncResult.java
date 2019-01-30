@@ -73,14 +73,14 @@ public class SyncResult {
 
   @Override
   public String toString() {
-    return "SyncData{" +
+    return "SyncResult{" +
         "fields=" + fields +
         ", extra=" + extra +
+        ", eventType=" + eventType +
         ", repo='" + repo + '\'' +
         ", entity='" + entity + '\'' +
         ", id=" + id +
         ", primaryKeyName='" + primaryKeyName + '\'' +
         '}';
   }
-
 }
