@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config;
 
 import com.github.zzt93.syncer.SyncerApplication;
+import com.github.zzt93.syncer.common.util.ArgUtil;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.RegexUtil;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
@@ -28,8 +29,6 @@ import java.util.*;
 import java.util.Map.Entry;
 import java.util.regex.Matcher;
 
-import static com.google.common.base.Preconditions.checkArgument;
-
 /**
  * @author zzt
  */
@@ -40,10 +39,9 @@ public class YamlEnvironmentPostProcessor {
   private static final String PRODUCER_CONFIG = "producerConfig";
   private static final String CONFIG = "config";
   private static final String APPLICATION = "application.yml";
-  private static final String DASH = "--";
 
   public static SyncerApplication processEnvironment(String[] args) {
-    HashMap<String, String> argKV = toMap(args);
+    HashMap<String, String> argKV = ArgUtil.toMap(args);
 
     String configFile = argKV.get(CONFIG);
     if (configFile == null) {
@@ -80,22 +78,6 @@ public class YamlEnvironmentPostProcessor {
     Yaml yaml = new Yaml();
     Map map = yaml.loadAs(str, Map.class);
     return map.get("syncer.version").toString();
-  }
-
-  private static HashMap<String, String> toMap(String[] args) {
-    HashMap<String, String> argKV = new HashMap<>();
-    for (String arg : args) {
-      if (arg.startsWith(DASH)) {
-        String[] split = arg.split("=");
-        checkArgument(split.length == 2, "Invalid arg format: %s", arg);
-        String dash = split[0].substring(0, 2);
-        checkArgument(dash.equals(DASH) && split[0].length() > 2, "Invalid arg format: %s", arg);
-        argKV.put(split[0].substring(2), split[1]);
-      } else {
-        logger.error("Unsupported arg: {}", arg);
-      }
-    }
-    return argKV;
   }
 
   private static Set<String> getFilePaths(String pipelineNames) {

@@ -2,20 +2,22 @@ package com.github.zzt93.syncer.consumer.output.channel.http;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.HttpConnection;
+import com.github.zzt93.syncer.config.consumer.output.http.Http;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
+import com.google.gson.Gson;
+import io.netty.handler.codec.http.HttpMethod;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.HttpStatus;
-import org.springframework.web.client.RestTemplate;
+import org.springframework.expression.Expression;
+import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.springframework.http.HttpMethod.*;
+import static io.netty.handler.codec.http.HttpMethod.*;
+
 
 /**
  * Should be thread safe
@@ -24,18 +26,25 @@ import static org.springframework.http.HttpMethod.*;
  */
 public class HttpChannel implements OutputChannel {
 
+  private static final Gson gson = new Gson();
+  private static final int MAX_TRY = 5;
   private final Logger logger = LoggerFactory.getLogger(HttpChannel.class);
-  private final RestTemplate restTemplate;
   private final String connection;
   private final KVMapper mapper;
   private final Ack ack;
   private final String id;
+  private final NettyHttpClient httpClient;
+  private Expression pathExpr;
 
-  public HttpChannel(HttpConnection connection, Map<String, Object> jsonMapper,
-      Ack ack) {
+  public HttpChannel(Http http, Map<String, Object> jsonMapper, Ack ack) {
+    HttpConnection connection = http.getConnection();
+    if (http.getPath() != null) {
+      SpelExpressionParser parser = new SpelExpressionParser();
+      pathExpr = parser.parseExpression(http.getPath());
+    }
     this.ack = ack;
-    this.restTemplate = new RestTemplate();
     this.connection = connection.toConnectionUrl(null);
+    httpClient = new NettyHttpClient(connection, new HttpClientInitializer());
     id = connection.connectionIdentifier();
     this.mapper = new KVMapper(jsonMapper);
   }
@@ -47,27 +56,43 @@ public class HttpChannel implements OutputChannel {
    * @param event the data from filter module
    */
   @Override
-  public boolean output(SyncData event) {
+  public boolean output(SyncData event) throws InterruptedException {
     // TODO 17/9/22 add batch worker
-    // TODO 18/6/6 add ack
-    HashMap<String, Object> res = mapper.map(event);
-    logger.debug("Mapping table row {} to {}", event.getFields(), res);
-    switch (event.getType()) {
-      case UPDATE:
-        return execute(res, POST).is2xxSuccessful();
-      case DELETE:
-        return execute(res, DELETE).is2xxSuccessful();
-      case WRITE:
-        return execute(res, PUT).is2xxSuccessful();
-      default:
-        return false;
+    HashMap<String, Object> map = mapper.map(event);
+    String path = pathExpr.getValue(event.getContext(), String.class);
+
+    boolean res = false;
+    int count = 0;
+    while (!res && count < MAX_TRY) {
+      switch (event.getType()) {
+        case UPDATE:
+          res = execute(POST, path, map);
+          break;
+        case DELETE:
+          res = execute(DELETE, path, map);
+          break;
+        case WRITE:
+          res = execute(PUT, path, map);
+          break;
+        default:
+          logger.error("Unsupported event type: {}", event);
+          return false;
+      }
+      if (res) {
+        ack.remove(event.getSourceIdentifier(), event.getDataId());
+      } else {
+        count++;
+        if (count == MAX_TRY) {
+          logger.error("Fail to send {}", event);
+        }
+      }
     }
+    return false;
   }
 
 
-  private HttpStatus execute(HashMap<String, Object> res, HttpMethod method) {
-    return restTemplate.exchange(connection, method, new HttpEntity<Map>(res), Object.class)
-        .getStatusCode();
+  private boolean execute(HttpMethod method, String path, HashMap<String, Object> content) throws InterruptedException {
+    return httpClient.write(method, path, gson.toJson(content));
   }
 
   @Override
@@ -79,7 +104,7 @@ public class HttpChannel implements OutputChannel {
 
   @Override
   public void close() {
-
+    httpClient.close();
   }
 
   @Override

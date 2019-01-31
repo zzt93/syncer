@@ -120,7 +120,9 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
     - Self referential relationship handle
   - Add `upsert` support, fix `DocumentMissingException` use `upsert`
 
-- Http Endpoint
+- Http Endpoint (Deprecated)
+  - Invoke `restful` interface according to event type: insert=`PUT`, update=`POST`, delete=`DELETE` 
+  - Will connect to a remote repeatedly, may change to websocket or rpc 
 - MySQL
   - [Version](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-versions.html): 5.5, 5.6, 5.7, 8.0
   - Bulk operation
@@ -130,6 +132,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - [Version](https://www.confluent.io/blog/upgrading-apache-kafka-clients-just-got-easier/): 0.10.0 or later
   - Bulk operation
   - Using `id` of data source as `key` of record, making sure the [orders between records](https://stackoverflow.com/questions/29511521/is-key-required-as-part-of-sending-messages-to-kafka)
+  - Using `SyncResult` as msg `data`
   - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
   - **Notice**: Kafka msg consumer has to handle event idempotent;
   - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
@@ -141,9 +144,12 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 - Http Endpoints
   - Port decision:
     - If no port config, `Syncer` will try ports between `[40000, 40010)`
-    - If port is configured via either command line (or env) `port` or `port` in `config.yml`
+    - If port is configured via either command line or env var `port` or `port` in `config.yml`
     syncer will use that port
-    - If port is configured both in command line and config file, command line option will override file config
+    - If port is configured in multiple locations: command line, env var and config file, the precedence will be
+      - command line option
+      - env var
+      - file config
   - `http://ip:port/health`: report `Syncer` status dynamically;
 
 - JMX Endpoints

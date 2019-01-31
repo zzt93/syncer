@@ -21,9 +21,9 @@ public class SyncUtilTest {
     Assert.assertEquals(ss.length, 5);
     Object map = SyncUtil.fromJson("{a:1, b:\"asd\"}", Map.class);
     Map m = (Map) map;
-    Assert.assertEquals(m.size(),2);
-    Assert.assertEquals(m.get("a"),1.0);
-    Assert.assertEquals(m.get("b"),"asd");
+    Assert.assertEquals(m.size(), 2);
+    Assert.assertEquals(m.get("a"), 1.0);
+    Assert.assertEquals(m.get("b"), "asd");
   }
 
   @Test
@@ -40,9 +40,14 @@ public class SyncUtilTest {
 
   @Test
   public void testWithToken() {
-    Map<String, String> map = SyncUtil.fromJson("{ \"_id\" : \"EuFB$vwXpMPb\", \"_key\" : \"L76y$\", \"tp\" : 3, \"sub\" : 0, \"name\" : \"测试-熊大飞\", \"time\" : 1547535531778, \"fromUserId\" : NumberLong(260404), \"index\" : 95, \"content\" : \"{\\\"code\\\":2500,\\\"data\\\":\\\"Duplicate key cn.superid.live.form.StartLiveForm$StreamLayout@44f3346f\\\"}\", \"groupId\" : NumberLong(12143021), \"fromRoleId\" : NumberLong(13000005), \"apns\" : \"[]\", \"state\" : 0, \"options\" : \"{\\\"announcementId\\\":13150624}\" }", new TypeToken<Map<String, String>>() {
-    });
+    TypeToken<Map<String, String>> token = new TypeToken<Map<String, String>>() {
+    };
+    Map<String, String> map = SyncUtil.fromJson("{ \"_id\" : \"EuFB$vwXpMPb\", \"_key\" : \"L76y$\", \"tp\" : 3, \"sub\" : 0, \"name\" : \"测试-熊大飞\", \"time\" : 1547535531778, \"fromUserId\" : NumberLong(260404), \"index\" : 95, \"content\" : \"{\\\"code\\\":2500,\\\"data\\\":\\\"Duplicate key cn.superid.live.form.StartLiveForm$StreamLayout@44f3346f\\\"}\", \"groupId\" : NumberLong(12143021), \"fromRoleId\" : NumberLong(13000005), \"apns\" : \"[]\", \"state\" : 0, \"options\" : \"{\\\"announcementId\\\":13150624}\" }", token);
     Assert.assertTrue(map.containsKey("content"));
+    Map<String, String> map1 = SyncUtil.fromJson("{\"a\":{}}", token);
+    Assert.assertNull(map1);
+    Map<String, String> map2 = SyncUtil.fromJson("{\"a\":[]}", token);
+    Assert.assertNull(map2);
   }
 
 }
