@@ -555,3 +555,8 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 
 If you have any problems with how to use `Syncer` or bugs of it, write a issue.
 I will handle it as soon as I can.
+
+## FAQ
+
+- Q: "Got error produce response in correlation id xxx on topic-partition xxx.xxPartition-0, splitting and retrying (5 attempts left). Error: MESSAGE_TOO_LARGE"?
+  - A: Adjust message `batch.size` to smaller number or config `kafka` to receive large message
