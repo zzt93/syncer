@@ -12,9 +12,9 @@ import java.util.Map;
 public class Switcher {
 
   public static final String DEFAULT = "default";
-  @SerializedName(value = "switch")
+  @SerializedName(value = "switch", alternate = {"Switch"})
   private String Switch;
-  @SerializedName(value = "case")
+  @SerializedName(value = "case", alternate = {"Case"})
   private Map<String, List<Map>> Case = new HashMap<>();
 
   public String getSwitch() {
