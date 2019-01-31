@@ -20,16 +20,17 @@ public class NettyHttpClient extends NettyClient {
   }
 
   public boolean write(HttpMethod method, String path, String body) throws InterruptedException {
-    // TODO 2019/1/26 lone-lived
-    ByteBuf byteBuf = Unpooled.wrappedBuffer(body.getBytes(StandardCharsets.UTF_8));
+    // TODO 2019/1/26 long-lived
+    ByteBuf byteBuf = Unpooled.copiedBuffer(body.getBytes(StandardCharsets.UTF_8));
     DefaultFullHttpRequest request = new DefaultFullHttpRequest(HttpVersion.HTTP_1_1, method, path, byteBuf);
     request.headers().set(HttpHeaderNames.HOST, connection.getAddress());
+    request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, "*/*");
     request.headers().set(HttpHeaderNames.CONNECTION, HttpHeaderValues.KEEP_ALIVE);
-    request.headers().set(HttpHeaderNames.ACCEPT_ENCODING, HttpHeaderValues.GZIP);
     request.headers().add(HttpHeaderNames.CONTENT_TYPE, HttpHeaderValues.APPLICATION_JSON);
     request.headers().set(HttpHeaderNames.CONTENT_LENGTH, byteBuf.readableBytes());
 
     ch.writeAndFlush(request).sync();
+    // TODO 2019/1/31 return value
     return true;
   }
 

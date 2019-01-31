@@ -17,9 +17,10 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiConsumer;
 
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_LENGTH;
+import static io.netty.handler.codec.http.HttpHeaderNames.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpHeaderValues.TEXT_PLAIN;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
-import static org.jboss.netty.handler.codec.rtsp.RtspHeaders.Names.CONTENT_LENGTH;
 
 /**
  * @author zzt
@@ -39,7 +40,7 @@ public class ExportServer {
       FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1,
           overall == Health.HealthStatus.GREEN ? HttpResponseStatus.OK : HttpResponseStatus.INTERNAL_SERVER_ERROR,
           Unpooled.wrappedBuffer(json.getBytes()));
-      response.headers().set(CONTENT_TYPE, "text/plain");
+      response.headers().set(CONTENT_TYPE, TEXT_PLAIN);
       response.headers().set(CONTENT_LENGTH, response.content().readableBytes());
       channelHandlerContext.write(response);
     });
@@ -50,6 +51,8 @@ public class ExportServer {
         ChannelPipeline p = ch.pipeline();
         p.addLast(new LoggingHandler(LogLevel.INFO));
         p.addLast(new HttpServerCodec());
+        // add body support if we need in future
+        // p.addLast(new HttpObjectAggregator(Short.MAX_VALUE));
         // add dispatch handler
         p.addLast(new DispatchHandler(mapping));
       }
