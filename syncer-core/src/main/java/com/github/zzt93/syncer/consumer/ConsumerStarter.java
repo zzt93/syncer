@@ -13,7 +13,10 @@ import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.*;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.filter.FilterJob;
-import com.github.zzt93.syncer.consumer.input.*;
+import com.github.zzt93.syncer.consumer.input.EventScheduler;
+import com.github.zzt93.syncer.consumer.input.PositionFlusher;
+import com.github.zzt93.syncer.consumer.input.Registrant;
+import com.github.zzt93.syncer.consumer.input.SchedulerBuilder;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.data.util.SyncFilter;
@@ -110,10 +113,9 @@ public class ConsumerStarter implements Starter {
                               HashMap<String, SyncInitMeta> id2SyncInitMeta) {
     registrant = new Registrant(consumerRegistry);
     for (MasterSource masterSource : input.getMasterSet()) {
-      EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler())
-          .build();
-      List<LocalConsumerSource> localConsumerSources = LocalConsumerSource
-          .inputSource(consumerId, masterSource, id2SyncInitMeta, scheduler);
+      EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler()).build();
+      List<? extends ConsumerSource> localConsumerSources =
+          masterSource.toConsumerSources(consumerId, id2SyncInitMeta, scheduler);
       registrant.addDatasource(localConsumerSources);
     }
   }

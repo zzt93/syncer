@@ -1,16 +1,22 @@
 package com.github.zzt93.syncer.config.common;
 
+import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
+import com.github.zzt93.syncer.consumer.ConsumerSource;
+import com.github.zzt93.syncer.consumer.input.EventScheduler;
+import com.github.zzt93.syncer.consumer.input.LocalConsumerSource;
+import com.github.zzt93.syncer.consumer.input.MongoLocalConsumerSource;
+import com.github.zzt93.syncer.consumer.input.MysqlLocalConsumerSource;
 import com.github.zzt93.syncer.consumer.input.SchedulerBuilder.SchedulerType;
+import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author zzt
@@ -110,4 +116,41 @@ public class MasterSource {
     return connection.remoteIds();
   }
 
+  public List<? extends ConsumerSource> toConsumerSources(String consumerId,
+                                                          HashMap<String, SyncInitMeta> id2SyncInitMeta,
+                                                          EventScheduler scheduler) {
+    List<LocalConsumerSource> res = new LinkedList<>();
+    ClusterConnection cluster = getConnection();
+    for (int i = 0; i < cluster.getConnections().size(); i++) {
+      Connection connection = cluster.getConnections().get(i);
+      SyncInitMeta syncInitMeta = getSyncInitMeta(cluster.getSyncMetas().get(i), id2SyncInitMeta, connection);
+      switch (getType()) {
+        case Mongo:
+          Preconditions
+              .checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is " + syncInitMeta);
+          res.add(new MongoLocalConsumerSource(consumerId, connection,
+              getRepoSet(), (DocTimestamp) syncInitMeta, scheduler));
+          break;
+        case MySQL:
+          Preconditions
+              .checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is " + syncInitMeta);
+          res.add(new MysqlLocalConsumerSource(consumerId, connection,
+              getRepoSet(), (BinlogInfo) syncInitMeta, scheduler));
+          break;
+        default:
+          throw new IllegalStateException("Not implemented type");
+      }
+    }
+    return res;
+  }
+
+  private SyncInitMeta getSyncInitMeta(SyncMeta syncMeta, HashMap<String, SyncInitMeta> id2SyncInitMeta, Connection connection) {
+    String identifier = connection.connectionIdentifier();
+    SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
+    if (syncMeta != null) {
+      logger.warn("Override syncer remembered position with config in file {}, watch out", syncMeta);
+      syncInitMeta = BinlogInfo.withFilenameCheck(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
+    }
+    return syncInitMeta;
+  }
 }

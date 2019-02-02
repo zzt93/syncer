@@ -8,7 +8,8 @@ import com.github.zzt93.syncer.config.consumer.input.Repo;
 import java.util.Set;
 
 /**
- * Class used to register consumer to producer
+ * Class used to register consumer input to producer;
+ * One consumer can have multiple ConsumerSource
  *
  * @see com.github.zzt93.syncer.producer.register.LocalConsumerRegistry#register(Connection, ConsumerSource)
  * @author zzt

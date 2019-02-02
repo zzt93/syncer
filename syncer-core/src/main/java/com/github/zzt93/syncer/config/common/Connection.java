@@ -5,7 +5,6 @@ import com.github.zzt93.syncer.common.util.NetworkUtil;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.net.UnknownHostException;
@@ -23,7 +22,7 @@ public class Connection implements Comparable<Connection> {
   private String user;
   private String passwordFile;
   private String password;
-  private String identifier;
+  private volatile String identifier;
   private String ip;
 
   public Connection() {
@@ -130,13 +129,10 @@ public class Connection implements Comparable<Connection> {
     return address != null && port > 0 && port < 65536;
   }
 
-  public String initIdentifier() {
-    identifier = ip + COMMON + getPort();
-    return identifier;
-  }
-
   public String connectionIdentifier() {
-    Assert.notNull(identifier, "[should invoke initIdentifier() first]");
+    if (identifier == null) {
+      identifier = ip + COMMON + getPort();
+    }
     return identifier;
   }
 

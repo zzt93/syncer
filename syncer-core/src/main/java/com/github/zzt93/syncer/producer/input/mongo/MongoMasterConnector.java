@@ -43,7 +43,7 @@ public class MongoMasterConnector implements MasterConnector {
 
 
   public MongoMasterConnector(MongoConnection connection, ConsumerRegistry registry) throws IOException {
-    identifier = connection.initIdentifier();
+    identifier = connection.connectionIdentifier();
 
     client = new MongoClient(new MongoClientURI(connection.toConnectionUrl(null)));
     configDispatch(connection, registry);

@@ -120,9 +120,9 @@ public class ProducerStarter implements Starter {
     for (ProducerMaster source : masterSources) {
       Connection connection = source.getConnection();
       if (consumerRegistry.outputSink(connection).isEmpty()) {
-        SyncerHealth.producer(connection.initIdentifier(), Health.inactive("No consumer registered"));
+        SyncerHealth.producer(connection.connectionIdentifier(), Health.inactive("No consumer registered"));
       } else {
-        SyncerHealth.producer(connection.initIdentifier(), Health.green());
+        SyncerHealth.producer(connection.connectionIdentifier(), Health.green());
       }
     }
   }

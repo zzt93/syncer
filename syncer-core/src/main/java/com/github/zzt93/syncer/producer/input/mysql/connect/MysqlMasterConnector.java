@@ -56,7 +56,7 @@ public class MysqlMasterConnector implements MasterConnector {
       throw new InvalidPasswordException(password);
     }
 
-    connectorIdentifier = connection.initIdentifier();
+    connectorIdentifier = connection.connectionIdentifier();
 
     BinlogInfo remembered = configLogClient(connection, password, registry);
     listener = configEventListener(connection, registry, remembered);

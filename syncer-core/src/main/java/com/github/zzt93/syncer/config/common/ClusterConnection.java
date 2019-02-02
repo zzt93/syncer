@@ -87,7 +87,7 @@ public class ClusterConnection extends Connection {
     return clusterNodes.get(0);
   }
 
-  public List<Connection> getConnections() {
+  List<Connection> getConnections() {
     boolean valid = super.valid();
     boolean validCluster = isValidCluster();
     if (valid == validCluster) {
@@ -117,7 +117,7 @@ public class ClusterConnection extends Connection {
     if (isValidCluster()) {
       return clusterNodes;
     } else {
-      return Lists.newArrayList(initIdentifier());
+      return Lists.newArrayList(super.connectionIdentifier());
     }
   }
 }
