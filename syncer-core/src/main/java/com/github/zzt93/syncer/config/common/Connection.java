@@ -26,6 +26,19 @@ public class Connection implements Comparable<Connection> {
   private String identifier;
   private String ip;
 
+  public Connection() {
+  }
+
+  public Connection(Connection connection) {
+    address = connection.address;
+    port = connection.port;
+    user = connection.user;
+    passwordFile = connection.passwordFile;
+    password = connection.password;
+    identifier = connection.identifier;
+    ip = connection.ip;
+  }
+
   public String getAddress() {
     return address;
   }

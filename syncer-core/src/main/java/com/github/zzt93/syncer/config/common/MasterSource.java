@@ -22,14 +22,14 @@ public class MasterSource {
   private MasterSourceType type = MasterSourceType.MySQL;
   private SchedulerType scheduler = SchedulerType.hash;
   private SyncMeta syncMeta;
-  private Connection connection;
+  private ClusterConnection connection;
   private List<Repo> repos = new ArrayList<>();
 
-  public Connection getConnection() {
+  public ClusterConnection getConnection() {
     return connection;
   }
 
-  public void setConnection(Connection connection) {
+  public void setConnection(ClusterConnection connection) {
     this.connection = connection;
   }
 
@@ -104,6 +104,10 @@ public class MasterSource {
         ", repos=" + repos +
         ", type=" + type +
         '}';
+  }
+
+  public List<String> remoteIds() {
+    return connection.remoteIds();
   }
 
 }

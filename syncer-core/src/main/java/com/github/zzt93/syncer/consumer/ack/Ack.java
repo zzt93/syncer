@@ -10,13 +10,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author zzt TODO 18/1/17 change string identifier to Class?
@@ -35,10 +33,12 @@ public class Ack {
       HashMap<String, SyncInitMeta> id2SyncInitMeta) {
     Ack ack = new Ack(clientId, syncerInputMeta);
     for (MasterSource masterSource : masterSources) {
-      String id = masterSource.getConnection().initIdentifier();
-      SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType());
-      if (initMeta != null) {
-        id2SyncInitMeta.put(id, initMeta);
+      List<String> ids = masterSource.remoteIds();
+      for (String id : ids) {
+        SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType());
+        if (initMeta != null) {
+          id2SyncInitMeta.put(id, initMeta);
+        }
       }
     }
     ack.ackMap = Collections.unmodifiableMap(ack.ackMap);
@@ -58,8 +58,8 @@ public class Ack {
     } else {
       try {
         syncInitMeta = recoverSyncInitMeta(path, sourceType, syncInitMeta);
-      } catch (IOException ignored) {
-        logger.error("Impossible to run to here", ignored);
+      } catch (IOException e) {
+        logger.error("Impossible to run to here", e);
       }
     }
     try {
@@ -75,7 +75,7 @@ public class Ack {
     byte[] bytes = FileBasedMap.readData(path);
     if (bytes.length > 0) {
       try {
-        String data = new String(bytes, "utf-8");
+        String data = new String(bytes, StandardCharsets.UTF_8);
         switch (sourceType) {
           case MySQL:
             syncInitMeta = IdGenerator.fromDataId(data);

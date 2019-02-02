@@ -54,9 +54,11 @@ public class MongoMasterConnector implements MasterConnector {
     DocTimestamp docTimestamp = registry.votedMongoId(connection);
     Pattern namespaces = getNamespaces(connection, registry);
     query = new Document()
-        .append(NS, new BasicDBObject("$regex", namespaces));
+        .append(NS, new BasicDBObject("$regex", namespaces))
+        .append("fromMigrate", new BasicDBObject("$exists", "false"))
+    ;
+    // https://www.mongodb.com/blog/post/tailing-mongodb-oplog-sharded-clusters
     // fromMigrate indicates the operation results from a shard re-balancing.
-    //.append("fromMigrate", new BasicDBObject("$exists", "false"))
     if (docTimestamp.getTimestamp() != null) {
       query.append(TS, new BasicDBObject("$gte", docTimestamp.getTimestamp()));
     } else {

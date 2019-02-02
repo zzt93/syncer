@@ -9,7 +9,6 @@ import com.github.zzt93.syncer.config.common.MasterSource;
 import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.input.PipelineInput;
-import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.*;
 import com.github.zzt93.syncer.consumer.ack.Ack;
@@ -20,7 +19,6 @@ import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.data.util.SyncFilter;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
-import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
@@ -112,19 +110,11 @@ public class ConsumerStarter implements Starter {
                               HashMap<String, SyncInitMeta> id2SyncInitMeta) {
     registrant = new Registrant(consumerRegistry);
     for (MasterSource masterSource : input.getMasterSet()) {
-      String identifier = masterSource.getConnection().connectionIdentifier();
-      SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
-      if (masterSource.hasSyncMeta()) {
-        SyncMeta syncMeta = masterSource.getSyncMeta();
-        logger.warn("Override syncer remembered position with config in file {}, watch out",
-            syncMeta);
-        syncInitMeta = BinlogInfo.withFilenameCheck(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
-      }
       EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler())
           .build();
-      LocalConsumerSource localInputSource = LocalConsumerSource
-          .inputSource(consumerId, masterSource, syncInitMeta, scheduler);
-      registrant.addDatasource(localInputSource);
+      List<LocalConsumerSource> localConsumerSources = LocalConsumerSource
+          .inputSource(consumerId, masterSource, id2SyncInitMeta, scheduler);
+      registrant.addDatasource(localConsumerSources);
     }
   }
 
