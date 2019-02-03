@@ -27,7 +27,6 @@ public class MasterSource {
   private final Set<Repo> repoSet = new HashSet<>();
   private MasterSourceType type = MasterSourceType.MySQL;
   private SchedulerType scheduler = SchedulerType.hash;
-  private SyncMeta syncMeta;
   private ClusterConnection connection;
   private List<Repo> repos = new ArrayList<>();
 
@@ -62,18 +61,6 @@ public class MasterSource {
 
   public void setType(MasterSourceType type) {
     this.type = type;
-  }
-
-  public void setSyncMeta(SyncMeta syncMeta) {
-    this.syncMeta = syncMeta;
-  }
-
-  public boolean hasSyncMeta() {
-    return syncMeta != null && type == MasterSourceType.MySQL;
-  }
-
-  public SyncMeta getSyncMeta() {
-    return syncMeta;
   }
 
   public void setScheduler(SchedulerType scheduler) {
