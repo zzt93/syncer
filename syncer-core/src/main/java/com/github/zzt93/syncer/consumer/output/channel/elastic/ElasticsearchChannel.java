@@ -82,7 +82,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
     this.ack = ack;
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
-    Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
+    Path path = Paths.get(outputMeta.getFailureLogDir(), id);
     singleRequest = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncData>>() {
     });
   }

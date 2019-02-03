@@ -7,6 +7,7 @@ import java.net.UnknownHostException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Supplier;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
@@ -16,7 +17,8 @@ public class ClusterConnection extends Connection {
   static final String COLON = ":";
   private String clusterName;
   private List<String> clusterNodes;
-  private List<SyncMeta> syncMetas;
+  private List<String> clusterIds;
+  private SyncMeta[] syncMetas;
 
   String getClusterName() {
     return clusterName;
@@ -34,17 +36,27 @@ public class ClusterConnection extends Connection {
     this.clusterNodes = clusterNodes;
   }
 
-  public List<SyncMeta> getSyncMetas() {
-    int target = super.valid() ? 1 : clusterNodes.size();
+  private List<String> getClusterIds() {
+    if (clusterIds == null) {
+      clusterIds = new ArrayList<>(clusterNodes.size());
+      for (String clusterNode : clusterNodes) {
+        clusterIds.add(getConnection(clusterNode).connectionIdentifier());
+      }
+    }
+    return clusterIds;
+  }
+
+  public SyncMeta[] getSyncMetas() {
+    int target = super.valid() ? 1 : getClusterNodes().size();
     if (syncMetas == null) {
-      syncMetas = new ArrayList<>(target);
-    } else if (syncMetas.size() != target) {
+      syncMetas = new SyncMeta[target];
+    } else if (syncMetas.length != target) {
       throw new InvalidConfigException("syncMetas.size() != clusterNodes.size()");
     }
     return syncMetas;
   }
 
-  public void setSyncMetas(List<SyncMeta> syncMetas) {
+  public void setSyncMetas(SyncMeta[] syncMetas) {
     this.syncMetas = syncMetas;
   }
 
@@ -56,7 +68,7 @@ public class ClusterConnection extends Connection {
   }
 
   private boolean isValidCluster() {
-    return clusterNodes != null && !clusterNodes.isEmpty();
+    return getClusterNodes() != null && !getClusterNodes().isEmpty();
   }
 
   @Override
@@ -65,12 +77,12 @@ public class ClusterConnection extends Connection {
     if (o == null || getClass() != o.getClass()) return false;
     if (!super.equals(o)) return false;
     ClusterConnection that = (ClusterConnection) o;
-    return Objects.equals(clusterNodes, that.clusterNodes);
+    return clusterOrSimple(() -> Objects.equals(getClusterIds(), that.getClusterIds()), () -> super.equals(o));
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), clusterNodes);
+    return clusterOrSimple(() -> Objects.hash(getClusterIds()), super::hashCode);
   }
 
   @Override
@@ -78,46 +90,56 @@ public class ClusterConnection extends Connection {
     return "ClusterConnection{" +
         "super=" + super.toString() +
         ", clusterName='" + clusterName + '\'' +
-        ", clusterNodes=" + clusterNodes +
+        ", clusterNodes=" + getClusterNodes() +
         '}';
   }
 
   @Override
   public String connectionIdentifier() {
-    return clusterNodes.get(0);
+    return clusterOrSimple(() -> getClusterIds().toString(), super::connectionIdentifier);
   }
 
   List<Connection> getConnections() {
+    return clusterOrSimple(() -> {
+      List<Connection> res = new ArrayList<>();
+      for (String clusterNode : getClusterNodes()) {
+        Connection e = getConnection(clusterNode);
+        res.add(e);
+      }
+      return res;
+    }, () -> Lists.newArrayList(this));
+  }
+
+  private Connection getConnection(String clusterNode) {
+    Connection e = new Connection(this);
+    String[] split = clusterNode.split(COLON);
+    if (split.length != 2) throw new InvalidConfigException(clusterNode);
+    e.setPort(Integer.parseUnsignedInt(split[1]));
+    try {
+      e.setAddress(split[0]);
+    } catch (UnknownHostException e1) {
+      throw new InvalidConfigException(e1);
+    }
+    return e;
+  }
+
+  List<String> remoteIds() {
+    return clusterOrSimple(
+        this::getClusterIds,
+        () -> Lists.newArrayList(super.connectionIdentifier())
+    );
+  }
+
+  private <T> T clusterOrSimple(Supplier<T> cluster, Supplier<T> simple) {
     boolean valid = super.valid();
     boolean validCluster = isValidCluster();
     if (valid == validCluster) {
       throw new InvalidConfigException("Config both address and clusterNodes");
     } else if (valid) {
-      return Lists.newArrayList(this);
+      return simple.get();
     } else {
-      // a cluster connection
-      List<Connection> res = new ArrayList<>();
-      for (String clusterNode : clusterNodes) {
-        Connection e = new Connection(this);
-        String[] split = clusterNode.split(COLON);
-        if (split.length != 2) throw new InvalidConfigException(clusterNode);
-        e.setPort(Integer.parseUnsignedInt(split[1]));
-        try {
-          e.setAddress(split[0]);
-        } catch (UnknownHostException e1) {
-          throw new InvalidConfigException(e1);
-        }
-        res.add(e);
-      }
-      return res;
+      return cluster.get();
     }
   }
 
-  List<String> remoteIds() {
-    if (isValidCluster()) {
-      return clusterNodes;
-    } else {
-      return Lists.newArrayList(super.connectionIdentifier());
-    }
-  }
 }

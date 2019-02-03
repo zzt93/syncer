@@ -50,7 +50,7 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
     this.batchBuffer = new BatchBuffer<>(batch);
     this.ack = ack;
     FailureLogConfig failureLog = redis.getFailureLog();
-    Path path = Paths.get(outputMeta.getFailureLogDir(), redis.connectionIdentifier());
+    Path path = Paths.get(outputMeta.getFailureLogDir(), id);
     request = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
     });
     template = new RedisTemplate<>();

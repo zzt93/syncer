@@ -121,9 +121,11 @@ public class MasterSource {
                                                           EventScheduler scheduler) {
     List<LocalConsumerSource> res = new LinkedList<>();
     ClusterConnection cluster = getConnection();
-    for (int i = 0; i < cluster.getConnections().size(); i++) {
-      Connection connection = cluster.getConnections().get(i);
-      SyncInitMeta syncInitMeta = getSyncInitMeta(cluster.getSyncMetas().get(i), id2SyncInitMeta, connection);
+    SyncMeta[] syncMetas = cluster.getSyncMetas();
+    List<Connection> connections = cluster.getConnections();
+    for (int i = 0; i < connections.size(); i++) {
+      Connection connection = connections.get(i);
+      SyncInitMeta syncInitMeta = getSyncInitMeta(syncMetas[i], id2SyncInitMeta, connection);
       switch (getType()) {
         case Mongo:
           Preconditions
