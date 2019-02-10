@@ -14,6 +14,7 @@ import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
+import com.github.zzt93.syncer.consumer.output.channel.AckChannel;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
@@ -31,6 +32,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -282,6 +284,14 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
     }
     batchBuffer.addAllInHead(tmp);
+  }
+
+  @Override
+  public ErrorLevel level(Throwable e, SyncWrapper wrapper, int maxTry) {
+    if (e instanceof IndexNotFoundException) {
+      return ErrorLevel.WARN;
+    }
+    return BufferedChannel.super.level(e, wrapper, maxTry);
   }
 
   private Object requestStr(SyncWrapper<WriteRequest> wrapper) {
