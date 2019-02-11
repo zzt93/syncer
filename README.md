@@ -475,6 +475,10 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 ```
 
 ## Test
+### Dependency
+- [Docker](https://docs.docker.com/install/#server)
+- [Docker compose](https://docs.docker.com/compose/install/)
+
 ### Correctness Test
 #### Test data: 
   - size: 7M
@@ -493,6 +497,7 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 - Throughput: limited by filter worker number, in average 2000 events per worker
 - CPU: 80-90
 - Memory: 4g
+  - Increase batch size & flush period, increase performance in cost of higher memory usage
 - IO
   - Network
   - Disk

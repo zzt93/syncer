@@ -1,0 +1,18 @@
+version: 1.2
+
+syncer.producer.input:
+  masters:
+
+  - connection:
+      address: ${MYSQL_ADDR}
+      port: 3306
+      user: root
+      password: root
+
+  - connection:
+      address: ${MONGO_ADDR}
+      port: 27017
+    type: mongo
+
+
+
