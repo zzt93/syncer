@@ -1,0 +1,75 @@
+version: 1.2
+
+consumerId: correctness
+
+
+input:
+  masters:
+    - connection:
+        address: ${MYSQL_ADDR}
+        port: 3306
+      scheduler: mod
+      repos:
+        - name: "test.*"
+          entities:
+          - name: correctness
+            fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
+          - name: types
+            fields: [tinyint, long, char, varchar, text, decimal, double, timestamp]
+          - name: news
+            fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
+        - name: "simple"
+          entities:
+          - name: types
+            fields: [tinyint, long, char, varchar, text, decimal, double, timestamp]
+
+
+
+filter:
+  - code: ''
+
+
+
+# Special expression
+# "field.*"
+# "field.*.flatten"
+# "extra.*"
+# "extra.*.flatten"
+
+output:
+  elasticsearch:
+    connection:
+      address: ${ES_ADDR}
+      port: 9200
+    requestMapping: # mapping from input data to es request
+      enableExtraQuery: true
+      retryOnUpdateConflict: 3
+      index: "entity + #suffix" # default: repos
+      documentId: "id" # default: id
+      fieldsMapping: # default: fields.*.flatten
+        "fields": "fields.*.flatten"
+    batch:
+      size: 100
+      delay: 1000
+      maxRetry: 5
+    refreshInMillis: 0
+    failureLog:
+      countLimit: 1000
+  mysql:
+    connection:
+      address: ${MYSQL_ADDR}
+      port: 3306
+      user: simu
+      password: simu123
+    rowMapping:
+      schema: "'test'"
+      table: "entity + '_bak'"
+      id: "id"
+      rows:
+        "fields": "fields.*.flatten"
+    batch:
+      size: 100
+      delay: 100
+      maxRetry: 5
+    failureLog:
+      countLimit: 1000

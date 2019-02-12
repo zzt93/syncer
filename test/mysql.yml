@@ -12,8 +12,6 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
-    volumes:
-    - mysqldata:/var/lib/mysql
     networks:
     - dbnet
 
@@ -35,17 +33,11 @@ services:
     ports:
     - 49200:9200
     - 49300:9300
-    volumes:
-    - ./elasticsearch/config/elasticsearch.yml:/etc/elasticsearch/config/elasticsearch.yml
-    - ./elasticsearch/config/jvm.options:/etc/elasticsearch/config/jvm.options
-    - ./elasticsearch/config/log4j2.properties:/etc/elasticsearch/config/log4j2.properties
-    - esdata:/usr/share/elasticsearch/data
     networks:
-    - esnet
+    - dbnet
 
   mongo:
-    image: mongo
-    container_name: mongo
+    image: mongo:3.2
     depends_on:
       elasticsearch:
         condition: service_healthy
@@ -56,31 +48,29 @@ services:
       retries: 12
     command: mongod --smallfiles
     environment:
-      MONGODB_USER="user"
-      MONGODB_PASS="pass"
+    - MONGODB_USER="root"
+    - MONGODB_PASS="root"
     ports:
     - 47017:27017
     networks:
-    - mongonet
+    - dbnet
 
   syncer:
     image: syncer
-    cotainer_name: syncer
     depends_on:
       mongo:
         condition: service_healthy
     ports:
     - 40000:40000
-
+    volumes:
+    - config:/data
+    networks:
+    - dbnet
 
 volumes:
-  mysqldata:
-    driver: local
-  esdata:
+  config:
     driver: local
 
 networks:
-  esnet:
-    driver: bridge
   dbnet:
     driver: bridge
