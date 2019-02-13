@@ -1,7 +1,7 @@
 create database simple;
 use simple;
 
-CREATE TABLE `types` (
+CREATE TABLE `simple_type` (
 	`id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
 	`tinyint` tinyint UNSIGNED NOT NULL,
 	`long` bigint UNSIGNED NOT NULL,

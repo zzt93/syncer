@@ -2,8 +2,20 @@
 env=$1
 config=$2
 
+# package syncer
+mvn package
+
+# build syncer image
+#docker rmi -f syncer:test
+docker build syncer-core -t syncer:test
+
+###############33333
+
+cd test
+
 # add syncer config according to test case
-rm test/config/consumer/*
+mkdir -p config/consumer
+rm config/consumer/*
 if [[ $config = "yaml" ]]; then
     cp config/correctness-consumer.yml config/consumer/correctness-consumer.yml
 elif [[ $config = "code" ]]; then
@@ -13,12 +25,7 @@ else
     cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
 fi
 
-# package
-mvn package
 
-# build image
-docker rmi -f syncer:test
-docker build . -t syncer:test
 
 # Given
 # start env by docker-compose
@@ -33,7 +40,7 @@ else
 fi
 
 
-
+t1=`echo 'select count(*) from test.news' | mysql -uroot -h localhost -proot -P43306`
 # Then
 # query ES count
 
@@ -48,5 +55,4 @@ c2=`curl -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application/js
 '`
 
 # query mysql count
-
-echo 'select count(*) from test.news' | mysql -uroot -h localhost -proot -P43306
+d1=`echo 'select count(*) from test.news_bak' | mysql -uroot -h localhost -proot -P43306`

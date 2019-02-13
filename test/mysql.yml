@@ -2,7 +2,7 @@ version: '2.1'
 services:
   mysql:
     container_name: mysql
-    image: mysql:5.7
+    image: mysql:5.7.15
     ports:
     - "43306:3306"
     environment:
@@ -16,11 +16,8 @@ services:
     - dbnet
 
   elasticsearch:
-    image: elasticsearch:6.1
+    image: elasticsearch:5.6
     container_name: elasticsearch
-    depends_on:
-      mysql:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
       interval: 30s
@@ -38,9 +35,7 @@ services:
 
   mongo:
     image: mongo:3.2
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
+    container_name: mongo
     healthcheck:
       test: echo 'db.stats().ok' | mongo localhost:27017 --quiet
       interval: 5s
@@ -56,14 +51,23 @@ services:
     - dbnet
 
   syncer:
-    image: syncer
+    image: syncer:test
+    container_name: syncer
     depends_on:
+      mysql:
+        condition: service_healthy
       mongo:
+        condition: service_healthy
+      elasticsearch:
         condition: service_healthy
     ports:
     - 40000:40000
     volumes:
     - config:/data
+    environment:
+    - ES_ADDR="elasticsearch"
+    - MYSQL_ADDR="mysql"
+    - MONGO_ADDR="mongo"
     networks:
     - dbnet
 

@@ -43,7 +43,7 @@ services:
     - dbnet
 
   elasticsearch:
-    image: elasticsearch:6.1
+    image: elasticsearch:5.6
     depends_on:
       mysql:
         condition: service_healthy
@@ -82,7 +82,7 @@ services:
     - dbnet
 
   syncer:
-    image: syncer
+    image: syncer:test
     depends_on:
       mongo:
         condition: service_healthy

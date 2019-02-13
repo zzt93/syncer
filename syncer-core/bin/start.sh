@@ -20,7 +20,7 @@ fi
 
 syncer_home="$SYNCER_HOME"
 if [ -z "$syncer_home" ]; then
-    syncer_home="/opt"
+    syncer_home="/"
 fi
 
 
@@ -36,6 +36,6 @@ if [ ! -x "$JAVA" ]; then
 fi
 
 #HOSTNAME=`hostname | cut -d. -f1`
-export $HOSTNAME
+export HOSTNAME
 
 $JAVA -server -XX:+UseG1GC -jar $syncer_home/syncer.jar --port=40000 --producerConfig=$producer --consumerConfig=$consumer
