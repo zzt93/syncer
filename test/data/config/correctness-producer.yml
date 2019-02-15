@@ -1,6 +1,6 @@
 version: 1.2
 
-syncer.producer.input:
+input:
   masters:
 
   - connection:
@@ -12,7 +12,7 @@ syncer.producer.input:
   - connection:
       address: ${MONGO_ADDR}
       port: 27017
-    type: mongo
+    type: Mongo
 
 
 

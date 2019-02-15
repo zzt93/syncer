@@ -89,12 +89,12 @@ services:
     ports:
     - 40000:40000
     volumes:
-    - config:/data
+    - data:/data
     networks:
     - dbnet
 
 volumes:
-  config:
+  data:
     driver: local
 
 networks:

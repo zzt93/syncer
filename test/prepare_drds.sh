@@ -13,7 +13,6 @@ for (( i = 0; i < 3; ++i )); do
     cat mysql_init.sql >> $tmp
     port=$((43306+$i))
     cat $tmp | mysql -uroot -h localhost -proot -P$port
-    docker run -v config/:/data/
-    docker run -v config/:/data/ --rm mysql:5.7.15 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot -P$port test_$i /data/*.csv
+    docker run -v data/:/data/ --rm mysql:5.7.15 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot -P$port test_$i /data/*.csv
 done
 

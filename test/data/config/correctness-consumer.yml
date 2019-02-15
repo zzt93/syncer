@@ -26,7 +26,32 @@ input:
 
 
 filter:
-  - code: ''
+  - statement: ["#suffix=''"]
+  - switcher:
+      switch: "table"
+      case: # support default branch
+        "news":
+        - if:
+            condition: "isWrite()"
+            ifBody:
+            - statement: ["addField('roles', new ArrayList())"]
+        - statement: ["#suffix = '-' + getField('alliance_id')/100",
+                      "renameField('affair_id','affairId').renameField('modify_time','modifyTime').renameField('thumb_content', 'thumbContent')
+          .renameField('plate_type', 'plateType').renameField('plate_sub_type', 'plateSubType').renameField('target_id', 'targetId')",
+                      "updateField('content', T(SyncUtil).fromJson(new String(getField('content')),T(Map))['blocks'].![text])",
+                      "updateField('thumbContent', new String(getField('thumbContent')))"]
+        - if:
+            condition: "isUpdate() && containField('title')"
+            ifBody:
+            - create:
+                copy: ["id", "result.fields['alliance_id']", "result.fields['title']"]
+                postCreation: ["entity = 'correctness'", "#docType='correctness'", "renameField('title', 'fromName').addField('type', 0)","syncByQuery().filter('newsId', id)", "id=null"]
+
+        "types":
+        - statement: ["#suffix = '-' + getField('tinyint')", ]
+        "correctness":
+        - statement: ["renameField('news_id', 'newsId')"]
+
 
 
 
@@ -39,8 +64,8 @@ filter:
 output:
   elasticsearch:
     connection:
-      address: ${ES_ADDR}
-      port: 9200
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
     requestMapping: # mapping from input data to es request
       enableExtraQuery: true
       retryOnUpdateConflict: 3

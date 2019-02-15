@@ -14,6 +14,7 @@ docker build syncer-core -t syncer:test
 cd test
 
 # add syncer config according to test case
+cd data
 mkdir -p config/consumer
 rm config/consumer/*
 if [[ $config = "yaml" ]]; then
@@ -22,9 +23,9 @@ elif [[ $config = "code" ]]; then
     cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
 else
     echo "prepare code env"
-    cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
+  Not support update list variable for UPDATE  cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
 fi
-
+cd ..
 
 
 # Given

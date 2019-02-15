@@ -6,4 +6,4 @@ COPY bin/start.sh /start.sh
 COPY bin/healthchecker.sh /healthchecker.sh
 EXPOSE 40000 40000
 HEALTHCHECK --interval=1m --timeout=3s --retries=4 CMD /healthchecker.sh
-ENTRYPOINT ["sh", "start.sh", "--producerConfig=/data/correctness-producer.yml", "--consumerConfig=/data/consumer/"]
+ENTRYPOINT ["sh", "start.sh"]

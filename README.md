@@ -60,8 +60,8 @@ way to make consistency promise because Syncer can only provide 'at least once' 
   - Remember to fetch partition key in `fields`
 
 - Remember where we leave last time by writing file/position of binlog/oplog, and resume from there so as to avoid any data loss
-  - More than once (at-least-once): we can ensure the at least once semantics now, so you need to make sure your `SyncData`
-  is idempotent and your destination can handle it. Counterexample: a table without primary key definitely
+  - More than once (at-least-once): we can ensure the at least once semantics now, so you need to make sure your output channel (the `consumer` of syncer output)
+  is **idempotent** and your destination can handle it without dup. Counterexample: a table without primary key definitely
   can't handle it and cause duplicate data soon or later.
 - Multiple consumer can share a common connection to same data source, i.e. MySQL/MongoDB, to reduce the
 burden of remote master
@@ -444,24 +444,23 @@ output:
 ### Syncer Config
 
 ```yml
-syncer:
-  # can be overrided via command line args `server.port`
-  port: 12345
-  ack:
-    flushPeriod: 100
-  input:
-    input-meta:
-      last-run-metadata-dir: /data/syncer/input/last_position/
+# can be overrided via command line args `server.port`
+port: 12345
+ack:
+  flushPeriod: 100
+input:
+  input-meta:
+    last-run-metadata-dir: /data/syncer/input/last_position/
 
-  filter:
-    worker: 6
-
-  output:
+filter:
+  worker: 6
+  
+output:
+  worker: 2
+  batch:
     worker: 2
-    batch:
-      worker: 2
-    output-meta:
-      failure-log-dir: /data/syncer/output/failure/
+  output-meta:
+    failure-log-dir: /data/syncer/output/failure/
 
 ```
 ### Run
