@@ -232,7 +232,49 @@ syncer.producer.input:
 
 #### Filter
 
-This part is implemented by [Spring EL](https://docs.spring.io/spring/docs/5.0.0.M5/spring-framework-reference/html/expressions.html), i.e. you can use any syntax Spring EL supported
+
+- `method`: write a java class implements `MethodFilter`  to handle `SyncData`
+  - Import dependency:
+  ```xml
+        <dependency>
+            <groupId>com.github.zzt93</groupId>
+            <artifactId>syncer-data</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
+
+  ```
+  - Write a class implement `MethodFilter`
+  ```java
+    public class MenkorFilterImpl implements MethodFilter {
+      @Override
+      public void filter(List<SyncData> list) {
+        SyncData data = list.get(0);
+        if (data.getField("location") != null) {
+          Map location = SyncUtil.fromJson((String) data.getField("location"));
+          if (!location.isEmpty()) {
+            data.addField("geom", SQLFunction.geomfromtext("point(" + location.get("longitude") + "," + location.get("latitude") + ")"));
+          }
+        }
+      }
+    }
+
+  ```
+  - Copy method filter to config file:
+  ```$xslt
+  filter:
+    - method: '      public void filter(List<SyncData> list) {
+                       SyncData data = list.get(0);
+                       if (data.getField("location") != null) {
+                         Map location = SyncUtil.fromJson((String) data.getField("location"));
+                         if (!location.isEmpty()) {
+                           data.addField("geom", SQLFunction.geomfromtext("point(" + location.get("longitude") + "," + location.get("latitude") + ")"));
+                         }
+                       }
+                     }'
+                     
+  ```
+
+The following part is implemented by [Spring EL](https://docs.spring.io/spring/docs/5.0.0.M5/spring-framework-reference/html/expressions.html), i.e. you can use any syntax Spring EL supported
 if I didn't listed.
 
 - `statement`: list of String code to be executed.
