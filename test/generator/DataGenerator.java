@@ -1,11 +1,10 @@
-package generator;
-
 import java.io.BufferedOutputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.math.BigDecimal;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
 import java.util.*;
@@ -19,17 +18,21 @@ public class DataGenerator {
   private static final String UNSIGNED = "UNSIGNED";
   private static final long OFFSET = Timestamp.valueOf("2017-01-01 00:00:00").getTime();
   private static final long END = Timestamp.valueOf("2049-01-01 00:00:00").getTime();
+  private static final String CSV = ".csv";
   private static int index = CREATE_TABLE.length();
   private static Random r = new Random();
 
-  public static void main(String[] args) throws IOException {
+  public static void main(String[] args) throws IOException, InterruptedException {
     String outDir = args[0];
     String sqlFile = args[1];
     long lines = Long.parseLong(args[2]);
     for (Map.Entry<String, List<Supplier<Object>>> e : tables(sqlFile).entrySet()) {
-      PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(Paths.get(outDir, e.getKey()).toFile())));
+      Path path = Paths.get(outDir, e.getKey() + CSV);
+      PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
+      System.out.println("Generate " + e.getKey() + " to " + path);
       csv(out, e.getValue(), lines);
     }
+    Thread.sleep(100000);
   }
 
   private static Map<String, List<Supplier<Object>>> tables(String sqlFile) throws IOException {
@@ -116,7 +119,7 @@ public class DataGenerator {
     return sub;
   }
 
-  public static void csv(PrintWriter out, List<Supplier<Object>> data, long lines) throws IOException {
+  public static void csv(PrintWriter out, List<Supplier<Object>> data, long lines) {
     for (int i = 0; i < lines; i++) {
       List<Object> line = new LinkedList<>();
       for (Supplier<Object> supplier : data) {
