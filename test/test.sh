@@ -32,9 +32,9 @@ cd ..
 # start env by docker-compose
 # init data
 if [[ $env = "mysql" ]]; then
-    bash prepare_mysql.sh
+    bash generator.sh 10000 $env
 elif [[ $env = "drds" ]]; then
-    bash prepare_drds.sh
+    bash generator.sh 10000 $env
 else
     echo "prepare mysql env"
     bash prepareMysql.sh

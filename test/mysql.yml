@@ -5,6 +5,9 @@ services:
     image: mysql:5.7.15
     ports:
     - "43306:3306"
+    command: --init-file /init.sql
+    volumes:
+    - ${mysql_init}:/init.sql
     environment:
     - MYSQL_ROOT_PASSWORD=root
     healthcheck:
