@@ -32,7 +32,6 @@ public class DataGenerator {
       System.out.println("Generate " + e.getKey() + " to " + path);
       csv(out, e.getValue(), lines);
     }
-    Thread.sleep(100000);
   }
 
   private static Map<String, List<Supplier<Object>>> tables(String sqlFile) throws IOException {
