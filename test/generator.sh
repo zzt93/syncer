@@ -7,8 +7,8 @@ cd generator
 docker build . -f DataGenerator.Dockerfile -t generator:test
 cd ..
 
-docker run -v data:/data generator:test /mysql_multi.sql $1
-docker run -v data:/data generator:test /mysql_simple.sql $1
+docker run -v $(pwd)/data:/data --rm generator:test /mysql_multi.sql $1
+docker run -v $(pwd)/data:/data --rm generator:test /mysql_simple.sql $1
 
 if [[ $env = "mysql" ]]; then
     tmp=`mktemp`
@@ -18,7 +18,7 @@ if [[ $env = "mysql" ]]; then
     export mysql_init=${tmp}
 
     docker-compose -f mysql.yml up -d
-    docker run -v data/:/data/ --rm mysql:5.7.15 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot -P43306 test /data/*.csv
+    docker run -v $(pwd)/data/:/data/ --rm mysql:5.7.15 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot -P43306 test /data/*.csv
 
 elif [[ $env = "drds" ]]; then
     for (( i = 0; i < 3; ++i )); do
@@ -33,7 +33,7 @@ elif [[ $env = "drds" ]]; then
 
     for (( i = 0; i < 3; ++i )); do
         port=$((43306+$i))
-        docker run -v data/:/data/ --rm mysql:5.7.15 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot -P$port test_$i /data/*.csv
+        docker run -v $(pwd)/data/:/data/ --rm mysql:5.7.15 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot -P$port test_$i /data/*.csv
     done
 else
     echo "Unsupported env"
