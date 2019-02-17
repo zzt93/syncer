@@ -12,7 +12,7 @@ docker run -v $(pwd)/data:/data --rm generator:test /mysql_simple.sql $1
 
 if [[ $env = "mysql" ]]; then
     tmp=`mktemp`
-    echo "CREATE DATABASE IF NOT EXISTS test;\n use test;" > ${tmp}
+    echo -e "CREATE DATABASE IF NOT EXISTS test;\n use test;" > ${tmp}
     cat generator/mysql_test.sql >> ${tmp}
     cat generator/mysql_simple.sql >> ${tmp}
     export mysql_init=${tmp}
@@ -23,7 +23,7 @@ if [[ $env = "mysql" ]]; then
 elif [[ $env = "drds" ]]; then
     for (( i = 0; i < 3; ++i )); do
         tmp=`mktemp`
-        echo "CREATE DATABASE IF NOT EXISTS test_$i;\n use test_$i;" > $tmp
+        echo -e "CREATE DATABASE IF NOT EXISTS test_$i;\n use test_$i;" > $tmp
         cat generator/mysql_test.sql >> ${tmp}
         cat generator/mysql_simple.sql >> ${tmp}
         export mysql_init_${i}=${tmp}
