@@ -12,7 +12,7 @@ import java.util.function.Supplier;
 
 public class DataGenerator {
 
-  private static final String CREATE_TABLE = "CREATE TABLE ";
+  private static final String CREATE_TABLE = "CREATE TABLE IF NOT EXISTS ";
   private static final int MIN = 32;
   private static final int MAX = 127;
   private static final String UNSIGNED = "UNSIGNED";
@@ -22,12 +22,13 @@ public class DataGenerator {
   private static int index = CREATE_TABLE.length();
   private static Random r = new Random();
 
-  public static void main(String[] args) throws IOException, InterruptedException {
+  public static void main(String[] args) throws IOException {
     String outDir = args[0];
     String sqlFile = args[1];
     long lines = Long.parseLong(args[2]);
     for (Map.Entry<String, List<Supplier<Object>>> e : tables(sqlFile).entrySet()) {
-      Path path = Paths.get(outDir, e.getKey() + CSV);
+      Path path = Paths.get(outDir, sqlFile.split("\\.")[0], e.getKey() + CSV);
+      Files.createDirectories(path.getParent());
       PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
       System.out.println("Generate " + e.getKey() + " to " + path);
       csv(out, e.getValue(), lines);

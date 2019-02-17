@@ -84,8 +84,8 @@ output:
     connection:
       address: ${MYSQL_ADDR}
       port: 3306
-      user: simu
-      password: simu123
+      user: root
+      password: root
     rowMapping:
       schema: "'test'"
       table: "entity + '_bak'"

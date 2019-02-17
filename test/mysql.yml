@@ -8,6 +8,7 @@ services:
     command: --init-file /init.sql
     volumes:
     - ${mysql_init}:/init.sql
+    - ./data:/tmp
     environment:
     - MYSQL_ROOT_PASSWORD=root
     healthcheck:
@@ -45,6 +46,8 @@ services:
       timeout: 5s
       retries: 12
     command: mongod --smallfiles
+    volumes:
+    - ./data:/tmp
     environment:
     - MONGODB_USER="root"
     - MONGODB_PASS="root"
