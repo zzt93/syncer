@@ -32,22 +32,24 @@ cd ..
 # start env by docker-compose
 # init data
 if [[ $env = "mysql" ]]; then
-    bash setup.sh 10000 $env
+    bash setup.sh 100 $env
 elif [[ $env = "drds" ]]; then
-    bash setup.sh 10000 $env
+    bash setup.sh 100 $env
 else
     echo "prepare mysql env"
-    bash setup.sh 10000 $env
+    bash setup.sh 100 $env
 fi
 
 
 t1=`echo 'select count(*) from test.news' | mysql -uroot -h localhost -proot -P43306`
+echo "test.news: $t1"
 # Then
 # query ES count
 
-c1=`curl -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application/json'`
+c1=`curl -s -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application/json'`
+echo "es: $c1"
 
-c2=`curl -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application/json' -d'
+c2=`curl s- -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application/json' -d'
 {
     "query" : {
         "term" : { "user" : "kimchy" }
@@ -57,3 +59,5 @@ c2=`curl -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application/js
 
 # query mysql count
 d1=`echo 'select count(*) from test.news_bak' | mysql -uroot -h localhost -proot -P43306`
+echo "test.news_bak: $c1"
+
