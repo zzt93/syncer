@@ -120,10 +120,6 @@ services:
     networks:
     - dbnet
 
-volumes:
-  data:
-    driver: local
-
 networks:
   dbnet:
     driver: bridge

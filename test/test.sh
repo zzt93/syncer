@@ -23,7 +23,7 @@ elif [[ $config = "code" ]]; then
     cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
 else
     echo "prepare code env"
-  Not support update list variable for UPDATE  cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
+    cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
 fi
 cd ..
 
@@ -32,12 +32,12 @@ cd ..
 # start env by docker-compose
 # init data
 if [[ $env = "mysql" ]]; then
-    bash generator.sh 10000 $env
+    bash setup.sh 10000 $env
 elif [[ $env = "drds" ]]; then
-    bash generator.sh 10000 $env
+    bash setup.sh 10000 $env
 else
     echo "prepare mysql env"
-    bash prepareMysql.sh
+    bash setup.sh 10000 $env
 fi
 
 
