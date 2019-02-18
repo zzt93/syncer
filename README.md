@@ -43,7 +43,7 @@ way to make consistency promise because Syncer can only provide 'at least once' 
   - If an event go through column filter, and only primary key is left:
     - If event type is `UPDATE`, then discard this event -- because not support update id now;
     - Other event type, keep it.
-  - Support reading from binlog file to do data recovering in case of loss of data (`syncer.producer.input.masters[x].file`)
+  - Support reading from binlog file to do data recovering in case of loss of data (`input.masters[x].file`)
   - Support specify binlog file/position to start reading (`input.masters[x].syncMeta`)
 - MongoDB master source filter:
   - Version: 3.x
@@ -193,14 +193,14 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - init replication set in shell: `rs.initiate()`
 
 ### Producer Data Source Config
-- `syncer.producer.input.masters[x]`
+- `input.masters[x]`
  - `type`: MySQL, Mongo
  - <a name="connection"></a>`connection`: `ip`, `address`, `port`, `user`, `password`, `passwordFile`
  - `file`: absolute path to binlog file
 
 ```yml
 
-syncer.producer.input:
+input:
   masters:
     - connection:
         address: ${HOST_ADDRESS}
