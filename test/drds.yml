@@ -100,7 +100,11 @@ services:
     image: syncer:test
     container_name: syncer
     depends_on:
-      mysql:
+      mysql0:
+        condition: service_healthy
+      mysql1:
+        condition: service_healthy
+      mysql2:
         condition: service_healthy
       mongo:
         condition: service_healthy

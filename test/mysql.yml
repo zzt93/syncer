@@ -60,7 +60,7 @@ services:
     image: syncer:test
     container_name: syncer
     depends_on:
-      mysql_0:
+      mysql:
         condition: service_healthy
       mongo:
         condition: service_healthy

@@ -16,7 +16,7 @@ function generateTestData() {
 
         for f in generator/*.sql; do
             name=`basename ${f}`
-            docker run -v $(pwd)/data:/data --rm generator:test "/${name}" $1
+            docker run -v $(pwd)/data:/data --rm generator:test /${name} $1
         done
     fi
 }
@@ -35,10 +35,10 @@ function generateInitSqlFile() {
 
 function loadToMysql() {
     instance=$1
-    cd data/csv
+    cd data
     for (( i = 0; i < instance; ++i )); do
-        for f in `find . -name "*.csv"`; do
-            docker-compose -f drds.yml exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/${f}
+        for f in `find csv -name "*.csv"`; do
+            docker-compose -f "../$env.yml" exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/${f}
         done
     done
 }
@@ -58,7 +58,7 @@ else
 fi
 
 
-generateTestData
+generateTestData ${num}
 generateInitSqlFile ${instance}
 docker-compose -f "$env.yml" up -d
 loadToMysql ${instance}
