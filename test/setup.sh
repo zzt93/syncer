@@ -1,49 +1,64 @@
 #!/usr/bin/env bash
 
+
+function generateTestData() {
+    mkdir -p data/csv
+    for f in generator/*.sql; do
+        filename=`basename ${f}`
+        dir=${filename%".sql"}
+        exists=`find data/csv/${dir} -name '*.csv'`
+    done
+
+    if [[ -z "$exists" ]]; then
+        cd generator
+        docker build . -f DataGenerator.Dockerfile -t generator:test
+        cd ..
+
+        for f in generator/*.sql; do
+            name=`basename ${f}`
+            docker run -v $(pwd)/data:/data --rm generator:test "/${name}" $1
+        done
+    fi
+}
+
+function generateInitSqlFile() {
+    instance=$1
+    for (( i = 0; i < $instance; ++i )); do
+        tmp="data/mysql_init_${i}.sql"
+        if [[ ! -e ${tmp} ]];then
+            echo -e "CREATE DATABASE IF NOT EXISTS test_$i;\n use test_$i;" > ${tmp}
+            cat generator/*.sql >> ${tmp}
+        fi
+        export mysql_init_${i}=$(pwd)/${tmp}
+    done
+}
+
+function loadToMysql() {
+    instance=$1
+    cd data/csv
+    for (( i = 0; i < instance; ++i )); do
+        for f in `find . -name "*.csv"`; do
+            docker-compose -f drds.yml exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/${f}
+        done
+    done
+}
+
 num=$1
 env=$2
 
-cd generator
-docker build . -f DataGenerator.Dockerfile -t generator:test
-cd ..
+DRDS_INSTANCE=3
 
-docker run -v $(pwd)/data:/data --rm generator:test /mysql_test.sql $1
-docker run -v $(pwd)/data:/data --rm generator:test /mysql_simple.sql $1
-
-if [[ $env = "mysql" ]]; then
-    tmp="data/mysql_init.sql"
-    echo -e "CREATE DATABASE IF NOT EXISTS test;\n use test;" > ${tmp}
-    cat generator/mysql_test.sql >> ${tmp}
-    cat generator/mysql_simple.sql >> ${tmp}
-    export mysql_init=$(pwd)/${tmp}
-
-    docker-compose -f mysql.yml up -d
-
-    for f in data/mysql_test/*.csv; do
-        name=`basename $f`
-        docker-compose -f mysql.yml exec mysql mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test /tmp/mysql_test/$name
-    done
-
-elif [[ $env = "drds" ]]; then
-    for (( i = 0; i < 3; ++i )); do
-        tmp="data/mysql_init_${i}.sql"
-        echo -e "CREATE DATABASE IF NOT EXISTS test_$i;\n use test_$i;" > $tmp
-        cat generator/mysql_test.sql >> ${tmp}
-        cat generator/mysql_simple.sql >> ${tmp}
-        export mysql_init_${i}=$(pwd)/${tmp}
-    done
-
-    docker-compose -f drds.yml up -d
-
-    for (( i = 0; i < 3; ++i )); do
-        for f in data/mysql_test/*.csv; do
-            name=`basename $f`
-            docker-compose -f drds.yml exec mysql_$i mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_$i /tmp/msyql_test/$name
-        done
-    done
+if [[ ${env} = "mysql" ]]; then
+    instance=1
+elif [[ ${env} = "drds" ]]; then
+    instance=$DRDS_INSTANCE
 else
     echo "Unsupported env"
     exit 1
 fi
 
 
+generateTestData
+generateInitSqlFile ${instance}
+docker-compose -f "$env.yml" up -d
+loadToMysql ${instance}

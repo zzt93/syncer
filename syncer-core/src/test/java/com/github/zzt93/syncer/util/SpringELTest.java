@@ -125,6 +125,12 @@ public class SpringELTest {
     Assert.assertNull(value);
   }
 
+  @Test
+  public void spaceTest() {
+    String value = parser.parseExpression(" 'test' ").getValue(String.class);
+    Assert.assertEquals(value, "test");
+  }
+
   private static class Tmp {
 
     private int a;

@@ -20,7 +20,7 @@ input:
             fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
         - name: "simple"
           entities:
-          - name: types
+          - name: simple_type
             fields: [tinyint, long, char, varchar, text, decimal, double, timestamp]
 
 

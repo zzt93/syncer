@@ -1,6 +1,15 @@
 #!/usr/bin/env bash
-env=$1
-config=$2
+config=$1
+env=$2
+num=$3
+
+if [[ -z "${num}" ]]; then
+    num=100
+fi
+
+if [[ -z "${env}" ]]; then
+    env="mysql"
+fi
 
 # package syncer
 mvn package
@@ -17,7 +26,7 @@ cd test
 cd data
 mkdir -p config/consumer
 rm config/consumer/*
-if [[ $config = "yaml" ]]; then
+if [[ $config = "yaml" || ${config} = "yml" ]]; then
     cp config/correctness-consumer.yml config/consumer/correctness-consumer.yml
 elif [[ $config = "code" ]]; then
     cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
@@ -31,25 +40,23 @@ cd ..
 # Given
 # start env by docker-compose
 # init data
-if [[ $env = "mysql" ]]; then
-    bash setup.sh 100 $env
-elif [[ $env = "drds" ]]; then
-    bash setup.sh 100 $env
-else
-    echo "prepare mysql env"
-    bash setup.sh 100 $env
-fi
+echo "prepare $env env"
+bash setup.sh $num $env
 
 
-t1=`echo 'select count(*) from test.news' | mysql -uroot -h localhost -proot -P43306`
-echo "test.news: $t1"
+all=`docker-compose -f mysql.yml exec mysql mysql -uroot -proot -N -B -e 'select count(*) from test.news' | grep -o "[0-9]*"`
+echo "test.news: $all"
+
 # Then
 # query ES count
 
-c1=`curl -s -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application/json'`
+c1=`curl -s -X GET "localhost:49200/test/news/_count" -H 'Content-Type: application/json'`
 echo "es: $c1"
+if [[ ${c1} -eq "$all" ]];then
+    exit 1
+fi
 
-c2=`curl s- -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application/json' -d'
+c2=`curl -s -X GET "localhost:49200/test/news/_count" -H 'Content-Type: application/json' -d'
 {
     "query" : {
         "term" : { "user" : "kimchy" }
@@ -58,6 +65,9 @@ c2=`curl s- -X GET "localhost:49200/*/_doc/_count" -H 'Content-Type: application
 '`
 
 # query mysql count
-d1=`echo 'select count(*) from test.news_bak' | mysql -uroot -h localhost -proot -P43306`
-echo "test.news_bak: $c1"
+d1=`docker-compose -f mysql.yml exec mysql mysql -uroot -proot -N -B -e 'select count(*) from test.news_bak' | grep -o "[0-9]*"`
+echo "test.news_bak: $d1"
 
+if [[ ${d1} -eq "$all" ]];then
+    exit 1
+fi

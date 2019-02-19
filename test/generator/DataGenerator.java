@@ -18,7 +18,7 @@ public class DataGenerator {
   private static final String UNSIGNED = "UNSIGNED";
   private static final long OFFSET = Timestamp.valueOf("2017-01-01 00:00:00").getTime();
   private static final long END = Timestamp.valueOf("2049-01-01 00:00:00").getTime();
-  private static final String CSV = ".csv";
+  private static final String CSV = "csv";
   private static int index = CREATE_TABLE.length();
   private static Random r = new Random();
 
@@ -27,7 +27,7 @@ public class DataGenerator {
     String sqlFile = args[1];
     long lines = Long.parseLong(args[2]);
     for (Map.Entry<String, List<Supplier<Object>>> e : tables(sqlFile).entrySet()) {
-      Path path = Paths.get(outDir, sqlFile.split("\\.")[0], e.getKey() + CSV);
+      Path path = Paths.get(outDir, CSV, sqlFile.split("\\.")[0], e.getKey() + "." + CSV);
       Files.createDirectories(path.getParent());
       PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
       System.out.println("Generate " + e.getKey() + " to " + path);
