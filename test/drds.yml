@@ -1,6 +1,6 @@
 version: '2.1'
 services:
-  mysql0:
+  mysql_0:
     image: mysql:5.7
     container_name: mysql_0
     ports:
@@ -19,7 +19,7 @@ services:
     networks:
     - dbnet
 
-  mysql1:
+  mysql_1:
     image: mysql:5.7
     container_name: mysql_1
     ports:
@@ -38,7 +38,7 @@ services:
     networks:
     - dbnet
 
-  mysql2:
+  mysql_2:
     image: mysql:5.7
     container_name: mysql_2
     ports:
@@ -100,11 +100,11 @@ services:
     image: syncer:test
     container_name: syncer
     depends_on:
-      mysql0:
+      mysql_0:
         condition: service_healthy
-      mysql1:
+      mysql_1:
         condition: service_healthy
-      mysql2:
+      mysql_2:
         condition: service_healthy
       mongo:
         condition: service_healthy
@@ -117,7 +117,7 @@ services:
     environment:
     - ES_ADDR=elasticsearch
     - ES_CLUSTER=test-cluster
-    - MYSQL_ADDR=mysql
+    - MYSQL_ADDR=mysql_0
     - MONGO_ADDR=mongo
     - SYNCER_PRODUCER=/data/config/correctness-producer.yml
     - SYNCER_CONSUMER=/data/config/consumer/

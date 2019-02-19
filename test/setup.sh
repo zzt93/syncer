@@ -57,8 +57,19 @@ else
     exit 1
 fi
 
-
+echo "----------------"
+echo "generateTestData"
+echo "----------------"
 generateTestData ${num}
+echo "-------------------"
+echo "generateInitSqlFile"
+echo "-------------------"
 generateInitSqlFile ${instance}
+echo "----------------"
+echo " docker-compose "
+echo "----------------"
 docker-compose -f "$env.yml" up -d
+echo "----------------"
+echo "  loadToMysql   "
+echo "----------------"
 loadToMysql ${instance}
