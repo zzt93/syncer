@@ -2,7 +2,6 @@ version: '2.1'
 services:
   mysql_0:
     image: mysql:5.7
-    container_name: mysql_0
     ports:
     - "43306:3306"
     command: --init-file /init.sql
@@ -21,7 +20,6 @@ services:
 
   mysql_1:
     image: mysql:5.7
-    container_name: mysql_1
     ports:
     - "43307:3306"
     command: --init-file /init.sql
@@ -40,7 +38,6 @@ services:
 
   mysql_2:
     image: mysql:5.7
-    container_name: mysql_2
     ports:
     - "43307:3306"
     command: --init-file /init.sql

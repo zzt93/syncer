@@ -2,6 +2,10 @@
 
 
 function generateTestData() {
+    echo "----------------"
+    echo "generateTestData"
+    echo "----------------"
+
     mkdir -p data/csv
     for f in generator/*.sql; do
         filename=`basename ${f}`
@@ -22,8 +26,12 @@ function generateTestData() {
 }
 
 function generateInitSqlFile() {
-    instance=$1
-    for (( i = 0; i < $instance; ++i )); do
+    echo "-------------------"
+    echo "generateInitSqlFile"
+    echo "-------------------"
+
+    mysql_instance=$1
+    for (( i = 0; i < $mysql_instance; ++i )); do
         tmp="data/mysql_init_${i}.sql"
         if [[ ! -e ${tmp} ]];then
             echo -e "CREATE DATABASE IF NOT EXISTS test_$i;\n use test_$i;" > ${tmp}
@@ -34,42 +42,45 @@ function generateInitSqlFile() {
 }
 
 function loadToMysql() {
-    instance=$1
+    echo "----------------"
+    echo "  loadToMysql   "
+    echo "----------------"
+
+    mysql_instance=$1
     cd data
-    for (( i = 0; i < instance; ++i )); do
+    for (( i = 0; i < mysql_instance; ++i )); do
         for f in `find csv -name "*.csv"`; do
             docker-compose -f "../$env.yml" exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/${f}
         done
     done
 }
 
+function prepareEnv() {
+    echo "----------------"
+    echo " docker-compose "
+    echo "----------------"
+    docker-compose -f "$env.yml" up -d
+}
+
+function checkParameter() {
+    if [[ ${env} = "mysql" ]]; then
+        mysql_instance=1
+    elif [[ ${env} = "drds" ]]; then
+        mysql_instance=3
+    else
+        echo "Unsupported env"
+        exit 1
+    fi
+}
+
 num=$1
 env=$2
 
-DRDS_INSTANCE=3
 
-if [[ ${env} = "mysql" ]]; then
-    instance=1
-elif [[ ${env} = "drds" ]]; then
-    instance=$DRDS_INSTANCE
-else
-    echo "Unsupported env"
-    exit 1
-fi
 
-echo "----------------"
-echo "generateTestData"
-echo "----------------"
+checkParameter
+
 generateTestData ${num}
-echo "-------------------"
-echo "generateInitSqlFile"
-echo "-------------------"
-generateInitSqlFile ${instance}
-echo "----------------"
-echo " docker-compose "
-echo "----------------"
-docker-compose -f "$env.yml" up -d
-echo "----------------"
-echo "  loadToMysql   "
-echo "----------------"
-loadToMysql ${instance}
+generateInitSqlFile ${mysql_instance}
+prepareEnv
+loadToMysql ${mysql_instance}
