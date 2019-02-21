@@ -126,6 +126,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   @Override
+  public com.github.zzt93.syncer.data.SyncData copyMeta(int index) {
+    return new SyncData(this, index);
+  }
+
+  @Override
   public SyncData addExtra(String key, Object value) {
     result.getExtra().put(key, value);
     return this;
@@ -202,7 +207,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   @Override
-  public HashMap<String, Object> getExtra() {
+  public HashMap<String, Object> getExtras() {
     return result.getExtra();
   }
 

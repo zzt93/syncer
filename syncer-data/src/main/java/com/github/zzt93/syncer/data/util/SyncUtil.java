@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.data.util;
 
+import com.github.zzt93.syncer.data.SyncData;
 import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
@@ -7,6 +8,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+
+import static com.google.common.base.CaseFormat.LOWER_CAMEL;
+import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 
 /**
  * @author zzt
@@ -49,6 +53,15 @@ public class SyncUtil {
 
   public static Map fromJson(String json) {
     return fromJson(json, Map.class);
+  }
+
+  public static void underscoreToCamel(SyncData data) {
+    for (Map.Entry<String, Object> e : data.getFields().entrySet()) {
+      String from = e.getKey();
+      String to = LOWER_UNDERSCORE.to(LOWER_CAMEL, from);
+      logger.info("Rename field: {} -> {}", from, to);
+      data.renameField(from, to);
+    }
   }
 
 }
