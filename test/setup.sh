@@ -50,7 +50,9 @@ function loadToMysql() {
     cd data
     for (( i = 0; i < mysql_instance; ++i )); do
         for f in `find csv -name "*.csv"`; do
-            docker-compose -f "../$env.yml" exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/${f}
+            if [[ ${f} != *_bak.csv ]]; then
+                docker-compose -f "../$env.yml" exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/${f}
+            fi
         done
     done
 }

@@ -2,8 +2,6 @@ version: '2.1'
 services:
   mysql_0:
     image: mysql:5.7
-    ports:
-    - "43306:3306"
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_0}:/init.sql
@@ -20,8 +18,6 @@ services:
 
   mysql_1:
     image: mysql:5.7
-    ports:
-    - "43307:3306"
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_1}:/init.sql
@@ -38,8 +34,6 @@ services:
 
   mysql_2:
     image: mysql:5.7
-    ports:
-    - "43307:3306"
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_2}:/init.sql
