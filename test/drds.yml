@@ -4,7 +4,7 @@ services:
     image: mysql:5.7
     ports:
     - "43306:3306"
-    command: --init-file /init.sql
+    command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_0}:/init.sql
     - ./data:/tmp
@@ -22,7 +22,7 @@ services:
     image: mysql:5.7
     ports:
     - "43307:3306"
-    command: --init-file /init.sql
+    command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_1}:/init.sql
     - ./data:/tmp
@@ -40,7 +40,7 @@ services:
     image: mysql:5.7
     ports:
     - "43307:3306"
-    command: --init-file /init.sql
+    command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_2}:/init.sql
     - ./data:/tmp
@@ -84,7 +84,7 @@ services:
       interval: 5s
       timeout: 5s
       retries: 12
-    command: mongod --smallfiles
+    command: mongod --smallfiles --replSet test
     environment:
     - MONGODB_USER="root"
     - MONGODB_PASS="root"
