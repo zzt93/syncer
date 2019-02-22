@@ -9,7 +9,7 @@ import java.util.HashMap;
  * update(set field)/delete by query
  * @see ExtraQuery
  */
-public class SyncByQuery implements com.github.zzt93.syncer.data.SyncByQuery {
+public abstract class SyncByQuery implements com.github.zzt93.syncer.data.SyncByQuery {
 
   private static final Logger logger = LoggerFactory.getLogger(SyncByQuery.class);
 
@@ -22,10 +22,6 @@ public class SyncByQuery implements com.github.zzt93.syncer.data.SyncByQuery {
     }
     syncBy.put(syncWithCol, value);
     return this;
-  }
-
-  boolean isSyncWithoutId() {
-    return !syncBy.isEmpty();
   }
 
   HashMap<String, Object> getSyncBy() {

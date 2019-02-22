@@ -9,7 +9,9 @@ public interface SyncByQuery {
 
   SyncByQuery filter(String syncWithCol, Object value);
 
-  @Override
+  SyncByQuery updateList(String listField, Object delta);
+
+    @Override
   String toString();
 
 }
