@@ -31,13 +31,13 @@ filter:
       switch: "entity"
       case: # support default branch
         "news":
-        - statement: ["#suffix = '-' + getField('alliance_id')/10000"]
+        - statement: ["#suffix = '-' + getField('alliance_id')/10000", "updateField('thumb_content', new String(getField('thumb_content'))).updateField('content', new String(getField('content')))"]
         "types":
-        - statement: ["#suffix = '-' + getField('tinyint')", ]
+        - statement: ["#suffix = '-' + getField('tinyint')", "updateField('text', new String(getField('text')))"]
         "simple_type":
-        - statement: ["#suffix = '-' + getField('tinyint')", ]
+        - statement: ["#suffix = '-' + getField('tinyint')", "updateField('text', new String(getField('text')))"]
         "correctness":
-        - statement: ["#suffix = '-' + id/10000", ]
+        - statement: ["#suffix = '-' + id/10000"]
 
 
 
@@ -74,7 +74,7 @@ output:
       user: root
       password: ${MYSQL_PASS}
     rowMapping:
-      schema: "'test'"
+      schema: "repo"
       table: "entity + '_bak'"
       id: "id"
       rows:

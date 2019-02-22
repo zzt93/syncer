@@ -62,7 +62,7 @@ output:
       user: root
       password: ${MYSQL_PASS}
     rowMapping:
-      schema: "'test'"
+      schema: "repo"
       table: "entity + '_bak'"
       id: "id"
       rows:

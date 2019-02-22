@@ -49,6 +49,7 @@ services:
     - dbnet
 
   elasticsearch:
+    command: -E cluster.name=test-cluster -E network.host=_site_
     image: elasticsearch:5.6
     depends_on:
       mysql:

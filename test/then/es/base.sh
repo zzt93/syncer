@@ -2,7 +2,7 @@
 
 env=$1
 
-all=`docker-compose -f ../../${env}.yml exec mysql_0 mysql -uroot -proot -N -B -e 'select count(*) from test_0.news' | grep -o "[0-9]*"`
+all=`docker-compose -f ${env}.yml exec mysql_0 mysql -uroot -proot -N -B -e 'select count(*) from test_0.news' | grep -o "[0-9]*"`
 echo "[Sync input] -- test.news: $all"
 
 
