@@ -75,14 +75,14 @@ function checkParameter() {
     fi
 }
 
-num=$1
+lines=$1
 env=$2
 
 
 
 checkParameter
 
-generateTestData ${num}
+generateTestData ${lines}
 generateInitSqlFile ${mysql_instance}
 prepareEnv
 loadToMysql ${mysql_instance}

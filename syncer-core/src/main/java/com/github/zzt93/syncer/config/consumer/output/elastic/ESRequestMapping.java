@@ -10,8 +10,8 @@ import java.util.LinkedHashMap;
  */
 public class ESRequestMapping {
 
-  private String index = "schema";
-  private String type = "table";
+  private String index = "repo";
+  private String type = "entity";
   private String documentId = "id";
   private LinkedHashMap<String, Object> fieldsMapping = new LinkedHashMap<>();
   private boolean noUseIdForIndex = false;

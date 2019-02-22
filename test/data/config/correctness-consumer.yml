@@ -28,11 +28,12 @@ input:
 filter:
   - statement: ["#suffix=''"]
   - switcher:
-      switch: "table"
+      switch: "entity"
       case: # support default branch
         "news":
         - statement: ["#suffix = '-' + getField('alliance_id')/10000"]
         "types":
+        - statement: ["#suffix = '-' + getField('tinyint')", ]
         "simple_type":
         - statement: ["#suffix = '-' + getField('tinyint')", ]
         "correctness":
@@ -71,7 +72,7 @@ output:
       address: ${MYSQL_ADDR}
       port: 3306
       user: root
-      password: root
+      password: ${MYSQL_PASS}
     rowMapping:
       schema: "'test'"
       table: "entity + '_bak'"

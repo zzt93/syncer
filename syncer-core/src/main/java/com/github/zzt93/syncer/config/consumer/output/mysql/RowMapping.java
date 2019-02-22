@@ -8,8 +8,8 @@ import java.util.LinkedHashMap;
 public class RowMapping {
 
 
-  private String schema = "schema";
-  private String table = "table";
+  private String schema = "repo";
+  private String table = "entity";
   private String id = "id";
   private LinkedHashMap<String, Object> rows = new LinkedHashMap<>();
 

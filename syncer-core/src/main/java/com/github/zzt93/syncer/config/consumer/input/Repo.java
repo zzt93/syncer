@@ -44,7 +44,7 @@ public class Repo implements Hashable {
       nameToRows.put(entity.getName(), new HashSet<>(entity.getFields()));
     }
     if (nameToRows.size() != entities.size()) {
-      logger.warn("Duplicate table name definition: {}", entities);
+      logger.warn("Duplicate entity name definition: {}", entities);
     }
   }
 

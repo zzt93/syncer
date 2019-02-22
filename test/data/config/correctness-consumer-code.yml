@@ -60,7 +60,7 @@ output:
       address: ${MYSQL_ADDR}
       port: 3306
       user: root
-      password: root
+      password: ${MYSQL_PASS}
     rowMapping:
       schema: "'test'"
       table: "entity + '_bak'"

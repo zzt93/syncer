@@ -71,6 +71,7 @@ services:
     - ES_ADDR=elasticsearch
     - ES_CLUSTER=test-cluster
     - MYSQL_ADDR=mysql_0
+    - MYSQL_PASS=root
     - MONGO_ADDR=mongo
     - SYNCER_PRODUCER=/data/config/correctness-producer.yml
     - SYNCER_CONSUMER=/data/config/consumer/
