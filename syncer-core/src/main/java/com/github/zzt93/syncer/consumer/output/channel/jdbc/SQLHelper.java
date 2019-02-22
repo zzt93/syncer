@@ -6,6 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ClassUtils;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 
 /**
@@ -22,7 +23,8 @@ public class SQLHelper {
     Class<?> aClass = value.getClass();
     if (ClassUtils.isPrimitiveOrWrapper(aClass)
         || CharSequence.class.isAssignableFrom(aClass)
-        || value instanceof Timestamp) {
+        || value instanceof Timestamp
+        || value instanceof BigDecimal) {
       if (value instanceof String || value instanceof Timestamp) {
         value = "'" + StringEscapeUtils.escapeSql(value.toString()) + "'";
       }
@@ -32,6 +34,10 @@ public class SQLHelper {
       logger.error("Unhandled complex type: {}, value: {}", aClass, value);
     }
     return value.toString();
+  }
+
+  public static String wrapCol(String col) {
+    return '`' + col + '`';
   }
 
 }

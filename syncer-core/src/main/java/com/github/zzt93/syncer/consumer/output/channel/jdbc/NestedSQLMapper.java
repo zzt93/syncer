@@ -44,7 +44,7 @@ public class NestedSQLMapper extends SQLMapper {
     ParameterizedString parameterizedString = null;
     HashMap<String, String> tmp = new HashMap<>();
     for (Entry<String, Object> entry : map.entrySet()) {
-      keys.add(entry.getKey());
+      keys.add(SQLHelper.wrapCol(entry.getKey()));
       Object value = entry.getValue();
       if (value instanceof ParameterizedString && value != parameterizedString) {
         // TODO 18/3/8 multiple query, change to select .. a join b
