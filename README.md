@@ -171,7 +171,16 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Not support composite primary key
   - Not support update primary key
   - Only support update/delete by query exact value, i.e. no support query analyzed field (`text` query when update)
-
+  - Data of numeric types (tinyint, etc) always returned **signed** regardless of whether column definition includes "unsigned" keyword or not.
+  You may need to convert to unsigned if necessary.
+  ```
+     Byte.toUnsignedInt(fields['xx'])
+  ```
+  - Data of *text/*blob types always returned as a byte array (for var* this is true in future).
+  You may need to convert to string if necessary.
+  ```
+    new String(fields['xx'])
+  ```
 ### Notice
 
 - Don't update/delete use `syncer` and other way (REST api or Java api) at the same time, it may cause version conflict and fail the change

@@ -7,6 +7,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.Timestamp;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.*;
 import java.util.function.Supplier;
 
@@ -16,11 +18,12 @@ public class DataGenerator {
   private static final int MIN = 32;
   private static final int MAX = 127;
   private static final String UNSIGNED = "UNSIGNED";
-  private static final long OFFSET = Timestamp.valueOf("2017-01-01 00:00:00").getTime();
-  private static final long END = Timestamp.valueOf("2049-01-01 00:00:00").getTime();
+  private static final long EARLIEST = Timestamp.valueOf("2000-01-01 00:00:00").getTime();
+  private static final long END = Timestamp.valueOf("2028-01-01 00:00:00").getTime();
   private static final String CSV = "csv";
   private static int index = CREATE_TABLE.length();
   private static Random r = new Random();
+  private static DateFormat mysqlDefault = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
 
   public static void main(String[] args) throws IOException {
     String outDir = args[0];
@@ -82,18 +85,22 @@ public class DataGenerator {
       case "longtext":
         return () -> random(1, 300);
       case "decimal":
-        return () -> new BigDecimal(r.nextLong()).movePointLeft(2);
+        return () -> new BigDecimal(r.nextInt()).movePointLeft(2);
       case "double":
-        return () -> r.nextDouble();
+        return () -> r.nextFloat();
       case "timestamp":
-        return DataGenerator::randomTimestamp;
+        if (type.length > 1) {
+          return DataGenerator::randomTimestamp;
+        }
+        return () -> mysqlDefault.format(randomTimestamp());
     }
     return null;
   }
 
   private static Timestamp randomTimestamp() {
-    long diff = END - OFFSET + 1;
-    return new Timestamp(OFFSET + (long) (Math.random() * diff));
+    long diff = END - EARLIEST + 1;
+    long l = (long) (Math.random() * diff);
+    return new Timestamp(EARLIEST + l);
   }
 
   private static String[] getType(String token) {
@@ -135,23 +142,18 @@ public class DataGenerator {
     out.close();
   }
 
-  private static Timestamp random() {
-    long abs = Math.abs(r.nextLong());
-    return new Timestamp(abs);
-  }
-
   private static String random(int min, int max) {
     int l = r.nextInt(max - min) + min;
     StringBuilder sb = new StringBuilder(l + 2);
-    sb.append('"');
+//    sb.append('"');
     for (int i = 0; i < l; i++) {
       char c = randomAscii();
-      while (c == '"') {
+      while (c == ',' || (c == '\\') && i == l-1) {
         c = randomAscii();
       }
       sb.append(c);
     }
-    sb.append('"');
+//    sb.append('"');
     return sb.toString();
   }
 

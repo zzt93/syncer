@@ -5,23 +5,23 @@ consumerId: correctness
 
 input:
   masters:
-    - connection:
-        address: ${MYSQL_ADDR}
-        port: 3306
-      scheduler: mod
-      repos:
-        - name: "test.*"
-          entities:
-          - name: correctness
-            fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
-          - name: types
-            fields: [tinyint, long, char, varchar, text, decimal, double, timestamp]
-          - name: news
-            fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
-        - name: "simple"
-          entities:
-          - name: simple_type
-            fields: [tinyint, long, char, varchar, text, decimal, double, timestamp]
+  - connection:
+      address: ${MYSQL_ADDR}
+      port: 3306
+    scheduler: mod
+    repos:
+    - name: "test.*"
+      entities:
+      - name: correctness
+        fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
+      - name: types
+        fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+      - name: news
+        fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
+    - name: "simple"
+      entities:
+      - name: simple_type
+        fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
 
 
 
@@ -67,6 +67,7 @@ output:
       id: "id"
       rows:
         "fields": "fields.*.flatten"
+        "id": "id"
     batch:
       size: 100
       delay: 100

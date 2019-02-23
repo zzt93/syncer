@@ -17,7 +17,7 @@ CREATE TABLE IF NOT EXISTS  `simple_type` (
 CREATE TABLE IF NOT EXISTS  `simple_type_bak` (
 	`id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,
 	`tinyint` tinyint UNSIGNED NOT NULL,
-	`long` bigint UNSIGNED NOT NULL,
+	`bigint` bigint UNSIGNED NOT NULL,
 	`char` char(32)  NOT NULL,
 	`varchar` varchar(5)  NOT NULL,
 	`text` text  NOT NULL,

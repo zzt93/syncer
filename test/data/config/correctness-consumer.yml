@@ -15,13 +15,13 @@ input:
           - name: correctness
             fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
           - name: types
-            fields: [tinyint, long, char, varchar, text, decimal, double, timestamp]
+            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
           - name: news
             fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
         - name: "simple"
           entities:
           - name: simple_type
-            fields: [tinyint, long, char, varchar, text, decimal, double, timestamp]
+            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
 
 
 
@@ -33,11 +33,11 @@ filter:
         "news":
         - statement: ["#suffix = '-' + getField('alliance_id')/10000", "updateField('thumb_content', new String(getField('thumb_content'))).updateField('content', new String(getField('content')))"]
         "types":
-        - statement: ["#suffix = '-' + getField('tinyint')", "updateField('text', new String(getField('text')))"]
+        - statement: ["#suffix = '-' + getField('tinyint')", "updateField('text', new String(getField('text'))).updateField('tinyint', T(Byte).toUnsignedInt(getField('tinyint')))"]
         "simple_type":
-        - statement: ["#suffix = '-' + getField('tinyint')", "updateField('text', new String(getField('text')))"]
+        - statement: ["#suffix = '-' + getField('tinyint')", "updateField('text', new String(getField('text'))).updateField('tinyint', T(Byte).toUnsignedInt(getField('tinyint')))"]
         "correctness":
-        - statement: ["#suffix = '-' + id/10000"]
+        - statement: ["#suffix = '-' + id/10000", "updateField('type', T(Byte).toUnsignedInt(getField('type')))"]
 
 
 
@@ -79,6 +79,7 @@ output:
       id: "id"
       rows:
         "fields": "fields.*.flatten"
+        "id": "id"
     batch:
       size: 100
       delay: 100
