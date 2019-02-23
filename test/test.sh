@@ -50,8 +50,6 @@ bash setup.sh ${num} ${env}
 
 # Then
 # query mysql/es count
-for dir in `find then/ -type d` ; do
-    for f in `find $dir -name "*.sh"` ; do
-        bash ${f} ${env}
-    done
+for f in `find then -name "*.sh"` ; do
+    bash ${f} ${env}
 done

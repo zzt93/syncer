@@ -31,13 +31,13 @@ filter:
       switch: "entity"
       case: # support default branch
         "news":
-        - statement: ["#suffix = '-' + getField('alliance_id')/10000", "updateField('thumb_content', new String(getField('thumb_content'))).updateField('content', new String(getField('content')))"]
+        - statement: ["updateField('thumb_content', new String(getField('thumb_content'))).updateField('content', new String(getField('content')))"]
         "types":
-        - statement: ["#suffix = '-' + getField('tinyint')", "updateField('text', new String(getField('text'))).updateField('tinyint', T(Byte).toUnsignedInt(getField('tinyint')))"]
+        - statement: ["updateField('text', new String(getField('text'))).updateField('tinyint', T(Byte).toUnsignedInt(getField('tinyint')))", "#suffix = '-' + getField('tinyint')/128"]
         "simple_type":
-        - statement: ["#suffix = '-' + getField('tinyint')", "updateField('text', new String(getField('text'))).updateField('tinyint', T(Byte).toUnsignedInt(getField('tinyint')))"]
+        - statement: ["updateField('text', new String(getField('text'))).updateField('tinyint', T(Byte).toUnsignedInt(getField('tinyint')))", "#suffix = '-' + getField('tinyint')/128"]
         "correctness":
-        - statement: ["#suffix = '-' + id/10000", "updateField('type', T(Byte).toUnsignedInt(getField('type')))"]
+        - statement: ["updateField('type', T(Byte).toUnsignedInt(getField('type')))"]
 
 
 
