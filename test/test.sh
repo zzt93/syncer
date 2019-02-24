@@ -50,6 +50,8 @@ bash setup.sh ${num} ${env}
 
 # Then
 # query mysql/es count
+export RED='\033[0;31m'
+export NC='\033[0m' # No Color
 for f in `find then -name "*.sh"` ; do
     bash ${f} ${env}
 done

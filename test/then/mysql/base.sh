@@ -16,7 +16,7 @@ for table in ${names} ; do
     tmp=`docker-compose -f $env.yml exec mysql_0 mysql -uroot -proot -N -B -e "select count(*) from test_0.${table}_bak" | grep -o "[0-9]*"`
     echo "[Sync result] -- test.${table}_bak: $tmp"
     if [[ ${tmp} -ne "$all" ]];then
-        echo "ERROR: $table not right"
+        echo -e "$RED ERROR $NC: $table not right"
     fi
 done
 
