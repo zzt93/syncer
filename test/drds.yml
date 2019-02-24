@@ -109,7 +109,7 @@ services:
     environment:
     - ES_ADDR=elasticsearch
     - ES_CLUSTER=test-cluster
-    - MYSQL_ADDR=mysql_0
+    - MYSQL_ADDR="mysql_0","mysql_1","mysql_2"
     - MYSQL_PASS=root
     - MONGO_ADDR=mongo
     - SYNCER_PRODUCER=/data/config/correctness-producer.yml

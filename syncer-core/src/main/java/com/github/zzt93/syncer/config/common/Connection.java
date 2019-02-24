@@ -2,16 +2,23 @@ package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NetworkUtil;
+import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import com.google.common.base.Preconditions;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
 
 import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author zzt
  */
+@NoArgsConstructor
 public class Connection implements Comparable<Connection> {
 
   private static final Logger logger = LoggerFactory.getLogger(Connection.class);
@@ -24,8 +31,15 @@ public class Connection implements Comparable<Connection> {
   private String password;
   private volatile String identifier;
   private String ip;
+  private SyncMeta syncMeta;
 
-  public Connection() {
+  public Connection(String address, int port, String user, String passwordFile, String password, SyncMeta syncMeta) {
+    this.address = address;
+    this.port = port;
+    this.user = user;
+    this.passwordFile = passwordFile;
+    this.password = password;
+    this.syncMeta = syncMeta;
   }
 
   public Connection(Connection connection) {
@@ -36,6 +50,15 @@ public class Connection implements Comparable<Connection> {
     password = connection.password;
     identifier = connection.identifier;
     ip = connection.ip;
+    syncMeta = connection.syncMeta;
+  }
+
+  public SyncMeta[] getSyncMetas() {
+    return new SyncMeta[]{syncMeta};
+  }
+
+  public void setSyncMeta(SyncMeta syncMeta) {
+    this.syncMeta = syncMeta;
   }
 
   public String getAddress() {
@@ -126,6 +149,10 @@ public class Connection implements Comparable<Connection> {
   }
 
   public boolean valid() {
+    return validConnection(address, port);
+  }
+
+  static boolean validConnection(String address, int port) {
     return address != null && port > 0 && port < 65536;
   }
 
@@ -144,5 +171,13 @@ public class Connection implements Comparable<Connection> {
   public int compareTo(Connection o) {
     int compare = ip.compareTo(o.ip);
     return compare != 0 ? compare : Integer.compare(port, o.port);
+  }
+
+  public Set<String> remoteIds() {
+    return Sets.newHashSet(connectionIdentifier());
+  }
+
+  public List<Connection> getConnections() {
+    return Lists.newArrayList(this);
   }
 }

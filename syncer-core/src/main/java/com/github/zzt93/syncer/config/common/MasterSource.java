@@ -27,14 +27,14 @@ public class MasterSource {
   private final Set<Repo> repoSet = new HashSet<>();
   private MasterSourceType type = MasterSourceType.MySQL;
   private SchedulerType scheduler = SchedulerType.hash;
-  private ClusterConnection connection;
+  private MayClusterConnection connection;
   private List<Repo> repos = new ArrayList<>();
 
-  public ClusterConnection getConnection() {
-    return connection;
+  public Connection getConnection() {
+    return connection.getRealConnection();
   }
 
-  public void setConnection(ClusterConnection connection) {
+  public void setConnection(MayClusterConnection connection) {
     this.connection = connection;
   }
 
@@ -82,12 +82,12 @@ public class MasterSource {
 
     MasterSource that = (MasterSource) o;
 
-    return connection.equals(that.connection);
+    return getConnection().equals(that.getConnection());
   }
 
   @Override
   public int hashCode() {
-    return connection.hashCode();
+    return getConnection().hashCode();
   }
 
   @Override
@@ -99,17 +99,17 @@ public class MasterSource {
         '}';
   }
 
-  public List<String> remoteIds() {
-    return connection.remoteIds();
+  public Set<String> remoteIds() {
+    return getConnection().remoteIds();
   }
 
   public List<? extends ConsumerSource> toConsumerSources(String consumerId,
                                                           HashMap<String, SyncInitMeta> id2SyncInitMeta,
                                                           EventScheduler scheduler) {
     List<LocalConsumerSource> res = new LinkedList<>();
-    ClusterConnection cluster = getConnection();
-    SyncMeta[] syncMetas = cluster.getSyncMetas();
-    List<Connection> connections = cluster.getConnections();
+    Connection realConnection = getConnection();
+    SyncMeta[] syncMetas = realConnection.getSyncMetas();
+    List<Connection> connections = realConnection.getConnections();
     for (int i = 0; i < connections.size(); i++) {
       Connection connection = connections.get(i);
       SyncInitMeta syncInitMeta = getSyncInitMeta(syncMetas[i], id2SyncInitMeta, connection);

@@ -1,44 +1,34 @@
 package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
-import com.google.common.collect.Lists;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.function.Supplier;
+import java.util.*;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
+@Getter
+@Setter
+@NoArgsConstructor
 public class ClusterConnection extends Connection {
 
   static final String COLON = ":";
   private String clusterName;
   private List<String> clusterNodes;
-  private List<String> clusterIds;
-  private SyncMeta[] syncMetas;
+  private HashSet<String> clusterIds;
 
-  String getClusterName() {
-    return clusterName;
-  }
-
-  public void setClusterName(String clusterName) {
+  ClusterConnection(String clusterName, List<String> clusterNodes) {
     this.clusterName = clusterName;
-  }
-
-  public List<String> getClusterNodes() {
-    return clusterNodes;
-  }
-
-  public void setClusterNodes(List<String> clusterNodes) {
     this.clusterNodes = clusterNodes;
   }
 
-  private List<String> getClusterIds() {
+  private HashSet<String> getClusterIds() {
     if (clusterIds == null) {
-      clusterIds = new ArrayList<>(clusterNodes.size());
+      clusterIds = new HashSet<>(clusterNodes.size());
       for (String clusterNode : clusterNodes) {
         clusterIds.add(getConnection(clusterNode).connectionIdentifier());
       }
@@ -47,7 +37,8 @@ public class ClusterConnection extends Connection {
   }
 
   public SyncMeta[] getSyncMetas() {
-    int target = super.valid() ? 1 : getClusterNodes().size();
+    int target = getClusterNodes().size();
+    SyncMeta[] syncMetas = super.getSyncMetas();
     if (syncMetas == null) {
       syncMetas = new SyncMeta[target];
     } else if (syncMetas.length != target) {
@@ -56,19 +47,13 @@ public class ClusterConnection extends Connection {
     return syncMetas;
   }
 
-  public void setSyncMetas(SyncMeta[] syncMetas) {
-    this.syncMetas = syncMetas;
-  }
-
   @Override
   public boolean valid() {
-    boolean validConnection = super.valid();
-    boolean validCluster = isValidCluster();
-    return validCluster != validConnection;
+    return validCluster(getClusterNodes());
   }
 
-  private boolean isValidCluster() {
-    return getClusterNodes() != null && !getClusterNodes().isEmpty();
+  static boolean validCluster(List<String> clusterNodes) {
+    return clusterNodes != null && !clusterNodes.isEmpty();
   }
 
   @Override
@@ -77,37 +62,34 @@ public class ClusterConnection extends Connection {
     if (o == null || getClass() != o.getClass()) return false;
     if (!super.equals(o)) return false;
     ClusterConnection that = (ClusterConnection) o;
-    return clusterOrSimple(() -> Objects.equals(getClusterIds(), that.getClusterIds()), () -> super.equals(o));
+    return Objects.equals(clusterIds, that.clusterIds);
   }
 
   @Override
   public int hashCode() {
-    return clusterOrSimple(() -> Objects.hash(getClusterIds()), super::hashCode);
+    return Objects.hash(super.hashCode(), clusterIds);
   }
 
   @Override
   public String toString() {
     return "ClusterConnection{" +
-        "super=" + super.toString() +
-        ", clusterName='" + clusterName + '\'' +
-        ", clusterNodes=" + getClusterNodes() +
+        "clusterName='" + clusterName + '\'' +
+        ", clusterNodes=" + clusterNodes +
+        ", clusterIds=" + clusterIds +
         '}';
   }
 
   @Override
   public String connectionIdentifier() {
-    return clusterOrSimple(() -> getClusterIds().toString(), super::connectionIdentifier);
+    return getClusterIds().toString();
   }
 
-  List<Connection> getConnections() {
-    return clusterOrSimple(() -> {
-      List<Connection> res = new ArrayList<>();
-      for (String clusterNode : getClusterNodes()) {
-        Connection e = getConnection(clusterNode);
-        res.add(e);
-      }
-      return res;
-    }, () -> Lists.newArrayList(this));
+  public List<Connection> getConnections() {
+    List<Connection> res = new ArrayList<>();
+    for (String clusterNode : getClusterNodes()) {
+      res.add(getConnection(clusterNode));
+    }
+    return res;
   }
 
   private Connection getConnection(String clusterNode) {
@@ -123,23 +105,8 @@ public class ClusterConnection extends Connection {
     return e;
   }
 
-  List<String> remoteIds() {
-    return clusterOrSimple(
-        this::getClusterIds,
-        () -> Lists.newArrayList(super.connectionIdentifier())
-    );
-  }
-
-  private <T> T clusterOrSimple(Supplier<T> cluster, Supplier<T> simple) {
-    boolean valid = super.valid();
-    boolean validCluster = isValidCluster();
-    if (valid == validCluster) {
-      throw new InvalidConfigException("Config both address and clusterNodes");
-    } else if (valid) {
-      return simple.get();
-    } else {
-      return cluster.get();
-    }
+  public Set<String> remoteIds() {
+    return getClusterIds();
   }
 
 }
