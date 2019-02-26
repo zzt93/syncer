@@ -177,7 +177,7 @@ public class Connection implements Comparable<Connection> {
     return Sets.newHashSet(connectionIdentifier());
   }
 
-  public List<Connection> getConnections() {
+  public List<Connection> getReals() {
     return Lists.newArrayList(this);
   }
 }

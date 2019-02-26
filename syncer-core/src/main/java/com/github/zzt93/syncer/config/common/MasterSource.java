@@ -109,7 +109,7 @@ public class MasterSource {
     List<LocalConsumerSource> res = new LinkedList<>();
     Connection realConnection = getConnection();
     SyncMeta[] syncMetas = realConnection.getSyncMetas();
-    List<Connection> connections = realConnection.getConnections();
+    List<Connection> connections = realConnection.getReals();
     for (int i = 0; i < connections.size(); i++) {
       Connection connection = connections.get(i);
       SyncInitMeta syncInitMeta = getSyncInitMeta(syncMetas[i], id2SyncInitMeta, connection);

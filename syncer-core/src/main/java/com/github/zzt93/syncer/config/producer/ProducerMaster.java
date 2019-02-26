@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.producer;
 
 import com.github.zzt93.syncer.config.common.Connection;
+import com.github.zzt93.syncer.config.common.MayClusterConnection;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 
 /**
@@ -9,14 +10,14 @@ import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 public class ProducerMaster {
 
   private MasterSourceType type = MasterSourceType.MySQL;
-  private Connection connection;
+  private MayClusterConnection connection;
   private String file;
 
   public Connection getConnection() {
-    return connection;
+    return connection.getRealConnection();
   }
 
-  public void setConnection(Connection connection) {
+  public void setConnection(MayClusterConnection connection) {
     this.connection = connection;
   }
 

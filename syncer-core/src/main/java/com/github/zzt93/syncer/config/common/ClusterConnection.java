@@ -84,7 +84,7 @@ public class ClusterConnection extends Connection {
     return getClusterIds().toString();
   }
 
-  public List<Connection> getConnections() {
+  public List<Connection> getReals() {
     List<Connection> res = new ArrayList<>();
     for (String clusterNode : getClusterNodes()) {
       res.add(getConnection(clusterNode));
