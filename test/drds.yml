@@ -112,7 +112,7 @@ services:
     - MYSQL_ADDR="mysql_0:3306","mysql_1:3306","mysql_2:3306"
     - MYSQL_PASS=root
     - MONGO_ADDR=mongo
-    - SYNCER_PRODUCER=/data/config/correctness-producer.yml
+    - SYNCER_PRODUCER=/data/config/producer.yml
     - SYNCER_CONSUMER=/data/config/consumer/
     networks:
     - dbnet

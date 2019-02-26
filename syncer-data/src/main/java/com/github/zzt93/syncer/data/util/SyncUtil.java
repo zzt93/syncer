@@ -7,6 +7,7 @@ import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import static com.google.common.base.CaseFormat.LOWER_CAMEL;
@@ -56,12 +57,16 @@ public class SyncUtil {
   }
 
   public static void underscoreToCamel(SyncData data) {
-    for (Map.Entry<String, Object> e : data.getFields().entrySet()) {
+    HashMap<String, Object> fields = data.getFields();
+    HashMap<String, Object> tmp = new HashMap<>();
+    for (Map.Entry<String, Object> e : fields.entrySet()) {
       String from = e.getKey();
       String to = LOWER_UNDERSCORE.to(LOWER_CAMEL, from);
       logger.info("Rename field: {} -> {}", from, to);
-      data.renameField(from, to);
+      tmp.put(from, e.getValue());
     }
+    fields.clear();
+    fields.putAll(tmp);
   }
 
 }

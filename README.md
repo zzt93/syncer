@@ -118,7 +118,9 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
       - Support multiple extra dependent query via special mark `$var$`
     - One to many relationship (parent-child relationship in ES)for document in different index
     - Self referential relationship handle
-  - Add `upsert` support, fix `DocumentMissingException` use `upsert`
+  - Add `upsert` support, fix `DocumentMissingException` use `upsert`, can be used in following two scenarios
+    - Init load for data, by creating index manually and update synced field to ES (only support `MySQL` input) 
+    - Fix some un-expected config/sync error
 
 - Http Endpoint (Deprecated)
   - Invoke `restful` interface according to event type: insert=`PUT`, update=`POST`, delete=`DELETE` 
@@ -181,6 +183,9 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   ```
     new String(fields['xx'])
   ```
+- Mongo:
+  - Not delete field from ES if sync to ES
+  
 ### Notice
 
 - Don't update/delete use `syncer` and other way (REST api or Java api) at the same time, it may cause version conflict and fail the change

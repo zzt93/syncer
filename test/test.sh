@@ -4,15 +4,37 @@ env=$2
 num=$3
 
 
-if [[ -z "${config}" ]]; then
-    config="yaml"
-fi
-if [[ -z "${env}" ]]; then
-    env="mysql"
-fi
-if [[ -z "${num}" ]]; then
-    num=100
-fi
+function setupDefaultPara() {
+    if [[ -z "${config}" ]]; then
+        config="code"
+    fi
+    if [[ -z "${env}" ]]; then
+        env="mysql"
+    fi
+    if [[ -z "${num}" ]]; then
+        num=100
+    fi
+    echo "Using config=$config, env=$env, num=$num"
+}
+
+function setupSyncerConfig() {
+    echo "Prepare syncer config"
+
+    mkdir -p data/config/consumer
+    rm data/config/consumer/*
+
+
+    if [[ ${env} = "drds" ]]; then
+        cp config/test-config/consumer-drds.yml data/config/consumer/consumer.yml
+    elif [[ ${config} = "yaml" || ${config} = "yml" ]]; then
+        cp config/base/consumer.yml data/config/consumer/consumer.yml
+    elif [[ ${config} = "code" ]]; then
+        cp config/base/consumer-code.yml data/config/consumer/consumer-code.yml
+    else
+        echo "Invalid option: $config"
+        exit 1
+    fi
+}
 
 
 # package syncer
@@ -22,30 +44,18 @@ mvn package
 #docker rmi -f syncer:test
 docker build syncer-core -t syncer:test
 
-###############33333
-
 cd test
 
-# add syncer config according to test case
-cd data
-mkdir -p config/consumer
-rm config/consumer/*
-if [[ $config = "yaml" || ${config} = "yml" ]]; then
-    cp config/correctness-consumer.yml config/consumer/correctness-consumer.yml
-elif [[ $config = "code" ]]; then
-    cp config/correctness-consumer-code.yml config/consumer/correctness-consumer-code.yml
-else
-    echo ""
-    exit 1
-fi
-cd ..
+
+setupDefaultPara
+setupSyncerConfig
 
 
 # Given
 # start env by docker-compose
 # init data
-echo "prepare $env env"
-bash setup.sh ${num} ${env}
+echo "Prepare $env env"
+bash setupEnv.sh ${num} ${env}
 
 
 # Then
