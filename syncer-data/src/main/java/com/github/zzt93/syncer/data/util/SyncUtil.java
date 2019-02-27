@@ -62,8 +62,10 @@ public class SyncUtil {
     for (Map.Entry<String, Object> e : fields.entrySet()) {
       String from = e.getKey();
       String to = LOWER_UNDERSCORE.to(LOWER_CAMEL, from);
-      logger.info("Rename field: {} -> {}", from, to);
-      tmp.put(from, e.getValue());
+      if (!from.equals(to)) {
+        logger.info("Rename field: {} -> {}", from, to);
+      }
+      tmp.put(to, e.getValue());
     }
     fields.clear();
     fields.putAll(tmp);

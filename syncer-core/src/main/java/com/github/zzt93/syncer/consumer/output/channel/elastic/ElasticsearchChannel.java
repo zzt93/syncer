@@ -14,7 +14,6 @@ import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.ack.FailureEntry;
 import com.github.zzt93.syncer.consumer.ack.FailureLog;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
-import com.github.zzt93.syncer.consumer.output.channel.AckChannel;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
@@ -271,7 +270,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         handle404(wrapper, item);
         tmp.add(wrapper);
       } else {
-        logger.error("Met {} in {}", level, wrapper, item.getFailure());
+        logger.error("Met {} in {} because {}", level, wrapper, item.getFailure());
         switch (level) {
           case MAX_TRY_EXCEED:
           case SYNCER_BUG:
