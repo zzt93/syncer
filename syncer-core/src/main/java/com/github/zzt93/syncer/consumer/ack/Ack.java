@@ -14,7 +14,10 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * @author zzt TODO 18/1/17 change string identifier to Class?
@@ -33,7 +36,7 @@ public class Ack {
       HashMap<String, SyncInitMeta> id2SyncInitMeta) {
     Ack ack = new Ack(clientId, syncerInputMeta);
     for (MasterSource masterSource : masterSources) {
-      List<String> ids = masterSource.remoteIds();
+      Set<String> ids = masterSource.remoteIds();
       for (String id : ids) {
         SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType());
         if (initMeta != null) {

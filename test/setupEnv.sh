@@ -1,34 +1,51 @@
 #!/usr/bin/env bash
 
 
-function generateTestData() {
-    echo "----------------"
-    echo "generateTestData"
-    echo "----------------"
+source ${LOG_LIB}
 
-    mkdir -p data/csv
-    for f in generator/*.sql; do
-        filename=`basename ${f}`
-        dir=${filename%".sql"}
-        exists=`find data/csv/${dir} -name '*.csv'`
-    done
-
-    if [[ -z "$exists" ]]; then
-        cd generator
-        docker build . -f DataGenerator.Dockerfile -t generator:test
-        cd ..
-
-        for f in generator/*.sql; do
-            name=`basename ${f}`
-            docker run -v $(pwd)/data:/data --rm generator:test /${name} $1
-        done
+function checkParameter() {
+    if [[ ${env} = "mysql" ]]; then
+        mysql_instance=1
+    elif [[ ${env} = "drds" ]]; then
+        mysql_instance=3
+    else
+        logi "Unsupported env"
+        exit 1
     fi
 }
 
+
+function generateMysqlTestData() {
+    logi "---------------------"
+    logi "generateMysqlTestData"
+    logi "---------------------"
+
+    for (( i = 0; i < ${mysql_instance}; ++i )); do
+        mkdir -p data/mysql/${i}/csv
+        for f in generator/*.sql; do
+            filename=`basename ${f}`
+            dir=${filename%".sql"}
+            exists=`find data/mysql/${i}/csv/${dir} -name '*.csv'`
+        done
+        if [[ -z "$exists" ]]; then
+            cd generator
+            docker build . -f DataGenerator.Dockerfile -t generator:test
+            cd ..
+
+            for f in generator/*.sql; do
+                name=`basename ${f}`
+                docker run -v $(pwd)/data:/data --rm generator:test /data/mysql/${i} /${name} $1
+            done
+        fi
+    done
+
+
+}
+
 function generateInitSqlFile() {
-    echo "-------------------"
-    echo "generateInitSqlFile"
-    echo "-------------------"
+    logi "-------------------"
+    logi "generateInitSqlFile"
+    logi "-------------------"
 
     mysql_instance=$1
     for (( i = 0; i < $mysql_instance; ++i )); do
@@ -42,38 +59,30 @@ function generateInitSqlFile() {
 }
 
 function loadToMysql() {
-    echo "----------------"
-    echo "  loadToMysql   "
-    echo "----------------"
+    logi "----------------"
+    logi "  loadToMysql   "
+    logi "----------------"
 
     mysql_instance=$1
-    cd data
+    cd data/mysql
     for (( i = 0; i < mysql_instance; ++i )); do
+        cd ${i}
         for f in `find csv -name "*.csv"`; do
             if [[ ${f} != *_bak.csv ]]; then
-                docker-compose -f "../$env.yml" exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/${f}
+                docker-compose -f "$DOCKER_CONFIG" exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/mysql/${i}/${f}
             fi
         done
+        cd ..
     done
 }
 
 function prepareEnv() {
-    echo "----------------"
-    echo " docker-compose "
-    echo "----------------"
+    logi "----------------"
+    logi " docker-compose "
+    logi "----------------"
     docker-compose -f "$env.yml" up -d
 }
 
-function checkParameter() {
-    if [[ ${env} = "mysql" ]]; then
-        mysql_instance=1
-    elif [[ ${env} = "drds" ]]; then
-        mysql_instance=3
-    else
-        echo "Unsupported env"
-        exit 1
-    fi
-}
 
 lines=$1
 env=$2
@@ -82,7 +91,7 @@ env=$2
 
 checkParameter
 
-generateTestData ${lines}
+generateMysqlTestData ${lines}
 generateInitSqlFile ${mysql_instance}
 prepareEnv
 loadToMysql ${mysql_instance}

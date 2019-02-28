@@ -4,4 +4,4 @@ VOLUME /data
 COPY DataGenerator.java /
 COPY mysql_test.sql mysql_simple.sql /
 RUN javac /DataGenerator.java
-ENTRYPOINT ["java", "DataGenerator", "/data"]
+ENTRYPOINT ["java", "DataGenerator"]

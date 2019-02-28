@@ -71,7 +71,7 @@ output:
       countLimit: 1000
   mysql:
     connection:
-      address: ${MYSQL_ADDR}
+      address: ${MYSQL_OUT}
       port: 3306
       user: root
       password: ${MYSQL_PASS}

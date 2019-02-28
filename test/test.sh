@@ -4,6 +4,12 @@ env=$2
 num=$3
 
 
+function configEnv() {
+    export LOG_LIB=`pwd`/log.sh
+    source ${LOG_LIB}
+    export DOCKER_CONFIG=`pwd`/${env}.yml
+}
+
 function setupDefaultPara() {
     if [[ -z "${config}" ]]; then
         config="code"
@@ -14,24 +20,25 @@ function setupDefaultPara() {
     if [[ -z "${num}" ]]; then
         num=100
     fi
-    echo "Using config=$config, env=$env, num=$num"
+    logi "Using config=$config, env=$env, num=$num"
 }
 
 function setupSyncerConfig() {
-    echo "Prepare syncer config"
+    logi "Prepare syncer config"
 
     mkdir -p data/config/consumer
     rm data/config/consumer/*
 
-
+    cp config/base/producer.yml data/config/producer.yml
     if [[ ${env} = "drds" ]]; then
         cp config/test-config/consumer-drds.yml data/config/consumer/consumer.yml
+        cp config/test-config/producer-drds.yml data/config/producer.yml
     elif [[ ${config} = "yaml" || ${config} = "yml" ]]; then
         cp config/base/consumer.yml data/config/consumer/consumer.yml
     elif [[ ${config} = "code" ]]; then
         cp config/base/consumer-code.yml data/config/consumer/consumer-code.yml
     else
-        echo "Invalid option: $config"
+        loge "Invalid option: $config"
         exit 1
     fi
 }
@@ -46,7 +53,7 @@ docker build syncer-core -t syncer:test
 
 cd test
 
-
+configEnv
 setupDefaultPara
 setupSyncerConfig
 
@@ -54,14 +61,12 @@ setupSyncerConfig
 # Given
 # start env by docker-compose
 # init data
-echo "Prepare $env env"
+logi "Prepare $env env"
 bash setupEnv.sh ${num} ${env}
 
 
 # Then
 # query mysql/es count
-export RED='\033[0;31m'
-export NC='\033[0m' # No Color
 for f in `find then -name "*.sh"` ; do
     bash ${f} ${env}
 done
