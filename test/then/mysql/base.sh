@@ -14,9 +14,9 @@ names="news correctness types"
 
 # query mysql count
 for table in ${names} ; do
-    all=`docker-compose -f ${env}.yml exec mysql_0 mysql -uroot -proot -N -B -e "select count(*) from test_0.${table}" | grep -o "[0-9]*"`
+    all=`docker-compose -f ${ENV_CONFIG} exec mysql_0 mysql -uroot -proot -N -B -e "select count(*) from test_0.${table}" | grep -o "[0-9]*"`
     logi "[Sync input] -- test.$table: $all"
-    tmp=`docker-compose -f $env.yml exec mysql_0 mysql -uroot -proot -N -B -e "select count(*) from test_0.${table}_bak" | grep -o "[0-9]*"`
+    tmp=`docker-compose -f ${ENV_CONFIG} exec mysql_0 mysql -uroot -proot -N -B -e "select count(*) from test_0.${table}_bak" | grep -o "[0-9]*"`
     logi "[Sync result] -- test.${table}_bak: $tmp"
     if [[ ${tmp} -ne "$all" ]];then
         loge "$table not right"

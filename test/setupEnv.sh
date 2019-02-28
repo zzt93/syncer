@@ -80,7 +80,7 @@ function prepareEnv() {
     logi "----------------"
     logi " docker-compose "
     logi "----------------"
-    docker-compose -f "$env.yml" up -d
+    docker-compose -f ${ENV_CONFIG} up -d
 }
 
 

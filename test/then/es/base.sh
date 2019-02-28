@@ -19,7 +19,7 @@ function extractCount() {
 
 # query mysql count
 for table in ${names} ; do
-    all=`docker-compose -f ${env}.yml exec mysql_0 mysql -uroot -proot -N -B -e "select count(*) from test_0.${table}" | grep -o "[0-9]*"`
+    all=`docker-compose -f ${ENV_CONFIG} exec mysql_0 mysql -uroot -proot -N -B -e "select count(*) from test_0.${table}" | grep -o "[0-9]*"`
     logi "[Sync input] -- test.$table: $all"
     tmp=`curl -s -X GET "localhost:49200/test*/${table}/_count" -H 'Content-Type: application/json'`
     c1=`extractCount ${tmp}`
