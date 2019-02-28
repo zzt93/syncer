@@ -14,6 +14,7 @@ public class ProducerMaster {
   private String file;
 
   public Connection getRealConnection() {
+    connection.checkPassword();
     return connection.getRealConnection();
   }
 

@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.config.common;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NetworkUtil;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import org.slf4j.Logger;
@@ -35,11 +34,15 @@ public class Connection implements Comparable<Connection> {
   }
 
   public Connection(String address, int port, String user, String passwordFile, String password, SyncMeta syncMeta) {
-    this.address = address;
+    try {
+      setAddress(address);
+    } catch (UnknownHostException e) {
+      throw new InvalidConfigException(e);
+    }
     this.port = port;
     this.user = user;
-    this.passwordFile = passwordFile;
-    this.password = password;
+    setPassword(password);
+    setPasswordFile(passwordFile);
     this.syncMeta = syncMeta;
   }
 
@@ -92,10 +95,16 @@ public class Connection implements Comparable<Connection> {
   }
 
   public void setPasswordFile(String passwordFile) {
-    Preconditions.checkNotNull(passwordFile);
+    if (passwordFile == null) {
+      return;
+    }
     this.passwordFile = passwordFile;
     try {
-      this.password = FileUtil.readLine(passwordFile).get(0);
+      List<String> lines = FileUtil.readLine(passwordFile);
+      if (lines.size() != 1) {
+        throw new InvalidConfigException("Multiple line password in " + passwordFile);
+      }
+      this.password = lines.get(0);
     } catch (Exception e) {
       logger
           .error("Fail to read password file from classpath, you may consider using absolute path",
@@ -104,6 +113,9 @@ public class Connection implements Comparable<Connection> {
   }
 
   public void setPassword(String password) {
+    if (password == null) {
+      return;
+    }
     this.password = password;
   }
 

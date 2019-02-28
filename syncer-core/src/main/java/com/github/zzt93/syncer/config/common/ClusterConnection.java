@@ -19,10 +19,13 @@ public class ClusterConnection extends Connection {
   ClusterConnection() {
   }
 
-  ClusterConnection(String clusterName, List<String> clusterNodes, SyncMeta[] syncMetas) {
+  ClusterConnection(String clusterName, List<String> clusterNodes, String user, String passwordFile, String password, SyncMeta[] syncMetas) {
     this.clusterName = clusterName;
     this.clusterNodes = clusterNodes;
     this.syncMetas = syncMetas;
+    setUser(user);
+    setPassword(password);
+    setPasswordFile(passwordFile);
   }
 
   private HashSet<String> getClusterIds() {

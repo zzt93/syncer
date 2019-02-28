@@ -1,7 +1,9 @@
 package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
+import org.springframework.util.StringUtils;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -17,9 +19,12 @@ public class MayClusterConnection {
   /**
    * @see Connection
    */
-  private SyncMeta[] syncMetas;
   private String address;
   private int port;
+  /**
+   * shared
+   */
+  private SyncMeta[] syncMetas;
   private String user;
   private String passwordFile;
   private String password;
@@ -30,10 +35,10 @@ public class MayClusterConnection {
     boolean cluster = ClusterConnection.validCluster(clusterNodes);
     boolean con = Connection.validConnection(address, port);
     if (cluster == con) {
-      throw new InvalidConfigException("");
+      throw new InvalidConfigException("Config one of `address & port` or `clusterNodes`");
     }
     if (cluster) {
-      realConnection = new ClusterConnection(clusterName, clusterNodes, syncMetas);
+      realConnection = new ClusterConnection(clusterName, clusterNodes, user, passwordFile, password, syncMetas);
     } else {
       realConnection = new Connection(address, port, user, passwordFile, password, syncMetas == null ? null : syncMetas[0]);
     }
@@ -110,5 +115,26 @@ public class MayClusterConnection {
     this.password = password;
   }
 
+  @Override
+  public String toString() {
+    return "MayClusterConnection{" +
+        "clusterName='" + clusterName + '\'' +
+        ", clusterNodes=" + clusterNodes +
+        ", syncMetas=" + Arrays.toString(syncMetas) +
+        ", address='" + address + '\'' +
+        ", port=" + port +
+        ", user='" + user + '\'' +
+        ", passwordFile='" + passwordFile + '\'' +
+        ", password='" + password + '\'' +
+        ", realConnection=" + realConnection +
+        '}';
+  }
 
+  public void checkPassword() {
+    boolean empty = StringUtils.isEmpty(password);
+    if (empty == StringUtils.isEmpty(passwordFile) && !empty) {
+      throw new InvalidConfigException("Should not config both `password` and `passwordFile`");
+    }
+
+  }
 }
