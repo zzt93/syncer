@@ -7,7 +7,7 @@ num=$3
 function configEnv() {
     export LOG_LIB=`pwd`/log.sh
     source ${LOG_LIB}
-    export DOCKER_CONFIG=`pwd`/${env}.yml
+    export ENV_CONFIG=`pwd`/${env}.yml
 }
 
 function setupDefaultPara() {

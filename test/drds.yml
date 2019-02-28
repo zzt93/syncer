@@ -1,7 +1,7 @@
 version: '2.1'
 services:
   mysql_0:
-    image: mysql:5.7
+    image: mysql:5.7.15
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_0}:/init.sql
@@ -17,7 +17,7 @@ services:
     - dbnet
 
   mysql_1:
-    image: mysql:5.7
+    image: mysql:5.7.15
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_1}:/init.sql
@@ -33,7 +33,7 @@ services:
     - dbnet
 
   mysql_2:
-    image: mysql:5.7
+    image: mysql:5.7.15
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_2}:/init.sql
@@ -51,9 +51,6 @@ services:
   elasticsearch:
     command: -E cluster.name=test-cluster -E network.host=_site_
     image: elasticsearch:5.6
-    depends_on:
-      mysql:
-        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
       interval: 30s
@@ -71,9 +68,6 @@ services:
 
   mongo:
     image: mongo:3.2
-    depends_on:
-      elasticsearch:
-        condition: service_healthy
     healthcheck:
       test: echo 'db.stats().ok' | mongo localhost:27017 --quiet
       interval: 5s
