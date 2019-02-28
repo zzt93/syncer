@@ -1,9 +1,6 @@
 package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 import java.net.UnknownHostException;
 import java.util.*;
@@ -11,19 +8,21 @@ import java.util.*;
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
  */
-@Getter
-@Setter
-@NoArgsConstructor
 public class ClusterConnection extends Connection {
 
   static final String COLON = ":";
   private String clusterName;
   private List<String> clusterNodes;
   private HashSet<String> clusterIds;
+  private SyncMeta[] syncMetas;
 
-  ClusterConnection(String clusterName, List<String> clusterNodes) {
+  ClusterConnection() {
+  }
+
+  ClusterConnection(String clusterName, List<String> clusterNodes, SyncMeta[] syncMetas) {
     this.clusterName = clusterName;
     this.clusterNodes = clusterNodes;
+    this.syncMetas = syncMetas;
   }
 
   private HashSet<String> getClusterIds() {
@@ -38,11 +37,8 @@ public class ClusterConnection extends Connection {
 
   public SyncMeta[] getSyncMetas() {
     int target = getClusterNodes().size();
-    SyncMeta[] syncMetas = super.getSyncMetas();
     if (syncMetas == null) {
       syncMetas = new SyncMeta[target];
-    } else if (syncMetas.length != target) {
-      throw new InvalidConfigException("syncMetas.size() != clusterNodes.size()");
     }
     return syncMetas;
   }
@@ -62,12 +58,25 @@ public class ClusterConnection extends Connection {
     if (o == null || getClass() != o.getClass()) return false;
     if (!super.equals(o)) return false;
     ClusterConnection that = (ClusterConnection) o;
-    return Objects.equals(clusterIds, that.clusterIds);
+    return isSetEquals(that);
   }
+
+  private boolean isSetEquals(ClusterConnection that) {
+    HashSet<String> f = getClusterIds();
+    HashSet<String> s = that.getClusterIds();
+    if (f.size() != s.size()) return false;
+    for (String id : f) {
+      if (!s.contains(id)) {
+        return false;
+      }
+    }
+    return true;
+  }
+
 
   @Override
   public int hashCode() {
-    return Objects.hash(super.hashCode(), clusterIds);
+    return Objects.hash(getClusterIds());
   }
 
   @Override
@@ -75,7 +84,7 @@ public class ClusterConnection extends Connection {
     return "ClusterConnection{" +
         "clusterName='" + clusterName + '\'' +
         ", clusterNodes=" + clusterNodes +
-        ", clusterIds=" + clusterIds +
+        ", clusterIds=" + getClusterIds() +
         '}';
   }
 
@@ -109,4 +118,27 @@ public class ClusterConnection extends Connection {
     return getClusterIds();
   }
 
+  public String getClusterName() {
+    return clusterName;
+  }
+
+  public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
+  }
+
+  public List<String> getClusterNodes() {
+    return clusterNodes;
+  }
+
+  public void setClusterNodes(List<String> clusterNodes) {
+    this.clusterNodes = clusterNodes;
+  }
+
+  public void setClusterIds(HashSet<String> clusterIds) {
+    this.clusterIds = clusterIds;
+  }
+
+  public void setSyncMetas(SyncMeta[] syncMetas) {
+    this.syncMetas = syncMetas;
+  }
 }

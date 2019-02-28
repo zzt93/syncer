@@ -6,7 +6,6 @@ import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.StringUtils;
@@ -18,7 +17,6 @@ import java.util.Set;
 /**
  * @author zzt
  */
-@NoArgsConstructor
 public class Connection implements Comparable<Connection> {
 
   private static final Logger logger = LoggerFactory.getLogger(Connection.class);
@@ -32,6 +30,9 @@ public class Connection implements Comparable<Connection> {
   private volatile String identifier;
   private String ip;
   private SyncMeta syncMeta;
+
+  public Connection() {
+  }
 
   public Connection(String address, int port, String user, String passwordFile, String password, SyncMeta syncMeta) {
     this.address = address;

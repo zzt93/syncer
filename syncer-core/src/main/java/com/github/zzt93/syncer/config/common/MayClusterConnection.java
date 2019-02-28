@@ -1,18 +1,12 @@
 package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.ToString;
 
 import java.util.List;
 
 /**
  * @author zzt
  */
-@Getter
-@Setter
-@ToString
 public class MayClusterConnection {
 
   /**
@@ -39,7 +33,7 @@ public class MayClusterConnection {
       throw new InvalidConfigException("");
     }
     if (cluster) {
-      realConnection = new ClusterConnection(clusterName, clusterNodes);
+      realConnection = new ClusterConnection(clusterName, clusterNodes, syncMetas);
     } else {
       realConnection = new Connection(address, port, user, passwordFile, password, syncMetas == null ? null : syncMetas[0]);
     }
@@ -51,4 +45,70 @@ public class MayClusterConnection {
     }
     return realConnection;
   }
+
+  public String getClusterName() {
+    return clusterName;
+  }
+
+  public void setClusterName(String clusterName) {
+    this.clusterName = clusterName;
+  }
+
+  public List<String> getClusterNodes() {
+    return clusterNodes;
+  }
+
+  public void setClusterNodes(List<String> clusterNodes) {
+    this.clusterNodes = clusterNodes;
+  }
+
+  public SyncMeta[] getSyncMetas() {
+    return syncMetas;
+  }
+
+  public void setSyncMetas(SyncMeta[] syncMetas) {
+    this.syncMetas = syncMetas;
+  }
+
+  public String getAddress() {
+    return address;
+  }
+
+  public void setAddress(String address) {
+    this.address = address;
+  }
+
+  public int getPort() {
+    return port;
+  }
+
+  public void setPort(int port) {
+    this.port = port;
+  }
+
+  public String getUser() {
+    return user;
+  }
+
+  public void setUser(String user) {
+    this.user = user;
+  }
+
+  public String getPasswordFile() {
+    return passwordFile;
+  }
+
+  public void setPasswordFile(String passwordFile) {
+    this.passwordFile = passwordFile;
+  }
+
+  public String getPassword() {
+    return password;
+  }
+
+  public void setPassword(String password) {
+    this.password = password;
+  }
+
+
 }
