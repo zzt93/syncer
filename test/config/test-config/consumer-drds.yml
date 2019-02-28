@@ -6,7 +6,7 @@ consumerId: drds
 input:
   masters:
     - connection:
-      clusterNodes: [${MYSQL_ADDR}]
+        clusterNodes: [${MYSQL_ADDR}]
       scheduler: mod
       repos:
         - name: "test_.*"
@@ -25,7 +25,7 @@ input:
 
 
 filter:
-- code: 'public void filter(List<SyncData> list) {
+- method: 'public void filter(List<SyncData> list) {
              SyncData sync = list.get(0);
              sync.addExtra("suffix", "");
              switch (sync.getEntity()) {

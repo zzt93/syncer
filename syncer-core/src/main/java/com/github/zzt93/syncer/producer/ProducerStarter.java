@@ -63,7 +63,7 @@ public class ProducerStarter implements Starter {
 
     Set<Connection> wanted = consumerRegistry.wantedSource();
     for (ProducerMaster masterSource : masterSources) {
-      Connection mayClusterConnection = masterSource.getConnection();
+      Connection mayClusterConnection = masterSource.getRealConnection();
       for (Connection real : mayClusterConnection.getReals()) {
         wanted.remove(real);
         addConnector(masterSource, real);
@@ -124,7 +124,7 @@ public class ProducerStarter implements Starter {
   @Override
   public void registerToHealthCenter() {
     for (ProducerMaster source : masterSources) {
-      Connection connection = source.getConnection();
+      Connection connection = source.getRealConnection();
       for (Connection real : connection.getReals()) {
         if (consumerRegistry.outputSink(real).isEmpty()) {
           SyncerHealth.producer(real.connectionIdentifier(), Health.inactive("No consumer registered"));

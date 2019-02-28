@@ -13,8 +13,12 @@ public class ProducerMaster {
   private MayClusterConnection connection;
   private String file;
 
-  public Connection getConnection() {
+  public Connection getRealConnection() {
     return connection.getRealConnection();
+  }
+
+  public MayClusterConnection getConnection() {
+    return connection;
   }
 
   public void setConnection(MayClusterConnection connection) {

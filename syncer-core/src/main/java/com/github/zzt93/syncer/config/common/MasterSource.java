@@ -30,8 +30,12 @@ public class MasterSource {
   private MayClusterConnection connection;
   private List<Repo> repos = new ArrayList<>();
 
-  public Connection getConnection() {
+  private Connection getRealConnection() {
     return connection.getRealConnection();
+  }
+
+  public MayClusterConnection getConnection() {
+    return connection;
   }
 
   public void setConnection(MayClusterConnection connection) {
@@ -82,12 +86,12 @@ public class MasterSource {
 
     MasterSource that = (MasterSource) o;
 
-    return getConnection().equals(that.getConnection());
+    return getRealConnection().equals(that.getRealConnection());
   }
 
   @Override
   public int hashCode() {
-    return getConnection().hashCode();
+    return getRealConnection().hashCode();
   }
 
   @Override
@@ -100,14 +104,14 @@ public class MasterSource {
   }
 
   public Set<String> remoteIds() {
-    return getConnection().remoteIds();
+    return getRealConnection().remoteIds();
   }
 
   public List<? extends ConsumerSource> toConsumerSources(String consumerId,
                                                           HashMap<String, SyncInitMeta> id2SyncInitMeta,
                                                           EventScheduler scheduler) {
     List<LocalConsumerSource> res = new LinkedList<>();
-    Connection realConnection = getConnection();
+    Connection realConnection = getRealConnection();
     SyncMeta[] syncMetas = realConnection.getSyncMetas();
     List<Connection> connections = realConnection.getReals();
     for (int i = 0; i < connections.size(); i++) {

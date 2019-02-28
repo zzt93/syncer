@@ -1,4 +1,6 @@
 #!/usr/bin/env bash
+set -e
+
 config=$1
 env=$2
 num=$3

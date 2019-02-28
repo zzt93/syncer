@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-
+set -e
 
 source ${LOG_LIB}
 
@@ -67,7 +67,7 @@ function loadToMysql() {
     cd data/mysql
     for (( i = 0; i < mysql_instance; ++i )); do
         cd ${i}
-        for f in `find csv -name "*.csv"`; do
+        for f in `find csv/mysql_test -name "*.csv"`; do
             if [[ ${f} != *_bak.csv ]]; then
                 docker-compose -f ${ENV_CONFIG} exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /tmp/mysql/${i}/${f}
             fi
