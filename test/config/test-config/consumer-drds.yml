@@ -34,7 +34,7 @@ filter:
                  break;
                case "types":
                case "simple_type":
-                 sync.updateField("text", new String((byte[]) sync.getField("text"))).updateField("tinyint", Byte.toUnsignedInt((Byte) sync.getField("tinyint")));
+                 sync.updateField("text", new String((byte[]) sync.getField("text"))).updateField("tinyint", Byte.toUnsignedInt((byte)(int) sync.getField("tinyint")));
                  sync.addExtra("suffix", "-" + ((int) sync.getField("tinyint"))/128);
                  break;
                case "correctness":

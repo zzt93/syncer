@@ -176,7 +176,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Data of numeric types (tinyint, etc) always returned **signed** regardless of whether column definition includes "unsigned" keyword or not.
   You may need to convert to unsigned if necessary.
   ```
-     Byte.toUnsignedInt(fields['xx'])
+     Byte.toUnsignedInt((byte)(int) fields['xx'])
   ```
   - Data of *text/*blob types always returned as a byte array (for var* this is true in future).
   You may need to convert to string if necessary.
