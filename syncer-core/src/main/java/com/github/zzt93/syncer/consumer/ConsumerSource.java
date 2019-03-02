@@ -20,7 +20,7 @@ public interface ConsumerSource extends Hashable {
 
   SyncInitMeta getSyncInitMeta();
 
-  Set<Repo> getRepos();
+  Set<Repo> copyRepos();
 
   String clientId();
 

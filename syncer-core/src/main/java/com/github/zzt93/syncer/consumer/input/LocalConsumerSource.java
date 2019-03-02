@@ -9,6 +9,7 @@ import com.github.zzt93.syncer.consumer.ConsumerSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -46,8 +47,12 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   public abstract SyncInitMeta getSyncInitMeta();
 
   @Override
-  public Set<Repo> getRepos() {
-    return repos;
+  public Set<Repo> copyRepos() {
+    Set<Repo> res = new HashSet<>();
+    for (Repo repo : repos) {
+      res.add(new Repo(repo));
+    }
+    return res;
   }
 
   @Override

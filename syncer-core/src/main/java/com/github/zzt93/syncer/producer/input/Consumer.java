@@ -19,7 +19,7 @@ public class Consumer {
   private final String id;
 
   public Consumer(ConsumerSource consumerSource) {
-    this.repos = consumerSource.getRepos();
+    this.repos = consumerSource.copyRepos();
     id = consumerSource.clientId();
   }
 

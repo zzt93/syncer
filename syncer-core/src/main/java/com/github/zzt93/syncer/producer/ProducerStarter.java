@@ -56,7 +56,7 @@ public class ProducerStarter implements Starter {
 
   @Override
   public Starter start() throws IOException {
-    logger.info("Start connecting to [{}]", masterSources);
+    logger.info("Start handling [{}]", masterSources);
     if (masterSources.size() > 1) {
       logger.warn("Connect to multiple masters, not suggested usage");
     }
