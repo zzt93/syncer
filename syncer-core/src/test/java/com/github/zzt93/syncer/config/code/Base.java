@@ -26,7 +26,7 @@ public class Base implements MethodFilter {
         sync.addExtra("suffix", "-" + ((int) sync.getField("tinyint"))/128);
         break;
       case "correctness":
-        sync.updateField("type", Byte.toUnsignedInt((Byte) sync.getField("type")));
+        sync.updateField("type", Byte.toUnsignedInt((byte)(int) sync.getField("type")));
         break;
     }
   }

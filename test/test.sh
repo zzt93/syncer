@@ -12,6 +12,15 @@ function configEnvVar() {
 
     export LOG_LIB=`pwd`/log.sh
     source ${LOG_LIB}
+
+    if [[ ${env} = "mysql" ]]; then
+        export MYSQL_INSTANCE=1
+    elif [[ ${env} = "drds" ]]; then
+        export MYSQL_INSTANCE=3
+    else
+        loge "Unsupported env"
+        exit 1
+    fi
     export ENV_CONFIG=`pwd`/${env}.yml
 }
 
@@ -28,14 +37,13 @@ function setupDefaultPara() {
     if [[ -z "${num}" ]]; then
         num=100
     fi
-    logi "Using env=$env, build=$build, config=$config, num=$num"
 }
 
 function setupSyncerConfig() {
     logi "Prepare syncer config"
 
     mkdir -p data/config/consumer
-    rm data/config/consumer/*
+    rm -f data/config/consumer/*
 
     cp config/base/producer.yml data/config/producer.yml
     if [[ ${env} = "drds" ]]; then
@@ -65,8 +73,11 @@ function buildSyncer() {
 }
 
 
-configEnvVar
 setupDefaultPara
+configEnvVar
+
+logi "Using env=$env, build=$build, config=$config, num=$num"
+
 buildSyncer
 setupSyncerConfig
 
@@ -74,7 +85,7 @@ setupSyncerConfig
 # Given
 # start env by docker-compose
 # init data
-logi "Prepare $env env"
+logi "Prepare $env runtime"
 bash setupEnv.sh ${num} ${env}
 
 

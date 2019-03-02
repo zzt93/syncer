@@ -3,24 +3,13 @@ set -e
 
 source ${LOG_LIB}
 
-function checkParameter() {
-    if [[ ${env} = "mysql" ]]; then
-        mysql_instance=1
-    elif [[ ${env} = "drds" ]]; then
-        mysql_instance=3
-    else
-        logi "Unsupported env"
-        exit 1
-    fi
-}
-
 
 function generateMysqlTestData() {
     logi "---------------------"
     logi "generateMysqlTestData"
     logi "---------------------"
 
-    for (( i = 0; i < ${mysql_instance}; ++i )); do
+    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         for f in generator/*.sql; do
             filename=`basename ${f}`
             dir=${filename%".sql"}
@@ -47,12 +36,12 @@ function generateInitSqlFile() {
     logi "generateInitSqlFile"
     logi "-------------------"
 
-    mysql_instance=$1
-    for (( i = 0; i < $mysql_instance; ++i )); do
+    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         tmp="data/mysql_init_${i}.sql"
         if [[ ! -e ${tmp} ]];then
             echo -e "CREATE DATABASE IF NOT EXISTS test_$i;\n use test_$i;" > ${tmp}
             cat generator/mysql_test.sql >> ${tmp}
+            cat generator/mysql_simple.sql >> ${tmp}
         fi
         export mysql_init_${i}=$(pwd)/${tmp}
     done
@@ -63,9 +52,8 @@ function loadToMysql() {
     logi "  loadToMysql   "
     logi "----------------"
 
-    mysql_instance=$1
     cd data/mysql
-    for (( i = 0; i < mysql_instance; ++i )); do
+    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         cd ${i}
         for f in `find csv/mysql_test -name "*.csv"`; do
             if [[ ${f} != *_bak.csv ]]; then
@@ -74,6 +62,8 @@ function loadToMysql() {
         done
         cd ..
     done
+    docker-compose -f ${ENV_CONFIG} exec mysql_0 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot simple /Data/mysql/0/csv/mysql_simple/simple_type.csv
+    cd ../..
 }
 
 function prepareEnv() {
@@ -89,9 +79,7 @@ env=$2
 
 
 
-checkParameter
-
 generateMysqlTestData ${lines}
-generateInitSqlFile ${mysql_instance}
+generateInitSqlFile
 prepareEnv
-loadToMysql ${mysql_instance}
+loadToMysql
