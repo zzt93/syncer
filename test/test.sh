@@ -49,20 +49,22 @@ function setupSyncerConfig() {
     fi
 }
 
+function buildSyncer() {
+    if [[ ${build} != "y" ]]; then
+        # package syncer
+        mvn package
 
-if [[ ${build} != "y" ]]; then
-    # package syncer
-    mvn package
-
-    # build syncer image
-    #docker rmi -f syncer:test
-    docker build syncer-core -t syncer:test
-fi
+        # build syncer image
+        #docker rmi -f syncer:test
+        docker build syncer-core -t syncer:test
+    fi
+}
 
 cd test
 
 configEnv
 setupDefaultPara
+buildSyncer
 setupSyncerConfig
 
 
