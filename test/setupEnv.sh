@@ -9,6 +9,9 @@ function generateMysqlTestData() {
     logi "generateMysqlTestData"
     logi "---------------------"
 
+    cd generator
+    docker build . -f DataGenerator.Dockerfile -t generator:test
+    cd ..
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         for f in generator/*.sql; do
             filename=`basename ${f}`
@@ -17,9 +20,6 @@ function generateMysqlTestData() {
             exists=`find data/mysql/${i}/csv/${dir} -name '*.csv'`
         done
         if [[ -z "$exists" ]]; then
-            cd generator
-            docker build . -f DataGenerator.Dockerfile -t generator:test
-            cd ..
 
             for f in generator/*.sql; do
                 name=`basename ${f}`

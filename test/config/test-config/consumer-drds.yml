@@ -25,7 +25,10 @@ input:
 
 
 filter:
-- method: 'public void filter(List<SyncData> list) {
+- method: 'private static final String SIMPLE_TYPE = "simple_type";
+
+           @Override
+           public void filter(List<SyncData> list) {
              SyncData sync = list.get(0);
              sync.addExtra("suffix", "");
              switch (sync.getEntity()) {
@@ -33,13 +36,18 @@ filter:
                  sync.updateField("thumb_content", new String((byte[]) sync.getField("thumb_content"))).updateField("content", new String((byte[]) sync.getField("content")));
                  break;
                case "types":
-               case "simple_type":
+               case SIMPLE_TYPE:
                  sync.updateField("text", new String((byte[]) sync.getField("text"))).updateField("tinyint", Byte.toUnsignedInt((byte)(int) sync.getField("tinyint")));
                  sync.addExtra("suffix", "-" + ((int) sync.getField("tinyint"))/128);
                  break;
                case "correctness":
                  sync.updateField("type", Byte.toUnsignedInt((byte)(int) sync.getField("type")));
                  break;
+             }
+             if (!sync.getEntity().equals(SIMPLE_TYPE)) {
+               sync.addExtra("target", "test_0");
+             } else {
+               sync.addExtra("target", sync.getRepo());
              }
            }'
 
@@ -58,7 +66,7 @@ output:
     requestMapping: # mapping from input data to es request
       enableExtraQuery: true
       retryOnUpdateConflict: 3
-      index: "repo + #suffix" # default: repo
+      index: "repo + getExtra('suffix')" # default: repo
       documentId: "id" # default: id
       fieldsMapping: # default: fields.*.flatten
         "fields": "fields.*.flatten"
@@ -76,7 +84,7 @@ output:
       user: root
       password: ${MYSQL_PASS}
     rowMapping:
-      schema: "repo"
+      schema: " getExtra('target') "
       table: "entity + '_bak'"
       id: "id"
       rows:

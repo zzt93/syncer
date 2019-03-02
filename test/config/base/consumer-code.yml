@@ -60,7 +60,7 @@ output:
     requestMapping: # mapping from input data to es request
       enableExtraQuery: true
       retryOnUpdateConflict: 3
-      index: "repo + #suffix" # default: repo
+      index: "repo + getExtra('target')" # default: repo
       documentId: "id" # default: id
       fieldsMapping: # default: fields.*.flatten
         "fields": "fields.*.flatten"

@@ -17,13 +17,16 @@ function extractCount() {
     logi ${response} | egrep -o '\{"count":[0-9]+' | awk -F ':' '{print $NF}'
 }
 
-# query mysql count
-for table in ${names} ; do
-    all=`docker-compose -f ${ENV_CONFIG} exec mysql_0 mysql -uroot -proot -N -B -e "select count(*) from test_0.${table}" | grep -o "[0-9]*"`
-    logi "[Sync input] -- test.$table: $all"
-    tmp=`curl -s -X GET "localhost:49200/test*/${table}/_count" -H 'Content-Type: application/json'`
+function esAssert() {
+    instance=$1
+    db=$2
+    table=$3
+
+    all=`docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -N -B -e "select count(*) from ${db}.${table}" | grep -o "[0-9]*"`
+    logi "[Sync input] -- ${db}.${table}: $all"
+    tmp=`curl -s -X GET "localhost:49200/${db}-*/${table}/_count" -H 'Content-Type: application/json'`
     c1=`extractCount ${tmp}`
-    logi "[Sync result] -- test*.$table: $c1"
+    logi "[Sync result] -- ${db}-*.${table} in ES : $c1"
     if [[ ${c1} -ne "$all" ]];then
         loge "$table not right"
     fi
@@ -36,7 +39,13 @@ for table in ${names} ; do
     }
     '`
     c2=`extractCount ${tmp}`
+}
 
+
+for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
+    for table in ${names} ; do
+        esAssert mysql_${i} test_${i} ${table}
+    done
 done
 
 logi "-----"

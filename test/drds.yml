@@ -51,6 +51,7 @@ services:
   elasticsearch:
     command: -E cluster.name=test-cluster -E network.host=_site_
     image: elasticsearch:5.6
+    container_name: elasticsearch
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
       interval: 30s
@@ -68,6 +69,7 @@ services:
 
   mongo:
     image: mongo:3.2
+    container_name: mongo
     healthcheck:
       test: echo 'db.stats().ok' | mongo localhost:27017 --quiet
       interval: 5s
@@ -96,10 +98,16 @@ services:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:40000/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
     ports:
     - 40000:40000
     volumes:
     - ./data:/data
+    - ./data/syncer/log:/log
     environment:
     - ES_ADDR=elasticsearch
     - ES_CLUSTER=test-cluster
