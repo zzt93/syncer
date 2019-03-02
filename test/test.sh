@@ -7,7 +7,9 @@ config=$3
 num=$4
 
 
-function configEnv() {
+function configEnvVar() {
+    cd test
+
     export LOG_LIB=`pwd`/log.sh
     source ${LOG_LIB}
     export ENV_CONFIG=`pwd`/${env}.yml
@@ -50,19 +52,20 @@ function setupSyncerConfig() {
 }
 
 function buildSyncer() {
-    if [[ ${build} != "y" ]]; then
+    if [[ ${build} != "n" ]]; then
         # package syncer
+        cd ..
         mvn package
 
         # build syncer image
         #docker rmi -f syncer:test
         docker build syncer-core -t syncer:test
+        cd test
     fi
 }
 
-cd test
 
-configEnv
+configEnvVar
 setupDefaultPara
 buildSyncer
 setupSyncerConfig
