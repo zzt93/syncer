@@ -519,8 +519,9 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
   - Lock contention 
 
 ### Used In Production
-- For search data sync
-- For auth data sync
+- Search system: search data sync
+- Micro-service: auth/recommend/chat data sync
+- Join table: avoid join in production env, use space for speed by join table
 - For data recovery: In case of drop entity mistakenly, or you know where to start & end
 
 ## TODO

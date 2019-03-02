@@ -5,7 +5,7 @@ services:
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_0}:/init.sql
-    - ./data:/tmp
+    - ./data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root
     healthcheck:
@@ -44,7 +44,7 @@ services:
       retries: 12
     command: mongod --smallfiles --replSet test
     volumes:
-    - ./data:/tmp
+    - ./data:/Data
     environment:
     - MONGODB_USER="root"
     - MONGODB_PASS="root"

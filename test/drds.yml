@@ -5,7 +5,7 @@ services:
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_0}:/init.sql
-    - ./data:/tmp
+    - ./data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root
     healthcheck:
@@ -21,7 +21,7 @@ services:
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_1}:/init.sql
-    - ./data:/tmp
+    - ./data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root
     healthcheck:
@@ -37,7 +37,7 @@ services:
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_2}:/init.sql
-    - ./data:/tmp
+    - ./data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root
     healthcheck:
