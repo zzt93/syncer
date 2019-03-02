@@ -1,9 +1,10 @@
 #!/usr/bin/env bash
 set -e
 
-config=$1
-env=$2
-num=$3
+env=$1
+build=$2
+config=$3
+num=$4
 
 
 function configEnv() {
@@ -19,10 +20,13 @@ function setupDefaultPara() {
     if [[ -z "${env}" ]]; then
         env="mysql"
     fi
+    if [[ -z "${build}" ]]; then
+        build="n"
+    fi
     if [[ -z "${num}" ]]; then
         num=100
     fi
-    logi "Using config=$config, env=$env, num=$num"
+    logi "Using env=$env, build=$build, config=$config, num=$num"
 }
 
 function setupSyncerConfig() {
@@ -46,12 +50,14 @@ function setupSyncerConfig() {
 }
 
 
-# package syncer
-mvn package
+if [[ ${build} != "y" ]]; then
+    # package syncer
+    mvn package
 
-# build syncer image
-#docker rmi -f syncer:test
-docker build syncer-core -t syncer:test
+    # build syncer image
+    #docker rmi -f syncer:test
+    docker build syncer-core -t syncer:test
+fi
 
 cd test
 
