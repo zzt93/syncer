@@ -490,6 +490,8 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 ## Test
 ### Dependency
 - [Docker](https://docs.docker.com/install/#server)
+  - [vm.max_map_count](https://stackoverflow.com/questions/41192680/update-max-map-count-for-elasticsearch-docker-container-mac-host) may be need to
+  be set for some os for ES docker image to run
 - [Docker compose](https://docs.docker.com/compose/install/)
 
 ### Correctness Test

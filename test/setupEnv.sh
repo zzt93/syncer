@@ -21,10 +21,10 @@ function generateMysqlTestData() {
     logi "---------------------"
 
     for (( i = 0; i < ${mysql_instance}; ++i )); do
-        mkdir -p data/mysql/${i}/csv
         for f in generator/*.sql; do
             filename=`basename ${f}`
             dir=${filename%".sql"}
+            mkdir -p data/mysql/${i}/csv/${dir}
             exists=`find data/mysql/${i}/csv/${dir} -name '*.csv'`
         done
         if [[ -z "$exists" ]]; then
@@ -52,7 +52,7 @@ function generateInitSqlFile() {
         tmp="data/mysql_init_${i}.sql"
         if [[ ! -e ${tmp} ]];then
             echo -e "CREATE DATABASE IF NOT EXISTS test_$i;\n use test_$i;" > ${tmp}
-            cat generator/*.sql >> ${tmp}
+            cat generator/mysql_test.sql >> ${tmp}
         fi
         export mysql_init_${i}=$(pwd)/${tmp}
     done
