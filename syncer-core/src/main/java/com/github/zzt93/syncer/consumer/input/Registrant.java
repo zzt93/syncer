@@ -26,8 +26,8 @@ public class Registrant {
     return res;
   }
 
-  public void addDatasource(ConsumerSource consumerSource) {
-    consumerSources.add(consumerSource);
+  public void addDatasource(List<? extends ConsumerSource> consumerSource) {
+    consumerSources.addAll(consumerSource);
   }
 
 }

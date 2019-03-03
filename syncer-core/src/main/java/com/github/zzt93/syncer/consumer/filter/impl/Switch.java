@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.filter.Switcher;
 import com.github.zzt93.syncer.consumer.filter.ConditionalStatement;
@@ -31,10 +32,14 @@ public class Switch implements ConditionalStatement {
     switchCondition = new SwitchCondition(filter.getSwitch(), parser);
     Map<String, List<SyncFilter>> tmp = new HashMap<>();
     filter.getCase()
-        .forEach((k, v) ->
-            tmp.put(k, v.stream()
-                .map(c -> gson.fromJson(gson.toJsonTree(c), FilterConfig.class).toFilter(parser))
-                .collect(Collectors.toList())));
+        .forEach((k, v) -> {
+          if (v == null) {
+            throw new InvalidConfigException("Unsupport empty case: " + k);
+          }
+          tmp.put(k, v.stream()
+              .map(c -> gson.fromJson(gson.toJsonTree(c), FilterConfig.class).toFilter(parser))
+              .collect(Collectors.toList()));
+        });
     actionsMap = Collections.unmodifiableMap(tmp);
   }
 

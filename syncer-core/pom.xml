@@ -64,6 +64,12 @@
             <artifactId>spring-jdbc</artifactId>
             <version>5.0.4.RELEASE</version>
             <scope>compile</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.springframework</groupId>
+                    <artifactId>spring-jcl</artifactId>
+                </exclusion>
+            </exclusions>
         </dependency>
 
         <dependency>
@@ -126,6 +132,9 @@
             <artifactId>snakeyaml</artifactId>
             <version>1.19</version>
         </dependency>
+
+        <!--https://github.com/rzwitserloot/lombok/issues/1671-->
+        <!--not support lombok-->
     </dependencies>
 
     <build>

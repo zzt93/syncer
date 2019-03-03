@@ -2,13 +2,16 @@ package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NetworkUtil;
-import com.google.common.base.Preconditions;
+import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.net.UnknownHostException;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author zzt
@@ -23,8 +26,44 @@ public class Connection implements Comparable<Connection> {
   private String user;
   private String passwordFile;
   private String password;
-  private String identifier;
+  private volatile String identifier;
   private String ip;
+  private SyncMeta syncMeta;
+
+  public Connection() {
+  }
+
+  public Connection(String address, int port, String user, String passwordFile, String password, SyncMeta syncMeta) {
+    try {
+      setAddress(address);
+    } catch (UnknownHostException e) {
+      throw new InvalidConfigException(e);
+    }
+    this.port = port;
+    this.user = user;
+    setPassword(password);
+    setPasswordFile(passwordFile);
+    this.syncMeta = syncMeta;
+  }
+
+  public Connection(Connection connection) {
+    address = connection.address;
+    port = connection.port;
+    user = connection.user;
+    passwordFile = connection.passwordFile;
+    password = connection.password;
+    identifier = connection.identifier;
+    ip = connection.ip;
+    syncMeta = connection.syncMeta;
+  }
+
+  public SyncMeta[] getSyncMetas() {
+    return new SyncMeta[]{syncMeta};
+  }
+
+  public void setSyncMeta(SyncMeta syncMeta) {
+    this.syncMeta = syncMeta;
+  }
 
   public String getAddress() {
     return address;
@@ -56,10 +95,16 @@ public class Connection implements Comparable<Connection> {
   }
 
   public void setPasswordFile(String passwordFile) {
-    Preconditions.checkNotNull(passwordFile);
+    if (passwordFile == null) {
+      return;
+    }
     this.passwordFile = passwordFile;
     try {
-      this.password = FileUtil.readLine(passwordFile).get(0);
+      List<String> lines = FileUtil.readLine(passwordFile);
+      if (lines.size() != 1) {
+        throw new InvalidConfigException("Multiple line password in " + passwordFile);
+      }
+      this.password = lines.get(0);
     } catch (Exception e) {
       logger
           .error("Fail to read password file from classpath, you may consider using absolute path",
@@ -68,6 +113,9 @@ public class Connection implements Comparable<Connection> {
   }
 
   public void setPassword(String password) {
+    if (password == null) {
+      return;
+    }
     this.password = password;
   }
 
@@ -114,16 +162,17 @@ public class Connection implements Comparable<Connection> {
   }
 
   public boolean valid() {
+    return validConnection(address, port);
+  }
+
+  static boolean validConnection(String address, int port) {
     return address != null && port > 0 && port < 65536;
   }
 
-  public String initIdentifier() {
-    identifier = ip + COMMON + getPort();
-    return identifier;
-  }
-
   public String connectionIdentifier() {
-    Assert.notNull(identifier, "[should invoke initIdentifier() first]");
+    if (identifier == null) {
+      identifier = ip + COMMON + getPort();
+    }
     return identifier;
   }
 
@@ -135,5 +184,13 @@ public class Connection implements Comparable<Connection> {
   public int compareTo(Connection o) {
     int compare = ip.compareTo(o.ip);
     return compare != 0 ? compare : Integer.compare(port, o.port);
+  }
+
+  public Set<String> remoteIds() {
+    return Sets.newHashSet(connectionIdentifier());
+  }
+
+  public List<Connection> getReals() {
+    return Lists.newArrayList(this);
   }
 }

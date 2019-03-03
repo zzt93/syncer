@@ -38,7 +38,7 @@ public class ProducerStarter implements Starter {
   private ProducerStarter(ProducerInput input,
       SyncerInput syncerConfigInput, ConsumerRegistry consumerRegistry) {
     masterSources = fromPipelineConfig(input);
-    int size = masterSources.size();
+    int size = masterSources.stream().mapToInt(p->p.getRealConnection().getReals().size()).sum();
     if (size > Runtime.getRuntime().availableProcessors()) {
       logger.warn("Too many master source: {} > cores", size);
     }
@@ -56,45 +56,51 @@ public class ProducerStarter implements Starter {
 
   @Override
   public Starter start() throws IOException {
-    logger.info("Start connecting to [{}]", masterSources);
+    logger.info("Start handling [{}]", masterSources);
     if (masterSources.size() > 1) {
       logger.warn("Connect to multiple masters, not suggested usage");
     }
 
     Set<Connection> wanted = consumerRegistry.wantedSource();
     for (ProducerMaster masterSource : masterSources) {
-      Connection connection = masterSource.getConnection();
-      wanted.remove(connection);
-      if (consumerRegistry.outputSink(connection).isEmpty()) {
-        logger.warn("Skip {} because no consumer registered", masterSource);
-        continue;
-      }
-      try {
-        MasterConnector masterConnector = null;
-        switch (masterSource.getType()) {
-          case MySQL:
-            masterConnector = new MysqlMasterConnector(new MysqlConnection(connection),
-                masterSource.getFile(), consumerRegistry);
-            break;
-          case Mongo:
-            masterConnector = new MongoMasterConnector(new MongoConnection(connection),
-                consumerRegistry);
-            break;
-        }
-        connectors.add(masterConnector);
-        service.submit(masterConnector);
-      } catch (InvalidConfigException e) {
-        logger.error("Invalid config for {}", masterSource);
-        ShutDownCenter.initShutDown(e);
-      } catch (IOException | SchemaUnavailableException e) {
-        logger.error("Fail to connect to master source: {}", masterSource);
-        ShutDownCenter.initShutDown(e);
+      Connection mayClusterConnection = masterSource.getRealConnection();
+      for (Connection real : mayClusterConnection.getReals()) {
+        wanted.remove(real);
+        addConnector(masterSource, real);
       }
     }
     if (!wanted.isEmpty()) {
       logger.warn("Some consumer wanted source is not configured in `producer`: {}", wanted);
     }
     return this;
+  }
+
+  private void addConnector(ProducerMaster masterSource, Connection connection) {
+    if (consumerRegistry.outputSink(connection).isEmpty()) {
+      logger.warn("Skip {} because no consumer registered", masterSource);
+      return;
+    }
+    try {
+      MasterConnector masterConnector = null;
+      switch (masterSource.getType()) {
+        case MySQL:
+          masterConnector = new MysqlMasterConnector(new MysqlConnection(connection),
+              masterSource.getFile(), consumerRegistry);
+          break;
+        case Mongo:
+          masterConnector = new MongoMasterConnector(new MongoConnection(connection),
+              consumerRegistry);
+          break;
+      }
+      connectors.add(masterConnector);
+      service.submit(masterConnector);
+    } catch (InvalidConfigException e) {
+      logger.error("Invalid config for {}", masterSource);
+      ShutDownCenter.initShutDown(e);
+    } catch (IOException | SchemaUnavailableException e) {
+      logger.error("Fail to connect to master source: {}", masterSource);
+      ShutDownCenter.initShutDown(e);
+    }
   }
 
 
@@ -118,11 +124,13 @@ public class ProducerStarter implements Starter {
   @Override
   public void registerToHealthCenter() {
     for (ProducerMaster source : masterSources) {
-      Connection connection = source.getConnection();
-      if (consumerRegistry.outputSink(connection).isEmpty()) {
-        SyncerHealth.producer(connection.initIdentifier(), Health.inactive("No consumer registered"));
-      } else {
-        SyncerHealth.producer(connection.initIdentifier(), Health.green());
+      Connection connection = source.getRealConnection();
+      for (Connection real : connection.getReals()) {
+        if (consumerRegistry.outputSink(real).isEmpty()) {
+          SyncerHealth.producer(real.connectionIdentifier(), Health.inactive("No consumer registered"));
+        } else {
+          SyncerHealth.producer(real.connectionIdentifier(), Health.green());
+        }
       }
     }
   }

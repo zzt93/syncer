@@ -92,13 +92,13 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
             mapObj(src, res, key, src.getFields(), false);
             break;
           case EXTRA_ALL:
-            res.put(key, src.getExtra());
+            res.put(key, src.getExtras());
             break;
           case ROW_FLATTEN:
             mapToRes(src, src.getFields(), res, false);
             break;
           case EXTRA_FLATTEN:
-            res.putAll(src.getExtra());
+            res.putAll(src.getExtras());
             break;
           default:
             throw new InvalidConfigException("Unknown special expression: " + expr);

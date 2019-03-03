@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
+import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Lists;
 import com.mysql.jdbc.Driver;
@@ -109,7 +110,7 @@ public class ConsumerSchemaMeta {
 
     public HashMap<ConsumerSchemaMeta, ProducerSink> build() throws SQLException {
       HashMap<ConsumerSchemaMeta, ProducerSink> res = new HashMap<>();
-      HashMap<Consumer, List<SchemaMeta>> def2data = build(consumerSink);
+      HashMap<Consumer, List<SchemaMeta>> def2data = build(consumerSink.keySet());
       for (Entry<Consumer, ProducerSink> entry : consumerSink.entrySet()) {
         Consumer consumer = entry.getKey();
         List<SchemaMeta> metas = def2data.get(consumer);
@@ -125,7 +126,7 @@ public class ConsumerSchemaMeta {
       return res;
     }
 
-    private HashMap<Consumer, List<SchemaMeta>> build(HashMap<Consumer, ProducerSink> consumerSink)
+    private HashMap<Consumer, List<SchemaMeta>> build(Set<Consumer> consumers)
         throws SQLException {
       logger.info("Getting connection, timeout in {}s", TIMEOUT);
       Connection connection = dataSource.getConnection();
@@ -138,11 +139,12 @@ public class ConsumerSchemaMeta {
         DatabaseMetaData metaData = connection.getMetaData();
         try (ResultSet tableResultSet = metaData
             .getTables(null, null, "%", new String[]{"TABLE"})) {
-          res = getSchemaMeta(metaData, tableResultSet, consumerSink.keySet());
+          res = getSchemaMeta(metaData, tableResultSet, consumers);
         }
       } finally {
         connection.close();
       }
+      logger.info("Fetched {} for {}", res, consumers);
       return res;
     }
 
@@ -171,6 +173,7 @@ public class ConsumerSchemaMeta {
               res.computeIfAbsent(consumer, key -> Lists.newLinkedList()).add(tmp);
               return tmp;
             });
+            // remove for drds situation re-enter
             Set<String> tableRow = aim.removeTableRow(tableSchema, tableName);
             TableMeta tableMeta = new TableMeta();
             // TODO 18/1/18 may opt to get all columns then use

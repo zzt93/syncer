@@ -4,15 +4,12 @@ import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.common.Connection;
-import com.github.zzt93.syncer.config.common.MasterSource;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
-import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
-import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
-import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.Set;
 
 /**
@@ -20,13 +17,13 @@ import java.util.Set;
  */
 public abstract class LocalConsumerSource implements ConsumerSource {
 
+  private static final Logger logger = LoggerFactory.getLogger(LocalConsumerSource.class);
   private final EventScheduler scheduler;
-  private final Logger logger = LoggerFactory.getLogger(LocalConsumerSource.class);
-
   private final Set<Repo> repos;
   private final Connection connection;
   private final SyncInitMeta syncInitMeta;
   private final String clientId;
+  private final String connectionIdentifier;
   private boolean isSent = true;
 
   public LocalConsumerSource(
@@ -38,28 +35,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     this.syncInitMeta = syncInitMeta;
     this.clientId = clientId;
     this.scheduler = scheduler;
-  }
-
-  public static LocalConsumerSource inputSource(String consumerId, MasterSource masterSource,
-      SyncInitMeta syncInitMeta, EventScheduler scheduler) {
-    LocalConsumerSource inputSource;
-    switch (masterSource.getType()) {
-      case Mongo:
-        Preconditions
-            .checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is " + syncInitMeta);
-        inputSource = new MongoLocalConsumerSource(consumerId, masterSource.getConnection(),
-            masterSource.getRepoSet(), (DocTimestamp) syncInitMeta, scheduler);
-        break;
-      case MySQL:
-        Preconditions
-            .checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is " + syncInitMeta);
-        inputSource = new MysqlLocalConsumerSource(consumerId, masterSource.getConnection(),
-            masterSource.getRepoSet(), (BinlogInfo) syncInitMeta, scheduler);
-        break;
-      default:
-        throw new IllegalStateException("Not implemented type");
-    }
-    return inputSource;
+    connectionIdentifier = connection.connectionIdentifier();
   }
 
   @Override
@@ -71,8 +47,12 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   public abstract SyncInitMeta getSyncInitMeta();
 
   @Override
-  public Set<Repo> getRepos() {
-    return repos;
+  public Set<Repo> copyRepos() {
+    Set<Repo> res = new HashSet<>();
+    for (Repo repo : repos) {
+      res.add(new Repo(repo));
+    }
+    return res;
   }
 
   @Override
@@ -83,12 +63,11 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   @Override
   public boolean input(SyncData data) {
     if (sent(data)) {
-      logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, data,
-          connection.connectionIdentifier());
+      logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, data, connectionIdentifier);
       return false;
     }
     logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data, data.hashCode());
-    data.setSourceIdentifier(connection.connectionIdentifier());
+    data.setSourceIdentifier(connectionIdentifier);
     return scheduler.schedule(data);
   }
 
@@ -97,13 +76,13 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     boolean res = true;
     for (SyncData datum : data) {
       if (!sent(datum)) {
-        res = scheduler.schedule(datum.setSourceIdentifier(connection.connectionIdentifier())) && res;
+        res = scheduler.schedule(datum.setSourceIdentifier(connectionIdentifier)) && res;
         logger.debug("add list: data id: {}, {}, {} in {}", datum.getDataId(), datum,
             datum.hashCode(),
             data);
       } else {
         logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, datum,
-            connection.connectionIdentifier());
+            connectionIdentifier);
       }
     }
     return res;

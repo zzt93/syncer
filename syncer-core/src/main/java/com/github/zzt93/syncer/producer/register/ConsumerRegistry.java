@@ -3,9 +3,9 @@ package com.github.zzt93.syncer.producer.register;
 import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.producer.ProducerStarter;
+import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
-import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 
 import java.util.HashMap;

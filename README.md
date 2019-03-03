@@ -118,7 +118,9 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
       - Support multiple extra dependent query via special mark `$var$`
     - One to many relationship (parent-child relationship in ES)for document in different index
     - Self referential relationship handle
-  - Add `upsert` support, fix `DocumentMissingException` use `upsert`
+  - Add `upsert` support, fix `DocumentMissingException` use `upsert`, can be used in following two scenarios
+    - Init load for data, by creating index manually and update synced field to ES (only support `MySQL` input) 
+    - Fix some un-expected config/sync error
 
 - Http Endpoint (Deprecated)
   - Invoke `restful` interface according to event type: insert=`PUT`, update=`POST`, delete=`DELETE` 
@@ -171,7 +173,19 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Not support composite primary key
   - Not support update primary key
   - Only support update/delete by query exact value, i.e. no support query analyzed field (`text` query when update)
-
+  - Data of numeric types (tinyint, etc) always returned **signed** regardless of whether column definition includes "unsigned" keyword or not.
+  You may need to convert to unsigned if necessary.
+  ```
+     Byte.toUnsignedInt((byte)(int) fields['xx'])
+  ```
+  - Data of *text/*blob types always returned as a byte array (for var* this is true in future).
+  You may need to convert to string if necessary.
+  ```
+    new String(fields['xx'])
+  ```
+- Mongo:
+  - Not delete field from ES if sync to ES
+  
 ### Notice
 
 - Don't update/delete use `syncer` and other way (REST api or Java api) at the same time, it may cause version conflict and fail the change
@@ -393,8 +407,8 @@ and send to where
         user: xxx
         password: xxx
       rowMapping:
-        schema: "'test'"
-        table: "'someTable'"
+        schema: " 'test' "
+        table: " 'someTable' "
         id: "id"
         rows:
           "fields": "fields.*.flatten"
@@ -472,8 +486,8 @@ output:
       user: root 
       passwordFile: mysql-password
     rowMapping:
-      schema: "'someSchema'"
-      table: "'someTable'"
+      schema: " 'someSchema' "
+      table: " 'someTable' "
       id: "id"
       rows:
         "fields": "fields.*.flatten"
@@ -515,6 +529,12 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 ```
 
 ## Test
+### Dependency
+- [Docker](https://docs.docker.com/install/#server)
+  - [vm.max_map_count](https://stackoverflow.com/questions/41192680/update-max-map-count-for-elasticsearch-docker-container-mac-host) may be need to
+  be set for some os for ES docker image to run
+- [Docker compose](https://docs.docker.com/compose/install/)
+
 ### Correctness Test
 #### Test data: 
   - size: 7M
@@ -533,6 +553,7 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 - Throughput: limited by filter worker number, in average 2000 events per worker
 - CPU: 80-90
 - Memory: 4g
+  - Increase batch size & flush period, increase performance in cost of higher memory usage
 - IO
   - Network
   - Disk
@@ -541,8 +562,9 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
   - Lock contention 
 
 ### Used In Production
-- For search data sync
-- For auth data sync
+- Search system: search data sync
+- Micro-service: auth/recommend/chat data sync
+- Join table: avoid join in production env, use space for speed by join table
 - For data recovery: In case of drop entity mistakenly, or you know where to start & end
 
 ## TODO

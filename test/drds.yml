@@ -1,0 +1,127 @@
+version: '2.1'
+services:
+  mysql_0:
+    image: mysql:5.7.15
+    command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
+    volumes:
+    - ${mysql_init_0}:/init.sql
+    - ./data:/Data
+    environment:
+    - MYSQL_ROOT_PASSWORD=root
+    ports:
+    - 43306:3306
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u root -proot ping --silent"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+    - dbnet
+
+  mysql_1:
+    image: mysql:5.7.15
+    command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
+    volumes:
+    - ${mysql_init_1}:/init.sql
+    - ./data:/Data
+    environment:
+    - MYSQL_ROOT_PASSWORD=root
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u root -proot ping --silent"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+    - dbnet
+
+  mysql_2:
+    image: mysql:5.7.15
+    command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
+    volumes:
+    - ${mysql_init_2}:/init.sql
+    - ./data:/Data
+    environment:
+    - MYSQL_ROOT_PASSWORD=root
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u root -proot ping --silent"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+    - dbnet
+
+  elasticsearch:
+    command: -E cluster.name=test-cluster -E network.host=_site_
+    image: elasticsearch:5.6
+    container_name: elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+    - "ES_JAVA_OPTS=-Xmx512m -Xms512m"
+    - bootstrap.memory_local=true
+    - cluster.name=test-cluster
+    ports:
+    - 49200:9200
+    - 49300:9300
+    networks:
+    - dbnet
+
+  mongo:
+    image: mongo:3.2
+    container_name: mongo
+    healthcheck:
+      test: echo 'db.stats().ok' | mongo localhost:27017 --quiet
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    command: mongod --smallfiles --replSet test
+    environment:
+    - MONGODB_USER="root"
+    - MONGODB_PASS="root"
+    ports:
+    - 47017:27017
+    networks:
+    - dbnet
+
+  syncer:
+    image: syncer:test
+    container_name: syncer
+    depends_on:
+      mysql_0:
+        condition: service_healthy
+      mysql_1:
+        condition: service_healthy
+      mysql_2:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:40000/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    ports:
+    - 40000:40000
+    volumes:
+    - ./data:/data
+    - ./data/syncer/log:/log
+    environment:
+    - ES_ADDR=elasticsearch
+    - ES_CLUSTER=test-cluster
+    - MYSQL_ADDR="mysql_0:3306","mysql_1:3306","mysql_2:3306"
+    - MYSQL_OUT=mysql_0
+    - MYSQL_PASS=root
+    - MONGO_ADDR=mongo
+    - SYNCER_PRODUCER=/data/config/producer.yml
+    - SYNCER_CONSUMER=/data/config/consumer/
+    networks:
+    - dbnet
+
+networks:
+  dbnet:
+    driver: bridge

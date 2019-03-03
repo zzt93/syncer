@@ -1,16 +1,22 @@
 package com.github.zzt93.syncer.config.common;
 
+import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
+import com.github.zzt93.syncer.consumer.ConsumerSource;
+import com.github.zzt93.syncer.consumer.input.EventScheduler;
+import com.github.zzt93.syncer.consumer.input.LocalConsumerSource;
+import com.github.zzt93.syncer.consumer.input.MongoLocalConsumerSource;
+import com.github.zzt93.syncer.consumer.input.MysqlLocalConsumerSource;
 import com.github.zzt93.syncer.consumer.input.SchedulerBuilder.SchedulerType;
+import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 /**
  * @author zzt
@@ -21,15 +27,18 @@ public class MasterSource {
   private final Set<Repo> repoSet = new HashSet<>();
   private MasterSourceType type = MasterSourceType.MySQL;
   private SchedulerType scheduler = SchedulerType.hash;
-  private SyncMeta syncMeta;
-  private Connection connection;
+  private MayClusterConnection connection;
   private List<Repo> repos = new ArrayList<>();
 
-  public Connection getConnection() {
+  private Connection getRealConnection() {
+    return connection.getRealConnection();
+  }
+
+  public MayClusterConnection getConnection() {
     return connection;
   }
 
-  public void setConnection(Connection connection) {
+  public void setConnection(MayClusterConnection connection) {
     this.connection = connection;
   }
 
@@ -58,18 +67,6 @@ public class MasterSource {
     this.type = type;
   }
 
-  public void setSyncMeta(SyncMeta syncMeta) {
-    this.syncMeta = syncMeta;
-  }
-
-  public boolean hasSyncMeta() {
-    return syncMeta != null && type == MasterSourceType.MySQL;
-  }
-
-  public SyncMeta getSyncMeta() {
-    return syncMeta;
-  }
-
   public void setScheduler(SchedulerType scheduler) {
     this.scheduler = scheduler;
   }
@@ -89,12 +86,12 @@ public class MasterSource {
 
     MasterSource that = (MasterSource) o;
 
-    return connection.equals(that.connection);
+    return getRealConnection().equals(that.getRealConnection());
   }
 
   @Override
   public int hashCode() {
-    return connection.hashCode();
+    return getRealConnection().hashCode();
   }
 
   @Override
@@ -106,4 +103,47 @@ public class MasterSource {
         '}';
   }
 
+  public Set<String> remoteIds() {
+    return getRealConnection().remoteIds();
+  }
+
+  public List<? extends ConsumerSource> toConsumerSources(String consumerId,
+                                                          HashMap<String, SyncInitMeta> id2SyncInitMeta,
+                                                          EventScheduler scheduler) {
+    List<LocalConsumerSource> res = new LinkedList<>();
+    Connection realConnection = getRealConnection();
+    SyncMeta[] syncMetas = realConnection.getSyncMetas();
+    List<Connection> connections = realConnection.getReals();
+    for (int i = 0; i < connections.size(); i++) {
+      Connection connection = connections.get(i);
+      SyncInitMeta syncInitMeta = getSyncInitMeta(syncMetas[i], id2SyncInitMeta, connection);
+      switch (getType()) {
+        case Mongo:
+          Preconditions
+              .checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is " + syncInitMeta);
+          res.add(new MongoLocalConsumerSource(consumerId, connection,
+              getRepoSet(), (DocTimestamp) syncInitMeta, scheduler));
+          break;
+        case MySQL:
+          Preconditions
+              .checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is " + syncInitMeta);
+          res.add(new MysqlLocalConsumerSource(consumerId, connection,
+              getRepoSet(), (BinlogInfo) syncInitMeta, scheduler));
+          break;
+        default:
+          throw new IllegalStateException("Not implemented type");
+      }
+    }
+    return res;
+  }
+
+  private SyncInitMeta getSyncInitMeta(SyncMeta syncMeta, HashMap<String, SyncInitMeta> id2SyncInitMeta, Connection connection) {
+    String identifier = connection.connectionIdentifier();
+    SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
+    if (syncMeta != null) {
+      logger.warn("Override syncer remembered position with config in file {}, watch out", syncMeta);
+      syncInitMeta = BinlogInfo.withFilenameCheck(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
+    }
+    return syncInitMeta;
+  }
 }

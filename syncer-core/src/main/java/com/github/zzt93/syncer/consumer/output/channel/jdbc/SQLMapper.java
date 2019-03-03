@@ -83,14 +83,14 @@ public class SQLMapper implements Mapper<SyncData, String> {
         StringJoiner keys = new StringJoiner(",");
         StringJoiner values = new StringJoiner(",");
         for (Entry<String, Object> entry : map.entrySet()) {
-          keys.add(entry.getKey());
+          keys.add(SQLHelper.wrapCol(entry.getKey()));
           values.add(SQLHelper.inSQL(entry.getValue()));
         }
         return new String[]{keys.toString(), values.toString()};
       case UPDATE:
         StringJoiner kv = new StringJoiner(",");
         for (Entry<String, Object> entry : map.entrySet()) {
-          String condition = "" + entry.getKey() + "=" + SQLHelper.inSQL(entry.getValue());
+          String condition = "" + SQLHelper.wrapCol(entry.getKey()) + "=" + SQLHelper.inSQL(entry.getValue());
           kv.add(condition);
         }
         return new String[]{kv.toString()};

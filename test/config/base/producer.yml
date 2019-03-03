@@ -1,0 +1,18 @@
+version: 1.2
+
+input:
+  masters:
+
+  - connection:
+      address: ${MYSQL_ADDR}
+      port: 3306
+      user: root
+      password: ${MYSQL_PASS}
+
+  - connection:
+      address: ${MONGO_ADDR}
+      port: 27017
+    type: Mongo
+
+
+

@@ -52,7 +52,7 @@ public interface SyncData {
 
   HashMap<String, Object> getFields();
 
-  HashMap<String, Object> getExtra();
+  HashMap<String, Object> getExtras();
 
   Object getField(String key);
 
@@ -76,6 +76,13 @@ public interface SyncData {
   boolean hasExtra();
 
   Object getExtra(String key);
+
+  /**
+   * create a new instance with meta info copied
+   * @param index ith copy of original data, should be different across invocation because it is used for logging
+   * @return a new instance of {@link SyncData}
+   */
+  SyncData copyMeta(int index);
 
   @Override
   String toString();

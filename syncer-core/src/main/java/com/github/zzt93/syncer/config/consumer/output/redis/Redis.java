@@ -91,7 +91,7 @@ public class Redis extends BufferedOutputChannelConfig {
     if (clusterConnection.valid()) {
       return clusterConnection.connectionIdentifier();
     } else if (connection.valid()) {
-      return connection.initIdentifier();
+      return connection.connectionIdentifier();
     }
     throw new InvalidConfigException("No valid connection configured");
   }

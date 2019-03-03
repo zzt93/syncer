@@ -14,8 +14,8 @@ import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.producer.InvalidPasswordException;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
+import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
-import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
@@ -56,7 +56,7 @@ public class MysqlMasterConnector implements MasterConnector {
       throw new InvalidPasswordException(password);
     }
 
-    connectorIdentifier = connection.initIdentifier();
+    connectorIdentifier = connection.connectionIdentifier();
 
     BinlogInfo remembered = configLogClient(connection, password, registry);
     listener = configEventListener(connection, registry, remembered);

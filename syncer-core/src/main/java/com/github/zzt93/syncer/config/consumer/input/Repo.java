@@ -25,6 +25,19 @@ public class Repo implements Hashable {
   private Pattern namePattern;
   private HashMap<String, Set<String>> nameToRows = new HashMap<>();
 
+  public Repo() {
+  }
+
+  /**
+   * because this config class is mutable, have to copy for re-use
+   * @see #removeTableRow(String, String)
+   */
+  public Repo(Repo repo) {
+    name = repo.name;
+    namePattern= repo.namePattern;
+    setEntities(repo.getEntities());
+  }
+
   public String getName() {
     return name;
   }
@@ -44,7 +57,7 @@ public class Repo implements Hashable {
       nameToRows.put(entity.getName(), new HashSet<>(entity.getFields()));
     }
     if (nameToRows.size() != entities.size()) {
-      logger.warn("Duplicate table name definition: {}", entities);
+      logger.warn("Duplicate entity name definition: {}", entities);
     }
   }
 
@@ -73,6 +86,8 @@ public class Repo implements Hashable {
   public String toString() {
     return "Repo{" +
         "name='" + name + '\'' +
+        ", entities=" + entities +
+        ", namePattern=" + namePattern +
         '}';
   }
 

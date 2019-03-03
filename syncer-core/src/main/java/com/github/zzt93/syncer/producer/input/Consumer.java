@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.input.mysql.meta;
+package com.github.zzt93.syncer.producer.input;
 
 import com.github.zzt93.syncer.config.common.MasterSource;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
@@ -19,7 +19,7 @@ public class Consumer {
   private final String id;
 
   public Consumer(ConsumerSource consumerSource) {
-    this.repos = consumerSource.getRepos();
+    this.repos = consumerSource.copyRepos();
     id = consumerSource.clientId();
   }
 
@@ -52,7 +52,7 @@ public class Consumer {
         '}';
   }
 
-  Repo matchedSchema(String tableSchema, String tableName) {
+  public Repo matchedSchema(String tableSchema, String tableName) {
     for (Repo aim : getRepos()) {
       if (aim.contain(tableSchema, tableName)) {
         // a consumer should only match one table at one time

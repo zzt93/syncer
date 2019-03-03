@@ -7,8 +7,8 @@ import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MongoConnection;
 import com.github.zzt93.syncer.config.consumer.input.Entity;
 import com.github.zzt93.syncer.producer.dispatch.mongo.MongoDispatcher;
+import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
-import com.github.zzt93.syncer.producer.input.mysql.meta.Consumer;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Throwables;
@@ -43,7 +43,7 @@ public class MongoMasterConnector implements MasterConnector {
 
 
   public MongoMasterConnector(MongoConnection connection, ConsumerRegistry registry) throws IOException {
-    identifier = connection.initIdentifier();
+    identifier = connection.connectionIdentifier();
 
     client = new MongoClient(new MongoClientURI(connection.toConnectionUrl(null)));
     configDispatch(connection, registry);
@@ -54,9 +54,11 @@ public class MongoMasterConnector implements MasterConnector {
     DocTimestamp docTimestamp = registry.votedMongoId(connection);
     Pattern namespaces = getNamespaces(connection, registry);
     query = new Document()
-        .append(NS, new BasicDBObject("$regex", namespaces));
-    // fromMigrate indicates the operation results from a shard re-balancing.
-    //.append("fromMigrate", new BasicDBObject("$exists", "false"))
+        .append(NS, new BasicDBObject("$regex", namespaces))
+        // https://www.mongodb.com/blog/post/tailing-mongodb-oplog-sharded-clusters
+        // fromMigrate indicates the operation results from a shard re-balancing.
+        .append("fromMigrate", new BasicDBObject("$exists", "false"))
+    ;
     if (docTimestamp.getTimestamp() != null) {
       query.append(TS, new BasicDBObject("$gte", docTimestamp.getTimestamp()));
     } else {
@@ -91,9 +93,10 @@ public class MongoMasterConnector implements MasterConnector {
   }
 
   private Pattern getNamespaces(MongoConnection connection, ConsumerRegistry registry) {
+    // TODO 2019/2/28 check whether registered collection is exists
+    Set<Consumer> consumers = registry.outputSink(connection).keySet();
     StringJoiner joiner = new StringJoiner("|");
-    registry.outputSink(connection)
-        .keySet().stream().map(Consumer::getRepos).flatMap(Set::stream).flatMap(s -> {
+    consumers.stream().map(Consumer::getRepos).flatMap(Set::stream).flatMap(s -> {
       List<Entity> entities = s.getEntities();
       ArrayList<String> res = new ArrayList<>(entities.size());
       for (Entity entity : entities) {

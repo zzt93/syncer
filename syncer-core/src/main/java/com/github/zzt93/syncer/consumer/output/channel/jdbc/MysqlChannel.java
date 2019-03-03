@@ -61,7 +61,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     this.batch = mysql.getBatch();
     this.ack = ack;
     FailureLogConfig failureLog = mysql.getFailureLog();
-    sqlFailureLog = FailureLog.getLogger(Paths.get(outputMeta.getFailureLogDir(), connection.initIdentifier()),
+    sqlFailureLog = FailureLog.getLogger(Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier()),
         failureLog, new TypeToken<FailureEntry<SyncWrapper<String>>>() {
         });
     output = connection.connectionIdentifier();

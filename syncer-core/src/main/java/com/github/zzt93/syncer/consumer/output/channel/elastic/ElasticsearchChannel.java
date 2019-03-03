@@ -31,6 +31,7 @@ import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.client.transport.TransportClient;
+import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
 import org.elasticsearch.index.reindex.BulkByScrollResponse;
@@ -82,7 +83,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
     this.ack = ack;
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
-    Path path = Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier());
+    Path path = Paths.get(outputMeta.getFailureLogDir(), id);
     singleRequest = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncData>>() {
     });
   }
@@ -269,7 +270,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         handle404(wrapper, item);
         tmp.add(wrapper);
       } else {
-        logger.error("Met {} in {}", level, wrapper, item.getFailure());
+        logger.error("Met {} in {} because {}", level, wrapper, item.getFailure());
         switch (level) {
           case MAX_TRY_EXCEED:
           case SYNCER_BUG:
@@ -282,6 +283,14 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
     }
     batchBuffer.addAllInHead(tmp);
+  }
+
+  @Override
+  public ErrorLevel level(Throwable e, SyncWrapper wrapper, int maxTry) {
+    if (e instanceof IndexNotFoundException) {
+      return ErrorLevel.WARN;
+    }
+    return BufferedChannel.super.level(e, wrapper, maxTry);
   }
 
   private Object requestStr(SyncWrapper<WriteRequest> wrapper) {
