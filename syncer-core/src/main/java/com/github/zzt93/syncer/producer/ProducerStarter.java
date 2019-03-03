@@ -38,7 +38,7 @@ public class ProducerStarter implements Starter {
   private ProducerStarter(ProducerInput input,
       SyncerInput syncerConfigInput, ConsumerRegistry consumerRegistry) {
     masterSources = fromPipelineConfig(input);
-    int size = masterSources.size();
+    int size = masterSources.stream().mapToInt(p->p.getRealConnection().getReals().size()).sum();
     if (size > Runtime.getRuntime().availableProcessors()) {
       logger.warn("Too many master source: {} > cores", size);
     }
