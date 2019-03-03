@@ -89,6 +89,17 @@ logi "Prepare $env runtime"
 bash setupEnv.sh ${num} ${env}
 
 
+for (( i = 0; i < 3; ++i )); do
+    printf "Waiting Syncer to warm up .\r"
+    sleep 1
+    printf "Waiting Syncer to warm up ..\r"
+    sleep 1
+    printf "Waiting Syncer to warm up ...\r"
+    sleep 1
+    echo ""
+done
+
+
 # Then
 # query mysql/es count
 for f in `find then -name "*.sh"` ; do

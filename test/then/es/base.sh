@@ -24,9 +24,9 @@ function esAssert() {
 
     all=`docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -N -B -e "select count(*) from ${db}.${table}" | grep -o "[0-9]*"`
     logi "[Sync input] -- ${db}.${table}: $all"
-    tmp=`curl -s -X GET "localhost:49200/${db}-*/${table}/_count" -H 'Content-Type: application/json'`
+    tmp=`curl -s -X GET "localhost:49200/${db}*/${table}/_count" -H 'Content-Type: application/json'`
     c1=`extractCount ${tmp}`
-    logi "[Sync result] -- ${db}-*.${table} in ES : $c1"
+    logi "[Sync result] -- ${db}*.${table} in ES : $c1"
     if [[ ${c1} -ne "$all" ]];then
         loge "$table not right"
     fi
