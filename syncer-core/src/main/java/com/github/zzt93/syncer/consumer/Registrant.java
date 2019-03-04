@@ -1,6 +1,5 @@
-package com.github.zzt93.syncer.consumer.input;
+package com.github.zzt93.syncer.consumer;
 
-import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 
 import java.util.ArrayList;

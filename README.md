@@ -30,6 +30,9 @@
 If you are changing the `id` of event, it always means you are doing joining like I do, which is no
 way to make consistency promise because Syncer can only provide 'at least once' semantic
 
+### Updated Asynchronously
+The business database query request is delayed as little as possible.
+ 
 ### Input -- DataSource
 
 - Support listening to both MySQL & MongoDB & DRDS of Aliyun (https://www.aliyun.com/product/drds)
