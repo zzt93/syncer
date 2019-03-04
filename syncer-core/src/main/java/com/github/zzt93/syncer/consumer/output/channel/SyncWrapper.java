@@ -1,6 +1,7 @@
-package com.github.zzt93.syncer.common.data;
+package com.github.zzt93.syncer.consumer.output.channel;
 
-import com.github.zzt93.syncer.consumer.ack.Retryable;
+import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.consumer.output.Retryable;
 
 /**
  * @author zzt

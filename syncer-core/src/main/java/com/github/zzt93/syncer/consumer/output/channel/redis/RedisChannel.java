@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.redis;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
@@ -10,6 +9,7 @@ import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.github.zzt93.syncer.consumer.output.channel.SyncWrapper;
 import com.github.zzt93.syncer.consumer.output.failure.FailureEntry;
 import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.google.gson.reflect.TypeToken;

@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.output.batch;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
-import com.github.zzt93.syncer.consumer.ack.Retryable;
+import com.github.zzt93.syncer.consumer.output.Retryable;
 
 import java.util.ArrayList;
 import java.util.List;

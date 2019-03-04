@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.common.ElasticsearchConnection;
@@ -13,6 +12,7 @@ import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchBuffer;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
+import com.github.zzt93.syncer.consumer.output.channel.SyncWrapper;
 import com.github.zzt93.syncer.consumer.output.failure.FailureEntry;
 import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.github.zzt93.syncer.health.Health;

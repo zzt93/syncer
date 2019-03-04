@@ -1,7 +1,5 @@
 package com.github.zzt93.syncer.consumer.output.channel;
 
-import com.github.zzt93.syncer.common.data.SyncWrapper;
-
 import java.util.List;
 
 /**

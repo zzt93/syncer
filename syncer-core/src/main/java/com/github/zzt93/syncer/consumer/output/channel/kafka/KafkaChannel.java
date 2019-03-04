@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.kafka;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.common.data.SyncWrapper;
 import com.github.zzt93.syncer.config.common.ClusterConnection;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.consumer.output.kafka.Kafka;
@@ -9,6 +8,7 @@ import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.AckChannel;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.consumer.output.channel.SyncWrapper;
 import com.github.zzt93.syncer.consumer.output.failure.FailureEntry;
 import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.google.common.collect.Lists;
