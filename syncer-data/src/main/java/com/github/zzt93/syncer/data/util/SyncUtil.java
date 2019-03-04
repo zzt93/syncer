@@ -71,4 +71,18 @@ public class SyncUtil {
     fields.putAll(tmp);
   }
 
+  public static void toStr(SyncData sync, String key) {
+    Object value = sync.getField(key);
+    if (value != null) {
+      sync.updateField(key, new String((byte[]) value, java.nio.charset.StandardCharsets.UTF_8));
+    }
+  }
+
+  public static void unsignedByte(SyncData sync, String key) {
+    Object field = sync.getField(key);
+    if (field != null) {
+      sync.updateField(key, Byte.toUnsignedInt((byte)(int) field));
+    }
+  }
+
 }
