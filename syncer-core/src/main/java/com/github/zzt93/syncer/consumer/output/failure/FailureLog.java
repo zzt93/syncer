@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.consumer.ack;
+package com.github.zzt93.syncer.consumer.output.failure;
 
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.util.FileUtil;

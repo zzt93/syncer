@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.consumer.ack;
+package com.github.zzt93.syncer.consumer.output.failure;
 
 import java.time.LocalDateTime;
 
