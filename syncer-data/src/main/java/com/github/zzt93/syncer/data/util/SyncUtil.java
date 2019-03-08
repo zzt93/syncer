@@ -10,8 +10,6 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.google.common.base.CaseFormat.LOWER_CAMEL;
-import static com.google.common.base.CaseFormat.LOWER_UNDERSCORE;
 
 /**
  * @author zzt
@@ -61,7 +59,7 @@ public class SyncUtil {
     HashMap<String, Object> tmp = new HashMap<>();
     for (Map.Entry<String, Object> e : fields.entrySet()) {
       String from = e.getKey();
-      String to = LOWER_UNDERSCORE.to(LOWER_CAMEL, from);
+      String to = underscoreToCamel(from);
       if (!from.equals(to)) {
         logger.info("Rename field: {} -> {}", from, to);
       }
@@ -69,6 +67,27 @@ public class SyncUtil {
     }
     fields.clear();
     fields.putAll(tmp);
+  }
+
+  private static String underscoreToCamel(String from) {
+    char[] cs = from.toCharArray();
+    StringBuilder sb = new StringBuilder(cs.length);
+    boolean lastIsUnderscore = false;
+    for (char c : cs) {
+      if (c == '_') {
+        lastIsUnderscore = true;
+      } else if (Character.isAlphabetic(c)) {
+        if (lastIsUnderscore && Character.isLowerCase(c)) {
+          sb.append(Character.toUpperCase(c));
+        } else {
+          sb.append(c);
+        }
+        lastIsUnderscore = false;
+      } else {
+        logger.warn("Unsupported {} in {}", c, from);
+      }
+    }
+    return sb.toString();
   }
 
   public static void toStr(SyncData sync, String key) {

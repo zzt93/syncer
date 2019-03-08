@@ -9,8 +9,15 @@
 - Eventual Consistency: Make data reach destination
 - Order Problem: Make data reach in same order as it is
   - update `item(id1)` set `field1` to `1`; then, update `item(id1)` set `field1` to `2`;
+      ```sql
+    update t set name='a' where id = 1;
+    update t set name='b' where id = 1;
+      ```
   - insert `item(id1)` with `field1` as `1`; delete `item(id1)`;
-
+      ```sql
+    insert into t values (1);
+    delete from t where id = 1;
+      ```
 #### Consistency Promise
 
 - Master slave replication protocol: If network has problem, MySQL master will re-send lost packet
@@ -27,8 +34,9 @@
 
 ---
 
-If you are changing the `id` of event, it always means you are doing joining like I do, which is no
-way to make consistency promise because Syncer can only provide 'at least once' semantic
+If you are changing the `id` of event, it always means you are doing joining like I do, which 
+ - may fail consistency promise because the order between events may not scheduled as it should be;
+ - may cause dup item because Syncer only make sure `exactly once semantic`;
 
 ### Updated Asynchronously
 The business database query request is delayed as little as possible.
@@ -40,6 +48,7 @@ The business database query request is delayed as little as possible.
   - Schema filter (naming as `repos`), support regex
   - Table name filter
   - Interested column filter
+  - In a `UPDATE`, all interested column will be received even no change (different from `MongoDB`)
   - automatic primary key detection and set into `id`
   - If a table match multiple schema & table (because the usage of regex), an error message will be logged and
       syncer will use any one that match filter column
@@ -52,6 +61,7 @@ The business database query request is delayed as little as possible.
   - Version: 3.x
   - Database filter (naming as `repos`), support regex
   - Collection name filter
+  - In a `UPDATE`, only changed column will be received (different from `MySQL`)
   - automatic `_id` detection and set into `id`
   - If an event match multiple schema & table, we will use the first specific match to filter/output,
   i.e. the specific `repo` config will override the regex `repo` config

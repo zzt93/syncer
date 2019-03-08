@@ -1,10 +1,12 @@
 package com.github.zzt93.syncer.common.data;
 
+import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.data.util.SyncUtil;
 import com.google.gson.reflect.TypeToken;
 import org.junit.Assert;
 import org.junit.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -50,4 +52,26 @@ public class SyncUtilTest {
     Assert.assertNull(map2);
   }
 
+  @Test
+  public void testRename() {
+    Map<String, Object> row = new HashMap<>();
+    row.put("a_pub", "1");
+    row.put("bPub", "1");
+    row.put("c_p_ub", "1");
+    row.put("d_p_ub_", "1");
+    row.put("e_p_u_b", "1");
+    row.put("f_p_u_bB", "1");
+    row.put("g_p_u_BB", "1");
+    row.put("hPuB", "1");
+    SyncData data = new SyncData("asdf", 1, "test", "test", "id", 1L, row, EventType.UPDATE_ROWS);
+    SyncUtil.underscoreToCamel(data);
+    Assert.assertEquals("1", data.getField("aPub"));
+    Assert.assertEquals("1", data.getField("bPub"));
+    Assert.assertEquals("1", data.getField("cPUb"));
+    Assert.assertEquals("1", data.getField("dPUb"));
+    Assert.assertEquals("1", data.getField("ePUB"));
+    Assert.assertEquals("1", data.getField("fPUBB"));
+    Assert.assertEquals("1", data.getField("gPUBB"));
+    Assert.assertEquals("1", data.getField("hPuB"));
+  }
 }
