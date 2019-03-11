@@ -44,6 +44,7 @@ The business database query request is delayed as little as possible.
 ### Input -- DataSource
 
 - Support listening to both MySQL & MongoDB & DRDS of Aliyun (https://www.aliyun.com/product/drds)
+- If fail to connect to input data source, will abort
 - MySQL master source filter:
   - Schema filter (naming as `repos`), support regex
   - Table name filter
@@ -56,7 +57,7 @@ The business database query request is delayed as little as possible.
     - If event type is `UPDATE`, then discard this event -- because not support update id now;
     - Other event type, keep it.
   - Support reading from binlog file to do data recovering in case of loss of data (`input.masters[x].file`)
-  - Support specify binlog file/position to start reading (`input.masters[x].syncMeta`)
+  - Support specify binlog file/position to start reading (`input.masters[x].connection.syncMeta[]`)
 - MongoDB master source filter:
   - Version: 3.x
   - Database filter (naming as `repos`), support regex
@@ -122,6 +123,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 ### Output -- DataSink
 
 - If output channel meet too many failure/error (exceeds `countLimit`), it will abort and change health to `red` 
+- If fail to connect to output channel, will retry every 2**n seconds
 - Elasticsearch
   - Version: 5.x
   - Bulk operation
@@ -260,7 +262,7 @@ input:
 #### Filter
 
 
-- `method`: write a java class implements `MethodFilter`  to handle `SyncData`
+- `method` (**preferred: more powerful and easier to wirte**) : write a java class implements `MethodFilter`  to handle `SyncData`
   - Import dependency:
   ```xml
         <dependency>

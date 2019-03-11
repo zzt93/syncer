@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
-import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
+import com.github.zzt93.syncer.consumer.output.channel.mapper.ExtraQueryMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.jdbc.core.JdbcTemplate;

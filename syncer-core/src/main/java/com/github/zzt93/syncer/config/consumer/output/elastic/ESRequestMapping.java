@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.output.elastic;
 
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
-import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
+import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 
 import java.util.LinkedHashMap;
 

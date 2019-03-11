@@ -1,9 +1,9 @@
 package com.github.zzt93.syncer.consumer.output.channel.kafka;
 
+import com.github.zzt93.syncer.common.data.Mapper;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.kafka.MsgMapping;
-import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;

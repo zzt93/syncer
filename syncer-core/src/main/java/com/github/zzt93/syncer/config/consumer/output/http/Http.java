@@ -6,7 +6,7 @@ import com.github.zzt93.syncer.config.consumer.output.OutputChannelConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.http.HttpChannel;
-import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
+import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 
 import java.util.Collections;
 import java.util.LinkedHashMap;

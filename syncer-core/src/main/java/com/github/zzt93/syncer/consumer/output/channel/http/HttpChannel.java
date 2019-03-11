@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.config.common.HttpConnection;
 import com.github.zzt93.syncer.config.consumer.output.http.Http;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
-import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
+import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 import com.google.gson.Gson;
 import io.netty.handler.codec.http.HttpMethod;
 import org.slf4j.Logger;

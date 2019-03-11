@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
-import com.github.zzt93.syncer.consumer.output.channel.ExtraQueryMapper;
+import com.github.zzt93.syncer.consumer.output.channel.mapper.ExtraQueryMapper;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.support.AbstractClient;
