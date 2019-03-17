@@ -329,6 +329,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   private void buildSendProcess(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {
     if (aim != null && aim.size() != 0) {
+      logger.info("Flush batch({})", aim.size());
       BulkResponse bulkResponse = buildAndSend(aim);
       if (!bulkResponse.hasFailures()) {
         ackSuccess(aim);
@@ -365,7 +366,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
         bulkRequest.add(((DeleteRequest) request));
       }
     }
-    logger.info("Sending {}", joiner);
+    logger.debug("Sending {}", joiner);
     return sleepInConnectionLost((sleepInSecond) -> {
       ListenableActionFuture<BulkResponse> future = bulkRequest.execute();
       try {

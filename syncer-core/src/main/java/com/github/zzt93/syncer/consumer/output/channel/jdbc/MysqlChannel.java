@@ -126,14 +126,14 @@ public class MysqlChannel implements BufferedChannel<String> {
   public void flush() throws InterruptedException {
     List<SyncWrapper<String>> sqls = batchBuffer.flush();
     if (sqls.size() != 0) {
-      logger.debug("Flush batch of {}", sqls);
       batchAndRetry(sqls);
     }
   }
 
   private void batchAndRetry(List<SyncWrapper<String>> sqls) throws InterruptedException {
     String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
-    logger.info("Sending {}", Arrays.toString(sqlStatement));
+    logger.info("Flush batch({})", sqls.size());
+    logger.debug("Sending {}", Arrays.toString(sqlStatement));
     long sleepInSecond = 1;
     while (!Thread.currentThread().isInterrupted()) {
       try {
@@ -157,7 +157,6 @@ public class MysqlChannel implements BufferedChannel<String> {
   public void flushIfReachSizeLimit() throws InterruptedException {
     List<SyncWrapper<String>> sqls = batchBuffer.flushIfReachSizeLimit();
     if (sqls != null) {
-      logger.debug("Flush when reach size limit, send batch of {}", sqls);
       batchAndRetry(sqls);
     }
   }
