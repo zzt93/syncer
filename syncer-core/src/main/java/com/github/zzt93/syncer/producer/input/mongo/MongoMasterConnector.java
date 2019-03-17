@@ -137,7 +137,7 @@ public class MongoMasterConnector implements MasterConnector {
     while (cursor.hasNext()) {
       Document d = cursor.next();
       try {
-        mongoDispatcher.dispatch(d);
+        mongoDispatcher.dispatch(null, d);
       } catch (InvalidConfigException e) {
         ShutDownCenter.initShutDown(e);
       } catch (Throwable e) {

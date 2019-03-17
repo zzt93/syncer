@@ -376,7 +376,7 @@ if I didn't listed.
   - "extra.*": map.put('your_key', `extra`)
   - "extra.*.flatten": map.putAll(`extra`)
 - `batch`: support output change in batch
-  - `size`: flush if reach this size
+  - `size`: flush if reach this size (if `size` <= 0, it will be considered as buffer as large as possible)
   - `delay`: flush if every this time in `MILLISECONDS`
   - `maxRetry`: max retry if met error
 - `failureLog`: failure log config

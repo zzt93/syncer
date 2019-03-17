@@ -1,7 +1,8 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
+import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.data.util.SyncUtil;
+import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
 import com.google.gson.reflect.TypeToken;
 import org.junit.Assert;
 import org.junit.Test;
@@ -54,7 +55,7 @@ public class SyncUtilTest {
 
   @Test
   public void testRename() {
-    Map<String, Object> row = new HashMap<>();
+    HashMap<String, Object> row = new HashMap<>();
     row.put("a_pub", "1");
     row.put("bPub", "1");
     row.put("c_p_ub", "1");
@@ -63,7 +64,7 @@ public class SyncUtilTest {
     row.put("f_p_u_bB", "1");
     row.put("g_p_u_BB", "1");
     row.put("hPuB", "1");
-    SyncData data = new SyncData("asdf", 1, "test", "test", "id", 1L, row, EventType.UPDATE_ROWS);
+    SyncData data = new SyncData("asdf", 1, SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(row));
     SyncUtil.underscoreToCamel(data);
     Assert.assertEquals("1", data.getField("aPub"));
     Assert.assertEquals("1", data.getField("bPub"));

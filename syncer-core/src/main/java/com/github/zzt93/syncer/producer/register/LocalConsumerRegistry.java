@@ -22,6 +22,7 @@ import java.util.concurrent.ConcurrentSkipListSet;
 import static com.google.common.base.Preconditions.checkState;
 
 /**
+ * todo split it to every producer?
  * @author zzt
  */
 public class LocalConsumerRegistry implements ConsumerRegistry {

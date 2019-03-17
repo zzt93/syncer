@@ -4,6 +4,7 @@ import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
@@ -43,14 +44,14 @@ public class MysqlDispatcher implements Dispatcher {
   }
 
   @Override
-  public boolean dispatch(Object... data) {
+  public boolean dispatch(SimpleEventType simpleEventType, Object... data) {
     Preconditions.checkState(data.length == 2);
     Event[] events = new Event[]{(Event) data[0], (Event) data[1]};
     String eventId = IdGenerator.fromEvent(events, binlogInfo.get().getBinlogFilename());
     MDC.put(IdGenerator.EID, eventId);
     boolean res = true;
     for (FilterChain filterChain : filterChains) {
-      FilterRes decide = filterChain.decide(eventId, events);
+      FilterRes decide = filterChain.decide(simpleEventType, eventId, events);
       res = res && FilterRes.ACCEPT == decide;
     }
     MDC.remove(IdGenerator.EID);

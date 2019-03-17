@@ -1,10 +1,11 @@
 package com.github.zzt93.syncer.producer.dispatch.mysql.event;
 
 
-import com.github.shyiko.mysql.binlog.event.*;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.util.Assert;
+import com.github.shyiko.mysql.binlog.event.DeleteRowsEventData;
+import com.github.shyiko.mysql.binlog.event.EventData;
+import com.github.shyiko.mysql.binlog.event.UpdateRowsEventData;
+import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
+import com.github.zzt93.syncer.data.SimpleEventType;
 
 import java.io.Serializable;
 import java.util.*;
@@ -17,42 +18,12 @@ import java.util.*;
  */
 public abstract class RowsEvent {
 
-  private static final Logger logger = LoggerFactory.getLogger(RowsEvent.class);
-
-  public static boolean filterData(List<HashMap<Integer, Object>> indexedRow,
-      List<Integer> interestedAndPkIndex, EventType eventType) {
-    Assert.isTrue(!indexedRow.isEmpty(), "Assertion Failure: no row to filter");
-    List<HashMap<Integer, Object>> tmp = new LinkedList<>();
-    for (HashMap<Integer, Object> row : indexedRow) {
-      HashMap<Integer, Object> map = new HashMap<>();
-      for (Integer integer : interestedAndPkIndex) {
-        if (row.containsKey(integer)) {
-          map.put(integer, row.get(integer));
-        }
-      }
-      if (map.size() > 1 || (map.size() == 1 && eventType != EventType.UPDATE_ROWS)) {
-        tmp.add(map);
-      } else {
-        Assert.isTrue(!map.isEmpty(), "Assertion Failure: should at least has primary key");
-        // discard event which only has id && event type is UPDATE_ROWS
-        logger.info("Discard {} because nothing to update", row);
-      }
-    }
-    indexedRow.clear();
-    indexedRow.addAll(tmp);
-    return !indexedRow.isEmpty();
-  }
-
-  public static List<HashMap<String, Object>> getNamedRows(
-      List<HashMap<Integer, Object>> indexedRow,
-      Map<Integer, String> indexToName) {
-    List<HashMap<String, Object>> res = new ArrayList<>(indexedRow.size());
-    for (HashMap<Integer, Object> row : indexedRow) {
-      HashMap<String, Object> map = new HashMap<>();
-      for (Integer index : row.keySet()) {
-        map.put(indexToName.get(index), row.get(index));
-      }
-      res.add(map);
+  public static List<NamedFullRow> getNamedRows(
+      List<IndexedFullRow> indexedRow,
+      List<Integer> interestedAndPkIndex, Map<Integer, String> indexToName) {
+    List<NamedFullRow> res = new ArrayList<>(indexedRow.size());
+    for (IndexedFullRow indexedFullRow : indexedRow) {
+      res.add(indexedFullRow.toNamed(interestedAndPkIndex, indexToName));
     }
     return res;
   }
@@ -63,15 +34,15 @@ public abstract class RowsEvent {
     return indexToName.get(key);
   }
 
-  public static List<HashMap<Integer, Object>> getIndexedRows(EventType eventType, EventData data,
-      Set<Integer> primaryKeys) {
+  public static List<IndexedFullRow> getIndexedRows(SimpleEventType eventType, EventData data,
+                                                    Set<Integer> primaryKeys) {
     switch (eventType) {
-      case UPDATE_ROWS:
-        return UpdateRowsEvent.getIndexedRows((UpdateRowsEventData) data, primaryKeys);
-      case WRITE_ROWS:
+      case UPDATE:
+        return UpdateRowsEvent.getIndexedRows((UpdateRowsEventData) data);
+      case WRITE:
         WriteRowsEventData write = (WriteRowsEventData) data;
         return getIndexedRows(write.getRows(), write.getIncludedColumns());
-      case DELETE_ROWS:
+      case DELETE:
         DeleteRowsEventData delete = (DeleteRowsEventData) data;
         return getIndexedRows(delete.getRows(), delete.getIncludedColumns());
       default:
@@ -79,17 +50,11 @@ public abstract class RowsEvent {
     }
   }
 
-  private static List<HashMap<Integer, Object>> getIndexedRows(List<Serializable[]> rows,
-      BitSet includedColumns) {
-    List<HashMap<Integer, Object>> res = new LinkedList<>();
+  private static List<IndexedFullRow> getIndexedRows(List<Serializable[]> rows,
+                                                     BitSet includedColumns) {
+    List<IndexedFullRow> res = new LinkedList<>();
     for (Serializable[] row : rows) {
-      HashMap<Integer, Object> map = new HashMap<>();
-      for (int i = 0; i < row.length; i++) {
-        if (includedColumns.get(i)) {
-          map.put(i, row[i]);
-        }
-      }
-      res.add(map);
+      res.add(new IndexedFullRow(row));
     }
     return res;
   }

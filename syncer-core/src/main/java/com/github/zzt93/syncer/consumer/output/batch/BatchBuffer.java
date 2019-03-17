@@ -16,6 +16,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BatchBuffer<T extends Retryable> {
 
   private final int limit;
+  /**
+   * <h3>Equation</h3>
+   * deque.size() >= estimateSize
+   */
   private final ConcurrentLinkedDeque<T> deque = new ConcurrentLinkedDeque<>();
   private final AtomicInteger estimateSize = new AtomicInteger(0);
 
@@ -49,7 +53,8 @@ public class BatchBuffer<T extends Retryable> {
         try {
           res.add(deque.removeFirst());
         } catch (NoSuchElementException ignored) {
-          // ignore, multiple thread may enter this block and cause this exception
+          // TODO 2019/3/13 should not flush & flushIfReachSizeLimit at the same time, fix it by: volatile boolean flushing?
+          // TODO 2019/3/13 should not ignore
           return res;
         }
       }
@@ -59,16 +64,18 @@ public class BatchBuffer<T extends Retryable> {
   }
 
   public List<T> flush() {
+    // TODO 2019/3/13 move into if
     ArrayList<T> res = new ArrayList<>(estimateSize.get());
     if (estimateSize.getAndUpdate(x -> 0) > 0) {
       while (!deque.isEmpty()) {
         try {
           res.add(deque.removeFirst());
         } catch (NoSuchElementException ignored) {
-          // ignore, multiple thread may enter this block and cause this exception
+          // TODO 2019/3/13 should not ignore
           return res;
         }
       }
+      // TODO 2019/3/13 reset estimateSize to 0?
     }
     return res;
   }

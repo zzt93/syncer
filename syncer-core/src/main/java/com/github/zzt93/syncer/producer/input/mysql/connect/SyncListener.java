@@ -2,15 +2,16 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;
-import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
 import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import static com.github.shyiko.mysql.binlog.event.EventType.*;
+import java.util.EnumMap;
+import java.util.Map;
 
 /**
  * @author zzt
@@ -18,12 +19,41 @@ import static com.github.shyiko.mysql.binlog.event.EventType.*;
 public class SyncListener implements BinaryLogClient.EventListener {
 
 
+  /**
+   * @see com.github.zzt93.syncer.producer.input.mysql.connect.SyncListener#onEvent(Event)
+   */
+  private static Map<EventType, SimpleEventType> map = new EnumMap<>(EventType.class);
+
+  static {
+    // unify multiple update/delete/write into one single type
+    // to avoid checking wrong type
+    map.put(EventType.PRE_GA_WRITE_ROWS, SimpleEventType.WRITE);
+    map.put(EventType.WRITE_ROWS, SimpleEventType.WRITE);
+    map.put(EventType.EXT_WRITE_ROWS, SimpleEventType.WRITE);
+
+    map.put(EventType.PRE_GA_UPDATE_ROWS, SimpleEventType.UPDATE);
+    map.put(EventType.UPDATE_ROWS, SimpleEventType.UPDATE);
+    map.put(EventType.EXT_UPDATE_ROWS, SimpleEventType.UPDATE);
+
+    map.put(EventType.PRE_GA_DELETE_ROWS, SimpleEventType.DELETE);
+    map.put(EventType.DELETE_ROWS, SimpleEventType.DELETE);
+    map.put(EventType.EXT_DELETE_ROWS, SimpleEventType.DELETE);
+  }
+
   private final Logger logger = LoggerFactory.getLogger(SyncListener.class);
   private final MysqlDispatcher mysqlDispatcher;
   private Event last;
 
   public SyncListener(MysqlDispatcher mysqlDispatcher) {
     this.mysqlDispatcher = mysqlDispatcher;
+  }
+
+  /**
+   * Filtered by {@link EventType#isRowMutation(EventType)}, so will always match
+   * @see #onEvent(Event)
+   */
+  private static SimpleEventType toSimpleEvent(EventType type) {
+    return map.get(type);
   }
 
   @Override
@@ -36,17 +66,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
       default:
         if (EventType.isRowMutation(eventType)) {
           try {
-            EventHeaderV4 header = event.getHeader();
-            // unify multiple update/delete/write into one single type
-            // to avoid checking wrong type
-            if (isUpdate(eventType)) {
-              header.setEventType(UPDATE_ROWS);
-            } else if (isWrite(eventType)) {
-              header.setEventType(WRITE_ROWS);
-            } else if (isDelete(eventType)) {
-              header.setEventType(DELETE_ROWS);
-            }
-            mysqlDispatcher.dispatch(last, event);
+            mysqlDispatcher.dispatch(toSimpleEvent(eventType), last, event);
           } catch (InvalidConfigException e) {
             ShutDownCenter.initShutDown(e);
           } catch (Throwable e) {
@@ -54,7 +74,9 @@ public class SyncListener implements BinaryLogClient.EventListener {
             ShutDownCenter.initShutDown(e);
           }
         }
+        // TODO 2019/3/15 alter table
         logger.trace("Receive binlog event: {}", event);
     }
   }
+
 }

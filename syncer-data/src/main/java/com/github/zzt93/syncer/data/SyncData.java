@@ -16,6 +16,10 @@ public interface SyncData {
 
   boolean isWrite();
 
+  /**
+   * @deprecated {@link #updated()} might be better
+   * @return whether this event type is {@link SimpleEventType}
+   */
   boolean isUpdate();
 
   boolean isDelete();
@@ -83,6 +87,21 @@ public interface SyncData {
    * @return a new instance of {@link SyncData}
    */
   SyncData copyMeta(int index);
+
+  /**
+   * @return any interested column is updated in this event
+   */
+  boolean updated();
+
+  /**
+   * @param key column name
+   * @return whether this key is updated in this event
+   */
+  boolean updated(String key);
+
+  Object getBefore(String key);
+
+  HashMap<String, Object> getBefore();
 
   @Override
   String toString();

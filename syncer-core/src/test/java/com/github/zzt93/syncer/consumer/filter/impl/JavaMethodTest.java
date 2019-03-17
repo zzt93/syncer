@@ -1,17 +1,17 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
+import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.data.util.SyncFilter;
+import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Maps;
 import org.junit.Test;
-
-import java.util.Collections;
 
 public class JavaMethodTest {
 
-  private static SyncData data = new SyncData("asdf", 1, "test", "test", "id", 1L, Collections.emptyMap(), EventType.UPDATE_ROWS);
+  private static SyncData data = new SyncData("asdf", 1, SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()));
 
   @Test
   public void build() {
