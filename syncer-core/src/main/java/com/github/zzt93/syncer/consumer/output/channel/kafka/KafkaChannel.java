@@ -124,7 +124,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
       }
     };
     future.addCallback(callback);
-    // TODO 2019/3/17 wait future?
+    // no need to wait future, the order between batch is ensured by kafka client
   }
 
   @Override
