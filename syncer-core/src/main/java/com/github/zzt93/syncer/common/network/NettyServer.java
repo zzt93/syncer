@@ -24,7 +24,7 @@ public class NettyServer {
       b.group(bossGroup, workerGroup)
           .channel(NioServerSocketChannel.class)
           .option(ChannelOption.SO_BACKLOG, 100)
-          .handler(new LoggingHandler(LogLevel.INFO))
+          .handler(new LoggingHandler(LogLevel.DEBUG))
           .childHandler(initializer);
 
       ChannelFuture f = b.bind(port).sync();

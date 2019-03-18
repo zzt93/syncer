@@ -43,7 +43,7 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
   public HashMap<String, Object> map(SyncData data) {
     HashMap<String, Object> res = new HashMap<>();
     mapToRes(data, mapping, res, true);
-    logger.info("SyncData json: " + res);
+    logger.debug("SyncData json: {}", res);
     return res;
   }
 

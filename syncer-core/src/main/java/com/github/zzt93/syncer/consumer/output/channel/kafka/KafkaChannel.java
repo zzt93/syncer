@@ -124,6 +124,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
       }
     };
     future.addCallback(callback);
+    // TODO 2019/3/17 wait future?
   }
 
   @Override

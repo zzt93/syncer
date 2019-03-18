@@ -99,7 +99,7 @@ public class FilterJob implements EventLoop {
   private void output(LinkedList<SyncData> list, List<OutputChannel> remove)
       throws InterruptedException {
     for (SyncData syncData : list) {
-      logger.debug("Output SyncData {}", syncData.getDataId());
+      logger.debug("Output SyncData {}", syncData);
       ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
       for (OutputChannel outputChannel : this.outputChannels) {
         try {

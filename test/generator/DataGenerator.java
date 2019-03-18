@@ -30,10 +30,14 @@ public class DataGenerator {
     String sqlFile = args[1];
     long lines = Long.parseLong(args[2]);
     for (Map.Entry<String, List<Supplier<Object>>> e : tables(sqlFile).entrySet()) {
-      Path path = Paths.get(outDir, CSV, sqlFile.split("\\.")[0], e.getKey() + "." + CSV);
+      String tableName = e.getKey();
+      if (tableName.endsWith("_bak")) {
+        continue;
+      }
+      Path path = Paths.get(outDir, CSV, sqlFile.split("\\.")[0], tableName + "." + CSV);
       Files.createDirectories(path.getParent());
       PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
-      System.out.println("Generate " + e.getKey() + " to " + path);
+      System.out.println("Generate " + tableName + " to " + path);
       csv(out, e.getValue(), lines);
     }
   }
@@ -145,15 +149,13 @@ public class DataGenerator {
   private static String random(int min, int max) {
     int l = r.nextInt(max - min) + min;
     StringBuilder sb = new StringBuilder(l + 2);
-//    sb.append('"');
     for (int i = 0; i < l; i++) {
       char c = randomAscii();
-      while (c == ',' || (c == '\\') && i == l-1) {
+      while (c == ',' || c == '\\') {
         c = randomAscii();
       }
       sb.append(c);
     }
-//    sb.append('"');
     return sb.toString();
   }
 
