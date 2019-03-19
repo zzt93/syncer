@@ -15,8 +15,10 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class MsgMapper implements Mapper<SyncData, String> {
 
   private final Expression topic;
+  private final boolean includeBefore;
 
   public MsgMapper(MsgMapping mapping) {
+    includeBefore = mapping.isIncludeBefore();
     SpelExpressionParser parser = new SpelExpressionParser();
     try {
       topic = parser.parseExpression(mapping.getTopic());
@@ -28,6 +30,9 @@ public class MsgMapper implements Mapper<SyncData, String> {
   @Override
   public String map(SyncData syncData) {
     StandardEvaluationContext context = syncData.getContext();
+    if (!includeBefore) {
+      syncData.getResult().setBefore(null);
+    }
     return topic.getValue(context, String.class);
   }
 }

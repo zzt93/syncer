@@ -37,8 +37,13 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     result = new SyncResult(row.getFull());
     result.setEventType(type);
     if (isUpdate()) {
-      // todo set before, updated
-      // todo mongo
+      result.setBefore(row.getBeforeFull());
+      HashMap<String, Object> updated = row.getUpdated();
+      if (updated != null) {
+        this.updated = (HashSet<String>) updated.keySet();
+      } else {
+
+      }
     }
   }
 

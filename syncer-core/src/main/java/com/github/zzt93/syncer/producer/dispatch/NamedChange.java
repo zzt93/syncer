@@ -11,7 +11,7 @@ public interface NamedChange {
     throw new UnsupportedOperationException();
   }
 
-  default HashMap<String, Object> getPart() {
+  default HashMap<String, Object> getUpdated() {
     throw new UnsupportedOperationException();
   }
 

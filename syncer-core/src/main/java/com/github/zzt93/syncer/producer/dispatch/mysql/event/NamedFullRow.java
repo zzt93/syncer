@@ -42,4 +42,8 @@ public class NamedFullRow implements NamedChange {
     return beforeFull;
   }
 
+  @Override
+  public HashMap<String, Object> getUpdated() {
+    return null;
+  }
 }

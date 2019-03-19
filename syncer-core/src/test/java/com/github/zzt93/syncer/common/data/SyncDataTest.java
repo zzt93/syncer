@@ -8,6 +8,7 @@ import org.junit.Before;
 import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author zzt
@@ -27,5 +28,10 @@ public class SyncDataTest {
     SyncData syncData = gson.fromJson(s, SyncData.class);
     assertEquals(data.getEventId(), syncData.getEventId());
     assertEquals(data.getRepo(), syncData.getRepo());
+  }
+
+  @Test
+  public void testUpdated() {
+    assertTrue(false);
   }
 }

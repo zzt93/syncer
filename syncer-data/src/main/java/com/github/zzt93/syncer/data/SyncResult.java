@@ -12,8 +12,8 @@ public class SyncResult {
   /**
    * {@link #fields} have to use `LinkedHashMap` to be in order to support multiple dependent {@link ExtraQuery}
    */
-  private HashMap<String, Object> fields;
-  private HashMap<String, Object> extras;
+  private LinkedHashMap<String, Object> fields;
+  private LinkedHashMap<String, Object> extras;
   private HashMap<String, Object> before;
 
   private SimpleEventType eventType;
@@ -80,9 +80,6 @@ public class SyncResult {
   }
 
   public HashMap<String, Object> getBefore() {
-    if (before != null) {
-      before = new HashMap<>();
-    }
     return before;
   }
 
@@ -100,6 +97,10 @@ public class SyncResult {
 
   public void setPrimaryKeyName(String primaryKeyName) {
     this.primaryKeyName = primaryKeyName;
+  }
+
+  public void setBefore(HashMap<String, Object> before) {
+    this.before = before;
   }
 
   @Override
