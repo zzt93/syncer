@@ -85,7 +85,7 @@ public class ProducerStarter implements Starter {
       switch (masterSource.getType()) {
         case MySQL:
           masterConnector = new MysqlMasterConnector(new MysqlConnection(connection),
-              masterSource.getFile(), consumerRegistry);
+              masterSource.getFile(), consumerRegistry, masterSource.isOnlyUpdated());
           break;
         case Mongo:
           masterConnector = new MongoMasterConnector(new MongoConnection(connection),

@@ -38,12 +38,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     result.setEventType(type);
     if (isUpdate()) {
       result.setBefore(row.getBeforeFull());
-      HashMap<String, Object> updated = row.getUpdated();
-      if (updated != null) {
-        this.updated = (HashSet<String>) updated.keySet();
-      } else {
-
-      }
+      updated = row.getUpdated();
     }
   }
 

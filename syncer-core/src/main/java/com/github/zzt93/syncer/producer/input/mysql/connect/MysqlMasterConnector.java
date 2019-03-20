@@ -49,7 +49,7 @@ public class MysqlMasterConnector implements MasterConnector {
   private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
   public MysqlMasterConnector(MysqlConnection connection,
-      String file, ConsumerRegistry registry)
+                              String file, ConsumerRegistry registry, boolean onlyUpdated)
       throws IOException, SchemaUnavailableException {
     String password = connection.getPassword();
     if (StringUtils.isEmpty(password)) {
@@ -59,7 +59,7 @@ public class MysqlMasterConnector implements MasterConnector {
     connectorIdentifier = connection.connectionIdentifier();
 
     BinlogInfo remembered = configLogClient(connection, password, registry);
-    listener = configEventListener(connection, registry, remembered);
+    listener = configEventListener(connection, registry, onlyUpdated);
     this.file = file;
   }
 
@@ -83,7 +83,7 @@ public class MysqlMasterConnector implements MasterConnector {
   }
 
   private SyncListener configEventListener(MysqlConnection connection, ConsumerRegistry registry,
-      BinlogInfo remembered)
+                                           boolean onlyUpdated)
       throws SchemaUnavailableException {
     HashMap<Consumer, ProducerSink> consumerSink = registry.outputSink(connection);
     HashMap<ConsumerSchemaMeta, ProducerSink> sinkMap;
@@ -92,7 +92,7 @@ public class MysqlMasterConnector implements MasterConnector {
     } catch (SQLException e) {
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, remembered));
+    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, onlyUpdated));
     // Order of listener: client has the current event position (not next),
     // so first have it, then use it in SyncListener
     client.registerEventListener((event) -> this.binlogInfo

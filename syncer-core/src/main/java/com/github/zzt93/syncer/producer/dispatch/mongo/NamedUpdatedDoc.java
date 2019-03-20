@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer.dispatch.mongo;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 
 import java.util.HashMap;
+import java.util.HashSet;
 
 /**
  * @author zzt
@@ -16,8 +17,8 @@ public class NamedUpdatedDoc implements NamedChange {
   }
 
   @Override
-  public HashMap<String, Object> getUpdated() {
-    return updated;
+  public HashSet<String> getUpdated() {
+    return (HashSet<String>) updated.keySet();
   }
 
   @Override

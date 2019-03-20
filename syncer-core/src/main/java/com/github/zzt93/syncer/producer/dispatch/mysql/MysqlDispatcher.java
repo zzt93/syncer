@@ -30,7 +30,7 @@ public class MysqlDispatcher implements Dispatcher {
   private final Logger logger = LoggerFactory.getLogger(MysqlDispatcher.class);
 
   public MysqlDispatcher(HashMap<ConsumerSchemaMeta, ProducerSink> sinkHashMap,
-      AtomicReference<BinlogInfo> binlogInfo, BinlogInfo remembered) {
+                         AtomicReference<BinlogInfo> binlogInfo, boolean onlyUpdated) {
     filterChains = new ArrayList<>(sinkHashMap.size());
     this.binlogInfo = binlogInfo;
     if (sinkHashMap.isEmpty()) {
@@ -39,7 +39,7 @@ public class MysqlDispatcher implements Dispatcher {
     }
     for (Entry<ConsumerSchemaMeta, ProducerSink> entry : sinkHashMap.entrySet()) {
       logger.info("Listening {}, dispatch to {}", entry.getKey(), entry.getValue());
-      filterChains.add(new FilterChain(entry.getKey(), entry.getValue()));
+      filterChains.add(new FilterChain(entry.getKey(), entry.getValue(), onlyUpdated));
     }
   }
 

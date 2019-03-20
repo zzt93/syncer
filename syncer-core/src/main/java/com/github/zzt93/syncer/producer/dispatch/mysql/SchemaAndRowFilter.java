@@ -9,6 +9,8 @@ import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.RowsEvent;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
 import com.github.zzt93.syncer.producer.input.mysql.meta.TableMeta;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.List;
 
@@ -18,12 +20,15 @@ import java.util.List;
 public class SchemaAndRowFilter {
 
   private final ConsumerSchemaMeta consumerSchemaMeta;
+  private final Logger logger = LoggerFactory.getLogger(SchemaAndRowFilter.class);
+  private boolean onlyUpdated;
 
-  public SchemaAndRowFilter(ConsumerSchemaMeta consumerSchemaMeta) {
+  SchemaAndRowFilter(ConsumerSchemaMeta consumerSchemaMeta, boolean onlyUpdated) {
     this.consumerSchemaMeta = consumerSchemaMeta;
+    this.onlyUpdated = onlyUpdated;
   }
 
-  public SyncData[] decide(SimpleEventType type, String eventId, Event... e) {
+  SyncData[] decide(SimpleEventType type, String eventId, Event... e) {
     TableMapEventData tableMap = e[0].getData();
     TableMeta table = consumerSchemaMeta.findTable(tableMap.getDatabase(), tableMap.getTable());
     if (table == null) {
@@ -38,6 +43,11 @@ public class SchemaAndRowFilter {
     SyncData[] res = new SyncData[namedRow.size()];
     for (int i = 0; i < res.length; i++) {
       NamedFullRow row = namedRow.get(i);
+      if (onlyUpdated && type == SimpleEventType.UPDATE && row.getUpdated().isEmpty()) {
+        logger.info("Discard {} because [{}]", eventId, row);
+        assert i == 0;
+        return null;
+      }
       Object pk = row.get(primaryKey);
       if (!table.isInterestedPK()) {
         row.remove(primaryKey);

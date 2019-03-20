@@ -20,12 +20,12 @@ public class FilterChain {
   private final SchemaAndRowFilter entry;
   private final ProducerSink producerSink;
 
-  public FilterChain(ConsumerSchemaMeta consumerSchemaMeta, ProducerSink producerSink) {
-    this.entry = new SchemaAndRowFilter(consumerSchemaMeta);
+  FilterChain(ConsumerSchemaMeta consumerSchemaMeta, ProducerSink producerSink, boolean onlyUpdated) {
+    this.entry = new SchemaAndRowFilter(consumerSchemaMeta, onlyUpdated);
     this.producerSink = producerSink;
   }
 
-  public FilterRes decide(SimpleEventType simpleEventType, String eventId, Event[] events) {
+  FilterRes decide(SimpleEventType simpleEventType, String eventId, Event[] events) {
     if (logger.isDebugEnabled()) {
       logger.debug("Receive binlog event: {}", Arrays.toString(events));
     }
