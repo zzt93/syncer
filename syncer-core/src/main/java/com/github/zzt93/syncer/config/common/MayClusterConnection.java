@@ -125,7 +125,7 @@ public class MayClusterConnection {
         ", port=" + port +
         ", user='" + user + '\'' +
         ", passwordFile='" + passwordFile + '\'' +
-        ", password='" + password + '\'' +
+        ", password='***'" +
         ", realConnection=" + realConnection +
         '}';
   }
