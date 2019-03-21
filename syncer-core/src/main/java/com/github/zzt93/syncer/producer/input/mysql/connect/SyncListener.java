@@ -74,7 +74,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
             ShutDownCenter.initShutDown(e);
           }
         }
-        // TODO 2019/3/15 alter table
+        // TODO 2019/3/15 alter table event, current position event
         logger.trace("Receive binlog event: {}", event);
     }
   }

@@ -44,6 +44,7 @@ public class SchemaAndRowFilter {
     for (int i = 0; i < res.length; i++) {
       NamedFullRow row = namedRow.get(i);
       if (onlyUpdated && type == SimpleEventType.UPDATE && row.getUpdated().isEmpty()) {
+        // TODO 2019/3/20 change to debug when test finish
         logger.info("Discard {} because [{}]", eventId, row);
         assert i == 0;
         return null;

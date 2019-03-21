@@ -30,7 +30,6 @@ public class SyncResult {
 
   public SyncResult(Map<String, Object> row) {
     fields = new LinkedHashMap<>(row);
-    // TODO 2019/3/15 set `before` optionally
   }
 
   public Object getId() {
