@@ -197,7 +197,7 @@ public class MysqlChannel implements BufferedChannel<String> {
             logger.error("Met {} in {}", level, stringSyncWrapper, cause);
             break;
           case WARN: // not count WARN as failure item
-            logger.error("Met {} in {}", level, stringSyncWrapper, cause.getMessage());
+            logger.error("Met {} in {} with {}", level, stringSyncWrapper, cause.getMessage());
             break;
         }
       }
