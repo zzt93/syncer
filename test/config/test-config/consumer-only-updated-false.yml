@@ -1,0 +1,102 @@
+version: 1.2
+
+consumerId: drds
+
+
+input:
+  masters:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    scheduler: mod
+    repos:
+    - name: "test.*"
+      entities:
+      - name: correctness
+        fields: [time, news_id, currency, total] # default id is not null, other can be null
+      - name: types
+        fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+      - name: news
+        fields: [plate_sub_type]
+    - name: "simple"
+      entities:
+      - name: simple_type
+        fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+
+
+
+
+filter:
+- method: 'private static final String SIMPLE_TYPE = "simple_type";
+
+           @Override
+           public void filter(List<SyncData> list) {
+             SyncData sync = list.get(0);
+             if (!sync.updated()) {
+               list.clear();
+             }
+             sync.addExtra("suffix", "");
+             switch (sync.getEntity()) {
+               case "news":
+                 sync.updateField("thumb_content", new String((byte[]) sync.getField("thumb_content"))).updateField("content", new String((byte[]) sync.getField("content")));
+                 break;
+               case "types":
+               case SIMPLE_TYPE:
+                 sync.updateField("text", new String((byte[]) sync.getField("text"))).updateField("tinyint", Byte.toUnsignedInt((byte)(int) sync.getField("tinyint")));
+                 sync.addExtra("suffix", "-" + ((int) sync.getField("tinyint"))/128);
+                 break;
+               case "correctness":
+                 sync.updateField("type", Byte.toUnsignedInt((byte)(int) sync.getField("type")));
+                 break;
+             }
+             if (!sync.getEntity().equals(SIMPLE_TYPE)) {
+               sync.addExtra("target", "test_0");
+             } else {
+               sync.addExtra("target", sync.getRepo());
+             }
+           }'
+
+
+# Special expression
+# "field.*"
+# "field.*.flatten"
+# "extra.*"
+# "extra.*.flatten"
+
+output:
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+    requestMapping: # mapping from input data to es request
+      enableExtraQuery: true
+      retryOnUpdateConflict: 3
+      index: "repo + getExtra('suffix')" # default: repo
+      documentId: "id" # default: id
+      fieldsMapping: # default: fields.*.flatten
+        "fields": "fields.*.flatten"
+    batch:
+      size: 100
+      delay: 1000
+      maxRetry: 5
+    refreshInMillis: 0
+    failureLog:
+      countLimit: 1000
+  mysql:
+    connection:
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_PASS}
+    rowMapping:
+      schema: " getExtra('target') "
+      table: "entity + '_bak'"
+      id: "id"
+      rows:
+        "fields": "fields.*.flatten"
+        "id": "id"
+    batch:
+      size: 100
+      delay: 100
+      maxRetry: 5
+    failureLog:
+      countLimit: 1000
