@@ -34,14 +34,8 @@ public class FilterChain {
       return FilterRes.DENY;
     }
 
-    FilterRes res = FilterRes.ACCEPT;
-    try {
-      producerSink.output(aim);
-    } catch (Exception e) {
-      res = FilterRes.DENY;
-      logger.error("Fail to send data to output: {}", producerSink, e);
-    }
-    return res;
+    boolean output = producerSink.output(aim);
+    return output ? FilterRes.ACCEPT : FilterRes.DENY;
   }
 
 }

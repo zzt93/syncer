@@ -194,8 +194,10 @@ public class MysqlChannel implements BufferedChannel<String> {
           case MAX_TRY_EXCEED:
           case SYNCER_BUG: // count as failure then write a log, so no break
             sqlFailureLog.log(stringSyncWrapper, cause.getMessage());
-          case WARN: // not count WARN as failure item
             logger.error("Met {} in {}", level, stringSyncWrapper, cause);
+            break;
+          case WARN: // not count WARN as failure item
+            logger.error("Met {} in {}", level, stringSyncWrapper, cause.getMessage());
             break;
         }
       }

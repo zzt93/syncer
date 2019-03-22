@@ -29,12 +29,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   public SyncData(String eventId, int ordinal, SimpleEventType type, String database, String entity, String primaryKeyName,
                   Object id, NamedChange row) {
     inner = new Meta(eventId, ordinal, -1, null);
+    result = new SyncResult(row.getFull());
 
     setPrimaryKeyName(primaryKeyName);
     setId(id);
     setEntity(entity);
     setRepo(database);
-    result = new SyncResult(row.getFull());
     result.setEventType(type);
     if (isUpdate()) {
       result.setBefore(row.getBeforeFull());
