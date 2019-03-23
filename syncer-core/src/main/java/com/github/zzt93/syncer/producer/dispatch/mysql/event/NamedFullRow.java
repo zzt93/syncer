@@ -33,7 +33,7 @@ public class NamedFullRow implements NamedChange {
   public void remove(String name) {
     full.remove(name);
     if (beforeFull != null) {
-      full.remove(name);
+      beforeFull.remove(name);
     }
   }
 

@@ -24,10 +24,10 @@ public class ModIdScheduler implements EventScheduler {
   @Override
   public boolean schedule(SyncData syncData) {
     // precondition: syncData#id is integer type
-    Object dataId = syncData.getId();
+    Number dataId = (Number) syncData.getId();
     long id;
     try {
-      id = (long) dataId;
+      id = dataId.longValue();
     } catch (Exception e) {
       String msg = "Invalid [scheduler] config for {}, [id] is not Long nor Integer";
       logger.error(msg, syncData, e);

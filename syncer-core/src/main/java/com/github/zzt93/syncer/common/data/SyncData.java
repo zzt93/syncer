@@ -62,7 +62,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     if (id != null) {
       result.setId(id);
     } else {
-      logger.error("Update primary key with null");
+      logger.warn("Update primary key with null");
     }
     return this;
   }
@@ -295,11 +295,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return inner.hasExtra;
   }
 
-  public String getPrimaryKeyName() {
+  private String getPrimaryKeyName() {
     return result.getPrimaryKeyName();
   }
 
-  public void setPrimaryKeyName(String primaryKeyName) {
+  private void setPrimaryKeyName(String primaryKeyName) {
     result.setPrimaryKeyName(primaryKeyName);
   }
 
@@ -318,6 +318,10 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   public SyncResult getResult() {
     return result;
+  }
+
+  void syncByForeignKey() {
+    result.setId(null);
   }
 
   private static class Meta {

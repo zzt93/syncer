@@ -26,6 +26,7 @@ public class SyncResult {
   private String primaryKeyName;
 
   public SyncResult() {
+    fields = new LinkedHashMap<>();
   }
 
   public SyncResult(Map<String, Object> row) {
