@@ -49,33 +49,36 @@ public class SyncListener implements BinaryLogClient.EventListener {
   }
 
   /**
-   * Filtered by {@link EventType#isRowMutation(EventType)}, so will always match
+   * May return null, should be handled
+   *
    * @see #onEvent(Event)
    */
   private static SimpleEventType toSimpleEvent(EventType type) {
-    return map.get(type);
+    return map.getOrDefault(type, null);
   }
 
   @Override
   public void onEvent(Event event) {
     EventType eventType = event.getHeader().getEventType();
+    logger.trace("Receive binlog event: {}", event);
     switch (eventType) {
       case TABLE_MAP:
         this.last = event;
         break;
       default:
-        if (EventType.isRowMutation(eventType)) {
-          try {
-            mysqlDispatcher.dispatch(toSimpleEvent(eventType), last, event);
-          } catch (InvalidConfigException e) {
-            ShutDownCenter.initShutDown(e);
-          } catch (Throwable e) {
-            logger.error("Fail to dispatch {}", event);
-            ShutDownCenter.initShutDown(e);
-          }
+        SimpleEventType type = toSimpleEvent(eventType);
+        if (type == null) {
+          break;
+        }
+        try {
+          mysqlDispatcher.dispatch(type, last, event);
+        } catch (InvalidConfigException e) {
+          ShutDownCenter.initShutDown(e);
+        } catch (Throwable e) {
+          logger.error("Fail to dispatch {}", event);
+          ShutDownCenter.initShutDown(e);
         }
         // TODO 2019/3/15 alter table event, current position event
-        logger.trace("Receive binlog event: {}", event);
     }
   }
 

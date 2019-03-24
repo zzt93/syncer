@@ -46,8 +46,13 @@ public class SchemaAndRowFilter {
       if (onlyUpdated && type == SimpleEventType.UPDATE && row.getUpdated().isEmpty()) {
         // TODO 2019/3/20 change to debug when test finish
         logger.info("Discard {} because [{}]", eventId, row);
-        assert i == 0;
-        return null;
+        // even though in one update event, multiple rows can have different updated column,
+        // so we can only skip one by one
+        // e.g. we listening 'name1' but not 'name2' and the following update will make all updates in a single event
+        // UPDATE relation
+        // SET name1 = CASE WHEN userid1 = 3 THEN 'jack' ELSE name1 END,
+        //     name2 = CASE WHEN userid2 = 3 THEN 'jack' ELSE name2 END
+        continue;
       }
       Object pk = row.get(primaryKey);
       if (!table.isInterestedPK()) {
