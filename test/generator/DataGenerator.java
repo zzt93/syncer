@@ -21,6 +21,7 @@ public class DataGenerator {
   private static final long EARLIEST = Timestamp.valueOf("2000-01-01 00:00:00").getTime();
   private static final long END = Timestamp.valueOf("2028-01-01 00:00:00").getTime();
   private static final String CSV = "csv";
+  private static final Supplier<Object> idSupplier = ()-> "id";
   private static int index = CREATE_TABLE.length();
   private static Random r = new Random();
   private static DateFormat mysqlDefault = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -68,6 +69,9 @@ public class DataGenerator {
     }
     String[] tokens = trim.split("\\s");
     if (tokens.length < 2) throw new IllegalArgumentException(line);
+    if (tokens[0].trim().equals("`id`")) {
+      return idSupplier;
+    }
     String[] type = getType(tokens[1]);
     switch (type[0]) {
       case "tinyint":
@@ -109,7 +113,7 @@ public class DataGenerator {
 
   private static String[] getType(String token) {
     String[] split = token.toLowerCase().replaceAll("[`(,)]", " ").split("\\s");
-    LinkedList<Object> res = new LinkedList<>();
+    LinkedList<String> res = new LinkedList<>();
     for (String s : split) {
       if (s.trim().length() > 0) {
         res.add(s);
@@ -130,11 +134,15 @@ public class DataGenerator {
     return sub;
   }
 
-  public static void csv(PrintWriter out, List<Supplier<Object>> data, long lines) {
+  private static void csv(PrintWriter out, List<Supplier<Object>> data, long lines) {
     for (int i = 0; i < lines; i++) {
       List<Object> line = new LinkedList<>();
       for (Supplier<Object> supplier : data) {
-        line.add(supplier.get());
+        if (supplier == idSupplier) {
+          line.add(i);
+        } else {
+          line.add(supplier.get());
+        }
       }
       StringJoiner joiner = new StringJoiner(",");
       for (Object o : line) {
