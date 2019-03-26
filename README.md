@@ -136,6 +136,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Add `upsert` support, fix `DocumentMissingException` use `upsert`, can be used in following two scenarios
     - Init load for data, by creating index manually and update synced field to ES (only support `MySQL` input) 
     - Fix some un-expected config/sync error
+  - No need code for search data preparation except config
 
 - Http Endpoint (Deprecated)
   - Invoke `restful` interface according to event type: insert=`PUT`, update=`POST`, delete=`DELETE` 
@@ -145,6 +146,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Bulk operation
   - Simple nested sql: `insert into select`
   - Ignore `DuplicateKeyException`, not count as failure
+  - **Low latency**
 - Kafka
   - [Version](https://www.confluent.io/blog/upgrading-apache-kafka-clients-just-got-easier/): 0.10.0 or later
   - Bulk operation
@@ -153,7 +155,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
   - **Notice**: Kafka msg consumer has to handle event idempotent;
   - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
-
+  - Easy to re-consume, rebuild without affect biz db;
   
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
 
@@ -579,7 +581,10 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 ### Used In Production
 - Search system: search data sync
 - Micro-service: auth/recommend/chat data sync
+  - Requirement: low latency, high availability
 - Join table: avoid join in production env, use space for speed by join table
+  - Requirement: low latency, high availability
+- Kafka: sync data to kafka, for other heterogeneous system to use
 - For data recovery: In case of drop entity mistakenly, or you know where to start & end
 
 ## TODO
