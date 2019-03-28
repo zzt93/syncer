@@ -82,9 +82,9 @@ public class DataGenerator {
     if (tokens.length < 2) throw new IllegalArgumentException(line);
     String col = tokens[0].trim();
     if (incId && col.equals("`id`")) {
-      return new Col(idSupplier, "id");
+      return new Col(idSupplier, idSupplier, "id");
     }
-    Supplier<Object> generate = null;
+    Supplier<Object> csv = null, sql = null;
     String[] type = getType(tokens[1]);
     switch (type[0]) {
       case "tinyint":
@@ -93,39 +93,43 @@ public class DataGenerator {
           max *= 2;
         }
         int finalMax = max;
-        generate = () -> r.nextInt(finalMax);
+        csv = () -> r.nextInt(finalMax);
         break;
       case "bigint":
         if (tokens.length > 2 && tokens[2].toUpperCase().equals(UNSIGNED)) {
-          generate = () -> Math.abs(r.nextLong());
+          csv = () -> Math.abs(r.nextLong());
           break;
         }
-        generate = () -> r.nextLong();
+        csv = () -> r.nextLong();
         break;
       case "char":
       case "varchar":
-        generate = () -> random(1, Integer.parseInt(type[1]));
+        csv = () -> random(1, Integer.parseInt(type[1]), false);
+        sql = () -> random(1, Integer.parseInt(type[1]), true);
         break;
       case "text":
       case "longtext":
-        generate = () -> random(1, 300);
+        csv = () -> random(1, 300, false);
+        sql = () -> random(1, 300, true);
         break;
       case "decimal":
-        generate = () -> new BigDecimal(r.nextInt()).movePointLeft(2);
+        csv = () -> new BigDecimal(r.nextInt()).movePointLeft(2);
         break;
       case "double":
-        generate = () -> r.nextFloat();
+        csv = () -> r.nextFloat();
         break;
       case "timestamp":
         if (type.length > 1) {
-          generate = () -> "'" + randomTimestamp() + "'";
+          csv = DataGenerator::randomTimestamp;
+          sql = () -> "'" + randomTimestamp() + "'";
           break;
         }
-        generate = () -> "'" + mysqlDefault.format(randomTimestamp()) + "'";
+        csv = () -> mysqlDefault.format(randomTimestamp());
+        sql = () -> "'" + mysqlDefault.format(randomTimestamp()) + "'";
         break;
     }
-    if (generate != null) {
-      return new Col(generate, removeQuote(col));
+    if (csv != null) {
+      return new Col(csv, sql == null ? csv : sql, removeQuote(col));
     }
     return null;
   }
@@ -167,7 +171,7 @@ public class DataGenerator {
     for (int i = 0; i < lines; i++) {
       List<Object> line = new LinkedList<>();
       for (Col col : data) {
-        Supplier<Object> supplier = col.data;
+        Supplier<Object> supplier = col.csv;
         if (supplier == idSupplier) {
           line.add(i);
         } else {
@@ -194,16 +198,16 @@ public class DataGenerator {
         int c = 0;
         for (int i = 0; i < cols.size(); i++) {
           Col col = cols.get(i);
-          if (col.data == idSupplier) {
+          if (col.sql == idSupplier) {
             c = i;
             break;
           } else {
-            joiner.add("`" + col.name + "`=" + col.data.get());
+            joiner.add("`" + col.name + "`=" + col.sql.get());
           }
         }
         if (c == 0) {
           Col col = cols.get(1);
-          joiner.add("`" + col.name + "`=" + col.data.get());
+          joiner.add("`" + col.name + "`=" + col.sql.get());
         }
         sql.append(joiner).append(" where id = ");
         int len = sql.length();
@@ -222,10 +226,12 @@ public class DataGenerator {
     out.flush();
   }
 
-  private static String random(int min, int max) {
+  private static String random(int min, int max, boolean hasQuote) {
     int l = r.nextInt(max - min) + min;
     StringBuilder sb = new StringBuilder(l + 2);
-    sb.append("'");
+    if (hasQuote) {
+      sb.append("'");
+    }
     for (int i = 0; i < l; i++) {
       char c = randomAscii();
       while (c == ',' || c == '\\') {
@@ -233,7 +239,9 @@ public class DataGenerator {
       }
       sb.append(c);
     }
-    sb.append("'");
+    if (hasQuote) {
+      sb.append("'");
+    }
     return sb.toString();
   }
 
@@ -246,11 +254,13 @@ public class DataGenerator {
   }
 
   private static class Col {
-    private Supplier<Object> data;
+    private Supplier<Object> csv;
+    private Supplier<Object> sql;
     private String name;
 
-    Col(Supplier<Object> data, String name) {
-      this.data = data;
+    Col(Supplier<Object> csv, Supplier<Object> sql, String name) {
+      this.csv = csv;
+      this.sql = sql;
       this.name = name;
     }
 
