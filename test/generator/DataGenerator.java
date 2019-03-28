@@ -21,7 +21,9 @@ public class DataGenerator {
   private static final long EARLIEST = Timestamp.valueOf("2000-01-01 00:00:00").getTime();
   private static final long END = Timestamp.valueOf("2028-01-01 00:00:00").getTime();
   private static final String CSV = "csv";
-  private static final Supplier<Object> idSupplier = ()-> "id";
+  private static final String SQL = "sql";
+  private static final Supplier<Object> idSupplier = () -> "id";
+  private static final boolean incId = true;
   private static int index = CREATE_TABLE.length();
   private static Random r = new Random();
   private static DateFormat mysqlDefault = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss");
@@ -30,7 +32,7 @@ public class DataGenerator {
     String outDir = args[0];
     String sqlFile = args[1];
     long lines = Long.parseLong(args[2]);
-    for (Map.Entry<String, List<Supplier<Object>>> e : tables(sqlFile).entrySet()) {
+    for (Map.Entry<String, List<Col>> e : tables(sqlFile).entrySet()) {
       String tableName = e.getKey();
       if (tableName.endsWith("_bak")) {
         continue;
@@ -38,40 +40,49 @@ public class DataGenerator {
       Path path = Paths.get(outDir, CSV, sqlFile.split("\\.")[0], tableName + "." + CSV);
       Files.createDirectories(path.getParent());
       PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
-      System.out.println("Generate " + tableName + " to " + path);
+      System.out.println("Generate " + path);
       csv(out, e.getValue(), lines);
+
+      path = Paths.get(outDir, SQL, sqlFile.split("\\.")[0], tableName + "." + SQL);
+      Files.createDirectories(path.getParent());
+      out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
+      System.out.println("Generate " + path);
+      sql(out, e.getValue(), lines, Type.UPDATE_TO_SAME_VALUE, tableName);
+      sql(out, e.getValue(), lines, Type.DELETE, tableName);
     }
   }
 
-  private static Map<String, List<Supplier<Object>>> tables(String sqlFile) throws IOException {
+  private static Map<String, List<Col>> tables(String sqlFile) throws IOException {
     List<String> lines = Files.readAllLines(Paths.get(sqlFile));
-    Map<String, List<Supplier<Object>>> res = new HashMap<>();
-    List<Supplier<Object>> table = null;
+    Map<String, List<Col>> res = new HashMap<>();
+    List<Col> table = null;
     for (String line : lines) {
       if (line.toUpperCase().startsWith(CREATE_TABLE)) {
         table = new LinkedList<>();
         res.put(getTableName(line), table);
       } else {
-        Supplier<Object> typeSupplier = getTypeSupplier(line);
-        if (typeSupplier != null) {
+        Col col = parseLine(line);
+        if (col != null) {
           if (table == null) throw new IllegalArgumentException(sqlFile);
-          table.add(typeSupplier);
+          table.add(col);
         }
       }
     }
     return res;
   }
 
-  private static Supplier<Object> getTypeSupplier(String line) {
+  private static Col parseLine(String line) {
     String trim = line.trim();
     if (trim.length() == 0) {
       return null;
     }
     String[] tokens = trim.split("\\s");
     if (tokens.length < 2) throw new IllegalArgumentException(line);
-    if (tokens[0].trim().equals("`id`")) {
-      return idSupplier;
+    String col = tokens[0].trim();
+    if (incId && col.equals("`id`")) {
+      return new Col(idSupplier, "id");
     }
+    Supplier<Object> generate = null;
     String[] type = getType(tokens[1]);
     switch (type[0]) {
       case "tinyint":
@@ -80,27 +91,39 @@ public class DataGenerator {
           max *= 2;
         }
         int finalMax = max;
-        return () -> r.nextInt(finalMax);
+        generate = () -> r.nextInt(finalMax);
+        break;
       case "bigint":
         if (tokens.length > 2 && tokens[2].toUpperCase().equals(UNSIGNED)) {
-          return () -> Math.abs(r.nextLong());
+          generate = () -> Math.abs(r.nextLong());
+          break;
         }
-        return () -> r.nextLong();
+        generate = () -> r.nextLong();
+        break;
       case "char":
       case "varchar":
-        return () -> random(1, Integer.parseInt(type[1]));
+        generate = () -> random(1, Integer.parseInt(type[1]));
+        break;
       case "text":
       case "longtext":
-        return () -> random(1, 300);
+        generate = () -> random(1, 300);
+        break;
       case "decimal":
-        return () -> new BigDecimal(r.nextInt()).movePointLeft(2);
+        generate = () -> new BigDecimal(r.nextInt()).movePointLeft(2);
+        break;
       case "double":
-        return () -> r.nextFloat();
+        generate = () -> r.nextFloat();
+        break;
       case "timestamp":
         if (type.length > 1) {
-          return DataGenerator::randomTimestamp;
+          generate = DataGenerator::randomTimestamp;
+          break;
         }
-        return () -> mysqlDefault.format(randomTimestamp());
+        generate = () -> mysqlDefault.format(randomTimestamp());
+        break;
+    }
+    if (generate != null) {
+      return new Col(generate, removeQuote(col));
     }
     return null;
   }
@@ -124,20 +147,25 @@ public class DataGenerator {
 
   private static String getTableName(String line) {
     String sub = line.substring(index, line.indexOf('(')).trim();
+    return removeQuote(sub);
+  }
+
+  private static String removeQuote(String sub) {
     if (sub.charAt(0) == '`') {
       if (sub.charAt(sub.length() - 1) == '`') {
         return sub.substring(1, sub.length() - 1);
       } else {
-        throw new IllegalArgumentException(line);
+        throw new IllegalArgumentException(sub);
       }
     }
     return sub;
   }
 
-  private static void csv(PrintWriter out, List<Supplier<Object>> data, long lines) {
+  private static void csv(PrintWriter out, List<Col> data, long lines) {
     for (int i = 0; i < lines; i++) {
       List<Object> line = new LinkedList<>();
-      for (Supplier<Object> supplier : data) {
+      for (Col col : data) {
+        Supplier<Object> supplier = col.data;
         if (supplier == idSupplier) {
           line.add(i);
         } else {
@@ -149,6 +177,46 @@ public class DataGenerator {
         joiner.add(o.toString());
       }
       out.println(joiner.toString());
+    }
+    out.flush();
+    out.close();
+  }
+
+  private static void sql(PrintWriter out, List<Col> cols, long lines, Type type, String tableName) {
+    assert cols.size() > 1;
+    switch (type) {
+      case UPDATE_TO_SAME_VALUE:
+        StringBuilder sql = new StringBuilder("UPDATE ");
+        sql.append(tableName).append(" SET ");
+        StringJoiner joiner = new StringJoiner(",");
+        Collections.shuffle(cols);
+        int c = 0;
+        for (int i = 0; i < cols.size(); i++) {
+          Col col = cols.get(i);
+          if (col.data == idSupplier) {
+            c = i;
+            break;
+          } else {
+            joiner.add(col.name + "=" + col.data.get());
+          }
+        }
+        if (c == 0) {
+          Col col = cols.get(1);
+          joiner.add(col.name + "=" + col.data.get());
+        }
+        sql.append(joiner).append(" where id = ");
+        int len = sql.length();
+        for (long i = 0; i < lines; i++) {
+          sql.append(i);
+          out.println(sql);
+          sql.delete(len, sql.length());
+        }
+        break;
+      case DELETE:
+        out.print("DELETE from ");
+        out.print(tableName);
+        out.println(" WHERE RAND() < 0.5;");
+        break;
     }
     out.flush();
     out.close();
@@ -169,5 +237,20 @@ public class DataGenerator {
 
   private static char randomAscii() {
     return (char) (MIN + r.nextInt(MAX - MIN));
+  }
+
+  private enum Type {
+    UPDATE_TO_SAME_VALUE, DELETE
+  }
+
+  private static class Col {
+    private Supplier<Object> data;
+    private String name;
+
+    Col(Supplier<Object> data, String name) {
+      this.data = data;
+      this.name = name;
+    }
+
   }
 }
