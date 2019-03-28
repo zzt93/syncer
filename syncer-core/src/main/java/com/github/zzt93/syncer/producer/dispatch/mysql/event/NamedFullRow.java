@@ -21,7 +21,7 @@ public class NamedFullRow implements NamedChange {
     this.full = full;
   }
 
-  NamedFullRow setBeforeFull(HashMap<String, Object> beforeFull) {
+  public NamedFullRow setBeforeFull(HashMap<String, Object> beforeFull) {
     this.beforeFull = beforeFull;
     return this;
   }

@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.util;
 
-import org.junit.Test;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -8,7 +7,6 @@ import java.util.ListIterator;
 
 public class IteratorAddTest {
 
-  @Test
   public void add() {
     List<Integer> dataList = new LinkedList<>();
     dataList.add(10);
