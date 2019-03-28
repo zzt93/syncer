@@ -173,7 +173,7 @@ public class DataGenerator {
       for (Col col : data) {
         Supplier<Object> supplier = col.csv;
         if (supplier == idSupplier) {
-          line.add(i);
+          line.add(i + 1);
         } else {
           line.add(supplier.get());
         }
@@ -212,7 +212,7 @@ public class DataGenerator {
         sql.append(joiner).append(" where id = ");
         int len = sql.length();
         for (long i = 0; i < lines; i++) {
-          sql.append(i);
+          sql.append(i + 1);
           out.println(sql);
           sql.delete(len, sql.length());
         }
