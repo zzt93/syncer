@@ -39,16 +39,18 @@ public class DataGenerator {
       }
       Path path = Paths.get(outDir, CSV, sqlFile.split("\\.")[0], tableName + "." + CSV);
       Files.createDirectories(path.getParent());
-      PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
       System.out.println("Generate " + path);
+      PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
       csv(out, e.getValue(), lines);
+      out.close();
 
       path = Paths.get(outDir, SQL, sqlFile.split("\\.")[0], tableName + "." + SQL);
       Files.createDirectories(path.getParent());
-      out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
       System.out.println("Generate " + path);
+      out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
       sql(out, e.getValue(), lines, Type.UPDATE_TO_SAME_VALUE, tableName);
       sql(out, e.getValue(), lines, Type.DELETE, tableName);
+      out.close();
     }
   }
 
@@ -116,10 +118,10 @@ public class DataGenerator {
         break;
       case "timestamp":
         if (type.length > 1) {
-          generate = DataGenerator::randomTimestamp;
+          generate = () -> "'" + randomTimestamp() + "'";
           break;
         }
-        generate = () -> mysqlDefault.format(randomTimestamp());
+        generate = () -> "'" + mysqlDefault.format(randomTimestamp()) + "'";
         break;
     }
     if (generate != null) {
@@ -179,15 +181,14 @@ public class DataGenerator {
       out.println(joiner.toString());
     }
     out.flush();
-    out.close();
   }
 
   private static void sql(PrintWriter out, List<Col> cols, long lines, Type type, String tableName) {
     assert cols.size() > 1;
     switch (type) {
       case UPDATE_TO_SAME_VALUE:
-        StringBuilder sql = new StringBuilder("UPDATE ");
-        sql.append(tableName).append(" SET ");
+        StringBuilder sql = new StringBuilder("UPDATE `");
+        sql.append(tableName).append("` SET ");
         StringJoiner joiner = new StringJoiner(",");
         Collections.shuffle(cols);
         int c = 0;
@@ -197,12 +198,12 @@ public class DataGenerator {
             c = i;
             break;
           } else {
-            joiner.add(col.name + "=" + col.data.get());
+            joiner.add("`" + col.name + "`=" + col.data.get());
           }
         }
         if (c == 0) {
           Col col = cols.get(1);
-          joiner.add(col.name + "=" + col.data.get());
+          joiner.add("`" + col.name + "`=" + col.data.get());
         }
         sql.append(joiner).append(" where id = ");
         int len = sql.length();
@@ -213,18 +214,18 @@ public class DataGenerator {
         }
         break;
       case DELETE:
-        out.print("DELETE from ");
+        out.print("DELETE from `");
         out.print(tableName);
-        out.println(" WHERE RAND() < 0.5;");
+        out.println("` WHERE RAND() < 0.5;");
         break;
     }
     out.flush();
-    out.close();
   }
 
   private static String random(int min, int max) {
     int l = r.nextInt(max - min) + min;
     StringBuilder sb = new StringBuilder(l + 2);
+    sb.append("'");
     for (int i = 0; i < l; i++) {
       char c = randomAscii();
       while (c == ',' || c == '\\') {
@@ -232,6 +233,7 @@ public class DataGenerator {
       }
       sb.append(c);
     }
+    sb.append("'");
     return sb.toString();
   }
 
