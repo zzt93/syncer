@@ -28,6 +28,7 @@ public class IndexedFullRow {
     int size = interestedAndPkIndex.size();
     HashMap<String, Object> now = Maps.newHashMapWithExpectedSize(size);
     for (Integer i : interestedAndPkIndex) {
+      // TODO 2019/3/29 changed schema problem
       now.put(indexToName.get(i), this.now[i]);
     }
     HashMap<String, Object> before = null;

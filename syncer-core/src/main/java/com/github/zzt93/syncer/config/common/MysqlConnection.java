@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.config.common;
 
-import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,7 +26,6 @@ public class MysqlConnection extends Connection {
     }
     setPort(connection.getPort());
     setUser(connection.getUser());
-    Preconditions.checkNotNull(connection.getPassword());
     setPassword(connection.getPassword());
   }
 

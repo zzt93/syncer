@@ -15,7 +15,7 @@ public class ProducerMaster {
   private boolean onlyUpdated = true;
 
   public Connection getRealConnection() {
-    connection.checkPassword();
+    connection.validate(type);
     return connection.getRealConnection();
   }
 

@@ -19,7 +19,7 @@ public class ShutDownCenter {
     if (first) {
       new Thread(() -> {
         if (e instanceof InvalidConfigException) {
-          logger.error("[Shutting down] Init {}", e.getMessage());
+          logger.error("[Shutting down] Init: {}", e.getMessage());
         } else {
           logger.error("[Shutting down] Init", e);
         }

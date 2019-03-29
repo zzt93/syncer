@@ -19,12 +19,11 @@ public class MongoConnection extends Connection {
       logger.error("Impossible", ignored);
     }
     setPort(connection.getPort());
-    if (connection.getUser() == null && connection.getPasswordFile() == null) {
+    if (connection.getUser() == null) {
       return;
-    } else if (connection.getUser() == null || connection.getPasswordFile() == null) {
-      throw new InvalidConfigException("Invalid authentication info" + connection);
     }
     setUser(connection.getUser());
+    setPassword(connection.getPassword());
     setPasswordFile(connection.getPasswordFile());
   }
 
@@ -32,7 +31,7 @@ public class MongoConnection extends Connection {
   public String toConnectionUrl(String path) {
     String s = super.toConnectionUrl(null);
     if (getUser() != null) {
-      s = getUser() + ":" + getPassword() + "@";
+      s = getUser() + ":" + getPassword() + "@" + s + "/?authSource=admin";
     }
     return "mongodb://" + s;
   }

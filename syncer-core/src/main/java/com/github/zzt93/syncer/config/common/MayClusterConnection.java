@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.common;
 
+import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import org.springframework.util.StringUtils;
 
@@ -130,11 +131,19 @@ public class MayClusterConnection {
         '}';
   }
 
-  public void checkPassword() {
+  public void validate(MasterSourceType type) {
     boolean empty = StringUtils.isEmpty(password);
-    if (empty == StringUtils.isEmpty(passwordFile) && !empty) {
+    boolean emptyFile = StringUtils.isEmpty(passwordFile);
+    if (!empty && !emptyFile) {
       throw new InvalidConfigException("Should not config both `password` and `passwordFile`");
     }
-
+    boolean emptyUser = StringUtils.isEmpty(user);
+    if (((empty && emptyFile) || emptyUser)) {
+      if (type == MasterSourceType.MySQL) {
+        throw new InvalidConfigException("Lack `user` or `password` for MySQL");
+      } else if (emptyUser != (empty && emptyFile)) {
+        throw new InvalidConfigException("Lack `user` or `password` for Mongo");
+      }
+    }
   }
 }
