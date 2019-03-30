@@ -41,6 +41,7 @@ public class SchemaAndRowFilter {
         .getNamedRows(indexedRow, table.getInterestedAndPkIndex(), table.getInterestedAndPkIndexToName());
     String primaryKey = RowsEvent.getPrimaryKey(table.getInterestedAndPkIndexToName(), table.getPrimaryKeys());
     SyncData[] res = new SyncData[namedRow.size()];
+    boolean hasData = false;
     for (int i = 0; i < res.length; i++) {
       NamedFullRow row = namedRow.get(i);
       if (onlyUpdated && type == SimpleEventType.UPDATE && row.getUpdated().isEmpty()) {
@@ -58,9 +59,13 @@ public class SchemaAndRowFilter {
       if (!table.isInterestedPK()) {
         row.remove(primaryKey);
       }
+      hasData = true;
       res[i] = new SyncData(eventId, i, type, tableMap.getDatabase(), tableMap.getTable(), primaryKey, pk, row);
     }
-    return res;
+    if (hasData) {
+      return res;
+    }
+    return null;
   }
 
 
