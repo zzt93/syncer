@@ -5,7 +5,10 @@ import com.github.shyiko.mysql.binlog.event.DeleteRowsEventData;
 import com.github.shyiko.mysql.binlog.event.EventData;
 import com.github.shyiko.mysql.binlog.event.UpdateRowsEventData;
 import com.github.shyiko.mysql.binlog.event.WriteRowsEventData;
+import com.github.zzt93.syncer.config.common.MismatchedSchemaException;
 import com.github.zzt93.syncer.data.SimpleEventType;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.io.Serializable;
 import java.util.*;
@@ -17,13 +20,19 @@ import java.util.*;
  * @author zzt
  */
 public abstract class RowsEvent {
+  private static final Logger logger = LoggerFactory.getLogger(RowsEvent.class);
 
   public static List<NamedFullRow> getNamedRows(
       List<IndexedFullRow> indexedRow,
       List<Integer> interestedAndPkIndex, Map<Integer, String> indexToName) {
     List<NamedFullRow> res = new ArrayList<>(indexedRow.size());
     for (IndexedFullRow indexedFullRow : indexedRow) {
-      res.add(indexedFullRow.toNamed(interestedAndPkIndex, indexToName));
+      try {
+        res.add(indexedFullRow.toNamed(interestedAndPkIndex, indexToName));
+      } catch (ArrayIndexOutOfBoundsException e) {
+        logger.error("Current schema({}) does not match old binlog record({}), fail to parse it. Try to connect to latest binlog.", interestedAndPkIndex, indexedFullRow.length());
+        throw new MismatchedSchemaException("Current schema does not match old binlog record, fail to parse it. Try to connect to latest binlog", e);
+      }
     }
     return res;
   }

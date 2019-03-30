@@ -41,4 +41,10 @@ public class IndexedFullRow {
     return new NamedFullRow(now).setBeforeFull(before);
   }
 
+  public String length() {
+    return "IndexedFullRow{" +
+        "now[0," + now.length +
+        "), before[0," + (before != null ? before.length : 0) +
+        ")}";
+  }
 }

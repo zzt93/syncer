@@ -6,6 +6,8 @@ import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.data.SimpleEventType;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.dispatch.mysql.MysqlDispatcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,10 +44,12 @@ public class SyncListener implements BinaryLogClient.EventListener {
 
   private final Logger logger = LoggerFactory.getLogger(SyncListener.class);
   private final MysqlDispatcher mysqlDispatcher;
+  private final String connectorIdentifier;
   private Event last;
 
-  public SyncListener(MysqlDispatcher mysqlDispatcher) {
+  public SyncListener(MysqlDispatcher mysqlDispatcher, String connectorIdentifier) {
     this.mysqlDispatcher = mysqlDispatcher;
+    this.connectorIdentifier = connectorIdentifier;
   }
 
   /**
@@ -73,9 +77,11 @@ public class SyncListener implements BinaryLogClient.EventListener {
         try {
           mysqlDispatcher.dispatch(type, last, event);
         } catch (InvalidConfigException e) {
+          SyncerHealth.producer(connectorIdentifier, Health.red(e.getMessage()));
           ShutDownCenter.initShutDown(e);
         } catch (Throwable e) {
           logger.error("Fail to dispatch {}", event);
+          SyncerHealth.producer(connectorIdentifier, Health.red(e.getMessage()));
           ShutDownCenter.initShutDown(e);
         }
         // TODO 2019/3/15 alter table event, current position event

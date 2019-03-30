@@ -91,7 +91,7 @@ public class MysqlMasterConnector implements MasterConnector {
     } catch (SQLException e) {
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, onlyUpdated));
+    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, onlyUpdated), connectorIdentifier);
     // Order of listener: client has the current event position (not next),
     // so first have it, then use it in SyncListener
     client.registerEventListener((event) -> this.binlogInfo
