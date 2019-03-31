@@ -350,23 +350,37 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
    */
   private BulkResponse buildAndSend(List<SyncWrapper<WriteRequest>> aim)
       throws InterruptedException {
-    StringJoiner joiner = new StringJoiner(",", "[", "]");
     // BulkProcessor?
     BulkRequestBuilder bulkRequest = client.prepareBulk();
-    for (SyncWrapper<WriteRequest> requestWrapper : aim) {
-      WriteRequest request = requestWrapper.getData();
-      if (request instanceof IndexRequest) {
-        joiner.add(request.toString());
-        bulkRequest.add((IndexRequest) request);
-      } else if (request instanceof UpdateRequest) {
-        joiner.add(toString(((UpdateRequest) request)));
-        bulkRequest.add(((UpdateRequest) request));
-      } else if (request instanceof DeleteRequest) {
-        joiner.add(request.toString());
-        bulkRequest.add(((DeleteRequest) request));
+    if (logger.isDebugEnabled()) {
+      StringJoiner joiner = new StringJoiner(",", "[", "]");
+      for (SyncWrapper<WriteRequest> requestWrapper : aim) {
+        WriteRequest request = requestWrapper.getData();
+        if (request instanceof IndexRequest) {
+          joiner.add(request.toString());
+          bulkRequest.add((IndexRequest) request);
+        } else if (request instanceof UpdateRequest) {
+          joiner.add(toString(((UpdateRequest) request)));
+          bulkRequest.add(((UpdateRequest) request));
+        } else if (request instanceof DeleteRequest) {
+          joiner.add(request.toString());
+          bulkRequest.add(((DeleteRequest) request));
+        }
+      }
+      logger.debug("Sending {}", joiner);
+    } else {
+      for (SyncWrapper<WriteRequest> requestWrapper : aim) {
+        WriteRequest request = requestWrapper.getData();
+        if (request instanceof IndexRequest) {
+          bulkRequest.add((IndexRequest) request);
+        } else if (request instanceof UpdateRequest) {
+          bulkRequest.add(((UpdateRequest) request));
+        } else if (request instanceof DeleteRequest) {
+          bulkRequest.add(((DeleteRequest) request));
+        }
       }
     }
-    logger.debug("Sending {}", joiner);
+
     return sleepInConnectionLost((sleepInSecond) -> {
       ListenableActionFuture<BulkResponse> future = bulkRequest.execute();
       try {

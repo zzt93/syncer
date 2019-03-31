@@ -172,7 +172,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - `http://ip:port/health`: report `Syncer` status dynamically;
 
 - JMX Endpoints
-  - Use `jconsole` to connect to `Syncer`, you can [change the logging level](https://logback.qos.ch/manual/jmxConfig.html) dynamically;
+  - Use `jconsole` to connect to `Syncer`, you can [change the logging level](https://logback.qos.ch/manual/jmxConfig.html) dynamically; (Or change log level by `--debug` option when start)
 
 - Shutdown process
   - Producer starter shutdown
@@ -542,7 +542,7 @@ cd syncer/ && mvn package
 # /path/to/config/: producer.yml, consumer.yml, password-file
 # use `-XX:+UseParallelOldGC` if you have less memory and lower input pressure
 # use `-XX:+UseG1GC` if you have at least 4g memory and event input rate larger than 2*10^4/s
-java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar [--port=40000] [--config=/absolute/path/to/syncerConfig.yml] --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
+java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar [--debug] [--port=40000] [--config=/absolute/path/to/syncerConfig.yml] --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
 ```
 
 ## Test

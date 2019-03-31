@@ -38,4 +38,4 @@ fi
 #HOSTNAME=`hostname | cut -d. -f1`
 export HOSTNAME
 
-$JAVA -server -XX:+UseG1GC -jar $syncer_home/syncer.jar --port=40000 --producerConfig=$producer --consumerConfig=$consumer
+$JAVA -server -XX:+UseG1GC -jar $syncer_home/syncer.jar --port=40000 --producerConfig=$producer --consumerConfig=$consumer --debug

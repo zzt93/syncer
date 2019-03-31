@@ -32,6 +32,7 @@ public class DataGenerator {
     String outDir = args[0];
     String sqlFile = args[1];
     long lines = Long.parseLong(args[2]);
+    long idStart = args.length >= 4 ? Long.parseUnsignedLong(args[3]) : 0;
     for (Map.Entry<String, List<Col>> e : tables(sqlFile).entrySet()) {
       String tableName = e.getKey();
       if (tableName.endsWith("_bak")) {
@@ -41,15 +42,15 @@ public class DataGenerator {
       Files.createDirectories(path.getParent());
       System.out.println("Generate " + path);
       PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
-      csv(out, e.getValue(), lines);
+      csv(out, e.getValue(), lines, idStart);
       out.close();
 
       path = Paths.get(outDir, SQL, sqlFile.split("\\.")[0], tableName + "." + SQL);
       Files.createDirectories(path.getParent());
       System.out.println("Generate " + path);
       out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
-      sql(out, e.getValue(), lines, Type.UPDATE_TO_SAME_VALUE, tableName);
-      sql(out, e.getValue(), lines, Type.DELETE, tableName);
+      sql(out, e.getValue(), lines, Type.UPDATE_TO_SAME_VALUE, tableName, idStart);
+      sql(out, e.getValue(), lines, Type.DELETE, tableName, idStart);
       out.close();
     }
   }
@@ -78,7 +79,7 @@ public class DataGenerator {
     if (trim.length() == 0) {
       return null;
     }
-    String[] tokens = trim.split("\\s");
+    String[] tokens = trim.split("\\s+");
     if (tokens.length < 2) throw new IllegalArgumentException(line);
     String col = tokens[0].trim();
     if (incId && col.equals("`id`")) {
@@ -113,7 +114,11 @@ public class DataGenerator {
         sql = () -> random(1, 300, true);
         break;
       case "decimal":
-        csv = () -> new BigDecimal(r.nextInt()).movePointLeft(2);
+        final int[] val = new int[]{r.nextInt()};
+        if (tokens.length > 2 && tokens[2].toUpperCase().equals(UNSIGNED)) {
+          val[0] = Math.abs(val[0]);
+        }
+        csv = () -> new BigDecimal(val[0]).movePointLeft(2);
         break;
       case "double":
         csv = () -> r.nextFloat();
@@ -167,13 +172,13 @@ public class DataGenerator {
     return sub;
   }
 
-  private static void csv(PrintWriter out, List<Col> data, long lines) {
+  private static void csv(PrintWriter out, List<Col> data, long lines, long idStart) {
     for (int i = 0; i < lines; i++) {
       List<Object> line = new LinkedList<>();
       for (Col col : data) {
         Supplier<Object> supplier = col.csv;
         if (supplier == idSupplier) {
-          line.add(i + 1);
+          line.add(getId(idStart, i));
         } else {
           line.add(supplier.get());
         }
@@ -187,7 +192,7 @@ public class DataGenerator {
     out.flush();
   }
 
-  private static void sql(PrintWriter out, List<Col> cols, long lines, Type type, String tableName) {
+  private static void sql(PrintWriter out, List<Col> cols, long lines, Type type, String tableName, long idStart) {
     assert cols.size() > 1;
     switch (type) {
       case UPDATE_TO_SAME_VALUE:
@@ -209,13 +214,16 @@ public class DataGenerator {
           Col col = cols.get(1);
           joiner.add("`" + col.name + "`=" + col.sql.get());
         }
-        sql.append(joiner).append(" where id = ");
-        int len = sql.length();
+        sql.append(joiner).append(" where id in (");
         for (long i = 0; i < lines; i++) {
-          sql.append(i + 1);
-          out.println(sql);
-          sql.delete(len, sql.length());
+          sql.append(getId(idStart, i)).append(',');
         }
+        sql.deleteCharAt(sql.length()-1).append(");");
+        out.println(sql);
+        break;
+      case UPDATE_TO_RANDOM_VALUE:
+        break;
+      case UPDATE_RADDOM_COL_TO_RANDOM_VALUE:
         break;
       case DELETE:
         out.print("DELETE from `");
@@ -226,6 +234,10 @@ public class DataGenerator {
     out.flush();
   }
 
+  private static long getId(long idStart, long i) {
+    return idStart + i + 1;
+  }
+
   private static String random(int min, int max, boolean hasQuote) {
     int l = r.nextInt(max - min) + min;
     StringBuilder sb = new StringBuilder(l + 2);
@@ -234,7 +246,7 @@ public class DataGenerator {
     }
     for (int i = 0; i < l; i++) {
       char c = randomAscii();
-      while (c == ',' || c == '\\') {
+      while (c == ',' || c == '\\' || (hasQuote && c == '\'')) {
         c = randomAscii();
       }
       sb.append(c);
@@ -250,7 +262,7 @@ public class DataGenerator {
   }
 
   private enum Type {
-    UPDATE_TO_SAME_VALUE, DELETE
+    UPDATE_TO_SAME_VALUE, UPDATE_TO_RANDOM_VALUE, UPDATE_RADDOM_COL_TO_RANDOM_VALUE, DELETE
   }
 
   private static class Col {

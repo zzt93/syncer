@@ -26,8 +26,8 @@ public class FilterChain {
   }
 
   FilterRes decide(SimpleEventType simpleEventType, String eventId, Event[] events) {
-    if (logger.isDebugEnabled()) {
-      logger.debug("Receive binlog event: {}", Arrays.toString(events));
+    if (logger.isTraceEnabled()) {
+      logger.trace("Receive binlog event: {}", Arrays.toString(events));
     }
     SyncData[] aim = entry.decide(simpleEventType, eventId, events[0], events[1]);
     if (aim == null) { // not interested in this database+table

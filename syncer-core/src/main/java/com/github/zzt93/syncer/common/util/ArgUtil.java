@@ -19,11 +19,17 @@ public class ArgUtil {
     HashMap<String, String> argKV = new HashMap<>();
     for (String arg : args) {
       if (arg.startsWith(DASH)) {
-        String[] split = arg.split("=");
-        checkArgument(split.length == 2, "Invalid arg format: %s", arg);
-        String dash = split[0].substring(0, 2);
-        checkArgument(dash.equals(DASH) && split[0].length() > 2, "Invalid arg format: %s", arg);
-        argKV.put(split[0].substring(2), split[1]);
+        if (arg.contains("=")) {
+          String[] split = arg.split("=");
+          checkArgument(split.length == 2, "Invalid arg format: %s", arg);
+          String dash = split[0].substring(0, 2);
+          checkArgument(dash.equals(DASH) && split[0].length() > 2, "Invalid arg format: %s", arg);
+          argKV.put(split[0].substring(2), split[1]);
+        } else {
+          String dash = arg.substring(0, 2);
+          checkArgument(dash.equals(DASH) && arg.length() > 2, "Invalid arg format: %s", arg);
+          argKV.put(arg.substring(2), "true");
+        }
       } else {
         logger.error("Unsupported arg: {}", arg);
       }

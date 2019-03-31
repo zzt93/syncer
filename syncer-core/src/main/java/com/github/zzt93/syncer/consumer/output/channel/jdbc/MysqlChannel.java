@@ -84,7 +84,6 @@ public class MysqlChannel implements BufferedChannel<String> {
     }
 
     String sql = sqlMapper.map(event);
-    logger.info("Convert event to sql: {}", sql);
     boolean add = batchBuffer
         .add(new SyncWrapper<>(event, sql));
     flushIfReachSizeLimit();
@@ -133,7 +132,9 @@ public class MysqlChannel implements BufferedChannel<String> {
   private void batchAndRetry(List<SyncWrapper<String>> sqls) throws InterruptedException {
     String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
     logger.info("Flush batch({})", sqls.size());
-    logger.debug("Sending {}", Arrays.toString(sqlStatement));
+    if (logger.isDebugEnabled()) {
+      logger.debug("Sending {}", Arrays.toString(sqlStatement));
+    }
     long sleepInSecond = 1;
     while (!Thread.currentThread().isInterrupted()) {
       try {
