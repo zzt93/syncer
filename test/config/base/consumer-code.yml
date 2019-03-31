@@ -77,7 +77,7 @@ output:
     connection:
       address: ${MYSQL_ADDR}
       port: 3306
-      user: root
+      user: ${MYSQL_USER}
       password: ${MYSQL_PASS}
     rowMapping:
       schema: "repo"

@@ -214,11 +214,9 @@ public class DataGenerator {
           Col col = cols.get(1);
           joiner.add("`" + col.name + "`=" + col.sql.get());
         }
-        sql.append(joiner).append(" where id in (");
-        for (long i = 0; i < lines; i++) {
-          sql.append(getId(idStart, i)).append(',');
-        }
-        sql.deleteCharAt(sql.length()-1).append(");");
+        sql.append(joiner).append(" where id >= ");
+        sql.append(getId(idStart, 0)).append(" and id < ");
+        sql.append(getId(idStart, lines)).append(";");
         out.println(sql);
         break;
       case UPDATE_TO_RANDOM_VALUE:
