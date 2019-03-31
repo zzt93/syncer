@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.config.code;
 
 import com.github.zzt93.syncer.data.SyncData;
 import com.github.zzt93.syncer.data.util.MethodFilter;
+import com.github.zzt93.syncer.data.util.SyncUtil;
 import org.junit.Assert;
 import org.junit.Test;
 
@@ -18,15 +19,17 @@ public class Base implements MethodFilter {
     sync.addExtra("suffix", "");
     switch (sync.getEntity()) {
       case "news":
-        sync.updateField("thumb_content", new String((byte[]) sync.getField("thumb_content"))).updateField("content", new String((byte[]) sync.getField("content")));
+        SyncUtil.toStr(sync, "thumb_content");
+        SyncUtil.toStr(sync, "content");
         break;
       case "types":
       case "simple_type":
-        sync.updateField("text", new String((byte[]) sync.getField("text"))).updateField("tinyint", Byte.toUnsignedInt((byte)(int) sync.getField("tinyint")));
-        sync.addExtra("suffix", "-" + ((int) sync.getField("tinyint"))/128);
+        SyncUtil.toStr(sync, "text");
+        SyncUtil.unsignedByte(sync, "tinyint");
+        sync.addExtra("suffix", "-" + ((long) sync.getId())%2);
         break;
       case "correctness":
-        sync.updateField("type", Byte.toUnsignedInt((byte)(int) sync.getField("type")));
+        SyncUtil.unsignedByte(sync, "type");
         break;
     }
   }
