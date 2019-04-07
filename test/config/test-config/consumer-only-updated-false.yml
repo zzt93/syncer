@@ -33,6 +33,7 @@ filter:
              SyncData sync = list.get(0);
              if (!sync.updated()) {
                list.clear();
+               return;
              }
              sync.addExtra("suffix", "");
              switch (sync.getEntity()) {

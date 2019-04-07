@@ -15,6 +15,7 @@ public class OnlyUpdatedFalse implements MethodFilter {
     SyncData sync = list.get(0);
     if (!sync.updated()) {
       list.clear();
+      return;
     }
   }
 

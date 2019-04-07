@@ -567,10 +567,40 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 - 10G & 10^8 lines
   - load every 10^5 lines by `mysqlimport`
   - no pause between import
-- Throughput: limited by filter worker number, in average 2000 events per worker
+- Throughput
+  - MySQL output: 1300+ insert/s
+  ```bash
+    time: 20190407-022652
+    src=800000
+    dst=9302
+    time: 20190407-022654
+    src=800000
+    dst=12070
+    time: 20190407-022656
+    src=800000
+    dst=14863
+    time: 20190407-022658
+    src=800000
+    dst=17536
+  ```
+  - ES output: 10000+ insert/s
+  ```bash
+    time: 20190406-083524
+    src=800000
+    dst=79441
+    time: 20190406-083527
+    src=800000
+    dst=130193
+    time: 20190406-083530
+    src=800000
+    dst=134752
+    time: 20190406-083533
+    src=800000
+    dst=190517
+  ```
 - CPU: 80-90
 - Memory: 4g
-  - Increase batch size & flush period, increase performance in cost of higher memory usage
+  - Increase batch size & flush period, increase performance in cost of higher memory usage (only for ES)
 - IO
   - Network
   - Disk
