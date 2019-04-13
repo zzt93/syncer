@@ -33,11 +33,14 @@ public class DataGenerator {
     String sqlFile = args[1];
     long lines = Long.parseLong(args[2]);
     long idStart = args.length >= 4 ? Long.parseUnsignedLong(args[3]) : 0;
+    long sqlFlags = args.length >= 5 ? Long.parseUnsignedLong(args[4]) : -1;
+
     for (Map.Entry<String, List<Col>> e : tables(sqlFile).entrySet()) {
       String tableName = e.getKey();
       if (tableName.endsWith("_bak")) {
         continue;
       }
+
       Path path = Paths.get(outDir, CSV, sqlFile.split("\\.")[0], tableName + "." + CSV);
       Files.createDirectories(path.getParent());
       System.out.println("Generate " + path);
@@ -45,13 +48,17 @@ public class DataGenerator {
       csv(out, e.getValue(), lines, idStart);
       out.close();
 
-      path = Paths.get(outDir, SQL, sqlFile.split("\\.")[0], tableName + "." + SQL);
-      Files.createDirectories(path.getParent());
-      System.out.println("Generate " + path);
-      out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
-      sql(out, e.getValue(), lines, Type.UPDATE_TO_SAME_VALUE, tableName, idStart);
-      sql(out, e.getValue(), lines, Type.DELETE, tableName, idStart);
-      out.close();
+      for (SqlFlag flag : SqlFlag.values()) {
+        if (((sqlFlags >> flag.ordinal()) & 1) == 0) {
+          continue;
+        }
+        path = Paths.get(outDir, SQL, sqlFile.split("\\.")[0], tableName + "-" + flag + "." + SQL);
+        Files.createDirectories(path.getParent());
+        System.out.println("Generate " + path);
+        out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
+        sql(out, e.getValue(), lines, flag, tableName, idStart);
+        out.close();
+      }
     }
   }
 
@@ -192,10 +199,10 @@ public class DataGenerator {
     out.flush();
   }
 
-  private static void sql(PrintWriter out, List<Col> cols, long lines, Type type, String tableName, long idStart) {
+  private static void sql(PrintWriter out, List<Col> cols, long lines, SqlFlag sqlFlag, String tableName, long idStart) {
     assert cols.size() > 1;
-    switch (type) {
-      case UPDATE_TO_SAME_VALUE:
+    switch (sqlFlag) {
+      case UPDATE_TO_SAME_VALUE: {
         StringBuilder sql = new StringBuilder("UPDATE `");
         sql.append(tableName).append("` SET ");
         StringJoiner joiner = new StringJoiner(",");
@@ -219,10 +226,64 @@ public class DataGenerator {
         sql.append(getId(idStart, lines)).append(";");
         out.println(sql);
         break;
-      case UPDATE_TO_RANDOM_VALUE:
+      }
+      case UPDATE_TO_RANDOM_VALUE: {
+        Collections.shuffle(cols);
+        int c = 0;
+        for (int i = 0; i < cols.size(); i++) {
+          Col col = cols.get(i);
+          if (col.sql == idSupplier) {
+            c = i;
+            break;
+          }
+        }
+        if (c == 0) {
+          Collections.swap(cols, 0, 1);
+          c = 1;
+        }
+
+        StringBuilder sql = new StringBuilder("UPDATE `");
+        sql.append(tableName).append("` SET ");
+        int len = sql.length();
+        for (long l = 0; l < lines; l++) {
+          StringJoiner joiner = new StringJoiner(",");
+          for (int i = 0; i < c; i++) {
+            Col col = cols.get(i);
+            joiner.add("`" + col.name + "`=" + col.sql.get());
+          }
+          sql.append(joiner).append(" where id = ").append(getId(idStart, l)).append(";");
+          out.println(sql);
+          sql.delete(len, sql.length());
+        }
+      }
+      break;
+      case UPDATE_RANDOM_COL_TO_RANDOM_VALUE: {
+        StringBuilder sql = new StringBuilder("UPDATE `");
+        sql.append(tableName).append("` SET ");
+        int len = sql.length();
+        for (long l = 0; l < lines; l++) {
+          StringJoiner joiner = new StringJoiner(",");
+          Collections.shuffle(cols);
+          int c = 0;
+          for (int i = 0; i < cols.size(); i++) {
+            Col col = cols.get(i);
+            if (col.sql == idSupplier) {
+              c = i;
+              break;
+            } else {
+              joiner.add("`" + col.name + "`=" + col.sql.get());
+            }
+          }
+          if (c == 0) {
+            Col col = cols.get(1);
+            joiner.add("`" + col.name + "`=" + col.sql.get());
+          }
+          sql.append(joiner).append(" where id = ").append(getId(idStart, l)).append(";");
+          out.println(sql);
+          sql.delete(len, sql.length());
+        }
         break;
-      case UPDATE_RADDOM_COL_TO_RANDOM_VALUE:
-        break;
+      }
       case DELETE:
         out.print("DELETE from `");
         out.print(tableName);
@@ -259,8 +320,8 @@ public class DataGenerator {
     return (char) (MIN + r.nextInt(MAX - MIN));
   }
 
-  private enum Type {
-    UPDATE_TO_SAME_VALUE, UPDATE_TO_RANDOM_VALUE, UPDATE_RADDOM_COL_TO_RANDOM_VALUE, DELETE
+  private enum SqlFlag {
+    UPDATE_TO_SAME_VALUE, UPDATE_TO_RANDOM_VALUE, UPDATE_RANDOM_COL_TO_RANDOM_VALUE, DELETE
   }
 
   private static class Col {
