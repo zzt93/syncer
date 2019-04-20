@@ -263,7 +263,13 @@ input:
      - `name`: entity name
      - `fields`: entity fields list
  - `scheduler`:
-
+   - `mod`: `mod` integral primary key to make same row change always handled in order;
+   - `hash`: hash primary key of data row, then `mod` hash value to schedule -- default value now;
+   - `direct`: 
+     - If your data source has only insert operation, you can choose this scheduler, which is faster;
+     - *No order promise* for data source with insert/update/delete, higher output rate if you can endure some inconsistency;
+ - `onlyUpdated`: whether sync not `updated` event (only for `MySQL`)
+   - `updated` definition: `Objects.deepEquals` == true 
 
 #### Filter
 
@@ -346,7 +352,7 @@ if I didn't listed.
         elseBody:
           - drop: {}
   ```
-- all public method in `SyncData`:
+- all public method in [`SyncData`](./syncer-data/src/main/java/com/github/zzt93/syncer/data/SyncData.java):
   - `isWrite()`
   - `isUpdate()`
   - `isDelete()`
@@ -438,85 +444,10 @@ and send to where
         delay: 100
         maxRetry: 5
       failureLog:
-        countLimit: 1000
   ```
-- Http endpoint
 
 #### In All
-More samples can be found under `src/test/resource/`
-```yml
-version: 1.2
-
-consumerId: todomsg
-
-input:
-  masters:
-    - connection:
-        address: ${HOST_ADDRESS}
-        port: 27017
-      type: Mongo
-      scheduler: direct
-      repos:
-        - name: "test"
-          entities:
-          - name: test
-            fields: [createTime, content]
-    - connection:
-        address: ${HOST_ADDRESS}
-        port: 3306
-      scheduler: mod
-      repos:
-        - name: "test_${ACTIVE_PROFILE}.*"
-          entities:
-          - name: user
-            fields: [user_id, title]
-          - name: addr
-            fields: [address]
-        - name: "file_${ACTIVE_PROFILE}.*"
-          entities:
-          - name: file
-            fields: [name]
-
-
-
-# input result class: com.github.zzt93.syncer.common.data.SyncData
-
-filter:
-  - switcher:
-      switch: "entity"
-      case:
-        "user": ["renameField('xxx', 'yyy')"]
-  - if:
-      condition: "entity == 'user' && isUpdate()"
-      ifBody:
-        - create:
-            copy: ["id", "entity", "#suffix", "#title", "#docType"]
-            postCreation: ["addField('ownerTitle', #title)", "syncByQuery().filter('ownerId', id)", "id = null"]
-      elseBody:
-        - drop: {}
-
-
-
-# filter result class: com.github.zzt93.syncer.common.data.SyncData
-
-output:
-  mysql:
-    connection:
-      address: ${HOST_ADDRESS}
-      port: 3306
-      user: root 
-      passwordFile: mysql-password
-    rowMapping:
-      schema: " 'someSchema' "
-      table: " 'someTable' "
-      id: "id"
-      rows:
-        "fields": "fields.*.flatten"
-    batch:
-      size: 100
-      delay: 100
-      maxRetry: 5
-```
+Full and usable samples can be found under [`test/config/`](test/config/)
 
 ### Syncer Config
 
