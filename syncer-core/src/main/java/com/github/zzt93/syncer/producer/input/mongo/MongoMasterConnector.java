@@ -57,7 +57,7 @@ public class MongoMasterConnector implements MasterConnector {
         .append(NS, new BasicDBObject("$regex", namespaces))
         // https://www.mongodb.com/blog/post/tailing-mongodb-oplog-sharded-clusters
         // fromMigrate indicates the operation results from a shard re-balancing.
-        .append("fromMigrate", new BasicDBObject("$exists", "false"))
+        .append("fromMigrate", new BasicDBObject("$exists", false))
     ;
     if (docTimestamp.getTimestamp() != null) {
       query.append(TS, new BasicDBObject("$gte", docTimestamp.getTimestamp()));
