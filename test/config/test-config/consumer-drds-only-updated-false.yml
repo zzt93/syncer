@@ -33,6 +33,7 @@ filter:
              SyncData sync = list.get(0);
              if (sync.isUpdate() && !sync.updated()) {
                list.clear();
+               logger.info("Nothing updated {}", sync);
                return;
              }
              sync.addExtra("suffix", "");

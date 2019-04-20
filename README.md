@@ -194,11 +194,15 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   You may need to convert to unsigned if necessary.
   ```
      Byte.toUnsignedInt((byte)(int) fields['xx'])
+     // or
+     SyncUtil.unsignedByte(sync, "xx");
   ```
-  - Data of *text/*blob types always returned as a byte array (for var* this is true in future).
+  - data of `*text`/`*blob` types always returned as a byte array (for `var*` this is true in future).
   You may need to convert to string if necessary.
   ```
     new String(fields['xx'])
+    // or 
+    SyncUtil.toStr(sync, "xx");
   ```
 - Mongo:
   - Not delete field from ES if sync to ES

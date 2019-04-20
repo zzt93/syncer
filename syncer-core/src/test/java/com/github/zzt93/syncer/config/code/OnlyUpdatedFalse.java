@@ -14,6 +14,7 @@ public class OnlyUpdatedFalse implements MethodFilter {
   public void filter(List<SyncData> list) {
     SyncData sync = list.get(0);
     if (sync.isUpdate() && !sync.updated()) {
+      logger.info("Nothing updated {}", sync);
       list.clear();
       return;
     }
