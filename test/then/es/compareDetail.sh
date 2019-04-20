@@ -23,11 +23,11 @@ function esCompare() {
     s=`shuf -i 0-$(($idMax/2)) -n 1`
     e=`shuf -i ${s}-${idMax} -n 1`
     ids="0"
-    for ((i=s;i<=e;i++)); do
-        ids="$ids,$i"
+    for ((id=s;id<=e;id++)); do
+        ids="$ids,$id"
     done
 
-    docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -N -B -e "select * from ${db}.${table} where id >= $s and id <= e" > ./mysql
+    docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -B -e "select * from ${db}.${table} where id >= $s and id <= $e" > $PWD/then/es/mysql_${table}
     curl -s -X GET "localhost:49200/${db}*/${table}/_search" -H 'Content-Type: application/json' -d "
     {
         \"query\": {
@@ -35,9 +35,10 @@ function esCompare() {
                 \"values\" : [$ids]
             }
         }
-    }"  > ./es
+    }"  > $PWD/then/es/es_${table}
 
-    python compareDetail.py ./es ./mysql
+    logi "Compare ${instance}.${db}.${table}"
+    python $PWD/then/es/compareDetail.py $PWD/then/es/es_${table} $PWD/then/es/mysql_${table}
 }
 
 

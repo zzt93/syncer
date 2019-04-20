@@ -31,7 +31,7 @@ public class MongoConnection extends Connection {
   public String toConnectionUrl(String path) {
     String s = super.toConnectionUrl(null);
     if (getUser() != null) {
-      s = getUser() + ":" + getPassword() + "@" + s + "/?authSource=admin";
+      s = getUser() + ":" + getPassword() + "@" + s + "/local?authSource=admin";
     }
     return "mongodb://" + s;
   }

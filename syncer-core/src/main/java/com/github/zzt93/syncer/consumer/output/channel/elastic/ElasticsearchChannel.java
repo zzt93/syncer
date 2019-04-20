@@ -266,7 +266,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       // failed item handle
       ErrorLevel level = level(e, wrapper, batchConfig.getMaxRetry());
       if (level.retriable()) {
-        logger.info("Retry request: {}", requestStr(wrapper));
+        logger.info("Retry {} because {}", requestStr(wrapper), item.getFailure());
         handle404(wrapper, item);
         tmp.add(wrapper);
       } else {
@@ -367,6 +367,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
           bulkRequest.add(((DeleteRequest) request));
         }
       }
+      // This buffer is shared by all filter thread,
+      // so events scheduled to different queue & filter thread will
+      // all in this buffer (Of course, will not affect the order of related events)
       logger.debug("Sending {}", joiner);
     } else {
       for (SyncWrapper<WriteRequest> requestWrapper : aim) {

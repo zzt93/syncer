@@ -6,7 +6,7 @@ consumerId: code
 input:
   masters:
   - connection:
-      address: ${MYSQL_ADDR}
+      address: ${MYSQL_IN}
       port: 3306
     scheduler: mod
     repos:
@@ -28,7 +28,7 @@ input:
 filter:
   - method: 'public void filter(List<SyncData> list) {
              SyncData sync = list.get(0);
-             if (!sync.updated()) {
+             if (sync.isUpdate() && !sync.updated()) {
                list.clear();
                return;
              }
@@ -66,7 +66,7 @@ output:
     requestMapping: # mapping from input data to es request
       enableExtraQuery: true
       retryOnUpdateConflict: 3
-      index: "repo + getExtra('target')" # default: repo
+      index: "repo + getExtra('suffix')" # default: repo
       documentId: "id" # default: id
       fieldsMapping: # default: fields.*.flatten
         "fields": "fields.*.flatten"
@@ -79,10 +79,10 @@ output:
       countLimit: 1000
   mysql:
     connection:
-      address: ${MYSQL_ADDR}
+      address: ${MYSQL_OUT}
       port: 3306
       user: root
-      password: ${MYSQL_PASS}
+      password: ${MYSQL_OUT_PASS}
     rowMapping:
       schema: "repo"
       table: "entity + '_bak'"

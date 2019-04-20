@@ -84,7 +84,7 @@ output:
       address: ${MYSQL_OUT}
       port: 3306
       user: root
-      password: ${MYSQL_PASS}
+      password: ${MYSQL_OUT_PASS}
     rowMapping:
       schema: " getExtra('target') "
       table: "entity + '_bak'"

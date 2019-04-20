@@ -5,23 +5,23 @@ consumerId: code
 
 input:
   masters:
-  - connection:
-      address: ${MYSQL_ADDR}
-      port: 3306
-    scheduler: mod
-    repos:
-    - name: "test.*"
-      entities:
-      - name: correctness
-        fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
-      - name: types
-        fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
-      - name: news
-        fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
-    - name: "simple"
-      entities:
-      - name: simple_type
-        fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+    - connection:
+        address: ${MYSQL_IN}
+        port: 3306
+      scheduler: mod
+      repos:
+        - name: "test.*"
+          entities:
+            - name: correctness
+              fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
+            - name: types
+              fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+            - name: news
+              fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
+        - name: "simple"
+          entities:
+            - name: simple_type
+              fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
 
 
 
@@ -62,7 +62,7 @@ output:
     requestMapping: # mapping from input data to es request
       enableExtraQuery: true
       retryOnUpdateConflict: 3
-      index: "repo + getExtra('target')" # default: repo
+      index: "repo + getExtra('suffix')" # default: repo
       documentId: "id" # default: id
       fieldsMapping: # default: fields.*.flatten
         "fields": "fields.*.flatten"
@@ -75,10 +75,10 @@ output:
       countLimit: 1000
   mysql:
     connection:
-      address: ${MYSQL_ADDR}
+      address: ${MYSQL_OUT}
       port: 3306
-      user: ${MYSQL_USER}
-      password: ${MYSQL_PASS}
+      user: root
+      password: ${MYSQL_OUT_PASS}
     rowMapping:
       schema: "repo"
       table: "entity + '_bak'"

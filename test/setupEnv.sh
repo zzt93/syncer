@@ -24,7 +24,7 @@ function generateMysqlTestData() {
 
             for f in generator/*.sql; do
                 name=`basename ${f}`
-                docker run -v $(pwd)/data:/data --rm generator:test /data/mysql/${i} /${name} $1 ${start}
+                docker run -v $(pwd)/data:/data --rm generator:test /data/mysql/${i} /${name} $1 ${start} 4
             done
         fi
         start=$(($start + $1))

@@ -4,10 +4,10 @@ input:
   masters:
 
   - connection:
-      address: ${MYSQL_ADDR}
+      address: ${MYSQL_IN}
       port: 3306
       user: root
-      password: ${MYSQL_PASS}
+      password: ${MYSQL_IN_PASS}
 #    onlyUpdated: true # default value
 
   - connection:

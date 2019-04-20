@@ -13,7 +13,7 @@ public class OnlyUpdatedFalse implements MethodFilter {
   @Override
   public void filter(List<SyncData> list) {
     SyncData sync = list.get(0);
-    if (!sync.updated()) {
+    if (sync.isUpdate() && !sync.updated()) {
       list.clear();
       return;
     }

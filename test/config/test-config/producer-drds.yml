@@ -6,7 +6,7 @@ input:
   - connection:
       clusterNodes: [${MYSQL_ADDR}]
       user: root
-      password: ${MYSQL_PASS}
+      password: ${MYSQL_OUT_PASS}
 
 
   - connection:
