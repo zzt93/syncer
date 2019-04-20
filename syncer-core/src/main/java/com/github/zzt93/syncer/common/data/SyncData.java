@@ -10,7 +10,7 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author zzt
@@ -24,7 +24,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
    * sync result data fields
    */
   private SyncResult result;
-  private HashSet<String> updated;
+  private Set<String> updated;
 
   public SyncData(String eventId, int ordinal, SimpleEventType type, String database, String entity, String primaryKeyName,
                   Object id, NamedChange row) {

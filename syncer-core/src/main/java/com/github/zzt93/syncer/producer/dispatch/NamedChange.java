@@ -4,7 +4,7 @@ import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.data.SimpleEventType;
 
 import java.util.HashMap;
-import java.util.HashSet;
+import java.util.Set;
 
 /**
  * @author zzt
@@ -18,8 +18,9 @@ public interface NamedChange {
   /**
    * Only {@link SimpleEventType#UPDATE} will have this,
    * otherwise return null
+   * @return
    */
-  default HashSet<String> getUpdated() {
+  default Set<String> getUpdated() {
     throw new UnsupportedOperationException();
   }
 

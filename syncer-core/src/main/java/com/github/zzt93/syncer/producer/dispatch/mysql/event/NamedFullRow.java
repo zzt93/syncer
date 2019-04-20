@@ -3,10 +3,7 @@ package com.github.zzt93.syncer.producer.dispatch.mysql.event;
 import com.github.zzt93.syncer.common.thread.NotThreadSafe;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 
 /**
  * @author zzt
@@ -49,7 +46,7 @@ public class NamedFullRow implements NamedChange {
 
   @NotThreadSafe
   @Override
-  public HashSet<String> getUpdated() {
+  public Set<String> getUpdated() {
     if (updated == null && beforeFull != null) {
       updated = new HashSet<>(full.size());
       for (Map.Entry<String, Object> e : full.entrySet()) {
