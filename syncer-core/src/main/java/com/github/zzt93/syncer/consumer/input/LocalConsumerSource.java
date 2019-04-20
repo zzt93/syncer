@@ -77,9 +77,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     for (SyncData datum : data) {
       if (!sent(datum)) {
         res = scheduler.schedule(datum.setSourceIdentifier(connectionIdentifier)) && res;
-        logger.debug("add list: data id: {}, {}, {} in {}", datum.getDataId(), datum,
-            datum.hashCode(),
-            data);
+        logger.debug("Consumer receive: {} in {}", datum, data);
       } else {
         logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, datum,
             connectionIdentifier);

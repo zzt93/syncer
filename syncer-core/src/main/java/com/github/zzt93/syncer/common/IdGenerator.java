@@ -30,21 +30,8 @@ public class IdGenerator {
     return new StringBuilder(COMMON_LEN)
         .append(binlogFileName).append(SEP)
         .append(tableMap.getPosition()).append(SEP)
-        .append(second.getPosition() - tableMap.getPosition()).append(SEP)
-        .append(getEventTypeAbbr(second)).toString();
-  }
-
-  private static String getEventTypeAbbr(EventHeaderV4 second) {
-    switch (second.getEventType()) {
-      case UPDATE_ROWS:
-        return "u";
-      case WRITE_ROWS:
-        return "w";
-      case DELETE_ROWS:
-        return "d";
-      default:
-        throw new IllegalArgumentException("Unsupported event type");
-    }
+        .append(second.getPosition() - tableMap.getPosition())
+        .toString();
   }
 
   public static String fromEventId(String eventId, int ordinal) {
@@ -58,7 +45,8 @@ public class IdGenerator {
 
   public static BinlogInfo fromDataId(String dataId) {
     String[] split = dataId.split(SEP);
-    if (split.length == 5 || split.length == 6) {
+    if (split.length == 4
+        || split.length == 5) { // for backward compatibility
       return BinlogInfo.withFilenameCheck(split[0], Long.parseLong(split[1]));
     }
     throw new IllegalArgumentException(dataId);
@@ -80,7 +68,8 @@ public class IdGenerator {
 
   public static SyncInitMeta getSyncMeta(String dataId) {
     String[] split = dataId.split(SEP);
-    if (split.length == 5 || split.length == 6) {
+    if (split.length == 4
+        || split.length == 5) { // for backward compatibility
       return new BinlogInfo(split[0], Long.parseLong(split[1]));
     }
     if (split.length == 3) {

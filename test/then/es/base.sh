@@ -31,14 +31,6 @@ function esAssert() {
         loge "$table not right"
     fi
 
-    tmp=`curl -s -X GET "localhost:49200/test*/news/_count" -H 'Content-Type: application/json' -d'
-    {
-        "query" : {
-            "term" : { "user" : "kimchy" }
-        }
-    }
-    '`
-    c2=`extractCount ${tmp}`
 }
 
 
@@ -47,6 +39,10 @@ for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         esAssert mysql_${i} test_${i} ${table}
     done
 done
+
+# tables in mysql_simple.sql
+esAssert mysql_0 simple simple_type
+
 
 logi "-----"
 logi "Done $0"

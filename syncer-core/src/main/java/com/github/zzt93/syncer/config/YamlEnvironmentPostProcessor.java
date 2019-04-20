@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config;
 
+import ch.qos.logback.classic.Level;
 import com.github.zzt93.syncer.SyncerApplication;
 import com.github.zzt93.syncer.common.util.ArgUtil;
 import com.github.zzt93.syncer.common.util.FileUtil;
@@ -38,10 +39,15 @@ public class YamlEnvironmentPostProcessor {
   private static final String CONSUMER_CONFIG = "consumerConfig";
   private static final String PRODUCER_CONFIG = "producerConfig";
   private static final String CONFIG = "config";
+  private static final String DEBUG = "debug";
   private static final String APPLICATION = "application.yml";
 
   public static SyncerApplication processEnvironment(String[] args) {
     HashMap<String, String> argKV = ArgUtil.toMap(args);
+    if (argKV.containsKey(DEBUG)) {
+      ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
+      root.setLevel(Level.DEBUG);
+    }
 
     String configFile = argKV.get(CONFIG);
     if (configFile == null) {

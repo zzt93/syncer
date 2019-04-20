@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.config.common;
 
-import com.google.common.base.Preconditions;
 import com.zaxxer.hikari.HikariConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,12 +26,11 @@ public class MysqlConnection extends Connection {
     }
     setPort(connection.getPort());
     setUser(connection.getUser());
-    Preconditions.checkNotNull(connection.getPassword());
     setPassword(connection.getPassword());
   }
 
   public String toConnectionUrl(String schema) {
-    return "jdbc:mysql://" + super.toConnectionUrl(null) + "/" + schema + "?autoReconnect=true&useSSL=false&useUnicode=yes&characterEncoding=UTF-8";
+    return "jdbc:mysql://" + super.toConnectionUrl(null) + "/" + schema + "?autoReconnect=true&useSSL=false&useUnicode=yes&characterEncoding=UTF-8&rewriteBatchedStatements=true";
   }
 
   private String toConnectionUrl() {

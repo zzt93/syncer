@@ -16,6 +16,10 @@ public interface SyncData {
 
   boolean isWrite();
 
+  /**
+   * @deprecated {@link #updated()} might be better
+   * @return whether this event type is {@link SimpleEventType}
+   */
   boolean isUpdate();
 
   boolean isDelete();
@@ -83,6 +87,27 @@ public interface SyncData {
    * @return a new instance of {@link SyncData}
    */
   SyncData copyMeta(int index);
+
+  /**
+   * Determine whether updated according to {@link java.util.Objects#deepEquals(Object, Object)}
+   * @return any interested column is updated in this event
+   * @see java.util.Objects#deepEquals(Object, Object)
+   */
+  boolean updated();
+
+  /**
+   * @param key column name
+   * @return whether this key is {{@link #updated()}} in this event
+   * @see java.util.Objects#deepEquals(Object, Object)
+   */
+  boolean updated(String key);
+
+  Object getBefore(String key);
+
+  /**
+   * @return null if no before info (MongoDB update event has no before info now)
+   */
+  HashMap<String, Object> getBefore();
 
   @Override
   String toString();

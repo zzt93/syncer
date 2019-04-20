@@ -44,6 +44,7 @@ The business database query request is delayed as little as possible.
 ### Input -- DataSource
 
 - Support listening to both MySQL & MongoDB & DRDS of Aliyun (https://www.aliyun.com/product/drds)
+- If fail to connect to input data source, will abort
 - MySQL master source filter:
   - Schema filter (naming as `repos`), support regex
   - Table name filter
@@ -56,7 +57,7 @@ The business database query request is delayed as little as possible.
     - If event type is `UPDATE`, then discard this event -- because not support update id now;
     - Other event type, keep it.
   - Support reading from binlog file to do data recovering in case of loss of data (`input.masters[x].file`)
-  - Support specify binlog file/position to start reading (`input.masters[x].syncMeta`)
+  - Support specify binlog file/position to start reading (`input.masters[x].connection.syncMeta[]`)
 - MongoDB master source filter:
   - Version: 3.x
   - Database filter (naming as `repos`), support regex
@@ -122,6 +123,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 ### Output -- DataSink
 
 - If output channel meet too many failure/error (exceeds `countLimit`), it will abort and change health to `red` 
+- If fail to connect to output channel, will retry every 2**n seconds
 - Elasticsearch
   - Version: 5.x
   - Bulk operation
@@ -134,6 +136,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Add `upsert` support, fix `DocumentMissingException` use `upsert`, can be used in following two scenarios
     - Init load for data, by creating index manually and update synced field to ES (only support `MySQL` input) 
     - Fix some un-expected config/sync error
+  - No need code for search data preparation except config
 
 - Http Endpoint (Deprecated)
   - Invoke `restful` interface according to event type: insert=`PUT`, update=`POST`, delete=`DELETE` 
@@ -143,6 +146,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Bulk operation
   - Simple nested sql: `insert into select`
   - Ignore `DuplicateKeyException`, not count as failure
+  - **Low latency**
 - Kafka
   - [Version](https://www.confluent.io/blog/upgrading-apache-kafka-clients-just-got-easier/): 0.10.0 or later
   - Bulk operation
@@ -151,7 +155,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
   - **Notice**: Kafka msg consumer has to handle event idempotent;
   - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
-
+  - Easy to re-consume, rebuild without affect biz db;
   
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
 
@@ -168,7 +172,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - `http://ip:port/health`: report `Syncer` status dynamically;
 
 - JMX Endpoints
-  - Use `jconsole` to connect to `Syncer`, you can [change the logging level](https://logback.qos.ch/manual/jmxConfig.html) dynamically;
+  - Use `jconsole` to connect to `Syncer`, you can [change the logging level](https://logback.qos.ch/manual/jmxConfig.html) dynamically; (Or change log level by `--debug` option when start)
 
 - Shutdown process
   - Producer starter shutdown
@@ -190,11 +194,15 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   You may need to convert to unsigned if necessary.
   ```
      Byte.toUnsignedInt((byte)(int) fields['xx'])
+     // or
+     SyncUtil.unsignedByte(sync, "xx");
   ```
-  - Data of *text/*blob types always returned as a byte array (for var* this is true in future).
+  - data of `*text`/`*blob` types always returned as a byte array (for `var*` this is true in future).
   You may need to convert to string if necessary.
   ```
     new String(fields['xx'])
+    // or 
+    SyncUtil.toStr(sync, "xx");
   ```
 - Mongo:
   - Not delete field from ES if sync to ES
@@ -260,7 +268,7 @@ input:
 #### Filter
 
 
-- `method`: write a java class implements `MethodFilter`  to handle `SyncData`
+- `method` (**preferred: more powerful and easier to wirte**) : write a java class implements `MethodFilter`  to handle `SyncData`
   - Import dependency:
   ```xml
         <dependency>
@@ -374,7 +382,7 @@ if I didn't listed.
   - "extra.*": map.put('your_key', `extra`)
   - "extra.*.flatten": map.putAll(`extra`)
 - `batch`: support output change in batch
-  - `size`: flush if reach this size
+  - `size`: flush if reach this size (if `size` <= 0, it will be considered as buffer as large as possible)
   - `delay`: flush if every this time in `MILLISECONDS`
   - `maxRetry`: max retry if met error
 - `failureLog`: failure log config
@@ -538,7 +546,7 @@ cd syncer/ && mvn package
 # /path/to/config/: producer.yml, consumer.yml, password-file
 # use `-XX:+UseParallelOldGC` if you have less memory and lower input pressure
 # use `-XX:+UseG1GC` if you have at least 4g memory and event input rate larger than 2*10^4/s
-java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar [--port=40000] [--config=/absolute/path/to/syncerConfig.yml] --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
+java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar [--debug] [--port=40000] [--config=/absolute/path/to/syncerConfig.yml] --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
 ```
 
 ## Test
@@ -563,10 +571,40 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 - 10G & 10^8 lines
   - load every 10^5 lines by `mysqlimport`
   - no pause between import
-- Throughput: limited by filter worker number, in average 2000 events per worker
+- Throughput
+  - MySQL output: 1300+ insert/s
+  ```bash
+    time: 20190407-022652
+    src=800000
+    dst=9302
+    time: 20190407-022654
+    src=800000
+    dst=12070
+    time: 20190407-022656
+    src=800000
+    dst=14863
+    time: 20190407-022658
+    src=800000
+    dst=17536
+  ```
+  - ES output: 10000+ insert/s
+  ```bash
+    time: 20190406-083524
+    src=800000
+    dst=79441
+    time: 20190406-083527
+    src=800000
+    dst=130193
+    time: 20190406-083530
+    src=800000
+    dst=134752
+    time: 20190406-083533
+    src=800000
+    dst=190517
+  ```
 - CPU: 80-90
 - Memory: 4g
-  - Increase batch size & flush period, increase performance in cost of higher memory usage
+  - Increase batch size & flush period, increase performance in cost of higher memory usage (only for ES)
 - IO
   - Network
   - Disk
@@ -577,7 +615,10 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 ### Used In Production
 - Search system: search data sync
 - Micro-service: auth/recommend/chat data sync
+  - Requirement: low latency, high availability
 - Join table: avoid join in production env, use space for speed by join table
+  - Requirement: low latency, high availability
+- Kafka: sync data to kafka, for other heterogeneous system to use
 - For data recovery: In case of drop entity mistakenly, or you know where to start & end
 
 ## TODO

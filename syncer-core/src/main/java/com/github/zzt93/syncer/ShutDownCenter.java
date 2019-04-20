@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer;
 
 import com.github.zzt93.syncer.common.exception.ShutDownException;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -17,7 +18,11 @@ public class ShutDownCenter {
     boolean first = shutdown.compareAndSet(false, true);
     if (first) {
       new Thread(() -> {
-        logger.error("[Shutting down] Init", e);
+        if (e instanceof InvalidConfigException) {
+          logger.error("[Shutting down] Init: {}", e.getMessage());
+        } else {
+          logger.error("[Shutting down] Init", e);
+        }
         System.exit(1);
       }, "syncer-shutdown-starter").start();
     } else {

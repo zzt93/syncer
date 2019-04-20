@@ -5,22 +5,23 @@ consumerId: drds
 
 input:
   masters:
-    - connection:
-        clusterNodes: [${MYSQL_ADDR}]
-      scheduler: mod
-      repos:
-        - name: "test_.*"
-          entities:
-          - name: correctness
-            fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
-          - name: types
-            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
-          - name: news
-            fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
-        - name: "simple"
-          entities:
-          - name: simple_type
-            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    scheduler: mod
+    repos:
+    - name: "test.*"
+      entities:
+      - name: correctness
+        fields: [time, news_id, currency, total] # default id is not null, other can be null
+      - name: types
+        fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+      - name: news
+        fields: [plate_sub_type]
+    - name: "simple"
+      entities:
+      - name: simple_type
+        fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+
 
 
 
@@ -30,6 +31,11 @@ filter:
            @Override
            public void filter(List<SyncData> list) {
              SyncData sync = list.get(0);
+             if (sync.isUpdate() && !sync.updated()) {
+               list.clear();
+               logger.info("Nothing updated {}", sync);
+               return;
+             }
              sync.addExtra("suffix", "");
              switch (sync.getEntity()) {
                case "news":

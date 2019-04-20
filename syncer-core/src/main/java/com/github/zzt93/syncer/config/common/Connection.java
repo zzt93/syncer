@@ -37,6 +37,7 @@ public class Connection implements Comparable<Connection> {
     try {
       setAddress(address);
     } catch (UnknownHostException e) {
+      logger.error("Unknown host", e);
       throw new InvalidConfigException(e);
     }
     this.port = port;
@@ -120,9 +121,6 @@ public class Connection implements Comparable<Connection> {
   }
 
   public String getPassword() {
-    if (password == null) {
-      throw new InvalidConfigException("No passwordFile/password set");
-    }
     return password;
   }
 

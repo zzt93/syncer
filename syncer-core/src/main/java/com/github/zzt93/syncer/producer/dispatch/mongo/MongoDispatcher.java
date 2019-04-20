@@ -1,9 +1,9 @@
 package com.github.zzt93.syncer.producer.dispatch.mongo;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
+import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
 import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
@@ -45,7 +45,7 @@ public class MongoDispatcher implements Dispatcher {
   }
 
   @Override
-  public boolean dispatch(Object... data) {
+  public boolean dispatch(SimpleEventType simpleEventType, Object... data) {
     Document document = (Document) data[0];
     String eventId = IdGenerator.fromDocument(document);
     MDC.put(IdGenerator.EID, eventId);
@@ -80,28 +80,28 @@ public class MongoDispatcher implements Dispatcher {
    */
   private SyncData fromDocument(Document document, String eventId, String[] namespace) {
     String op = document.getString("op");
-    Map<String, Object> row = new HashMap<>();
-    EventType type;
+    HashMap<String, Object> row = new HashMap<>();
+    SimpleEventType type;
     Map obj = (Map) document.get("o");
     switch (op) {
       case "u":
-        type = EventType.UPDATE_ROWS;
+        type = SimpleEventType.UPDATE;
         // see issue for format explanation: https://jira.mongodb.org/browse/SERVER-37306
         row.putAll((Map) obj.getOrDefault("$set", obj));
         row.putAll((Map) document.get("o2"));
         break;
       case "i":
-        type = EventType.WRITE_ROWS;
+        type = SimpleEventType.WRITE;
         row.putAll(obj);
         break;
       case "d":
-        type = EventType.DELETE_ROWS;
+        type = SimpleEventType.DELETE;
         row.putAll(obj);
         break;
       default:
         return null;
     }
     Preconditions.checkState(row.containsKey(ID));
-    return new SyncData(eventId, 0, namespace[0], namespace[1], ID, row.get(ID), row, type);
+    return new SyncData(eventId, 0, type, namespace[0], namespace[1], ID, row.get(ID), new NamedUpdatedDoc(row));
   }
 }

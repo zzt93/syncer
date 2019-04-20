@@ -12,9 +12,10 @@ public class ProducerMaster {
   private MasterSourceType type = MasterSourceType.MySQL;
   private MayClusterConnection connection;
   private String file;
+  private boolean onlyUpdated = true;
 
   public Connection getRealConnection() {
-    connection.checkPassword();
+    connection.validate(type);
     return connection.getRealConnection();
   }
 
@@ -40,6 +41,14 @@ public class ProducerMaster {
 
   public void setFile(String file) {
     this.file = file;
+  }
+
+  public boolean isOnlyUpdated() {
+    return onlyUpdated;
+  }
+
+  public void setOnlyUpdated(boolean onlyUpdated) {
+    this.onlyUpdated = onlyUpdated;
   }
 
   @Override

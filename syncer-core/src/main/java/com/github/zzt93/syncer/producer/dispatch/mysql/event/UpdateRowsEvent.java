@@ -3,7 +3,8 @@ package com.github.zzt93.syncer.producer.dispatch.mysql.event;
 import com.github.shyiko.mysql.binlog.event.UpdateRowsEventData;
 
 import java.io.Serializable;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map.Entry;
 
 /**
@@ -21,19 +22,15 @@ import java.util.Map.Entry;
  */
 public class UpdateRowsEvent  {
 
-  static List<HashMap<Integer, Object>> getIndexedRows(
-      UpdateRowsEventData updateRowsEventData, Set<Integer> primaryKeys){
-    List<HashMap<Integer, Object>> res = new ArrayList<>();
-    BitSet includedColumns = updateRowsEventData.getIncludedColumns();
+  static List<IndexedFullRow> getIndexedRows(UpdateRowsEventData updateRowsEventData){
+    List<IndexedFullRow> res = new ArrayList<>();
     // TODO 17/10/10 may support different binlog row image, only 'full' now
     // If support 'minimal' format:
     // - it will only keep columns needed to identify rows (id) & updated fields, but not partition key in DRDS
     // - it will disable upsert related function of ES output channel
-    RowUpdateImageMapper mapper = new FullRowUpdateImageMapper(primaryKeys, includedColumns);
     List<Entry<Serializable[], Serializable[]>> rows = updateRowsEventData.getRows();
     for (Entry<Serializable[], Serializable[]> row : rows) {
-      HashMap<Integer, Object> map = mapper.map(row);
-      res.add(map);
+      res.add(new IndexedFullRow(row.getValue()).setBefore(row.getKey()));
     }
     return res;
   }

@@ -17,6 +17,7 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.util.EnumSet;
 import java.util.LinkedList;
+import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
 
@@ -78,7 +79,13 @@ public class FileBasedMap<T extends Comparable<T>> {
     if (map.isEmpty()) {
       return false;
     }
-    T first = map.firstKey();
+    // possible race condition isEmpty & remove, firstKey may throw NoSuchElementException
+    T first;
+    try {
+      first = map.firstKey();
+    } catch (NoSuchElementException e) {
+      return false;
+    }
     byte[] bytes = first.toString().getBytes(StandardCharsets.UTF_8);
     putBytes(file, bytes);
     file.force();

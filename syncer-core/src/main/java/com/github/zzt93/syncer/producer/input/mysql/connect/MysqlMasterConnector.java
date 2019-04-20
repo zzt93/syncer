@@ -4,7 +4,6 @@ import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.BinaryLogFileReader;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
-import com.github.shyiko.mysql.binlog.event.deserialization.ChecksumType;
 import com.github.shyiko.mysql.binlog.event.deserialization.EventDeserializer;
 import com.github.shyiko.mysql.binlog.network.SSLMode;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
@@ -49,7 +48,7 @@ public class MysqlMasterConnector implements MasterConnector {
   private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
   public MysqlMasterConnector(MysqlConnection connection,
-      String file, ConsumerRegistry registry)
+                              String file, ConsumerRegistry registry, boolean onlyUpdated)
       throws IOException, SchemaUnavailableException {
     String password = connection.getPassword();
     if (StringUtils.isEmpty(password)) {
@@ -59,7 +58,7 @@ public class MysqlMasterConnector implements MasterConnector {
     connectorIdentifier = connection.connectionIdentifier();
 
     BinlogInfo remembered = configLogClient(connection, password, registry);
-    listener = configEventListener(connection, registry, remembered);
+    listener = configEventListener(connection, registry, onlyUpdated);
     this.file = file;
   }
 
@@ -83,7 +82,7 @@ public class MysqlMasterConnector implements MasterConnector {
   }
 
   private SyncListener configEventListener(MysqlConnection connection, ConsumerRegistry registry,
-      BinlogInfo remembered)
+                                           boolean onlyUpdated)
       throws SchemaUnavailableException {
     HashMap<Consumer, ProducerSink> consumerSink = registry.outputSink(connection);
     HashMap<ConsumerSchemaMeta, ProducerSink> sinkMap;
@@ -92,7 +91,7 @@ public class MysqlMasterConnector implements MasterConnector {
     } catch (SQLException e) {
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, remembered));
+    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, onlyUpdated), connectorIdentifier);
     // Order of listener: client has the current event position (not next),
     // so first have it, then use it in SyncListener
     client.registerEventListener((event) -> this.binlogInfo
@@ -118,8 +117,6 @@ public class MysqlMasterConnector implements MasterConnector {
       }
     }
     EventDeserializer eventDeserializer = SyncDeserializer.defaultDeserialzer();
-    // TODO 18/6/3 change to auto detect checksum type
-    eventDeserializer.setChecksumType(ChecksumType.CRC32);
     Event e;
     for (Path file : files) {
       logger.info("Consuming the binlog {}", file);

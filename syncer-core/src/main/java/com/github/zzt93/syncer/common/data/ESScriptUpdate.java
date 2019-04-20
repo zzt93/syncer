@@ -20,7 +20,8 @@ public class ESScriptUpdate extends SyncByQuery implements Serializable {
   private final HashMap<String, Object> remove = new HashMap<>();
   private final transient SyncData outer;
 
-  public ESScriptUpdate(SyncData data) {
+  ESScriptUpdate(SyncData data) {
+    super(data);
     outer = data;
   }
 

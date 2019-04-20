@@ -1,14 +1,14 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.data.ESScriptUpdate;
+import com.github.zzt93.syncer.common.data.Mapper;
 import com.github.zzt93.syncer.common.data.SyncByQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.InvalidSyncDataException;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
-import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
-import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
+import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 import com.google.common.collect.Lists;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.support.AbstractClient;

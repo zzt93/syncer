@@ -89,15 +89,15 @@ public class FilterJob implements EventLoop {
       logger.error(
           "Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked",
           poll, e);
-      Throwables.throwIfUnchecked(e);
-      return false;
+      SyncerHealth.consumer(this.consumerId, Health.red(e.getMessage()));
+      InvalidConfigException invalidConfigException = new InvalidConfigException(e);
+      shutdown(invalidConfigException, outputChannels);
     }
     ack.remove(poll.getSourceIdentifier(), poll.getDataId());
     return false;
   }
 
-  private void output(LinkedList<SyncData> list, List<OutputChannel> remove)
-      throws InterruptedException {
+  private void output(LinkedList<SyncData> list, List<OutputChannel> remove) {
     for (SyncData syncData : list) {
       logger.debug("Output SyncData {}", syncData);
       ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());

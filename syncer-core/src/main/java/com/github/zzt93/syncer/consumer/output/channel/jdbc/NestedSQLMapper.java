@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
 import com.github.zzt93.syncer.config.consumer.output.mysql.RowMapping;
-import com.github.zzt93.syncer.consumer.output.mapper.KVMapper;
+import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;

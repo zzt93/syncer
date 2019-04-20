@@ -6,7 +6,7 @@ consumerId: base
 input:
   masters:
     - connection:
-        address: ${MYSQL_ADDR}
+        address: ${MYSQL_IN}
         port: 3306
       scheduler: mod
       repos:
@@ -69,10 +69,10 @@ output:
       countLimit: 1000
   mysql:
     connection:
-      address: ${MYSQL_ADDR}
+      address: ${MYSQL_OUT}
       port: 3306
       user: root
-      password: ${MYSQL_PASS}
+      password: ${MYSQL_OUT_PASS}
     rowMapping:
       schema: "repo"
       table: "entity + '_bak'"

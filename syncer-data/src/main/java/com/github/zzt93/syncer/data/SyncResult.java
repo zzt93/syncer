@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.data;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author zzt
@@ -9,10 +10,11 @@ import java.util.LinkedHashMap;
 public class SyncResult {
 
   /**
-   * {@link #fields} have to use `LinkedHashMap` to be in order to support multiple dependent extraQuery
+   * {@link #fields} have to use `LinkedHashMap` to be in order to support multiple dependent {@link ExtraQuery}
    */
-  private final HashMap<String, Object> fields = new LinkedHashMap<>();
-  private final HashMap<String, Object> extra = new HashMap<>();
+  private LinkedHashMap<String, Object> fields;
+  private LinkedHashMap<String, Object> extras;
+  private HashMap<String, Object> before;
 
   private SimpleEventType eventType;
   private String repo;
@@ -22,6 +24,14 @@ public class SyncResult {
    */
   private Object id;
   private String primaryKeyName;
+
+  public SyncResult() {
+    fields = new LinkedHashMap<>();
+  }
+
+  public SyncResult(Map<String, Object> row) {
+    fields = new LinkedHashMap<>(row);
+  }
 
   public Object getId() {
     return id;
@@ -51,8 +61,26 @@ public class SyncResult {
     return fields;
   }
 
-  public HashMap<String, Object> getExtra() {
-    return extra;
+  public Object getExtra(String key) {
+    return extras != null ? extras.get(key) : null;
+  }
+
+  public Object getBefore(String key) {
+    return before != null ? before.get(key) : null;
+  }
+
+  /**
+   * Not thread-safe, should not be invoked by multiple thread
+   */
+  public HashMap<String, Object> getExtras() {
+    if (extras == null) {
+      extras = new LinkedHashMap<>();
+    }
+    return extras;
+  }
+
+  public HashMap<String, Object> getBefore() {
+    return before;
   }
 
   public String getPrimaryKeyName() {
@@ -71,11 +99,15 @@ public class SyncResult {
     this.primaryKeyName = primaryKeyName;
   }
 
+  public void setBefore(HashMap<String, Object> before) {
+    this.before = before;
+  }
+
   @Override
   public String toString() {
     return "SyncResult{" +
         "fields=" + fields +
-        ", extra=" + extra +
+        ", extras=" + extras +
         ", eventType=" + eventType +
         ", repo='" + repo + '\'' +
         ", entity='" + entity + '\'' +
@@ -83,4 +115,5 @@ public class SyncResult {
         ", primaryKeyName='" + primaryKeyName + '\'' +
         '}';
   }
+
 }

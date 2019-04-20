@@ -12,6 +12,7 @@ function generateMysqlTestData() {
     cd generator
     docker build . -f DataGenerator.Dockerfile -t generator:test
     cd ..
+    start=0
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         for f in generator/*.sql; do
             filename=`basename ${f}`
@@ -23,9 +24,10 @@ function generateMysqlTestData() {
 
             for f in generator/*.sql; do
                 name=`basename ${f}`
-                docker run -v $(pwd)/data:/data --rm generator:test /data/mysql/${i} /${name} $1
+                docker run -v $(pwd)/data:/data --rm generator:test /data/mysql/${i} /${name} $1 ${start} 4
             done
         fi
+        start=$(($start + $1))
     done
 
 
@@ -47,6 +49,11 @@ function generateInitSqlFile() {
     done
 }
 
+function dockerExec() {
+  local service="$1"; shift
+  docker exec -i $(docker-compose -f ${ENV_CONFIG} ps -q ${service}) $@
+}
+
 function loadToMysql() {
     logi "----------------"
     logi "  loadToMysql   "
@@ -56,13 +63,19 @@ function loadToMysql() {
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         cd ${i}
         for f in `find csv/mysql_test -name "*.csv"`; do
-            if [[ ${f} != *_bak.csv ]]; then
-                docker-compose -f ${ENV_CONFIG} exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /Data/mysql/${i}/${f}
-            fi
+            docker-compose -f ${ENV_CONFIG} exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /Data/mysql/${i}/${f}
+        done
+        cd ..
+    done
+    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
+        cd ${i}
+        for f in `find sql/mysql_test -name "*.sql"`; do
+            dockerExec mysql_${i} mysql -u root -proot test_${i} < ${f}
         done
         cd ..
     done
     docker-compose -f ${ENV_CONFIG} exec mysql_0 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot simple /Data/mysql/0/csv/mysql_simple/simple_type.csv
+    dockerExec mysql_0  mysql -u root -proot simple < 0/sql/mysql_simple/simple_type.sql
     cd ../..
 }
 

@@ -1,9 +1,9 @@
 package com.github.zzt93.syncer.consumer.output.channel.kafka;
 
+import com.github.zzt93.syncer.common.data.Mapper;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.kafka.MsgMapping;
-import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -15,8 +15,10 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 public class MsgMapper implements Mapper<SyncData, String> {
 
   private final Expression topic;
+  private final boolean includeBefore;
 
   public MsgMapper(MsgMapping mapping) {
+    includeBefore = mapping.isIncludeBefore();
     SpelExpressionParser parser = new SpelExpressionParser();
     try {
       topic = parser.parseExpression(mapping.getTopic());
@@ -28,6 +30,9 @@ public class MsgMapper implements Mapper<SyncData, String> {
   @Override
   public String map(SyncData syncData) {
     StandardEvaluationContext context = syncData.getContext();
+    if (!includeBefore) {
+      syncData.getResult().setBefore(null);
+    }
     return topic.getValue(context, String.class);
   }
 }

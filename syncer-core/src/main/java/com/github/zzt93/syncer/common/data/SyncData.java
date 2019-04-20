@@ -1,16 +1,16 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.github.shyiko.mysql.binlog.event.EventType;
 import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.data.SyncResult;
+import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.Serializable;
 import java.util.HashMap;
-import java.util.Map;
+import java.util.HashSet;
 
 /**
  * @author zzt
@@ -23,22 +23,23 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   /**
    * sync result data fields
    */
-  private SyncResult result = new SyncResult();
+  private SyncResult result;
+  private HashSet<String> updated;
 
-  public SyncData(String eventId, int ordinal, String database, String entity, String primaryKeyName,
-                  Object id, Map<String, Object> row, EventType type) {
+  public SyncData(String eventId, int ordinal, SimpleEventType type, String database, String entity, String primaryKeyName,
+                  Object id, NamedChange row) {
     inner = new Meta(eventId, ordinal, -1, null);
+    result = new SyncResult(row.getFull());
 
-    result.setEventType(toSimpleEvent(type));
     setPrimaryKeyName(primaryKeyName);
-    if (id != null) {
-      setId(id);
-    } else {
-      logger.error("{} without primary key", type);
-    }
-    setRepo(database);
+    setId(id);
     setEntity(entity);
-    getFields().putAll(row);
+    setRepo(database);
+    result.setEventType(type);
+    if (isUpdate()) {
+      result.setBefore(row.getBeforeFull());
+      updated = row.getUpdated();
+    }
   }
 
   public SyncData(SyncData syncData, int offset) {
@@ -46,6 +47,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
         syncData.getSourceIdentifier());
     inner.context = EvaluationFactory.context();
     inner.context.setRootObject(this);
+    result = new SyncResult();
     result.setEventType(syncData.getType());
   }
 
@@ -57,7 +59,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public SyncData setId(Object id) {
-    result.setId(id);
+    if (id != null) {
+      result.setId(id);
+    } else {
+      logger.warn("Update primary key with null");
+    }
     return this;
   }
 
@@ -122,7 +128,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public Object getExtra(String key) {
-    return result.getExtra().get(key);
+    return result.getExtra(key);
   }
 
   @Override
@@ -130,9 +136,33 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return new SyncData(this, index);
   }
 
+  /**
+   *
+   * @see #SyncData(String, int, SimpleEventType, String, String, String, Object, NamedChange)
+   */
+  @Override
+  public boolean updated() {
+    return updated != null;
+  }
+
+  @Override
+  public boolean updated(String key) {
+    return updated() && updated.contains(key);
+  }
+
+  @Override
+  public Object getBefore(String key) {
+    return result.getBefore(key);
+  }
+
+  @Override
+  public HashMap<String, Object> getBefore() {
+    return result.getBefore();
+  }
+
   @Override
   public SyncData addExtra(String key, Object value) {
-    result.getExtra().put(key, value);
+    result.getExtras().put(key, value);
     return this;
   }
 
@@ -208,7 +238,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public HashMap<String, Object> getExtras() {
-    return result.getExtra();
+    return result.getExtras();
   }
 
   public Object getField(String key) {
@@ -265,11 +295,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return inner.hasExtra;
   }
 
-  public String getPrimaryKeyName() {
+  private String getPrimaryKeyName() {
     return result.getPrimaryKeyName();
   }
 
-  public void setPrimaryKeyName(String primaryKeyName) {
+  private void setPrimaryKeyName(String primaryKeyName) {
     result.setPrimaryKeyName(primaryKeyName);
   }
 
@@ -290,17 +320,8 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return result;
   }
 
-  public static SimpleEventType toSimpleEvent(EventType type) {
-    if (EventType.isDelete(type)) {
-      return SimpleEventType.DELETE;
-    }
-    if (EventType.isUpdate(type)) {
-      return SimpleEventType.UPDATE;
-    }
-    if (EventType.isWrite(type)) {
-      return SimpleEventType.WRITE;
-    }
-    throw new IllegalArgumentException("Unknown " + type);
+  void syncByForeignKey() {
+    result.setId(null);
   }
 
   private static class Meta {

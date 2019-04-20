@@ -1,9 +1,9 @@
 package com.github.zzt93.syncer.consumer.output.channel.redis;
 
+import com.github.zzt93.syncer.common.data.Mapper;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.redis.OperationMapping;
-import com.github.zzt93.syncer.consumer.output.mapper.Mapper;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.core.RedisCallback;

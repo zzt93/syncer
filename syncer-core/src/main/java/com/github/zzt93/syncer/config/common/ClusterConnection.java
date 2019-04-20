@@ -1,6 +1,8 @@
 package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.net.UnknownHostException;
 import java.util.*;
@@ -11,6 +13,7 @@ import java.util.*;
 public class ClusterConnection extends Connection {
 
   static final String COLON = ":";
+  private static final Logger logger = LoggerFactory.getLogger(ClusterConnection.class);
   private String clusterName;
   private List<String> clusterNodes;
   private HashSet<String> clusterIds;
@@ -28,6 +31,10 @@ public class ClusterConnection extends Connection {
     setPasswordFile(passwordFile);
   }
 
+  static boolean validCluster(List<String> clusterNodes) {
+    return clusterNodes != null && !clusterNodes.isEmpty();
+  }
+
   private HashSet<String> getClusterIds() {
     if (clusterIds == null) {
       clusterIds = new HashSet<>(clusterNodes.size());
@@ -38,6 +45,10 @@ public class ClusterConnection extends Connection {
     return clusterIds;
   }
 
+  public void setClusterIds(HashSet<String> clusterIds) {
+    this.clusterIds = clusterIds;
+  }
+
   public SyncMeta[] getSyncMetas() {
     int target = getClusterNodes().size();
     if (syncMetas == null) {
@@ -46,13 +57,13 @@ public class ClusterConnection extends Connection {
     return syncMetas;
   }
 
+  public void setSyncMetas(SyncMeta[] syncMetas) {
+    this.syncMetas = syncMetas;
+  }
+
   @Override
   public boolean valid() {
     return validCluster(getClusterNodes());
-  }
-
-  static boolean validCluster(List<String> clusterNodes) {
-    return clusterNodes != null && !clusterNodes.isEmpty();
   }
 
   @Override
@@ -75,7 +86,6 @@ public class ClusterConnection extends Connection {
     }
     return true;
   }
-
 
   @Override
   public int hashCode() {
@@ -105,16 +115,17 @@ public class ClusterConnection extends Connection {
   }
 
   private Connection getConnection(String clusterNode) {
-    Connection e = new Connection(this);
+    Connection connection = new Connection(this);
     String[] split = clusterNode.split(COLON);
     if (split.length != 2) throw new InvalidConfigException(clusterNode);
-    e.setPort(Integer.parseUnsignedInt(split[1]));
+    connection.setPort(Integer.parseUnsignedInt(split[1]));
     try {
-      e.setAddress(split[0]);
-    } catch (UnknownHostException e1) {
-      throw new InvalidConfigException(e1);
+      connection.setAddress(split[0]);
+    } catch (UnknownHostException e) {
+      logger.error("Unknown host", e);
+      throw new InvalidConfigException(e);
     }
-    return e;
+    return connection;
   }
 
   public Set<String> remoteIds() {
@@ -135,13 +146,5 @@ public class ClusterConnection extends Connection {
 
   public void setClusterNodes(List<String> clusterNodes) {
     this.clusterNodes = clusterNodes;
-  }
-
-  public void setClusterIds(HashSet<String> clusterIds) {
-    this.clusterIds = clusterIds;
-  }
-
-  public void setSyncMetas(SyncMeta[] syncMetas) {
-    this.syncMetas = syncMetas;
   }
 }
