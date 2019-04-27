@@ -252,24 +252,24 @@ input:
 
 #### Input
 - `input.master[x]`:
- - `type`: same as producer
- - `connection`: [same as producer](#connection)
- - `syncMeta`:
-   - `binlogFilename`: string name of remote master's binlog file name
-   - `binlogPosition`: position you want to start listening
- - `repos[x]`:
-   - `name`: repo name, allow regex
-   - `entities[x]`:
-     - `name`: entity name
-     - `fields`: entity fields list
- - `scheduler`:
-   - `mod`: `mod` integral primary key to make same row change always handled in order;
-   - `hash`: hash primary key of data row, then `mod` hash value to schedule -- default value now;
-   - `direct`: 
-     - If your data source has only insert operation, you can choose this scheduler, which is faster;
-     - *No order promise* for data source with insert/update/delete, higher output rate if you can endure some inconsistency;
- - `onlyUpdated`: whether sync not `updated` event (only for `MySQL`)
-   - `updated` definition: `Objects.deepEquals` == true 
+  - `type`: same as producer
+  - `connection`: [same as producer](#connection)
+  - `syncMeta`:
+    - `binlogFilename`: string name of remote master's binlog file name
+    - `binlogPosition`: position you want to start listening
+  - `repos[x]`:
+    - `name`: repo name, allow regex
+    - `entities[x]`:
+      - `name`: entity name
+      - `fields`: entity fields list
+  - `scheduler`:
+    - `mod`: `mod` integral primary key to make same row change always handled in order;
+    - `hash`: hash primary key of data row, then `mod` hash value to schedule -- default value now;
+    - `direct`: 
+      - If your data source has only insert operation, you can choose this scheduler, which is faster;
+      - *No order promise* for data source with insert/update/delete, higher output rate if you can endure some inconsistency;
+  - `onlyUpdated`: whether sync not `updated` event (only for `MySQL`)
+    - `updated` definition: `Objects.deepEquals` == true 
 
 #### Filter
 
@@ -316,7 +316,7 @@ input:
   ```
 
 The following part is implemented by [Spring EL](https://docs.spring.io/spring/docs/5.0.0.M5/spring-framework-reference/html/expressions.html), i.e. you can use any syntax Spring EL supported
-if I didn't listed.
+even if I didn't listed.
 
 - `statement`: list of String code to be executed.
   - e.g.
@@ -460,8 +460,10 @@ input:
     last-run-metadata-dir: /data/syncer/input/last_position/
 
 filter:
-  worker: 6
-  
+  worker: 3
+  filter-meta:
+    src: /data/syncer/filter/src
+    
 output:
   worker: 2
   batch:
@@ -487,7 +489,7 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
   be set for some os for ES docker image to run
 - [Docker compose](https://docs.docker.com/compose/install/)
 
-### Correctness Test
+### Integration Test
 #### Test data: 
   - size: 7M
   - machines: 3

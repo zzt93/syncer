@@ -13,6 +13,7 @@ import com.github.zzt93.syncer.consumer.output.failure.FailureEntry;
 import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
+import org.apache.kafka.common.errors.NotLeaderForPartitionException;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -78,8 +79,8 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
 
   @Override
   public ErrorLevel level(Throwable e, SyncWrapper wrapper, int maxTry) {
-    if (e instanceof TimeoutException) {
-      return AckChannel.super.level(e, wrapper, maxTry);
+    if (e instanceof TimeoutException || e instanceof NotLeaderForPartitionException) {
+      return ErrorLevel.RETRIABLE_ERROR;
     }
     return ErrorLevel.MAX_TRY_EXCEED;
   }
