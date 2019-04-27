@@ -11,6 +11,8 @@ import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.consumer.output.channel.SyncWrapper;
 import com.github.zzt93.syncer.consumer.output.failure.FailureEntry;
 import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
+import com.github.zzt93.syncer.health.Health;
+import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
 import org.apache.kafka.common.errors.NotLeaderForPartitionException;
@@ -120,6 +122,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
 
       @Override
       public void onFailure(final Throwable throwable) {
+        SyncerHealth.consumer(consumerId, identifier, Health.red(throwable.getMessage()));
         retryFailed(Lists.newArrayList(wrapper), throwable);
         logger.error("unable to send {} ", event, throwable);
       }
