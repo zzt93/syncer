@@ -30,7 +30,7 @@ public class JavaMethod {
     String source =
         // User write config using com.github.zzt93.syncer.data,
         // syncer run config using com.github.zzt93.syncer.common.data
-        "import com.github.zzt93.syncer.common.data.*;\n" +
+        "import com.github.zzt93.syncer.data.*;\n" +
             "import com.github.zzt93.syncer.data.util.*;\n" +
             "\n" +
             "import java.util.*;\n" +
@@ -92,7 +92,9 @@ public class JavaMethod {
           inQuote = !inQuote;
           break;
         case ';':
+        case ':':
         case '{':
+        case '}':
           if (!inQuote) sb.append('\n');
           break;
       }
