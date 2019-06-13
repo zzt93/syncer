@@ -19,7 +19,7 @@ public class HashIdScheduler implements EventScheduler {
 
   @Override
   public boolean schedule(SyncData syncData) {
-    int hash = syncData.getId().hashCode();
+    int hash = Math.abs(syncData.getId().hashCode());
     deques[hash % size].addLast(syncData);
     return true;
   }

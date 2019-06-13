@@ -1,0 +1,51 @@
+version: 1.2
+
+consumerId: mongo
+
+
+input:
+  masters:
+    - connection:
+        address: ${MONGO_IN}
+        port: 27017
+      scheduler: hash
+      type: Mongo
+      repos:
+        - name: "mongo-test"
+          entities:
+            - name: test
+              fields: [simples, nestedIn]
+
+
+filter:
+  - method: 'public void filter(List<SyncData> list) {
+               SyncData sync = list.get(0);
+             }'
+
+
+
+# Special expression
+# "field.*"
+# "field.*.flatten"
+# "extra.*"
+# "extra.*.flatten"
+
+output:
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+    requestMapping: # mapping from input data to es request
+      enableExtraQuery: true
+      retryOnUpdateConflict: 3
+      index: "repo + getExtra('suffix')" # default: repo
+      documentId: "id" # default: id
+      fieldsMapping: # default: fields.*.flatten
+        "fields": "fields.*.flatten"
+    batch:
+      size: 100
+      delay: 1000
+      maxRetry: 5
+    refreshInMillis: 0
+    failureLog:
+      countLimit: 1000

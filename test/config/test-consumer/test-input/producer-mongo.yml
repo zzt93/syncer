@@ -4,12 +4,6 @@ input:
   masters:
 
   - connection:
-      clusterNodes: [${MYSQL_ADDR}]
-      user: root
-      password: ${MYSQL_OUT_PASS}
-
-
-  - connection:
       address: ${MONGO_IN}
       port: 27017
     type: Mongo

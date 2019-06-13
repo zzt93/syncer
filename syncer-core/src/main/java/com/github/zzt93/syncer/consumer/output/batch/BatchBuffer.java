@@ -11,7 +11,38 @@ import java.util.concurrent.ConcurrentLinkedDeque;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
- * @author zzt
+ *
+ *
+ * <ul>
+ *   <li>Filter thread should not share one buffer, otherwise may cause disorder: e.g.
+ *   <pre>
+ *    hh:ss.000: [thread1] insert (1, a)
+ *    hh:ss.001: [thread2] insert (2, b), insert (3, c), update (2, d)
+ *    hh:ss.002: [thread1] flushIfReachSizeLimit(buffer size 2): thread1 insert (1, a)(2, b)
+ *    hh:ss.003: [thread2] flushIfReachSizeLimit(buffer size 2): thread2 insert (3, c); update (2, d)
+ *    // update may cause DocumentMissing, should after thread1 return
+ *   </pre>
+ *   </li>
+ *   <li>Flush by size and time should not invoked at same time, otherwise may cause disorder: e.g.
+ *   <pre>
+ *    hh:ss.000: [thread1] buffer: (1, a)(2, b)
+ *    hh:ss.000: [thread1] flushIfReachSizeLimit(buffer size 2): thread1 insert (1, a)(2, b)
+ *    hh:ss.001: [thread2] add to buffer: (2, d)
+ *    hh:ss.002: [thread2] flush(time reach): thread2 update (2, d)
+ *   </pre>
+ *   </li>
+ * </ul>
+ *
+ * <h3>Solution</h3>
+ *
+ * <ul>
+ *   <li>Every filter thread should have one buffer</li>
+ *   <li>A flush timer thread flush all filter buffer</li>
+ *   <li>A buffer have a `flushing` flag (set when `flushing == false` in flushXXX, unSet when finish remote request),
+ *   a flushing buffer refuse other flush request</li>
+ * </ul>
+ *
+ *  @author zzt
  */
 public class BatchBuffer<T extends Retryable> {
 

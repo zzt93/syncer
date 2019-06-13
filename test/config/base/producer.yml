@@ -11,7 +11,7 @@ input:
 #    onlyUpdated: true # default value
 
   - connection:
-      address: ${MONGO_ADDR}
+      address: ${MONGO_IN}
       port: 27017
     type: Mongo
 

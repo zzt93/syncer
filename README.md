@@ -69,6 +69,8 @@ The business database query request is delayed as little as possible.
   - If an event go through column filter, and only primary key is left:
     - If event type is `UPDATE`, then discard this event -- because not support update id now;
     - Other event type, keep it.
+  - If config user/password for auth, it should have permission of `[listDatabases, find]`
+  - Only support listening first level field (Because MongoDB store json, it may have multiple levels)
 - DRDS:
   - Same config as MySQL, but need to connect directly to RDS's MySQL because DRDS not support binlog dump
   - Remember to fetch partition key in `fields`

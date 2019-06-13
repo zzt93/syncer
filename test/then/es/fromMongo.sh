@@ -8,16 +8,12 @@ logi "-----"
 logi "Testing $0"
 logi "-----"
 
-# tables in mysql_test.sql
-names="news correctness types"
-
 
 function esAssert() {
-    instance=$1
-    db=$2
-    table=$3
+    db=$1
+    table=$2
 
-    all=`extractMySqlCount ${instance} ${db} ${table}`
+    all=`extractMongoCount ${db} ${table}`
     logi "[Sync input] -- ${db}.${table}: $all"
     c1=`extractESCount ${db} ${table}`
     logi "[Sync result] -- ${db}*.${table} in ES : $c1"
@@ -27,15 +23,11 @@ function esAssert() {
 
 }
 
-
-for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
-    for table in ${names} ; do
-        esAssert mysql_${i} test_${i} ${table}
-    done
+names="test"
+for table in ${names} ; do
+    esAssert mongo-test ${table}
 done
 
-# tables in mysql_simple.sql
-esAssert mysql_0 simple simple_type
 
 
 logi "-----"

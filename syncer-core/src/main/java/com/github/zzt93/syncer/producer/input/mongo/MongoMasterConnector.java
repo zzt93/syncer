@@ -70,6 +70,7 @@ public class MongoMasterConnector implements MasterConnector {
     // perform a find() on a capped collection with no ordering specified,
     // MongoDB guarantees that the ordering of results is the same as the insertion order.
     // BasicDBObject sort = new BasicDBObject("$natural", 1);
+    logger.debug("Query: {}", query.toJson());
   }
 
   private void configDispatch(MongoConnection connection, ConsumerRegistry registry) {
@@ -93,13 +94,28 @@ public class MongoMasterConnector implements MasterConnector {
   }
 
   private Pattern getNamespaces(MongoConnection connection, ConsumerRegistry registry) {
-    // TODO 2019/2/28 check whether registered collection is exists
+    Set<String> producerDbName = new HashSet<>();
+    for (String dbName : client.listDatabaseNames()) {
+      producerDbName.add(dbName);
+    }
+
     Set<Consumer> consumers = registry.outputSink(connection).keySet();
     StringJoiner joiner = new StringJoiner("|");
     consumers.stream().map(Consumer::getRepos).flatMap(Set::stream).flatMap(s -> {
+      if (!producerDbName.contains(s.getName())) {
+        throw new InvalidConfigException("No such repo(" + s.getName() + ") in " + connection);
+      }
+      Set<String> producerCollectionName = new HashSet<>();
+      for (String collectionName : client.getDatabase(s.getName()).listCollectionNames()) {
+        producerCollectionName.add(collectionName);
+      }
+
       List<Entity> entities = s.getEntities();
       ArrayList<String> res = new ArrayList<>(entities.size());
       for (Entity entity : entities) {
+        if (!producerCollectionName.contains(entity.getName())) {
+          throw new InvalidConfigException("No such collection(" + s.getName() + "." + entity.getName() + ") in " + connection);
+        }
         res.add("(" + s.getName() + "\\." + entity.getName() + ")");
       }
       return res.stream();

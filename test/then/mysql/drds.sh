@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ${LOG_LIB}
+source ${UTIL_LIB}
 
 
 env=$1
@@ -14,10 +14,10 @@ function mysqlAssert() {
     db=$2
     table=$3
 
-    all=`docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -N -B -e "select count(*) from ${db}.${table}" | grep -o "[0-9]*"`
+    all=`extractMySqlCount ${instance} ${db} ${table}`
     logi "[Sync input] -- ${db}.${table}: $all"
-    tmp=`docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -N -B -e "select count(*) from ${db}.${table}_bak" | grep -o "[0-9]*"`
-    logi "[Sync result] -- ${db}.${table}_bak: $tmp"
+    tmp=`extractMySqlResultCount ${instance} ${db} "${table}"`
+    logi "[Sync result] -- ${db}.`mysqlResultName ${table}`: $tmp"
     if [[ ${tmp} -ne "$all" ]];then
         loge "$table not right"
     fi
@@ -30,7 +30,7 @@ function drdsAssert() {
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         instance=mysql_${i}
         db=test_${i}
-        c=`docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -N -B -e "select count(*) from ${db}.${table}" | grep -o "[0-9]*"`
+        c=`extractMySqlCount ${instance} ${db} ${table}`
         logi "[Sync input] -- ${db}.${table}: $c"
         let all=all+c
     done
@@ -38,8 +38,8 @@ function drdsAssert() {
     # see consumer_drds.yml & drds.yml
     instance=mysql_0
     db=test_0
-    tmp=`docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -N -B -e "select count(*) from ${db}.${table}_bak" | grep -o "[0-9]*"`
-    logi "[Sync result] -- ${db}.${table}_bak: $tmp"
+    tmp=`extractMySqlResultCount ${instance} ${db} "${table}"`
+    logi "[Sync result] -- ${db}.`mysqlResultName ${table}`: $tmp"
     if [[ ${tmp} -ne "$all" ]];then
         loge "$table not right"
     fi

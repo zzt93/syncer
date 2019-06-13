@@ -7,7 +7,7 @@ if [[ -z ${idMax} ]]; then
     idMax=100
 fi
 
-source ${LOG_LIB}
+source ${UTIL_LIB}
 
 
 logi "-----"
@@ -27,7 +27,7 @@ function esCompare() {
         ids="$ids,$id"
     done
 
-    docker-compose -f ${ENV_CONFIG} exec ${instance} mysql -uroot -proot -B -e "select * from ${db}.${table} where id >= $s and id <= $e" > $PWD/then/es/mysql_${table}
+    dockerExec ${instance} mysql -uroot -proot -B -e "select * from ${db}.${table} where id >= $s and id <= $e" > $PWD/then/es/mysql_${table}
     curl -s -X GET "localhost:49200/${db}*/${table}/_search" -H 'Content-Type: application/json' -d "
     {
         \"query\": {

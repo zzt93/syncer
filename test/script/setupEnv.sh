@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-source ${LOG_LIB}
+source ${UTIL_LIB}
 
 
 function generateMysqlTestData() {
@@ -30,8 +30,21 @@ function generateMysqlTestData() {
         start=$(($start + $1))
     done
 
-
+    cd ${TEST_DIR}
 }
+
+function generateMongoTestData() {
+    logi "---------------------"
+    logi "generateMongoTestData"
+    logi "---------------------"
+
+    mkdir -p ${TEST_DIR}/data/mongo/
+    cd ${TEST_DIR}/../syncer-core/
+    mvn test -q -Dtest=com.github.zzt93.syncer.common.data.MongoGenerator -DargLine="-Dnum=$1 -DfileName=${TEST_DIR}/data/mongo/test.json"
+    mvn test -q -Dtest=com.github.zzt93.syncer.common.data.MongoGenerator -DargLine="-Dnum=$1 -DfileName=${TEST_DIR}/data/mongo/test2.json"
+    cd ${TEST_DIR}
+}
+
 
 function generateInitSqlFile() {
     logi "-------------------"
@@ -49,41 +62,14 @@ function generateInitSqlFile() {
     done
 }
 
-function dockerExec() {
-  local service="$1"; shift
-  docker exec -i $(docker-compose -f ${ENV_CONFIG} ps -q ${service}) $@
-}
-
-function loadToMysql() {
-    logi "----------------"
-    logi "  loadToMysql   "
-    logi "----------------"
-
-    cd data/mysql
-    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
-        cd ${i}
-        for f in `find csv/mysql_test -name "*.csv"`; do
-            docker-compose -f ${ENV_CONFIG} exec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /Data/mysql/${i}/${f}
-        done
-        cd ..
-    done
-    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
-        cd ${i}
-        for f in `find sql/mysql_test -name "*.sql"`; do
-            dockerExec mysql_${i} mysql -u root -proot test_${i} < ${f}
-        done
-        cd ..
-    done
-    docker-compose -f ${ENV_CONFIG} exec mysql_0 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot simple /Data/mysql/0/csv/mysql_simple/simple_type.csv
-    dockerExec mysql_0  mysql -u root -proot simple < 0/sql/mysql_simple/simple_type.sql
-    cd ../..
-}
 
 function prepareEnv() {
     logi "----------------"
     logi " docker-compose "
     logi "----------------"
     docker-compose -f ${ENV_CONFIG} up -d
+
+    dockerExec mongo mongo --eval "rs.initiate()"
 }
 
 
@@ -91,8 +77,10 @@ lines=$1
 env=$2
 
 
-
-generateMysqlTestData ${lines}
-generateInitSqlFile
+if [[ ${env} = "mongo" ]]; then
+    generateMongoTestData ${lines}
+else
+    generateMysqlTestData ${lines}
+    generateInitSqlFile
+fi
 prepareEnv
-loadToMysql

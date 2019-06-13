@@ -34,7 +34,7 @@ public class JsonKeyFilter {
     HashMap<String, Object> fields = data.getFields();
     HashSet<String> tmp = new HashSet<>();
     for (Entry<String, Object> entry : fields.entrySet()) {
-      if (!tableRow.contains(entry.getKey())) {
+      if (!tableRow.contains(entry.getKey()) && !tableRow.contains(entry.getKey().split("\\.")[0])) {
         tmp.add(entry.getKey());
       }
     }

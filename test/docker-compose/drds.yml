@@ -5,7 +5,7 @@ services:
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_0}:/init.sql
-    - ./data:/Data
+    - ${TEST_DIR}/data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root
     ports:
@@ -23,7 +23,7 @@ services:
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_1}:/init.sql
-    - ./data:/Data
+    - ${TEST_DIR}/data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root
     healthcheck:
@@ -39,7 +39,7 @@ services:
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
     - ${mysql_init_2}:/init.sql
-    - ./data:/Data
+    - ${TEST_DIR}/data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root
     healthcheck:
@@ -108,8 +108,8 @@ services:
     ports:
     - 40000:40000
     volumes:
-    - ./data:/data
-    - ./data/syncer/log:/log
+    - ${TEST_DIR}/data:/data
+    - ${TEST_DIR}/data/syncer/log:/log
     environment:
     - ES_ADDR=elasticsearch
     - ES_CLUSTER=test-cluster
@@ -117,7 +117,7 @@ services:
     - MYSQL_OUT=mysql_0
     - MYSQL_USER=root
     - MYSQL_PASS=root
-    - MONGO_ADDR=mongo
+    - MONGO_IN=mongo
     - SYNCER_PRODUCER=/data/config/producer.yml
     - SYNCER_CONSUMER=/data/config/consumer/
     networks:
