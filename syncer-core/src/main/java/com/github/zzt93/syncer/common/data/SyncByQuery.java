@@ -14,7 +14,7 @@ public abstract class SyncByQuery implements com.github.zzt93.syncer.data.SyncBy
   private static final Logger logger = LoggerFactory.getLogger(SyncByQuery.class);
 
   private final HashMap<String, Object> syncBy = new HashMap<>();
-  private final SyncData data;
+  private final transient SyncData data;
 
   SyncByQuery(SyncData data) {
     this.data = data;
