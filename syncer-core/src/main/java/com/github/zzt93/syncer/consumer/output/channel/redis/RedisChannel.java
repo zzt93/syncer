@@ -84,22 +84,22 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
   @Override
   public void flush() {
     List<SyncWrapper<RedisCallback>> aim = batchBuffer.flush();
-    try {
-      send(aim);
-      ackSuccess(aim);
-    } catch (Exception e) {
-      retryFailed(aim, e);
-    }
+    send(aim);
   }
 
   private void send(List<SyncWrapper<RedisCallback>> aim) {
-    if (aim != null && aim.size() != 0) {
-      template.executePipelined((RedisCallback<Void>) connection -> {
-        for (SyncWrapper<RedisCallback> wrapper : aim) {
-          wrapper.getData().doInRedis(connection);
-        }
-        return null;
-      });
+    if (aim != null) {
+      try {
+        template.executePipelined((RedisCallback<Void>) connection -> {
+          for (SyncWrapper<RedisCallback> wrapper : aim) {
+            wrapper.getData().doInRedis(connection);
+          }
+          return null;
+        });
+        ackSuccess(aim);
+      } catch (Exception e) {
+        retryFailed(aim, e);
+      }
     }
   }
 

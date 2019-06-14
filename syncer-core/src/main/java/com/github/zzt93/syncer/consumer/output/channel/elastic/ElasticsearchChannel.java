@@ -328,7 +328,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   }
 
   private void buildSendProcess(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {
-    if (aim != null && aim.size() != 0) {
+    if (aim != null) {
       logger.info("Flush batch({})", aim.size());
       BulkResponse bulkResponse = buildAndSend(aim);
       if (!bulkResponse.hasFailures()) {

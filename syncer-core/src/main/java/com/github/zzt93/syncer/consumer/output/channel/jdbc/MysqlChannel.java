@@ -124,7 +124,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   @Override
   public void flush() throws InterruptedException {
     List<SyncWrapper<String>> sqls = batchBuffer.flush();
-    if (sqls.size() != 0) {
+    if (sqls != null) {
       batchAndRetry(sqls);
     }
   }
