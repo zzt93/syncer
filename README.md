@@ -140,7 +140,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
     - Fix some un-expected config/sync error
   - No need code for search data preparation except config
 
-- Http Endpoint (Deprecated)
+- Http Endpoint (Deprecated, only for debug or test)
   - Invoke `restful` interface according to event type: insert=`PUT`, update=`POST`, delete=`DELETE` 
   - Will connect to a remote repeatedly, may change to websocket or rpc 
 - MySQL

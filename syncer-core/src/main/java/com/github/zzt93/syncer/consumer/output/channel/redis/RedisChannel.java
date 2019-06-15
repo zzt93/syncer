@@ -135,16 +135,17 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
 
   @Override
   public boolean output(SyncData event) {
+    throw new UnsupportedOperationException("Not implemented");
     // TODO 18/4/16 add flushIfReachSizeLimit
-    if (expression == null) {
-      return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
-    }
-    Boolean value = expression.getValue(event.getContext(), Boolean.class);
-    if (value == null || !value) {
-      ack.remove(event.getSourceIdentifier(), event.getDataId());
-      return false;
-    }
-    return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
+//    if (expression == null) {
+//      return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
+//    }
+//    Boolean value = expression.getValue(event.getContext(), Boolean.class);
+//    if (value == null || !value) {
+//      ack.remove(event.getSourceIdentifier(), event.getDataId());
+//      return false;
+//    }
+//    return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
   }
 
   @Override

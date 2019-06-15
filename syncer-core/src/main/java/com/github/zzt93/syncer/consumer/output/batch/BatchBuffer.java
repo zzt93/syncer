@@ -40,7 +40,7 @@ import java.util.concurrent.atomic.AtomicInteger;
  * <h3>Solution</h3>
  *
  * <ul>
- *   <li>Every filter thread should have one buffer</li>
+ *   <li>Every filter thread should have one buffer; Or, following option 3</li>
  *   <li>A flush timer thread flush all filter buffer</li>
  *   <li>A buffer have a `flushing` flag (set when `flushing == false` in flushXXX, unSet when finish remote request),
  *   a flushing buffer refuse other flush request</li>
