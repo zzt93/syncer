@@ -127,7 +127,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     if (buffered(builder)) {
       boolean addRes = batchBuffer.add(
           new SyncWrapper<>(event, ((WriteRequestBuilder) builder).request()));
-      flushIfReachSizeLimit();
+      BufferedChannel.super.flushAndSetFlushDone(true);
       return addRes;
     } else {
       return sleepInConnectionLost((sleepInSecond) -> {
@@ -239,9 +239,10 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
-  public void flush() throws InterruptedException {
+  public boolean flush() throws InterruptedException {
     List<SyncWrapper<WriteRequest>> aim = batchBuffer.flush();
     buildSendProcess(aim);
+    return aim != null;
   }
 
   @Override
@@ -321,10 +322,15 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
   @Override
-  public void flushIfReachSizeLimit() throws InterruptedException {
-    @SuppressWarnings("unchecked")
+  public boolean flushIfReachSizeLimit() throws InterruptedException {
     List<SyncWrapper<WriteRequest>> aim = batchBuffer.flushIfReachSizeLimit();
     buildSendProcess(aim);
+    return aim != null;
+  }
+
+  @Override
+  public void setFlushDone() {
+    batchBuffer.flushDone();
   }
 
   private void buildSendProcess(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {

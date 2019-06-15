@@ -86,7 +86,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     String sql = sqlMapper.map(event);
     boolean add = batchBuffer
         .add(new SyncWrapper<>(event, sql));
-    flushIfReachSizeLimit();
+    BufferedChannel.super.flushAndSetFlushDone(true);
     return add;
   }
 
@@ -122,14 +122,16 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   @Override
-  public void flush() throws InterruptedException {
+  public boolean flush() throws InterruptedException {
     List<SyncWrapper<String>> sqls = batchBuffer.flush();
-    if (sqls != null) {
-      batchAndRetry(sqls);
-    }
+    batchAndRetry(sqls);
+    return sqls != null;
   }
 
   private void batchAndRetry(List<SyncWrapper<String>> sqls) throws InterruptedException {
+    if (sqls == null) {
+      return;
+    }
     String[] sqlStatement = sqls.stream().map(SyncWrapper::getData).toArray(String[]::new);
     logger.info("Flush batch({})", sqls.size());
     if (logger.isDebugEnabled()) {
@@ -155,11 +157,15 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   @Override
-  public void flushIfReachSizeLimit() throws InterruptedException {
+  public boolean flushIfReachSizeLimit() throws InterruptedException {
     List<SyncWrapper<String>> sqls = batchBuffer.flushIfReachSizeLimit();
-    if (sqls != null) {
-      batchAndRetry(sqls);
-    }
+    batchAndRetry(sqls);
+    return sqls != null;
+  }
+
+  @Override
+  public void setFlushDone() {
+    batchBuffer.flushDone();
   }
 
   @Override

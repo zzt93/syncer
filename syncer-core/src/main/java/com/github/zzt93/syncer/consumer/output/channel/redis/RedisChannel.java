@@ -82,9 +82,10 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
   }
 
   @Override
-  public void flush() {
+  public boolean flush() {
     List<SyncWrapper<RedisCallback>> aim = batchBuffer.flush();
     send(aim);
+    return aim != null;
   }
 
   private void send(List<SyncWrapper<RedisCallback>> aim) {
@@ -104,9 +105,15 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
   }
 
   @Override
-  public void flushIfReachSizeLimit() {
+  public boolean flushIfReachSizeLimit() {
     List<SyncWrapper<RedisCallback>> wrappers = batchBuffer.flushIfReachSizeLimit();
     send(wrappers);
+    return wrappers != null;
+  }
+
+  @Override
+  public void setFlushDone() {
+    batchBuffer.flushDone();
   }
 
   @Override
@@ -146,6 +153,7 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
 //      return false;
 //    }
 //    return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
+//    BufferedChannel.super.flushAndSetFlushDone(true);
   }
 
   @Override
