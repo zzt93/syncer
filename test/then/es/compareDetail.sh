@@ -27,7 +27,7 @@ function esCompare() {
         ids="$ids,$id"
     done
 
-    dockerExec ${instance} mysql -uroot -proot -B -e "select * from ${db}.${table} where id >= $s and id <= $e" > $PWD/then/es/mysql_${table}
+    docker exec -i $(docker-compose -f ${ENV_CONFIG} ps -q ${instance}) mysql -uroot -proot -B -e "select * from ${db}.${table} where id >= $s and id <= $e" > $PWD/then/es/mysql_${table}
     curl -s -X GET "localhost:49200/${db}*/${table}/_search" -H 'Content-Type: application/json' -d "
     {
         \"query\": {

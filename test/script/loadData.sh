@@ -29,7 +29,7 @@ function loadToMysql() {
         done
         cd ..
     done
-    dockerExec mysql_0  mysql -u root -proot simple < 0/sql/mysql_simple/simple_type.sql
+    dockerExec mysql_0  mysql -u root -proot simple < 0/sql/mysql_simple/simple_type*.sql
 
     cd ${TEST_DIR}
 }
@@ -51,4 +51,11 @@ function loadToMongo() {
     cd ${TEST_DIR}
 }
 
-loadToMongo
+env=$1
+
+
+if [[ ${env} = "mongo" ]]; then
+    loadToMongo
+else
+    loadToMysql
+fi
