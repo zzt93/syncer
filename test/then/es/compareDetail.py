@@ -34,9 +34,9 @@ def compare(es='es', mysql='mysql'):
         es_map[h['_id']] = h['_source']
 
     mysql_map = {}
-    if len(mysql_lines) >= 2:
-        col = mysql_lines[1].strip().split('\t')
-        for i in range(2, len(mysql_lines)):
+    if len(mysql_lines) >= 1:
+        col = mysql_lines[0].strip().split('\t')
+        for i in range(1, len(mysql_lines)):
             row = mysql_lines[i].strip().split('\t')
             row_map = {}
             for i in range(len(row)):

@@ -97,7 +97,7 @@ setupSyncerConfig
 # init data
 logi "Prepare $env runtime"
 bash script/setupEnv.sh ${num} ${env}
-bash script/loadData.sh ${num} ${env}
+bash script/loadData.sh ${env}
 
 
 for (( i = 0; i < 3; ++i )); do

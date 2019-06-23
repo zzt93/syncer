@@ -7,6 +7,8 @@ import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -25,7 +27,7 @@ import static org.junit.Assert.assertTrue;
 public class SyncDataTest {
 
   private static final int _1D = 24 * 60 * 60 * 1000;
-  private Gson gson = new Gson();
+  private Gson gson = new GsonBuilder().registerTypeAdapter(SyncByQuery.class, (InstanceCreator<SyncByQuery>) type -> new ESScriptUpdate(null)).create();
 
   @Before
   public void setUp() throws Exception {
@@ -34,6 +36,7 @@ public class SyncDataTest {
   @Test
   public void testSerialize() {
     SyncData data = new SyncData("asdf", 1, SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()));
+    data.syncByQuery().filter("id", 1);
     String s = gson.toJson(data);
     SyncData syncData = gson.fromJson(s, SyncData.class);
     assertEquals(data.getEventId(), syncData.getEventId());

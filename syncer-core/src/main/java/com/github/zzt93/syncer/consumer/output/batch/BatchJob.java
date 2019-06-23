@@ -28,6 +28,7 @@ public class BatchJob implements EventLoop {
   @Override
   public void loop() {
     try {
+      logger.debug("Flushing by batch job");
       bufferedChannel.flushAndSetFlushDone(false);
     } catch (InterruptedException e) {
       logger.warn("Batch job interrupted");

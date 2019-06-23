@@ -10,6 +10,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentLinkedDeque;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -50,7 +51,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class BatchBuffer<T extends Retryable> {
 
   private final Logger logger = LoggerFactory.getLogger(BatchBuffer.class);
-  private volatile boolean flushing = false;
+  private AtomicBoolean flushing = new AtomicBoolean(false);
   private final int limit;
   /**
    * <h3>Equation</h3>
@@ -83,7 +84,8 @@ public class BatchBuffer<T extends Retryable> {
   public List<T> flushIfReachSizeLimit() {
     // The function should be side-effect-free, since it may be
     // re-applied when attempted updates fail due to contention among threads
-    if (estimateSize.getAndUpdate(x -> !flushing && x >= limit && (flushing = true) ? x - limit : x) >= limit) {
+    if (estimateSize.get() >= limit && flushing.compareAndSet(false, true)) {
+      estimateSize.addAndGet(-limit);
       return flushContent(limit);
     }
     return null;
@@ -91,13 +93,15 @@ public class BatchBuffer<T extends Retryable> {
 
   public List<T> flush() {
     int size;
-    if ((size = estimateSize.getAndUpdate(x -> !flushing && x > 0 && (flushing = true)  ? 0 : x)) > 0) {
+    if ((size = estimateSize.get()) > 0 && flushing.compareAndSet(false, true)) {
+      estimateSize.set(0);
       return flushContent(size);
     }
     return null;
   }
 
   private List<T> flushContent(int size) {
+    logger.debug("{}, {}, {}", estimateSize, deque.size(), flushing);
     ArrayList<T> res = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       try {
@@ -111,7 +115,7 @@ public class BatchBuffer<T extends Retryable> {
   }
 
   public void flushDone() {
-    flushing = false;
+    flushing.set(false);
   }
 
 }

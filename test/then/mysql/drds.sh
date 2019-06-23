@@ -17,7 +17,7 @@ function mysqlAssert() {
     all=`extractMySqlCount ${instance} ${db} ${table}`
     logi "[Sync input] -- ${db}.${table}: $all"
     tmp=`extractMySqlResultCount ${instance} ${db} "${table}"`
-    logi "[Sync result] -- ${db}.`mysqlResultName ${table}`: $tmp"
+    logi "[Sync result] -- ${db}.${table}${mysqlResultSuffix}: $tmp"
     if [[ ${tmp} -ne "$all" ]];then
         loge "$table not right"
     fi
@@ -39,7 +39,7 @@ function drdsAssert() {
     instance=mysql_0
     db=test_0
     tmp=`extractMySqlResultCount ${instance} ${db} "${table}"`
-    logi "[Sync result] -- ${db}.`mysqlResultName ${table}`: $tmp"
+    logi "[Sync result] -- ${db}.${table}${mysqlResultSuffix}: $tmp"
     if [[ ${tmp} -ne "$all" ]];then
         loge "$table not right"
     fi

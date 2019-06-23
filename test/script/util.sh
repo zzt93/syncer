@@ -21,30 +21,23 @@ function extractMySqlCount() {
     local db=$2
     local table=$3
 
-    local all=`dockerExec ${instance} mysql -uroot -proot -N -B -e "select count(*) from ${db}.${table}" | grep -o "[0-9]*"`
-    echo ${all}
+    docker exec -i $(docker-compose -f ${ENV_CONFIG} ps -q ${instance}) mysql -uroot -proot -N -B -e "select count(*) from ${db}.${table}" | grep -o "[0-9]*"
 }
 
 
-function mysqlResultName() {
-    local table=$1
-
-    echo "${table}_bak"
-}
+export mysqlResultSuffix="_bak"
 
 function extractMySqlResultCount() {
     local instance=$1
     local db=$2
-    local table=`mysqlResultName $3`
+    local table="$3$mysqlResultSuffix"
 
-    local all=`extractMySqlCount`
-    echo ${all}
+    extractMySqlCount ${instance} ${db} ${table}
 }
 
 function extractMongoCount() {
     local db=$1
     local table=$2
 
-    local all=`dockerExec mongo mongo ${db} --quiet --eval "db.${table}.count()"`
-    echo ${all}
+    dockerExec mongo mongo ${db} --quiet --eval "db.${table}.count()"
 }
