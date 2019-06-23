@@ -63,7 +63,7 @@ public class MongoMasterConnector implements MasterConnector {
       query.append(TS, new BasicDBObject("$gte", docTimestamp.getTimestamp()));
     } else {
       // initial export
-      logger.warn("Start with initial export, may take a long time");
+      logger.warn("Start with initial export from [{}], may take a long time", connection.toConnectionUrl(null));
       query.append(TS, new BasicDBObject("$gt", new BsonTimestamp()));
     }
     // no need for capped collections:

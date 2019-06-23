@@ -75,7 +75,7 @@ public class MysqlMasterConnector implements MasterConnector {
       client.setBinlogFilename(binlogInfo.getBinlogFilename());
       client.setBinlogPosition(binlogInfo.getBinlogPosition());
     } else {
-      logger.info("No binlog info provided by consumer, connect to oldest binlog");
+      logger.info("No binlog info provided by consumer[{}], connect to oldest binlog", connectorIdentifier);
       setOldestLog();
     }
     return binlogInfo;

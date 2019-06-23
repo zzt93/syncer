@@ -120,6 +120,7 @@ services:
     - MONGO_IN=mongo
     - SYNCER_PRODUCER=/data/config/producer.yml
     - SYNCER_CONSUMER=/data/config/consumer/
+    - EXTRA_OPT=--debug
     networks:
     - dbnet
 

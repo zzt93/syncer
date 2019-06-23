@@ -88,6 +88,7 @@ public class ConsumerSchemaMeta {
     private final DataSource dataSource;
     private final HashMap<Consumer, ProducerSink> consumerSink;
     private final String calculatedSchemaName;
+    private final String jdbcUrl;
 
     public MetaDataBuilder(MysqlConnection connection,
                            HashMap<Consumer, ProducerSink> consumerSink) throws SQLException {
@@ -95,7 +96,8 @@ public class ConsumerSchemaMeta {
       Set<String> merged = consumerSink.keySet().stream().map(Consumer::getRepos)
           .flatMap(Set::stream).map(Repo::getConnectionName).collect(Collectors.toSet());
       calculatedSchemaName = getSchemaName(merged);
-      dataSource = new DriverDataSource(connection.toConnectionUrl(calculatedSchemaName),
+      jdbcUrl = connection.toConnectionUrl(calculatedSchemaName);
+      dataSource = new DriverDataSource(jdbcUrl,
           Driver.class.getName(), new Properties(),
           connection.getUser(), connection.getPassword());
       dataSource.setLoginTimeout(TIMEOUT);
@@ -128,7 +130,7 @@ public class ConsumerSchemaMeta {
 
     private HashMap<Consumer, List<SchemaMeta>> build(Set<Consumer> consumers)
         throws SQLException {
-      logger.info("Getting connection, timeout in {}s", TIMEOUT);
+      logger.info("Getting connection[{}], timeout in {}s", jdbcUrl,TIMEOUT);
       Connection connection = dataSource.getConnection();
       if (calculatedSchemaName.equals(MysqlConnection.DEFAULT_DB)) {
         // make it to get all databases
@@ -216,7 +218,7 @@ public class ConsumerSchemaMeta {
           String columnName = primaryKeys.getString("COLUMN_NAME");
           if (!tableRow.contains(columnName)) {
             tableMeta.noPrimaryKey();
-            logger.info("Not config primary key as interested column, can be accessed only in `id` but not in `field`");
+            logger.info("Not config primary key as interested column in [{}.{}], can be accessed only in `id` but not in `field`", tableSchema, tableName);
           }
           tableMeta.addPrimaryKey(columnName, ordinalPosition);
         } else {

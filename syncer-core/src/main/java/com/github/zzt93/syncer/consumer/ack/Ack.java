@@ -57,7 +57,7 @@ public class Ack {
     Path path = Paths.get(metaDir, clientId, identifier);
     SyncInitMeta syncInitMeta = SyncInitMeta.defaultMeta(sourceType);
     if (!Files.exists(path)) {
-      logger.info("Last run meta file not exists, fresh run");
+      logger.info("Last run meta file[{}] not exists, fresh run", path);
     } else {
       try {
         syncInitMeta = recoverSyncInitMeta(path, sourceType, syncInitMeta);
@@ -111,7 +111,7 @@ public class Ack {
       logger.error("Fail to remove from ack log: {} {}", identifier, dataId, e);
     }
     if (remove) {
-      logger.info("Remove {} {} from ack log", identifier, dataId);
+      logger.debug("Remove {} {} from ack log", identifier, dataId);
     }
   }
 
