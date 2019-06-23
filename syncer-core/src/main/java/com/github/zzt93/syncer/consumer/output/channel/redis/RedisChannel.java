@@ -82,31 +82,38 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
   }
 
   @Override
-  public void flush() {
+  public boolean flush() {
     List<SyncWrapper<RedisCallback>> aim = batchBuffer.flush();
-    try {
-      send(aim);
-      ackSuccess(aim);
-    } catch (Exception e) {
-      retryFailed(aim, e);
-    }
+    send(aim);
+    return aim != null;
   }
 
   private void send(List<SyncWrapper<RedisCallback>> aim) {
-    if (aim != null && aim.size() != 0) {
-      template.executePipelined((RedisCallback<Void>) connection -> {
-        for (SyncWrapper<RedisCallback> wrapper : aim) {
-          wrapper.getData().doInRedis(connection);
-        }
-        return null;
-      });
+    if (aim != null) {
+      try {
+        template.executePipelined((RedisCallback<Void>) connection -> {
+          for (SyncWrapper<RedisCallback> wrapper : aim) {
+            wrapper.getData().doInRedis(connection);
+          }
+          return null;
+        });
+        ackSuccess(aim);
+      } catch (Exception e) {
+        retryFailed(aim, e);
+      }
     }
   }
 
   @Override
-  public void flushIfReachSizeLimit() {
+  public boolean flushIfReachSizeLimit() {
     List<SyncWrapper<RedisCallback>> wrappers = batchBuffer.flushIfReachSizeLimit();
     send(wrappers);
+    return wrappers != null;
+  }
+
+  @Override
+  public void setFlushDone() {
+    batchBuffer.flushDone();
   }
 
   @Override
@@ -135,16 +142,18 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
 
   @Override
   public boolean output(SyncData event) {
+    throw new UnsupportedOperationException("Not implemented");
     // TODO 18/4/16 add flushIfReachSizeLimit
-    if (expression == null) {
-      return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
-    }
-    Boolean value = expression.getValue(event.getContext(), Boolean.class);
-    if (value == null || !value) {
-      ack.remove(event.getSourceIdentifier(), event.getDataId());
-      return false;
-    }
-    return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
+//    if (expression == null) {
+//      return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
+//    }
+//    Boolean value = expression.getValue(event.getContext(), Boolean.class);
+//    if (value == null || !value) {
+//      ack.remove(event.getSourceIdentifier(), event.getDataId());
+//      return false;
+//    }
+//    return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
+//    BufferedChannel.super.flushAndSetFlushDone(true);
   }
 
   @Override

@@ -20,10 +20,25 @@ public interface BufferedChannel<T> extends OutputChannel, AckChannel<T> {
   TimeUnit getDelayUnit();
 
   @ThreadSafe
-  void flush() throws InterruptedException;
+  boolean flush() throws InterruptedException;
 
   @ThreadSafe
-  void flushIfReachSizeLimit() throws InterruptedException;
+  boolean flushIfReachSizeLimit() throws InterruptedException;
+
+  @ThreadSafe
+  default void flushAndSetFlushDone(boolean bySize) throws InterruptedException {
+    boolean res;
+    if (bySize) {
+      res = flushIfReachSizeLimit();
+    } else {
+      res = flush();
+    }
+    if (res) {
+      setFlushDone();
+    }
+  }
+
+  void setFlushDone();
 
   @Override
   default void close() {
