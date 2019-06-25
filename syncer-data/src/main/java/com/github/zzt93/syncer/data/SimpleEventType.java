@@ -9,6 +9,11 @@ public enum SimpleEventType {
     public String abbr() {
       return "w";
     }
+  }, UPSERT() {
+    @Override
+    public String abbr() {
+      return "w";
+    }
   }, UPDATE {
     @Override
     public String abbr() {
