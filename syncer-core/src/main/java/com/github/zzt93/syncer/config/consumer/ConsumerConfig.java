@@ -4,8 +4,6 @@ import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.input.PipelineInput;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -14,8 +12,6 @@ import java.util.List;
  * @author zzt
  */
 public class ConsumerConfig {
-
-  private Logger logger = LoggerFactory.getLogger(ConsumerConfig.class);
 
   private String version;
   private String consumerId;

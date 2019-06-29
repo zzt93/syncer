@@ -57,13 +57,13 @@ public class MysqlMasterConnector implements MasterConnector {
 
     connectorIdentifier = connection.connectionIdentifier();
 
-    BinlogInfo remembered = configLogClient(connection, password, registry);
+    configLogClient(connection, password, registry);
     listener = configEventListener(connection, registry, onlyUpdated);
     this.file = file;
   }
 
-  private BinlogInfo configLogClient(MysqlConnection connection, String password,
-      ConsumerRegistry registry) throws IOException {
+  private void configLogClient(MysqlConnection connection, String password,
+                               ConsumerRegistry registry) throws IOException {
     client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
@@ -71,14 +71,9 @@ public class MysqlMasterConnector implements MasterConnector {
     client.setServerId(random.nextInt(Integer.MAX_VALUE));
     client.setSSLMode(SSLMode.DISABLED);
     BinlogInfo binlogInfo = registry.votedBinlogInfo(connection);
-    if (!binlogInfo.isEmpty()) {
-      client.setBinlogFilename(binlogInfo.getBinlogFilename());
-      client.setBinlogPosition(binlogInfo.getBinlogPosition());
-    } else {
-      logger.info("No binlog info provided by consumer[{}], connect to oldest binlog", connectorIdentifier);
-      setOldestLog();
-    }
-    return binlogInfo;
+    logger.info("Producer[{}] connect to {}", connectorIdentifier, binlogInfo);
+    client.setBinlogFilename(binlogInfo.getBinlogFilename());
+    client.setBinlogPosition(binlogInfo.getBinlogPosition());
   }
 
   private SyncListener configEventListener(MysqlConnection connection, ConsumerRegistry registry,
@@ -174,23 +169,13 @@ public class MysqlMasterConnector implements MasterConnector {
   }
 
   private void oldestLog(InvalidBinlogException e) {
-    logger.error("Invalid binlog file info {}@{}, reconnect to oldest binlog",
+    logger.error("Invalid binlog file info {}@{}, reconnect to earliest binlog",
         client.getBinlogFilename(), client.getBinlogPosition(), e);
-    setOldestLog();
+    BinlogInfo earliest = BinlogInfo.earliest;
+    client.setBinlogFilename(earliest.getBinlogFilename());
+    client.setBinlogPosition(earliest.getBinlogPosition());
   }
 
-  private void setOldestLog() {
-    // fetch oldest binlog file, but can't ensure no data loss if syncer is closed too long
-    client.setBinlogFilename("");
-    // have to reset it to avoid exception
-    client.setBinlogPosition(0);
-  }
-
-  private void latestLog(InvalidBinlogException e) {
-    logger.error("Invalid binlog file info {}@{}, reconnect to latest binlog",
-        client.getBinlogFilename(), client.getBinlogPosition(), e);
-    client.setBinlogFilename(null);
-  }
 
   @Override
   public void close() {

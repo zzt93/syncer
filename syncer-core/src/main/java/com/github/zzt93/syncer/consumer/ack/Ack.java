@@ -33,14 +33,14 @@ public class Ack {
   private final String clientId;
 
   public static Ack build(String clientId, SyncerInputMeta syncerInputMeta, Set<MasterSource> masterSources,
-      HashMap<String, SyncInitMeta> id2SyncInitMeta) {
+      HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta) {
     Ack ack = new Ack(clientId, syncerInputMeta);
     for (MasterSource masterSource : masterSources) {
       Set<String> ids = masterSource.remoteIds();
       for (String id : ids) {
         SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType());
         if (initMeta != null) {
-          id2SyncInitMeta.put(id, initMeta);
+          ackConnectionId2SyncInitMeta.put(id, initMeta);
         }
       }
     }
@@ -55,7 +55,7 @@ public class Ack {
 
   private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {
     Path path = Paths.get(metaDir, clientId, identifier);
-    SyncInitMeta syncInitMeta = SyncInitMeta.defaultMeta(sourceType);
+    SyncInitMeta syncInitMeta = null;
     if (!Files.exists(path)) {
       logger.info("Last run meta file[{}] not exists, fresh run", path);
     } else {

@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.producer.input.mysql.connect;
 
-import static org.junit.Assert.assertEquals;
-
 import org.junit.Test;
+
+import static org.junit.Assert.assertEquals;
 
 /**
  * @author zzt
@@ -11,7 +11,8 @@ public class BinlogInfoTest {
 
   @Test
   public void compareTo() throws Exception {
-    BinlogInfo b0 = new BinlogInfo();
+    BinlogInfo b0 = BinlogInfo.earliest;
+    BinlogInfo b_ = BinlogInfo.latest;
     BinlogInfo b1 = new BinlogInfo("mysql-bin.00001", 0);
     BinlogInfo b2 = new BinlogInfo("mysql-bin.00002", 0);
     BinlogInfo b2_1 = new BinlogInfo("mysql-bin.00002", 1);

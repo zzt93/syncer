@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.common.data;
 
 
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
-import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 
 /**
@@ -10,15 +9,26 @@ import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
  */
 public interface SyncInitMeta<T> extends Comparable<T> {
 
-  static SyncInitMeta defaultMeta(MasterSourceType sourceType) {
-    SyncInitMeta syncInitMeta = null;
+  static SyncInitMeta earliest(MasterSourceType sourceType) {
+    SyncInitMeta syncInitMeta;
     switch (sourceType) {
       case MySQL:
-        syncInitMeta= new BinlogInfo();
+        syncInitMeta = BinlogInfo.earliest;
         break;
-      case Mongo:
-        syncInitMeta = new DocTimestamp();
+      default:
+        throw new IllegalStateException("Not implement");
+    }
+    return syncInitMeta;
+  }
+
+  static SyncInitMeta latest(MasterSourceType sourceType) {
+    SyncInitMeta syncInitMeta;
+    switch (sourceType) {
+      case MySQL:
+        syncInitMeta = BinlogInfo.latest;
         break;
+      default:
+        throw new IllegalStateException("Not implement");
     }
     return syncInitMeta;
   }

@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.common;
 
+import com.github.zzt93.syncer.config.consumer.input.AutoOffsetReset;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import org.springframework.util.StringUtils;
@@ -29,6 +30,12 @@ public class MayClusterConnection {
   private String user;
   private String passwordFile;
   private String password;
+
+  /**
+   * What to do when there is no initial offset in Syncer or if the current offset no
+   * longer exists on the server.
+   */
+  private AutoOffsetReset autoOffsetReset;
 
   private Connection realConnection;
 
@@ -114,6 +121,15 @@ public class MayClusterConnection {
 
   public void setPassword(String password) {
     this.password = password;
+  }
+
+  public AutoOffsetReset getAutoOffsetReset() {
+    return autoOffsetReset;
+  }
+
+  public MayClusterConnection setAutoOffsetReset(AutoOffsetReset autoOffsetReset) {
+    this.autoOffsetReset = autoOffsetReset;
+    return this;
   }
 
   @Override
