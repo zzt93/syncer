@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.common.data;
 
 
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
+import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 
 /**
@@ -15,6 +16,9 @@ public interface SyncInitMeta<T> extends Comparable<T> {
       case MySQL:
         syncInitMeta = BinlogInfo.earliest;
         break;
+      case Mongo:
+        syncInitMeta = DocTimestamp.earliest;
+        break;
       default:
         throw new IllegalStateException("Not implement");
     }
@@ -26,6 +30,9 @@ public interface SyncInitMeta<T> extends Comparable<T> {
     switch (sourceType) {
       case MySQL:
         syncInitMeta = BinlogInfo.latest;
+        break;
+      case Mongo:
+        syncInitMeta = DocTimestamp.latest;
         break;
       default:
         throw new IllegalStateException("Not implement");

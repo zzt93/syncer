@@ -9,29 +9,34 @@ import org.bson.BsonTimestamp;
  */
 public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
 
+  /**
+   * @see BsonTimestamp
+   */
+  public static final DocTimestamp earliest = new DocTimestamp(new BsonTimestamp(0));
+  public static final DocTimestamp latest = new DocTimestamp(new BsonTimestamp((int) (System.currentTimeMillis() / 1000), 0));
+
   private final BsonTimestamp timestamp;
 
   public DocTimestamp(BsonTimestamp data) {
     timestamp = data;
   }
 
-  public DocTimestamp() {
-    timestamp = null;
-  }
-
-  public BsonTimestamp getTimestamp() {
+  BsonTimestamp getTimestamp() {
     return timestamp;
   }
 
   @Override
   public int compareTo(DocTimestamp o) {
-    if (timestamp == null && o.timestamp == null) {
+    if (o == this) {
       return 0;
-    } else if (timestamp == null) {
+    }
+
+    if (o == earliest) {
       return -1;
-    } else if (o.timestamp == null) {
+    } else if (o == latest) {
       return 1;
     }
+
     return timestamp.compareTo(o.timestamp);
   }
 

@@ -550,11 +550,14 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 ### Used In Production
 - Search system: search data sync
 - Micro-service: auth/recommend/chat data sync
-  - Requirement: low latency, high availability
-- Join table: avoid join in production env, use space for speed by join table
-  - Requirement: low latency, high availability
+  - Sync Requirement: low latency, high availability
+- Join table: avoid join in production env, use space for speed by joining table
+  - Sync Requirement: low latency, high availability
 - Kafka: sync data to kafka, for other heterogeneous system to use
 - For data recovery: In case of drop entity mistakenly, or you know where to start & end
+- For alter table sync: 
+  - [MySQL very slow for alter table](https://stackoverflow.com/questions/12774709/mysql-very-slow-for-alter-table-query)
+  - [MySQL 8.0: InnoDB now supports Instant ADD COLUMN](https://mysqlserverteam.com/mysql-8-0-innodb-now-supports-instant-add-column/)
 
 ## TODO
 [See Issue 1](https://github.com/zzt93/syncer/issues/1)

@@ -16,7 +16,6 @@ import com.mongodb.*;
 import com.mongodb.client.MongoCollection;
 import com.mongodb.client.MongoCursor;
 import com.mongodb.client.MongoDatabase;
-import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -59,13 +58,7 @@ public class MongoMasterConnector implements MasterConnector {
         // fromMigrate indicates the operation results from a shard re-balancing.
         .append("fromMigrate", new BasicDBObject("$exists", false))
     ;
-    if (docTimestamp.getTimestamp() != null) {
-      query.append(TS, new BasicDBObject("$gte", docTimestamp.getTimestamp()));
-    } else {
-      // initial export
-      logger.warn("Start with initial export from [{}], may take a long time", connection.toConnectionUrl(null));
-      query.append(TS, new BasicDBObject("$gt", new BsonTimestamp()));
-    }
+    query.append(TS, new BasicDBObject("$gte", docTimestamp.getTimestamp()));
     // no need for capped collections:
     // perform a find() on a capped collection with no ordering specified,
     // MongoDB guarantees that the ordering of results is the same as the insertion order.
@@ -126,6 +119,7 @@ public class MongoMasterConnector implements MasterConnector {
   @Override
   public void loop() {
     Thread.currentThread().setName(identifier);
+    logger.info("Start export from [{}]", identifier);
 
     long sleepInSecond = 1;
     while (!Thread.interrupted()) {

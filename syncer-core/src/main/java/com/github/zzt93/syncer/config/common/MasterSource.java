@@ -156,6 +156,7 @@ public class MasterSource {
       }
     }
     if (ackSyncMeta == null) {
+      logger.info("Connect to earliest possible position because no config and no last run info");
       ackSyncMeta = SyncInitMeta.earliest(getType());
     }
     return ackSyncMeta;

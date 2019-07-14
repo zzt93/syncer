@@ -10,11 +10,14 @@ import com.github.zzt93.syncer.producer.register.LocalConsumerRegistry;
  */
 public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
 
-  private final String binlogFilename;
-  private final long binlogPosition;
-
+  /**
+   * @see com.github.shyiko.mysql.binlog.BinaryLogClient#setBinlogFilename(String)
+   */
   public static final BinlogInfo latest = new BinlogInfo(null, 0);
   public static final BinlogInfo earliest = new BinlogInfo("", 0);
+
+  private final String binlogFilename;
+  private final long binlogPosition;
 
   public BinlogInfo(String binlogFilename, long binlogPosition) {
     this.binlogFilename = binlogFilename;
@@ -29,7 +32,7 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
   static int checkFilename(String binlogFilename) {
     try {
       return Integer.parseInt(binlogFilename.split("\\.")[1]);
-    } catch (NumberFormatException|ArrayIndexOutOfBoundsException e) {
+    } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
       throw new InvalidBinlogException(e, binlogFilename, 0);
     }
   }
@@ -44,12 +47,12 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
 
   /**
    * <ul>
-   *   <li>If some consumer is {@link #earliest}, i.e. fresh start, try retrieve oldest log to sync.</li>
-   *   <li>If some consumer is {@link #latest}, i.e. fresh start, try retrieve latest log to sync.</li>
-   *   <li>If we need to sync even earlier log than oldest log possible, try to config {@link
-   *   com.github.zzt93.syncer.config.producer.ProducerMaster#file}</li>
-   *   <li><a href='https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#option_mysqld_log-bin'>
-   *    Binary log naming conversion: base_name.number, e.g. mysql-bin.000042</a></li>
+   * <li>If some consumer is {@link #earliest}, i.e. fresh start, try retrieve oldest log to sync.</li>
+   * <li>If some consumer is {@link #latest}, i.e. fresh start, try retrieve latest log to sync.</li>
+   * <li>If we need to sync even earlier log than oldest log possible, try to config {@link
+   * com.github.zzt93.syncer.config.producer.ProducerMaster#file}</li>
+   * <li><a href='https://dev.mysql.com/doc/refman/8.0/en/replication-options-binary-log.html#option_mysqld_log-bin'>
+   * Binary log naming conversion: base_name.number, e.g. mysql-bin.000042</a></li>
    * </ul>
    *
    * <p>We can't compare using string

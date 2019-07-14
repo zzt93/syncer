@@ -19,7 +19,7 @@ public class JsonKeyFilter {
 
   private final Repo repo;
   private final ProducerSink producerSink;
-  private final static Logger logger = LoggerFactory.getLogger(MongoDispatcher.class);
+  private final static Logger logger = LoggerFactory.getLogger(JsonKeyFilter.class);
 
   public JsonKeyFilter(Repo repo, ProducerSink producerSink) {
     this.repo = repo;
