@@ -19,7 +19,7 @@ public class JsonKeyFilter {
 
   private final Repo repo;
   private final ProducerSink producerSink;
-  private final static Logger logger = LoggerFactory.getLogger(MongoDispatcher.class);
+  private final static Logger logger = LoggerFactory.getLogger(JsonKeyFilter.class);
 
   public JsonKeyFilter(Repo repo, ProducerSink producerSink) {
     this.repo = repo;
@@ -41,7 +41,7 @@ public class JsonKeyFilter {
     tmp.forEach(fields::remove);
     if ((fields.isEmpty() || fields.size() == 1 && fields.containsKey(MongoDispatcher.ID))
         && data.getType() == SimpleEventType.UPDATE) {
-      logger.info("Discard {} because nothing to update", data);
+      logger.debug("Discard {} because nothing to update", data);
       return false;
     }
     return producerSink.output(data);

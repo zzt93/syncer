@@ -46,7 +46,7 @@ public class SchemaAndRowFilter {
       NamedFullRow row = namedRow.get(i);
       if (onlyUpdated && type == SimpleEventType.UPDATE && row.getUpdated().isEmpty()) {
         // TODO 2019/3/20 change to debug when test finish
-        logger.info("Discard {} because [{}]", eventId, row);
+        logger.debug("Discard {} because [{}]", eventId, row);
         // even though in one update event, multiple rows can have different updated column,
         // so we can only skip one by one
         // e.g. we listening 'name1' but not 'name2' and the following update will make all updates in a single event

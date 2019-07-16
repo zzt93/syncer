@@ -60,9 +60,7 @@ public class SyncUtil {
     for (Map.Entry<String, Object> e : fields.entrySet()) {
       String from = e.getKey();
       String to = underscoreToCamel(from);
-      if (!from.equals(to)) {
-        logger.info("Rename field: {} -> {}", from, to);
-      }
+      logger.debug("Rename field: {} -> {}", from, to);
       tmp.put(to, e.getValue());
     }
     fields.clear();
