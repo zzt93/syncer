@@ -179,8 +179,8 @@ public class ConsumerSchemaMeta {
             Set<String> tableRow = aim.removeTableRow(tableSchema, tableName);
             TableMeta tableMeta = new TableMeta();
             // TODO 18/1/18 may opt to get all columns then use
-            setPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
-            setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta);
+            String primaryKeyName = getPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
+            setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta, primaryKeyName);
             schemaMeta.addTableMeta(tableName, tableMeta);
             nowCount++;
           }
@@ -194,40 +194,40 @@ public class ConsumerSchemaMeta {
     }
 
     private void setInterestedCol(DatabaseMetaData metaData, String tableSchema, String tableName,
-                                  Set<String> tableRow, TableMeta tableMeta) throws SQLException {
+                                  Set<String> tableRow, TableMeta tableMeta, String primaryKeyName) throws SQLException {
       try (ResultSet columnResultSet = metaData
           .getColumns(tableSchema, "public", tableName, null)) {
         while (columnResultSet.next()) {
           String columnName = columnResultSet.getString("COLUMN_NAME");
-          if (!tableRow.contains(columnName)) {
-            continue;
-          }
           // use - 1 because the index of mysql column is count from 1
           int ordinalPosition = columnResultSet.getInt("ORDINAL_POSITION") - 1;
-          tableMeta.addInterestedCol(columnName, ordinalPosition);
+          if (primaryKeyName.equals(columnName)) {
+            tableMeta.addPrimaryKey(columnName, ordinalPosition);
+          }
+          if (tableRow.contains(columnName)) {
+            tableMeta.addInterestedCol(columnName, ordinalPosition);
+          }
         }
       }
     }
 
-    private void setPrimaryKey(DatabaseMetaData metaData, String tableSchema, String tableName,
-                               Set<String> tableRow, TableMeta tableMeta) throws SQLException {
+    private String getPrimaryKey(DatabaseMetaData metaData, String tableSchema, String tableName,
+                                 Set<String> tableRow, TableMeta tableMeta) throws SQLException {
       try (ResultSet primaryKeys = metaData.getPrimaryKeys(tableSchema, "", tableName)) {
         if (primaryKeys.next()) {
-          // use `- 1` because the index of mysql column is count from 1
-          int ordinalPosition = primaryKeys.getInt("KEY_SEQ") - 1;
           String columnName = primaryKeys.getString("COLUMN_NAME");
           if (!tableRow.contains(columnName)) {
             tableMeta.noPrimaryKey();
             logger.info("Not config primary key as interested column in [{}.{}], can be accessed only in `id` but not in `field`", tableSchema, tableName);
           }
-          tableMeta.addPrimaryKey(columnName, ordinalPosition);
+          if (primaryKeys.next()) {
+            logger.error("Not support multiple/composite primary key {}.{}", tableSchema, tableName);
+            throw new InvalidConfigException("Not support composite primary key");
+          }
+          return columnName;
         } else {
           logger.error("Fail to fetch primary key or no primary key for {}.{}", tableSchema, tableName);
           throw new InvalidConfigException("Not support table without primary key");
-        }
-        if (primaryKeys.next()) {
-          logger.error("Not support composite primary key {}.{}", tableSchema, tableName);
-          throw new InvalidConfigException("Not support composite primary key");
         }
       }
     }
