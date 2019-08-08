@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer;
 
 import com.github.zzt93.syncer.common.thread.WaitingAckHook;
+import com.github.zzt93.syncer.common.util.RegexUtil;
 import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
 import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.ProducerConfig;
@@ -72,6 +73,10 @@ public class SyncerApplication {
     String consumerId = consumerConfig.getConsumerId();
     if (consumerId == null) {
       logger.error("No `consumerId` specified");
+      return false;
+    }
+    if (!RegexUtil.isClassName(consumerId)) {
+      logger.error("`consumerId` not match Java identifier regex: [a-zA-Z_$][a-zA-Z\\d_$]*");
       return false;
     }
     return true;

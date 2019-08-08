@@ -11,6 +11,7 @@ public class RegexUtil {
 
   private static Pattern pattern = Pattern.compile("[.*+?^]");
   private static Pattern env = Pattern.compile("\\$\\{([^}]+)}");
+  private static Pattern className = Pattern.compile("[a-zA-Z_$][a-zA-Z\\d_$]*");
 
   public static Pattern getRegex(String input) {
     Matcher matcher = pattern.matcher(input);
@@ -26,5 +27,9 @@ public class RegexUtil {
 
   public static Pattern env() {
     return env;
+  }
+
+  public static boolean isClassName(String consumerId) {
+    return className.matcher(consumerId).find();
   }
 }

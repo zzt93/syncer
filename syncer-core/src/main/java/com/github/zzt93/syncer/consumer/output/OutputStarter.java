@@ -32,7 +32,7 @@ public class OutputStarter {
     outputChannels = pipelineOutput.toOutputChannels(consumerId, ack, module.getOutputMeta());
     batchService = Executors
         .newScheduledThreadPool(Math.min(module.getBatch().getWorker(), outputChannels.size()),
-            new NamedThreadFactory("syncer-batch"));
+            new NamedThreadFactory("syncer-" + consumerId + "-batch"));
 
     for (OutputChannel outputChannel : outputChannels) {
       if (outputChannel instanceof BufferedChannel) {

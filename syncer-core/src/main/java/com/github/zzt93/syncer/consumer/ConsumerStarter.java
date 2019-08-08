@@ -90,7 +90,7 @@ public class ConsumerStarter implements Starter {
             "Too many worker thread");
     Preconditions.checkArgument(module.getWorker() > 0, "Invalid worker thread number config");
     filterOutputService = Executors
-        .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-filter-output"));
+        .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-" + id + "-filter"));
 
     List<SyncFilter> syncFilters = fromPipelineConfig(filters, module);
     worker = module.getWorker();
@@ -156,7 +156,7 @@ public class ConsumerStarter implements Starter {
 
   private void startAck() throws IOException {
     ScheduledExecutorService scheduled = Executors
-        .newScheduledThreadPool(1, new NamedThreadFactory("syncer-ack"));
+        .newScheduledThreadPool(1, new NamedThreadFactory("syncer-" + id + "-ack"));
     if (registrant.register()) {
       scheduled.scheduleAtFixedRate(new PositionFlusher(ack), 0, ackConfig.getFlushPeriod(),
           ackConfig.getUnit());
