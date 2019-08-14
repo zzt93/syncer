@@ -26,7 +26,8 @@ public class NamedThreadFactory implements ThreadFactory {
 
   @Override
   public Thread newThread(Runnable r) {
-    String name = prefix + "-" + every.getAndAdd(1L) + "-" + all.getAndAdd(1L);
+    all.getAndAdd(1L);
+    String name = prefix + "-" + every.getAndAdd(1L);
     logger.debug("Create a new thread: {}", name);
     return new Thread(r, name);
   }
