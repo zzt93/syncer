@@ -40,4 +40,14 @@ public interface SyncInitMeta<T> extends Comparable<T> {
     return syncInitMeta;
   }
 
+  static boolean isLatest(SyncInitMeta syncInitMeta) {
+    if (syncInitMeta instanceof BinlogInfo) {
+      return syncInitMeta == BinlogInfo.latest;
+    }
+    if (syncInitMeta instanceof DocTimestamp) {
+      return syncInitMeta == DocTimestamp.latest;
+    }
+    throw new UnsupportedOperationException("Not implement");
+  }
+
 }

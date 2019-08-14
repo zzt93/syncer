@@ -31,9 +31,9 @@ public class DocTimestamp implements SyncInitMeta<DocTimestamp> {
       return 0;
     }
 
-    if (o == earliest) {
+    if (this == earliest || o == latest) {
       return -1;
-    } else if (o == latest) {
+    } else if (this == latest || o == earliest) {
       return 1;
     }
 

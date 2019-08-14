@@ -7,8 +7,7 @@ input:
       clusterNodes: [${MYSQL_ADDR}]
       user: root
       password: ${MYSQL_IN_PASS}
-
-
+#    onlyUpdated: true # default value
 
 
 

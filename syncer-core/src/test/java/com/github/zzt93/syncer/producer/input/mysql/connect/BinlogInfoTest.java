@@ -11,8 +11,9 @@ public class BinlogInfoTest {
 
   @Test
   public void compareTo() throws Exception {
-    BinlogInfo b0 = BinlogInfo.earliest;
-    BinlogInfo b_ = BinlogInfo.latest;
+    BinlogInfo b_e = BinlogInfo.earliest;
+    BinlogInfo b_l = BinlogInfo.latest;
+    BinlogInfo b__l = BinlogInfo.latest;
     BinlogInfo b1 = new BinlogInfo("mysql-bin.00001", 0);
     BinlogInfo b2 = new BinlogInfo("mysql-bin.00002", 0);
     BinlogInfo b2_1 = new BinlogInfo("mysql-bin.00002", 1);
@@ -21,7 +22,10 @@ public class BinlogInfoTest {
     BinlogInfo b200_2 = new BinlogInfo("mysql-bin.200", 2);
     BinlogInfo b1200_2 = new BinlogInfo("mysql-bin.1200", 2);
 
-    assertEquals(b0.compareTo(b1), -1);
+    assertEquals(b_e.compareTo(b1), -1);
+    assertEquals(b_l.compareTo(b1), 1);
+    assertEquals(b_e.compareTo(b_l), -1);
+    assertEquals(b_l.compareTo(b__l), 0);
     assertEquals(b1.compareTo(b2), -1);
     assertEquals(b2.compareTo(b2_1), -1);
     assertEquals(b2_1.compareTo(b2_2), -1);

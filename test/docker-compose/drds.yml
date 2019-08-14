@@ -8,8 +8,6 @@ services:
     - ${TEST_DIR}/data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root
-    ports:
-    - 43306:3306
     healthcheck:
       test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u root -proot ping --silent"]
       interval: 30s
@@ -69,22 +67,6 @@ services:
     networks:
     - dbnet
 
-  mongo:
-    image: mongo:3.2
-    container_name: mongo
-    healthcheck:
-      test: echo 'db.stats().ok' | mongo localhost:27017 --quiet
-      interval: 5s
-      timeout: 5s
-      retries: 12
-    command: mongod --smallfiles --replSet test
-    environment:
-    - MONGODB_USER="root"
-    - MONGODB_PASS="root"
-    ports:
-    - 47017:27017
-    networks:
-    - dbnet
 
   syncer:
     image: syncer:test
@@ -95,8 +77,6 @@ services:
       mysql_1:
         condition: service_healthy
       mysql_2:
-        condition: service_healthy
-      mongo:
         condition: service_healthy
       elasticsearch:
         condition: service_healthy
@@ -114,8 +94,9 @@ services:
     - ES_ADDR=elasticsearch
     - ES_CLUSTER=test-cluster
     - MYSQL_ADDR="mysql_0:3306","mysql_1:3306","mysql_2:3306"
-    - MYSQL_OUT=mysql_0
+    - MYSQL_IN_PASS=root
     - MYSQL_USER=root
+    - MYSQL_OUT=mysql_0
     - MYSQL_OUT_PASS=root
     - MONGO_IN=mongo
     - SYNCER_PRODUCER=/data/config/producer.yml

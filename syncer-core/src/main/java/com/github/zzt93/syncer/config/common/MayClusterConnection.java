@@ -127,9 +127,8 @@ public class MayClusterConnection {
     return autoOffsetReset;
   }
 
-  public MayClusterConnection setAutoOffsetReset(AutoOffsetReset autoOffsetReset) {
+  public void setAutoOffsetReset(AutoOffsetReset autoOffsetReset) {
     this.autoOffsetReset = autoOffsetReset;
-    return this;
   }
 
   @Override

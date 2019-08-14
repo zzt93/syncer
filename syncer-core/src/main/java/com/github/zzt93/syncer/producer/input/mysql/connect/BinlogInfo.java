@@ -67,10 +67,10 @@ public class BinlogInfo implements SyncInitMeta<BinlogInfo> {
       return 0;
     }
 
-    if (o == earliest) {
-      return -1;
-    } else if (o == latest) {
+    if (this == latest || o == earliest) {
       return 1;
+    } else if (this == earliest || o == latest) {
+      return -1;
     }
 
     int seq = Integer.parseInt(binlogFilename.split("\\.")[1]);

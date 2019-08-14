@@ -10,10 +10,6 @@ input:
       onlyUpdated: false
 
 
-    - connection:
-        address: ${MONGO_IN}
-        port: 27017
-      type: Mongo
 
 
 
