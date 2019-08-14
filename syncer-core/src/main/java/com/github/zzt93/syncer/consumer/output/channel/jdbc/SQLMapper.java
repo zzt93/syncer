@@ -18,6 +18,9 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
 
+import static com.github.zzt93.syncer.data.SimpleEventType.UPDATE;
+import static com.github.zzt93.syncer.data.SimpleEventType.WRITE;
+
 /**
  * @author zzt
  */
@@ -54,21 +57,20 @@ public class SQLMapper implements Mapper<SyncData, String> {
     // TODO 18/1/24 replace with `PreparedStatement`?
     switch (data.getType()) {
       case WRITE:
-        String[] entry = join(map, data.getType());
+        String[] entry = join(map, WRITE);
         return ParameterReplace
             .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1]);
       case DELETE:
         return ParameterReplace.orderedParam(DELETE_FROM_WHERE_ID, schema, table, id);
       case UPDATE:
         if (id != null) {
-          return ParameterReplace.orderedParam(UPDATE_SET_WHERE_ID, schema, table, id, join(map,
-              data.getType())[0]);
+          return ParameterReplace.orderedParam(UPDATE_SET_WHERE_ID, schema, table, id, join(map, UPDATE)[0]);
         } else {
           HashMap<String, Object> syncBy = data.getSyncBy();
           if (syncBy == null) {
             throw new InvalidSyncDataException("Ignore invalid SyncData: update row without [id] and/or [syncByQuery].", data);
           }
-          String filterCondition = join(syncBy, SimpleEventType.UPDATE)[0];
+          String filterCondition = join(syncBy, UPDATE)[0];
           return ParameterReplace.orderedParam(UPDATE_SET_WHERE, schema, table, filterCondition, join(map,
               data.getType())[0]);
         }

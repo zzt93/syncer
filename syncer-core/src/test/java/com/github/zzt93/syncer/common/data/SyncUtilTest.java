@@ -30,6 +30,13 @@ public class SyncUtilTest {
   }
 
   @Test
+  public void json() {
+    String jsonWithNewLine = "[\"AC\",\"BD\",\"CE\",\"DF\",\"GG\n\"]";
+    Map o = SyncUtil.fromJson(jsonWithNewLine);
+    Assert.assertNull(o);
+  }
+
+  @Test
   public void announcementBlock() throws Exception {
     Map o = (Map) SyncUtil.fromJson(
         "{\"blocks\":[{\"data\":{},\"depth\":0,\"entityRanges\":[],\"inlineStyleRanges\":[],\"key\":\"ummxd\",\"text\":\"Test\",\"type\":\"unstyled\"}],\"entityMap\":{}}",

@@ -15,21 +15,21 @@ function loadToMysql() {
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         cd ${i}
         for f in `find csv/mysql_test -name "*.csv"`; do
-            dockerExec mysql_${i} mysqlimport --fields-terminated-by=, --verbose --local -u root -proot test_${i} /Data/mysql/${i}/${f}
+            dockerExec mysql_${i} mysqlimport --defaults-file=/Data/my.cnf --fields-terminated-by=, --verbose --local test_${i} /Data/mysql/${i}/${f} >> "${LOG_FILE}"
         done
         cd ..
     done
-    dockerExec mysql_0 mysqlimport --fields-terminated-by=, --verbose --local -u root -proot simple /Data/mysql/0/csv/mysql_simple/simple_type.csv
+    dockerExec mysql_0 mysqlimport --defaults-file=/Data/my.cnf --fields-terminated-by=, --verbose --local simple /Data/mysql/0/csv/mysql_simple/simple_type.csv >> "${LOG_FILE}"
 
     logi "loading sql"
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         cd ${i}
         for f in `find sql/mysql_test -name "*.sql"`; do
-            dockerExec mysql_${i} mysql -u root -proot test_${i} < ${f}
+            dockerExec mysql_${i} mysql --defaults-file=/Data/my.cnf test_${i} < ${f} >> "${LOG_FILE}"
         done
         cd ..
     done
-    dockerExec mysql_0  mysql -u root -proot simple < 0/sql/mysql_simple/simple_type*.sql
+    dockerExec mysql_0  mysql --defaults-file=/Data/my.cnf simple < 0/sql/mysql_simple/simple_type*.sql >> "${LOG_FILE}"
 
     cd ${TEST_DIR}
 }
@@ -45,7 +45,7 @@ function loadToMongo() {
     for f in `find . -name "*.json"`; do
         tmp=`basename $f`
         col=${tmp%".json"}
-        dockerExec mongo mongoimport --db mongo-test --collection ${col} --file /Data/mongo/${f} --jsonArray
+        dockerExec mongo mongoimport --db mongo-test --collection ${col} --file /Data/mongo/${f} --jsonArray >> "${LOG_FILE}"
     done
 
     cd ${TEST_DIR}

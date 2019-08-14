@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
+import com.github.zzt93.syncer.config.consumer.input.AutoOffsetReset;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
@@ -108,15 +109,16 @@ public class MasterSource {
   }
 
   public List<? extends ConsumerSource> toConsumerSources(String consumerId,
-                                                          HashMap<String, SyncInitMeta> id2SyncInitMeta,
+                                                          HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta,
                                                           EventScheduler scheduler) {
     List<LocalConsumerSource> res = new LinkedList<>();
     Connection realConnection = getRealConnection();
-    SyncMeta[] syncMetas = realConnection.getSyncMetas();
+    AutoOffsetReset autoOffsetReset = connection.getAutoOffsetReset();
+    SyncMeta[] configSyncMetas = realConnection.getSyncMetas();
     List<Connection> connections = realConnection.getReals();
     for (int i = 0; i < connections.size(); i++) {
       Connection connection = connections.get(i);
-      SyncInitMeta syncInitMeta = getSyncInitMeta(syncMetas[i], id2SyncInitMeta, connection);
+      SyncInitMeta syncInitMeta = getSyncInitMeta(configSyncMetas[i], ackConnectionId2SyncInitMeta.get(connection.connectionIdentifier()), autoOffsetReset);
       switch (getType()) {
         case Mongo:
           Preconditions
@@ -137,13 +139,26 @@ public class MasterSource {
     return res;
   }
 
-  private SyncInitMeta getSyncInitMeta(SyncMeta syncMeta, HashMap<String, SyncInitMeta> id2SyncInitMeta, Connection connection) {
-    String identifier = connection.connectionIdentifier();
-    SyncInitMeta syncInitMeta = id2SyncInitMeta.get(identifier);
-    if (syncMeta != null) {
-      logger.warn("Override syncer remembered position with config in file {}, watch out", syncMeta);
-      syncInitMeta = BinlogInfo.withFilenameCheck(syncMeta.getBinlogFilename(), syncMeta.getBinlogPosition());
+  private SyncInitMeta getSyncInitMeta(SyncMeta configSyncMeta, SyncInitMeta ackSyncMeta, AutoOffsetReset autoOffsetReset) {
+    if (configSyncMeta != null) {
+      logger.warn("Override syncer remembered position with: {}", configSyncMeta);
+      return BinlogInfo.withFilenameCheck(configSyncMeta.getBinlogFilename(), configSyncMeta.getBinlogPosition());
     }
-    return syncInitMeta;
+    if (autoOffsetReset != null) {
+      logger.warn("Override syncer remembered position with autoOffsetReset: {}", autoOffsetReset);
+      switch (autoOffsetReset) {
+        case latest:
+          return SyncInitMeta.latest(getType());
+        case earliest:
+          return SyncInitMeta.earliest(getType());
+        default:
+          throw new IllegalStateException();
+      }
+    }
+    if (ackSyncMeta == null) {
+      logger.info("Connect to earliest possible position because no config and no last run info");
+      ackSyncMeta = SyncInitMeta.earliest(getType());
+    }
+    return ackSyncMeta;
   }
 }

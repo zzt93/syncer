@@ -56,7 +56,7 @@ public class ConsumerStarter implements Starter {
                          ConsumerRegistry consumerRegistry) throws Exception {
 
     id = pipeline.getConsumerId();
-    HashMap<String, SyncInitMeta> id2SyncInitMeta = initAckModule(id, pipeline.getInput(),
+    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(id, pipeline.getInput(),
         syncer.getInput(), syncer.getAck());
 
     outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput());
@@ -64,17 +64,17 @@ public class ConsumerStarter implements Starter {
     SchedulerBuilder schedulerBuilder = new SchedulerBuilder();
     initFilterModule(ack, syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels);
 
-    initRegistrant(id, consumerRegistry, schedulerBuilder, pipeline.getInput(), id2SyncInitMeta);
+    initRegistrant(id, consumerRegistry, schedulerBuilder, pipeline.getInput(), ackConnectionId2SyncInitMeta);
   }
 
   private HashMap<String, SyncInitMeta> initAckModule(String consumerId,
                                                       PipelineInput pipelineInput,
                                                       SyncerInput input, SyncerAck ackConfig) {
     Set<MasterSource> masterSet = pipelineInput.getMasterSet();
-    HashMap<String, SyncInitMeta> id2SyncInitMeta = new HashMap<>();
-    this.ack = Ack.build(consumerId, input.getInputMeta(), masterSet, id2SyncInitMeta);
+    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = new HashMap<>();
+    this.ack = Ack.build(consumerId, input.getInputMeta(), masterSet, ackConnectionId2SyncInitMeta);
     this.ackConfig = ackConfig;
-    return id2SyncInitMeta;
+    return ackConnectionId2SyncInitMeta;
   }
 
   private List<OutputChannel> initBatchOutputModule(String id, PipelineOutput pipeline,
@@ -109,12 +109,12 @@ public class ConsumerStarter implements Starter {
   private void initRegistrant(String consumerId, ConsumerRegistry consumerRegistry,
                               SchedulerBuilder schedulerBuilder,
                               PipelineInput input,
-                              HashMap<String, SyncInitMeta> id2SyncInitMeta) {
+                              HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta) {
     registrant = new Registrant(consumerRegistry);
     for (MasterSource masterSource : input.getMasterSet()) {
       EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler()).build();
       List<? extends ConsumerSource> localConsumerSources =
-          masterSource.toConsumerSources(consumerId, id2SyncInitMeta, scheduler);
+          masterSource.toConsumerSources(consumerId, ackConnectionId2SyncInitMeta, scheduler);
       registrant.addDatasource(localConsumerSources);
     }
   }

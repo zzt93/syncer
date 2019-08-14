@@ -10,17 +10,44 @@ import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
  */
 public interface SyncInitMeta<T> extends Comparable<T> {
 
-  static SyncInitMeta defaultMeta(MasterSourceType sourceType) {
-    SyncInitMeta syncInitMeta = null;
+  static SyncInitMeta earliest(MasterSourceType sourceType) {
+    SyncInitMeta syncInitMeta;
     switch (sourceType) {
       case MySQL:
-        syncInitMeta= new BinlogInfo();
+        syncInitMeta = BinlogInfo.earliest;
         break;
       case Mongo:
-        syncInitMeta = new DocTimestamp();
+        syncInitMeta = DocTimestamp.earliest;
         break;
+      default:
+        throw new IllegalStateException("Not implement");
     }
     return syncInitMeta;
+  }
+
+  static SyncInitMeta latest(MasterSourceType sourceType) {
+    SyncInitMeta syncInitMeta;
+    switch (sourceType) {
+      case MySQL:
+        syncInitMeta = BinlogInfo.latest;
+        break;
+      case Mongo:
+        syncInitMeta = DocTimestamp.latest;
+        break;
+      default:
+        throw new IllegalStateException("Not implement");
+    }
+    return syncInitMeta;
+  }
+
+  static boolean isLatest(SyncInitMeta syncInitMeta) {
+    if (syncInitMeta instanceof BinlogInfo) {
+      return syncInitMeta == BinlogInfo.latest;
+    }
+    if (syncInitMeta instanceof DocTimestamp) {
+      return syncInitMeta == DocTimestamp.latest;
+    }
+    throw new UnsupportedOperationException("Not implement");
   }
 
 }
