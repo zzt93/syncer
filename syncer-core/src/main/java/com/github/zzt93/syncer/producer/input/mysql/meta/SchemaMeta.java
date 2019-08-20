@@ -41,6 +41,10 @@ public class SchemaMeta {
     return null;
   }
 
+  String getSchema() {
+    return schema;
+  }
+
   public int size() {
     return tableMetas.size();
   }
@@ -48,9 +52,9 @@ public class SchemaMeta {
   @Override
   public String toString() {
     return "SchemaMeta{" +
-        "tableMetas=" + tableMetas +
+        "schema='" + schema + '\'' +
         ", schemaPattern=" + schemaPattern +
-        ", schema='" + schema + '\'' +
+        ", tableMetas(" + tableMetas.size() + ")=" + tableMetas +
         '}';
   }
 }

@@ -118,7 +118,7 @@ public class ConsumerSchemaMeta {
         List<SchemaMeta> metas = def2data.get(consumer);
         if (metas == null ||
             consumer.getRepos().size() != metas.size()) {
-          logger.error("Fail to fetch meta info for {}, {}", consumer, metas);
+          logger.error("Fail to fetch meta info for {}", diff(consumer.getRepos(), metas));
           throw new InvalidConfigException("Fail to fetch meta info");
         }
         ConsumerSchemaMeta consumerSchemaMeta = new ConsumerSchemaMeta(consumer.getId());
@@ -126,6 +126,17 @@ public class ConsumerSchemaMeta {
         res.put(consumerSchemaMeta, entry.getValue());
       }
       return res;
+    }
+
+    private Set<Repo> diff(Set<Repo> repos, List<SchemaMeta> metas) {
+      if (metas != null) {
+        for (SchemaMeta meta : metas) {
+          Repo o = new Repo();
+          o.setName(meta.getSchema());
+          repos.remove(o);
+        }
+      }
+      return repos;
     }
 
     private HashMap<Consumer, List<SchemaMeta>> build(Set<Consumer> consumers)
@@ -186,7 +197,7 @@ public class ConsumerSchemaMeta {
           }
         }
       }
-      if (tableCount < nowCount) {
+      if (tableCount > nowCount) {
         logger.error("Invalid schema config: want {} tables, only find {}", tableCount, nowCount);
         throw new InvalidConfigException("Invalid schema config");
       }

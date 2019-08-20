@@ -47,8 +47,8 @@ public class Consumer {
   @Override
   public String toString() {
     return "Consumer{" +
-        "repos=" + repos +
-        ", id='" + id + '\'' +
+        "id='" + id + '\'' +
+        ", repos(" + repos.size() + ")" + "=" + repos +
         '}';
   }
 
