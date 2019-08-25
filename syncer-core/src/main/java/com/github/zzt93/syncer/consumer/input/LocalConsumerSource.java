@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
+import com.github.zzt93.syncer.consumer.ack.Ack;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -24,16 +25,18 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   private final SyncInitMeta syncInitMeta;
   private final String clientId;
   private final String connectionIdentifier;
+  private final Ack ack;
   private boolean isSent = true;
 
   public LocalConsumerSource(
       String clientId, Connection connection, Set<Repo> repos,
       SyncInitMeta syncInitMeta,
-      EventScheduler scheduler) {
+      Ack ack, EventScheduler scheduler) {
     this.repos = repos;
     this.connection = connection;
     this.syncInitMeta = syncInitMeta;
     this.clientId = clientId;
+    this.ack = ack;
     this.scheduler = scheduler;
     connectionIdentifier = connection.connectionIdentifier();
   }
@@ -68,6 +71,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     }
     logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data, data.hashCode());
     data.setSourceIdentifier(connectionIdentifier);
+    ack.append(data.getSourceIdentifier(), data.getDataId());
     return scheduler.schedule(data);
   }
 
@@ -76,6 +80,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     boolean res = true;
     for (SyncData datum : data) {
       if (!sent(datum)) {
+        ack.append(datum.getSourceIdentifier(), datum.getDataId());
         res = scheduler.schedule(datum.setSourceIdentifier(connectionIdentifier)) && res;
         logger.debug("Consumer receive: {} in {}", datum, data);
       } else {

@@ -31,10 +31,11 @@ public class Ack {
       + "main thread init ack before two other thread start")
   private Map<String, FileBasedMap<String>> ackMap = new HashMap<>();
   private final String clientId;
+  private final int outputSize;
 
   public static Ack build(String clientId, SyncerInputMeta syncerInputMeta, Set<MasterSource> masterSources,
-      HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta) {
-    Ack ack = new Ack(clientId, syncerInputMeta);
+      HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta, int outputSize) {
+    Ack ack = new Ack(clientId, syncerInputMeta, outputSize);
     for (MasterSource masterSource : masterSources) {
       Set<String> ids = masterSource.remoteIds();
       for (String id : ids) {
@@ -48,9 +49,10 @@ public class Ack {
     return ack;
   }
 
-  private Ack(String clientId, SyncerInputMeta syncerInputMeta) {
+  private Ack(String clientId, SyncerInputMeta syncerInputMeta, int outputSize) {
     this.clientId = clientId;
     this.metaDir = syncerInputMeta.getLastRunMetadataDir();
+    this.outputSize = outputSize;
   }
 
   private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {
@@ -96,17 +98,20 @@ public class Ack {
     return syncInitMeta;
   }
 
-  public void append(String identifier, String dataId, int size) {
-    boolean append = ackMap.get(identifier).append(dataId, size) == null;
-    if (!append) {
-      logger.error("Fail to append to ack log: {} {}", identifier, dataId);
-    }
+  /**
+   * append `outputSize` at the beginning of consumer
+   */
+  public void append(String identifier, String dataId) {
+    ackMap.get(identifier).append(dataId, outputSize);
   }
 
+  /**
+   * remove one when ack is received from a output
+   */
   public void remove(String identifier, String dataId) {
     boolean remove = false;
     try {
-      remove = ackMap.get(identifier).remove(dataId, 1) == null;
+      remove = ackMap.get(identifier).remove(dataId, 1);
     } catch (Exception e) {
       logger.error("Fail to remove from ack log: {} {}", identifier, dataId, e);
     }
@@ -116,7 +121,6 @@ public class Ack {
   }
 
   public boolean flush() {
-    // TODO 18/8/20 If dataId is just removed and map is empty
     // - add next dataId: seems hard to do
     // - set `lastRemoved` in FileBasedMap#remove
     boolean res = true;

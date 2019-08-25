@@ -32,7 +32,8 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FileBasedMap<T extends Comparable<T>> {
 
   private static final int _1K = 1024;
-  public static final AtomicInteger ZERO = new AtomicInteger();
+  private static final AtomicInteger ZERO = new AtomicInteger();
+  private volatile T lastRemoved;
   private final MappedByteBuffer file;
   private final ConcurrentSkipListMap<T, AtomicInteger> map = new ConcurrentSkipListMap<>();
   private final Logger logger = LoggerFactory.getLogger(FileBasedMap.class);
@@ -64,32 +65,50 @@ public class FileBasedMap<T extends Comparable<T>> {
     return Bytes.toArray(bytes);
   }
 
-  public AtomicInteger append(T data, int count) {
-    return map.put(data, new AtomicInteger(count));
+  /**
+   * @return true if this data is added for first time
+   */
+  public boolean append(T data, int count) {
+    return map.put(data, new AtomicInteger(count)) == null;
   }
 
-  public AtomicInteger remove(T data, int count) {
+  /**
+   * @return true if this data is removed from map
+   */
+  public boolean remove(T data, int count) {
     if (map.getOrDefault(data, ZERO).get() < count) {
       throw new IllegalStateException();
     }
-    return map.computeIfPresent(data, (k, v) -> v.updateAndGet(c -> c - count) == 0 ? null : v);
+    boolean succ = map.computeIfPresent(data, (k, v) -> v.updateAndGet(c -> c - count) == 0 ? null : v) == null;
+    if (succ) {
+      lastRemoved = data;
+    }
+    return succ;
   }
 
   public boolean flush() {
-    if (map.isEmpty()) {
+    T toFlush = getToFlush();
+    if (toFlush == null) {
       return false;
+    }
+    byte[] bytes = toFlush.toString().getBytes(StandardCharsets.UTF_8);
+    putBytes(file, bytes);
+    file.force();
+    return true;
+  }
+
+  private T getToFlush() {
+    if (map.isEmpty()) {
+      return lastRemoved;
     }
     // possible race condition isEmpty & remove, firstKey may throw NoSuchElementException
     T first;
     try {
       first = map.firstKey();
     } catch (NoSuchElementException e) {
-      return false;
+      return lastRemoved;
     }
-    byte[] bytes = first.toString().getBytes(StandardCharsets.UTF_8);
-    putBytes(file, bytes);
-    file.force();
-    return true;
+    return first;
   }
 
   private void putBytes(MappedByteBuffer file, byte[] bytes) {

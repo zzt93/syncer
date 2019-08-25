@@ -56,23 +56,23 @@ public class ConsumerStarter implements Starter {
                          ConsumerRegistry consumerRegistry) throws Exception {
 
     id = pipeline.getConsumerId();
-    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(id, pipeline.getInput(),
-        syncer.getInput(), syncer.getAck());
 
     outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput());
 
     SchedulerBuilder schedulerBuilder = new SchedulerBuilder();
-    initFilterModule(ack, syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels);
+    initFilterModule(syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels);
 
+    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(id, pipeline.getInput(),
+        syncer.getInput(), syncer.getAck(), outputChannels.size());
     initRegistrant(id, consumerRegistry, schedulerBuilder, pipeline.getInput(), ackConnectionId2SyncInitMeta);
   }
 
   private HashMap<String, SyncInitMeta> initAckModule(String consumerId,
                                                       PipelineInput pipelineInput,
-                                                      SyncerInput input, SyncerAck ackConfig) {
+                                                      SyncerInput input, SyncerAck ackConfig, int outputSize) {
     Set<MasterSource> masterSet = pipelineInput.getMasterSet();
     HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = new HashMap<>();
-    this.ack = Ack.build(consumerId, input.getInputMeta(), masterSet, ackConnectionId2SyncInitMeta);
+    this.ack = Ack.build(consumerId, input.getInputMeta(), masterSet, ackConnectionId2SyncInitMeta, outputSize);
     this.ackConfig = ackConfig;
     return ackConnectionId2SyncInitMeta;
   }
@@ -83,7 +83,7 @@ public class ConsumerStarter implements Starter {
     return outputStarter.getOutputChannels();
   }
 
-  private void initFilterModule(Ack ack, SyncerFilter module, List<FilterConfig> filters,
+  private void initFilterModule(SyncerFilter module, List<FilterConfig> filters,
                                 SchedulerBuilder schedulerBuilder, List<OutputChannel> outputChannels) {
     Preconditions
         .checkArgument(module.getWorker() <= Runtime.getRuntime().availableProcessors() * 3,
@@ -101,7 +101,7 @@ public class ConsumerStarter implements Starter {
     CopyOnWriteArrayList<OutputChannel> channels = new CopyOnWriteArrayList<>(outputChannels);
     for (int i = 0; i < worker; i++) {
       deques[i] = new LinkedBlockingDeque<>();
-      filterJobs[i] = new FilterJob(id, ack, deques[i], channels, syncFilters);
+      filterJobs[i] = new FilterJob(id, deques[i], channels, syncFilters);
     }
     schedulerBuilder.setDeques(deques);
   }
@@ -114,7 +114,7 @@ public class ConsumerStarter implements Starter {
     for (MasterSource masterSource : input.getMasterSet()) {
       EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler()).build();
       List<? extends ConsumerSource> localConsumerSources =
-          masterSource.toConsumerSources(consumerId, ackConnectionId2SyncInitMeta, scheduler);
+          masterSource.toConsumerSources(consumerId, ack, ackConnectionId2SyncInitMeta, scheduler);
       registrant.addDatasource(localConsumerSources);
     }
   }

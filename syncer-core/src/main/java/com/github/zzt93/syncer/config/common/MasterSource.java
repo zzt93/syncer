@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
+import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.input.EventScheduler;
 import com.github.zzt93.syncer.consumer.input.LocalConsumerSource;
 import com.github.zzt93.syncer.consumer.input.MongoLocalConsumerSource;
@@ -109,7 +110,7 @@ public class MasterSource {
   }
 
   public List<? extends ConsumerSource> toConsumerSources(String consumerId,
-                                                          HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta,
+                                                          Ack ack, HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta,
                                                           EventScheduler scheduler) {
     List<LocalConsumerSource> res = new LinkedList<>();
     Connection realConnection = getRealConnection();
@@ -124,13 +125,13 @@ public class MasterSource {
           Preconditions
               .checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is " + syncInitMeta);
           res.add(new MongoLocalConsumerSource(consumerId, connection,
-              getRepoSet(), (DocTimestamp) syncInitMeta, scheduler));
+              getRepoSet(), (DocTimestamp) syncInitMeta, ack, scheduler));
           break;
         case MySQL:
           Preconditions
               .checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is " + syncInitMeta);
           res.add(new MysqlLocalConsumerSource(consumerId, connection,
-              getRepoSet(), (BinlogInfo) syncInitMeta, scheduler));
+              getRepoSet(), (BinlogInfo) syncInitMeta, ack, scheduler));
           break;
         default:
           throw new IllegalStateException("Not implemented type");

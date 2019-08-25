@@ -35,17 +35,15 @@ public class FilterJob implements EventLoop {
   private final BlockingDeque<SyncData> fromInput;
   private final CopyOnWriteArrayList<OutputChannel> outputChannels;
   private final List<SyncFilter> filters;
-  private final Ack ack;
   private final String consumerId;
 
-  public FilterJob(String consumerId, Ack ack, BlockingDeque<SyncData> fromInput,
-      CopyOnWriteArrayList<OutputChannel> outputChannels,
-      List<SyncFilter> filters) {
+  public FilterJob(String consumerId, BlockingDeque<SyncData> fromInput,
+                   CopyOnWriteArrayList<OutputChannel> outputChannels,
+                   List<SyncFilter> filters) {
     this.consumerId = consumerId;
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
     this.filters = filters;
-    this.ack = ack;
   }
 
   @Override
@@ -55,12 +53,7 @@ public class FilterJob implements EventLoop {
     while (!Thread.currentThread().isInterrupted()) {
       try {
         SyncData poll = fromInput.takeFirst();
-        MDC.put(IdGenerator.EID, poll.getEventId());
-        logger.debug("Filter SyncData: {}", poll.getDataId());
-
-        if (filter(list, poll)) {
-          continue;
-        }
+        filter(list, poll);
         output(list, remove);
       } catch (InterruptedException e) {
         logger.warn("[Shutting down] Filter job interrupted");
@@ -69,16 +62,15 @@ public class FilterJob implements EventLoop {
     }
   }
 
-  private boolean filter(LinkedList<SyncData> list, SyncData poll) {
+  private void filter(LinkedList<SyncData> list, SyncData poll) {
+    MDC.put(IdGenerator.EID, poll.getEventId());
+    logger.debug("Filter SyncData: {}", poll);
+
+    list.clear();
+    list.add(poll);
+    // one thread share one context to save much memory
+    poll.setContext(contexts.get());
     try {
-      list.clear();
-      list.add(poll);
-
-      // add dataId to avoid the loss of data when exception happens when do filter
-      ack.append(poll.getSourceIdentifier(), poll.getDataId(), 1);
-      // one thread share one context to save much memory
-      poll.setContext(contexts.get());
-
       for (SyncFilter filter : filters) {
         filter.filter(list);
       }
@@ -86,21 +78,15 @@ public class FilterJob implements EventLoop {
       logger.error("Invalid config for {}", poll, e);
       shutdown(e, outputChannels);
     } catch (Throwable e) {
-      logger.error(
-          "Filter job failed with {}: check [input & filter] config, otherwise syncer will be blocked",
-          poll, e);
+      logger.error("Check [input & filter] config, otherwise syncer will be blocked: {}", poll, e);
       SyncerHealth.consumer(this.consumerId, Health.red(e.getMessage()));
-      InvalidConfigException invalidConfigException = new InvalidConfigException(e);
-      shutdown(invalidConfigException, outputChannels);
+      shutdown(new InvalidConfigException(e), outputChannels);
     }
-    ack.remove(poll.getSourceIdentifier(), poll.getDataId());
-    return false;
   }
 
   private void output(LinkedList<SyncData> list, List<OutputChannel> remove) {
     for (SyncData syncData : list) {
       logger.debug("Output SyncData {}", syncData);
-      ack.append(syncData.getSourceIdentifier(), syncData.getDataId(), outputChannels.size());
       for (OutputChannel outputChannel : this.outputChannels) {
         try {
           outputChannel.output(syncData);
