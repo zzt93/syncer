@@ -46,7 +46,7 @@ if [[ -z ${case} ]]; then
             exit 77
         fi
         logi "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
-        logi "Tested ${c}"
+        logi "Done ${c}"
         logi "~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~"
     done
 else

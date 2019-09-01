@@ -70,9 +70,8 @@ public abstract class LocalConsumerSource implements ConsumerSource {
       return false;
     }
     logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data, data.hashCode());
-    data.setSourceIdentifier(connectionIdentifier);
-    ack.append(data.getSourceIdentifier(), data.getDataId());
-    return scheduler.schedule(data);
+    ack.append(connectionIdentifier, data.getDataId());
+    return scheduler.schedule(data.setSourceIdentifier(connectionIdentifier));
   }
 
   @Override
@@ -80,7 +79,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     boolean res = true;
     for (SyncData datum : data) {
       if (!sent(datum)) {
-        ack.append(datum.getSourceIdentifier(), datum.getDataId());
+        ack.append(connectionIdentifier, datum.getDataId());
         res = scheduler.schedule(datum.setSourceIdentifier(connectionIdentifier)) && res;
         logger.debug("Consumer receive: {} in {}", datum, data);
       } else {

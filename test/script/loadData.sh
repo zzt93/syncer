@@ -45,7 +45,7 @@ function loadToMongo() {
     for f in `find . -name "*.json"`; do
         tmp=`basename $f`
         col=${tmp%".json"}
-        dockerExec mongo mongoimport --db mongo-test --collection ${col} --file /Data/mongo/${f} --jsonArray >> "${LOG_FILE}"
+        dockerExec mongo mongoimport --db simple --collection ${col} --file /Data/mongo/${f} --jsonArray >> "${LOG_FILE}"
     done
 
     cd ${TEST_DIR}

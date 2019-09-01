@@ -1,18 +1,19 @@
 package com.github.zzt93.syncer.consumer.ack;
 
-import java.nio.file.Path;
-import java.nio.file.Paths;
-
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
+
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * @author zzt
  */
 public class FileBasedMapTest {
 
-  private static final Path PATH = Paths.get("src/test/resources/FileBasedMapTest");
+  private static final Path PATH = Paths.get("src/test/resources/FileBasedMapTest.out");
   private FileBasedMap<String> map;
 
   @Before
@@ -52,8 +53,13 @@ public class FileBasedMapTest {
   }
 
   @Test
-  public void testLastRemoved() {
-
+  public void testLastRemoved() throws IOException {
+    String _115 = "mysql-bin.000115/1234360405/139/0";
+    map.append(_115, 2);
+    map.remove(_115, 2);
+    map.flush();
+    String s = new String(FileBasedMap.readData(PATH));
+    Assert.assertEquals(s, _115);
   }
 
   @Test

@@ -8,8 +8,9 @@ function dockerExec() {
 }
 
 function extractESCount() {
-    local db=$1
-    local table=$2
+    local instance=$1
+    local db=$2
+    local table=$3
 
     local response=`curl -s -X GET "localhost:49200/${db}*/${table}/_count" -H 'Content-Type: application/json'`
     logi ${response} | egrep -o '\{"count":[0-9]+' | awk -F ':' '{print $NF}'
@@ -36,8 +37,9 @@ function extractMySqlResultCount() {
 }
 
 function extractMongoCount() {
-    local db=$1
-    local table=$2
+    local instance=$1
+    local db=$2
+    local table=$3
 
     dockerExec mongo mongo ${db} --quiet --eval "db.${table}.count()"
 }
@@ -115,7 +117,7 @@ function cmpFromTo() {
 
             from=`${fromF} ${instance} ${db} ${table} ${expected}`
             logi "[Sync input] -- ${db}.${table}: $from"
-            to=`${toF} ${db} ${table}`
+            to=`${toF} ${instance} ${db} ${table} ${expected}`
             logi "[Sync result] -- ${db}*.${table} in ES : $to"
             if [[ ${to} -ne "$from" ]];then
                 loge "$table not right"
@@ -131,7 +133,7 @@ function cmpFromTo() {
 
     from=`${fromF} ${instance} ${db} ${table} ${expected}`
     logi "[Sync input] -- ${db}.${table}: $from"
-    to=`${toF} ${db} ${table}`
+    to=`${toF} ${instance} ${db} ${table} ${expected}`
     logi "[Sync result] -- ${db}*.${table} in ES : $to"
     if [[ ${to} -ne "$from" ]];then
         loge "$table not right"
@@ -146,6 +148,6 @@ function cmpFromTo() {
 
 
 function cleanupAll() {
-    docker-compose -f docker-compose/drds.yml rm -fsv
+    docker-compose -f docker-compose/${env}.yml rm -fsv
     rm -rf data/*
 }

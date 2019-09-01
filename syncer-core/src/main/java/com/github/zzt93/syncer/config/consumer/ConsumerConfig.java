@@ -61,5 +61,9 @@ public class ConsumerConfig {
     }
     this.filter = filter;
   }
+
+  public int outputSize() {
+    return output.outputChannels();
+  }
 }
 

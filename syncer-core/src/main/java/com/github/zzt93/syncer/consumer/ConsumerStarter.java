@@ -57,13 +57,14 @@ public class ConsumerStarter implements Starter {
 
     id = pipeline.getConsumerId();
 
-    outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput());
+    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(id, pipeline.getInput(),
+        syncer.getInput(), syncer.getAck(), pipeline.outputSize());
+
+    outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput(), ack);
 
     SchedulerBuilder schedulerBuilder = new SchedulerBuilder();
     initFilterModule(syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels);
 
-    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(id, pipeline.getInput(),
-        syncer.getInput(), syncer.getAck(), outputChannels.size());
     initRegistrant(id, consumerRegistry, schedulerBuilder, pipeline.getInput(), ackConnectionId2SyncInitMeta);
   }
 
@@ -78,7 +79,7 @@ public class ConsumerStarter implements Starter {
   }
 
   private List<OutputChannel> initBatchOutputModule(String id, PipelineOutput pipeline,
-                                                    SyncerOutput syncer) throws Exception {
+                                                    SyncerOutput syncer, Ack ack) throws Exception {
     outputStarter = new OutputStarter(id, pipeline, syncer, ack);
     return outputStarter.getOutputChannels();
   }

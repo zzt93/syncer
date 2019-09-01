@@ -84,4 +84,14 @@ public class PipelineOutput {
     }
     return res;
   }
+
+  public int outputChannels() {
+    int count = 0;
+    if (elasticsearch != null) count++;
+    if (http != null) count++;
+    if (mysql != null) count++;
+    if (redis != null) count++;
+    if (kafka != null) count++;
+    return count;
+  }
 }
