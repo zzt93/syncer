@@ -2,10 +2,13 @@ package com.github.zzt93.syncer.config.common;
 
 import com.google.common.collect.Lists;
 import org.elasticsearch.action.bulk.BulkItemResponse;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
 import org.elasticsearch.action.bulk.BulkResponse;
+import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.client.support.AbstractClient;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.junit.Assert;
@@ -27,7 +30,7 @@ public class ElasticsearchConnectionTest {
     elasticsearchConnection.setClusterName("searcher-integration");
     elasticsearchConnection.setClusterNodes(Lists.newArrayList("192.168.1.100:9300"));
 
-    AbstractClient client = elasticsearchConnection.esClient();
+    RestHighLevelClient client = elasticsearchConnection.esClient();
 
     HashMap<String, Object> params = new HashMap<>();
     params.put("users", 540722L);
@@ -41,18 +44,18 @@ public class ElasticsearchConnectionTest {
     Script remove = new Script(ScriptType.INLINE, "painless",
         "ctx._source.users.remove(ctx._source.users.indexOf(params.users));",
         params);
-    UpdateRequestBuilder addRequest = updateRequest(client, add);
-    UpdateRequestBuilder metaRequest = updateRequest(client, meta);
-    UpdateRequestBuilder removeRequest = updateRequest(client, remove);
+    UpdateRequest addRequest = updateRequest(add);
+    UpdateRequest metaRequest = updateRequest(meta);
+    UpdateRequest removeRequest = updateRequest(remove);
 
-    BulkRequestBuilder bulkRequest = client.prepareBulk();
-    bulkRequest.add(metaRequest.request());
-//    bulkRequest.add(removeRequest.request());
-    bulkRequest.add(removeRequest.request());
-//    bulkRequest.add(addRequest.request());
-//    bulkRequest.add(addRequest.request());
-    bulkRequest.add(metaRequest.request());
-    BulkResponse bulkItemResponses = bulkRequest.execute().actionGet();
+    BulkRequest bulkRequest = new BulkRequest();
+    bulkRequest.add(metaRequest);
+//    bulkRequest.add(removeRequest);
+    bulkRequest.add(removeRequest);
+//    bulkRequest.add(addRequest);
+//    bulkRequest.add(addRequest);
+    bulkRequest.add(metaRequest);
+    BulkResponse bulkItemResponses = client.bulk(bulkRequest, RequestOptions.DEFAULT);
     if (bulkItemResponses.hasFailures()) {
       for (BulkItemResponse itemResponse : bulkItemResponses.getItems()) {
         System.out.println(itemResponse.getFailure());
@@ -61,11 +64,11 @@ public class ElasticsearchConnectionTest {
     }
   }
 
-  private UpdateRequestBuilder updateRequest(AbstractClient client, Script meta) {
+  private UpdateRequest updateRequest(Script meta) {
     return
-        client.prepareUpdate("test", "test", "1")
+        new UpdateRequest("test", "test", "1")
 //      client.prepareUpdate("task-0", "task", "13031005")
-          .setScript(meta);
+          .script(meta);
   }
 
   @Test

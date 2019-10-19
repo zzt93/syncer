@@ -19,33 +19,27 @@ import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
 import org.elasticsearch.action.ActionListener;
-import org.elasticsearch.action.ListenableActionFuture;
+import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequest;
-import org.elasticsearch.action.index.IndexRequest;
-import org.elasticsearch.action.support.WriteRequest;
-import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.client.support.AbstractClient;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
-import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
-import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -53,13 +47,13 @@ import java.util.function.Function;
 /**
  * @author zzt
  */
-public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
+public class ElasticsearchChannel implements BufferedChannel<DocWriteRequest> {
 
-  private final BatchBuffer<SyncWrapper<WriteRequest>> batchBuffer;
+  private final BatchBuffer<SyncWrapper<DocWriteRequest>> batchBuffer;
   private final Ack ack;
   // https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-low-usage-maven.html
   // TODO 18/7/12 change to rest client:
-  private final AbstractClient client;
+  private final RestHighLevelClient client;
   private final FailureLog<SyncData> singleRequest;
   private final ESRequestMapper esRequestMapper;
 
@@ -88,31 +82,6 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     });
   }
 
-  static String toString(UpdateRequest request) {
-    String res = "update {[" + request.index() + "][" + request.type() + "][" + request.id() + "]";
-    if (request.docAsUpsert()) {
-      res += (", doc_as_upsert[" + request.docAsUpsert() + "]");
-    }
-    if (request.doc() != null) {
-      res += (", doc[" + request.doc() + "]");
-    }
-    if (request.script() != null) {
-      res += (", script[" + request.script() + "]");
-    }
-    if (request.upsertRequest() != null) {
-      res += (", upsert[" + request.upsertRequest() + "]");
-    }
-    if (request.scriptedUpsert()) {
-      res += (", scripted_upsert[" + request.scriptedUpsert() + "]");
-    }
-    if (request.detectNoop()) {
-      res += (", detect_noop[" + request.detectNoop() + "]");
-    }
-    if (request.fields() != null) {
-      res += (", fields[" + Arrays.toString(request.fields()) + "]");
-    }
-    return res + "}";
-  }
 
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override
@@ -123,37 +92,37 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     if (event.removePrimaryKey()) {
       logger.warn("Include primary key in `_source` is usually not necessary, remove it");
     }
-    Object builder = esRequestMapper.map(event);
-    if (buffered(builder)) {
-      boolean addRes = batchBuffer.add(
-          new SyncWrapper<>(event, ((WriteRequestBuilder) builder).request()));
+    Object request = esRequestMapper.map(event);
+    if (buffered(request)) {
+      boolean addRes = batchBuffer.add(new SyncWrapper<>(event, ((DocWriteRequest) request)));
       BufferedChannel.super.flushAndSetFlushDone(true);
       return addRes;
     } else {
       return sleepInConnectionLost((sleepInSecond) -> {
-        bulkByScrollRequest(event, ((AbstractBulkByScrollRequestBuilder) builder), 0);
+        bulkByScrollRequest(event, ((AbstractBulkByScrollRequest) request), 0);
         return true;
       });
     }
   }
 
   private boolean buffered(Object builder) {
-    return builder instanceof WriteRequestBuilder;
+    return builder instanceof DocWriteRequest;
   }
 
-  private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequestBuilder builder,
-      int count) {
+  private void bulkByScrollRequest(SyncData data, AbstractBulkByScrollRequest bulkByScrollRequest,
+                                   int count) {
     if (closed.get()) {
       return;
     }
-    builder.execute(new ActionListener<BulkByScrollResponse>() {
+
+    ActionListener<BulkByScrollResponse> actionListener = new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
         MDC.put(LogbackLoggingField.EID, data.getEventId());
         if (bulkByScrollResponse.getUpdated() == 0
             && bulkByScrollResponse.getDeleted() == 0) {
           if (count == 0) {// only log at first failure
-            logger.warn("No documents changed of {}:\n {}", builder.request(), builder.source());
+            logger.warn("No documents changed of {}:\n {}", bulkByScrollRequest.getSearchRequest(), bulkByScrollRequest.getDescription());
           }
           try {
             waitRefresh();
@@ -164,7 +133,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
           retry(null, false);
         } else {
           if (count > 0) {
-            logger.warn("Finally succeed to {}:\n {}", builder.request(), builder.source());
+            logger.warn("Finally succeed to {}:\n {}", bulkByScrollRequest.getSearchRequest(), bulkByScrollRequest.getDescription());
           }
           ack.remove(data.getSourceIdentifier(), data.getDataId());
         }
@@ -173,7 +142,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       @Override
       public void onFailure(Exception e) {
         MDC.put(LogbackLoggingField.EID, data.getEventId());
-        logger.error("Fail to {}:\n {}", builder.request(), builder.source(), e);
+        logger.error("Fail to {}:\n {}", bulkByScrollRequest.getSearchRequest(), bulkByScrollRequest.getDescription(), e);
         retry(e, true);
       }
 
@@ -187,9 +156,16 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
           ack.remove(data.getSourceIdentifier(), data.getDataId());
           return;
         }
-        bulkByScrollRequest(data, builder, count + 1);
+        bulkByScrollRequest(data, bulkByScrollRequest, count + 1);
       }
-    });
+    };
+
+    if (bulkByScrollRequest instanceof DeleteByQueryRequest) {
+      client.deleteByQueryAsync((DeleteByQueryRequest) bulkByScrollRequest, RequestOptions.DEFAULT, actionListener);
+    } else if (bulkByScrollRequest instanceof UpdateByQueryRequest) {
+      client.updateByQueryAsync((UpdateByQueryRequest) bulkByScrollRequest, RequestOptions.DEFAULT, actionListener);
+    }
+
   }
 
   private void waitRefresh() throws InterruptedException {
@@ -218,8 +194,11 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
     BufferedChannel.super.close();
 
-    // client
-    client.close();
+    try {
+      client.close();
+    } catch (IOException e) {
+      logger.error("Fail to close ES channel", e);
+    }
   }
 
   @Override
@@ -237,28 +216,28 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     return batchConfig.getDelayTimeUnit();
   }
 
-  @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
+  @ThreadSafe(safe = {RestHighLevelClient.class, BatchBuffer.class})
   @Override
   public boolean flush() throws InterruptedException {
-    List<SyncWrapper<WriteRequest>> aim = batchBuffer.flush();
+    List<SyncWrapper<DocWriteRequest>> aim = batchBuffer.flush();
     buildSendProcess(aim);
     return aim != null;
   }
 
   @Override
-  public void ackSuccess(List<SyncWrapper<WriteRequest>> aim) {
+  public void ackSuccess(List<SyncWrapper<DocWriteRequest>> aim) {
     for (SyncWrapper wrapper : aim) {
       ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
     }
   }
 
   @Override
-  public void retryFailed(List<SyncWrapper<WriteRequest>> aim, Throwable e) {
+  public void retryFailed(List<SyncWrapper<DocWriteRequest>> aim, Throwable e) {
     BulkItemResponse[] items = ((ElasticsearchBulkException) e).getBulkItemResponses().getItems();
-    LinkedList<SyncWrapper<WriteRequest>> tmp = new LinkedList<>();
+    LinkedList<SyncWrapper<DocWriteRequest>> tmp = new LinkedList<>();
     for (int i = 0; i < aim.size(); i++) {
       BulkItemResponse item = items[i];
-      SyncWrapper<WriteRequest> wrapper = aim.get(i);
+      SyncWrapper<DocWriteRequest> wrapper = aim.get(i);
       if (!item.isFailed()) {
         ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
         continue;
@@ -267,7 +246,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       // failed item handle
       ErrorLevel level = level(e, wrapper, batchConfig.getMaxRetry());
       if (level.retriable()) {
-        logger.info("Retry {} because {}", requestStr(wrapper), item.getFailure());
+        logger.info("Retry {} because {}", wrapper.getData(), item.getFailure());
         handle404(wrapper, item);
         tmp.add(wrapper);
       } else {
@@ -294,16 +273,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     return BufferedChannel.super.level(e, wrapper, maxTry);
   }
 
-  private Object requestStr(SyncWrapper<WriteRequest> wrapper) {
-    WriteRequest request = wrapper.getData();
-    String reqStr = null;
-    if (request instanceof UpdateRequest) {
-      reqStr = toString((UpdateRequest) request);
-    }
-    return reqStr == null ? request : reqStr;
-  }
-
-  private void handle404(SyncWrapper<WriteRequest> wrapper, BulkItemResponse item) {
+  private void handle404(SyncWrapper<DocWriteRequest> wrapper, BulkItemResponse item) {
     if (item.getFailure().getCause() instanceof DocumentMissingException) {
       logger.warn("Make update request upsert to resolve DocumentMissingException");
       UpdateRequest request = ((UpdateRequest) wrapper.getData());
@@ -320,10 +290,10 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     return ack.flush();
   }
 
-  @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
+  @ThreadSafe(safe = {RestHighLevelClient.class, BatchBuffer.class})
   @Override
   public boolean flushIfReachSizeLimit() throws InterruptedException {
-    List<SyncWrapper<WriteRequest>> aim = batchBuffer.flushIfReachSizeLimit();
+    List<SyncWrapper<DocWriteRequest>> aim = batchBuffer.flushIfReachSizeLimit();
     buildSendProcess(aim);
     return aim != null;
   }
@@ -333,7 +303,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     batchBuffer.flushDone();
   }
 
-  private void buildSendProcess(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {
+  private void buildSendProcess(List<SyncWrapper<DocWriteRequest>> aim) throws InterruptedException {
     if (aim != null) {
       logger.info("Flush batch({})", aim.size());
       BulkResponse bulkResponse = buildAndSend(aim);
@@ -354,60 +324,40 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
    *
    * @throws InterruptedException throw when shutdown
    */
-  private BulkResponse buildAndSend(List<SyncWrapper<WriteRequest>> aim)
+  private BulkResponse buildAndSend(List<SyncWrapper<DocWriteRequest>> aim)
       throws InterruptedException {
     // BulkProcessor?
-    BulkRequestBuilder bulkRequest = client.prepareBulk();
+    BulkRequest bulkRequest = new BulkRequest();
     if (logger.isDebugEnabled()) {
       StringJoiner joiner = new StringJoiner(",", "[", "]");
-      for (SyncWrapper<WriteRequest> requestWrapper : aim) {
-        WriteRequest request = requestWrapper.getData();
-        if (request instanceof IndexRequest) {
-          joiner.add(request.toString());
-          bulkRequest.add((IndexRequest) request);
-        } else if (request instanceof UpdateRequest) {
-          joiner.add(toString(((UpdateRequest) request)));
-          bulkRequest.add(((UpdateRequest) request));
-        } else if (request instanceof DeleteRequest) {
-          joiner.add(request.toString());
-          bulkRequest.add(((DeleteRequest) request));
-        }
+      for (SyncWrapper<DocWriteRequest> requestWrapper : aim) {
+        DocWriteRequest request = requestWrapper.getData();
+        joiner.add(request.toString());
+        bulkRequest.add(request);
       }
       // This buffer is shared by all filter thread,
       // so events scheduled to different queue & filter thread will
       // all in this buffer (Of course, will not affect the order of related events)
       logger.debug("Sending {}", joiner);
     } else {
-      for (SyncWrapper<WriteRequest> requestWrapper : aim) {
-        WriteRequest request = requestWrapper.getData();
-        if (request instanceof IndexRequest) {
-          bulkRequest.add((IndexRequest) request);
-        } else if (request instanceof UpdateRequest) {
-          bulkRequest.add(((UpdateRequest) request));
-        } else if (request instanceof DeleteRequest) {
-          bulkRequest.add(((DeleteRequest) request));
-        }
+      for (SyncWrapper<DocWriteRequest> requestWrapper : aim) {
+        DocWriteRequest request = requestWrapper.getData();
+        bulkRequest.add(request);
       }
     }
 
     return sleepInConnectionLost((sleepInSecond) -> {
-      ListenableActionFuture<BulkResponse> future = bulkRequest.execute();
       try {
-        return future.get();
-      } catch (ExecutionException e) {
+        return client.bulk(bulkRequest, RequestOptions.DEFAULT);
+      } catch (IOException e) {
         logger.error("", e);
         SyncerHealth.consumer(consumerId, id, Health.red(e.getMessage()));
         return null;
-      } catch (InterruptedException e) {
-        logger.info("Future interrupted");
-        Thread.currentThread().interrupt();
-        return future.actionGet();
       }
     });
   }
 
   /**
-   *
    * @param supplier return null if it fails to connect to ES
    */
   private <R> R sleepInConnectionLost(Function<Long, R> supplier) throws InterruptedException {

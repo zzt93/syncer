@@ -11,7 +11,7 @@ import java.util.Map;
 import java.util.function.BiConsumer;
 
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
-import static org.jboss.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static org.apache.http.HttpHeaders.CONTENT_TYPE;
 
 /**
  * @author zzt

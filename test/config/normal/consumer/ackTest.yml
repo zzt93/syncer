@@ -101,7 +101,7 @@ output:
         "fields": "fields.*.flatten"
         "id": "id"
     batch:
-      size: 100
+      size: 1000
       delay: 100
       maxRetry: 5
     failureLog:
