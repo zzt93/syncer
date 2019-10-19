@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
-import com.github.zzt93.syncer.common.IdGenerator.Offset;
+import com.github.zzt93.syncer.common.data.MongoDataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.filter.ForkStatement;
 import org.springframework.expression.Expression;
@@ -36,7 +36,7 @@ public class Create implements ForkStatement {
   }
 
   public SyncData execute(SyncData src) {
-    SyncData create = new SyncData(src, Offset.CLONE.ordinal());
+    SyncData create = new SyncData(src, MongoDataId.Offset.CLONE.ordinal());
     for (Expression s : copyValue) {
       Object value = s.getValue(src.getContext());
       s.setValue(create.getContext(), value);

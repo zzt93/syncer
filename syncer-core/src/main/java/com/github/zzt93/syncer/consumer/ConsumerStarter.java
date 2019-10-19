@@ -63,7 +63,7 @@ public class ConsumerStarter implements Starter {
     outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput(), ack);
 
     SchedulerBuilder schedulerBuilder = new SchedulerBuilder();
-    initFilterModule(syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels);
+    initFilterModule(syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels, ack);
 
     initRegistrant(id, consumerRegistry, schedulerBuilder, pipeline.getInput(), ackConnectionId2SyncInitMeta);
   }
@@ -85,7 +85,7 @@ public class ConsumerStarter implements Starter {
   }
 
   private void initFilterModule(SyncerFilter module, List<FilterConfig> filters,
-                                SchedulerBuilder schedulerBuilder, List<OutputChannel> outputChannels) {
+                                SchedulerBuilder schedulerBuilder, List<OutputChannel> outputChannels, Ack ack) {
     Preconditions
         .checkArgument(module.getWorker() <= Runtime.getRuntime().availableProcessors() * 3,
             "Too many worker thread");
@@ -102,7 +102,7 @@ public class ConsumerStarter implements Starter {
     CopyOnWriteArrayList<OutputChannel> channels = new CopyOnWriteArrayList<>(outputChannels);
     for (int i = 0; i < worker; i++) {
       deques[i] = new LinkedBlockingDeque<>();
-      filterJobs[i] = new FilterJob(id, deques[i], channels, syncFilters);
+      filterJobs[i] = new FilterJob(id, deques[i], channels, syncFilters, ack);
     }
     schedulerBuilder.setDeques(deques);
   }

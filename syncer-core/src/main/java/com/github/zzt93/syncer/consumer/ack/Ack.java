@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.ack;
 
-import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.MasterSource;
@@ -29,7 +29,7 @@ public class Ack {
   private final String metaDir;
   @ThreadSafe(sharedBy = {"main", "shutdown hook", "syncer-filter-output"}, des = "Thread start rule."
       + "main thread init ack before two other thread start")
-  private Map<String, FileBasedMap<String>> ackMap = new HashMap<>();
+  private Map<String, FileBasedMap<DataId>> ackMap = new HashMap<>();
   private final String clientId;
   private final int outputSize;
 
@@ -83,10 +83,10 @@ public class Ack {
         String data = new String(bytes, StandardCharsets.UTF_8);
         switch (sourceType) {
           case MySQL:
-            syncInitMeta = IdGenerator.fromDataId(data);
+            syncInitMeta = DataId.fromDataId(data);
             break;
           case Mongo:
-            syncInitMeta = IdGenerator.fromMongoDataId(data);
+            syncInitMeta = DataId.fromMongoDataId(data);
             break;
         }
       } catch (Exception e) {
@@ -101,14 +101,18 @@ public class Ack {
   /**
    * append `outputSize` at the beginning of consumer
    */
-  public void append(String identifier, String dataId) {
-    ackMap.get(identifier).append(dataId, outputSize);
+  public void append(String identifier, DataId dataId) {
+    if (ackMap.get(identifier).append(dataId, outputSize)) {
+      logger.debug("Append {} {} to ack log", identifier, dataId);
+    } else {
+      logger.error("Already append: {} {}", identifier, dataId);
+    }
   }
 
   /**
    * remove one when ack is received from a output
    */
-  public void remove(String identifier, String dataId) {
+  public void remove(String identifier, DataId dataId) {
     boolean remove = false;
     try {
       remove = ackMap.get(identifier).remove(dataId, 1);
@@ -124,7 +128,7 @@ public class Ack {
     // - add next dataId: seems hard to do
     // - set `lastRemoved` in FileBasedMap#remove
     boolean res = true;
-    for (FileBasedMap<String> map : ackMap.values()) {
+    for (FileBasedMap<? super DataId> map : ackMap.values()) {
       res = map.flush() && res;
     }
     return res;

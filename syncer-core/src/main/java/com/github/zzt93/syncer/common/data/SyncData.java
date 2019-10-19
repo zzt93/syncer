@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.data.SyncResult;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
@@ -26,9 +25,9 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   private SyncResult result;
   private Set<String> updated;
 
-  public SyncData(String eventId, int ordinal, SimpleEventType type, String database, String entity, String primaryKeyName,
+  public SyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName,
                   Object id, NamedChange row) {
-    inner = new Meta(eventId, ordinal, -1, null);
+    inner = new Meta(dataId, null);
     result = new SyncResult(row.getFull());
 
     setPrimaryKeyName(primaryKeyName);
@@ -43,8 +42,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public SyncData(SyncData syncData, int offset) {
-    inner = new Meta(syncData.getEventId(), syncData.inner.ordinal, offset,
-        syncData.getSourceIdentifier());
+    inner = new Meta(((BinlogDataId) syncData.inner.dataId).copyAndSetOffset(offset), syncData.getSourceIdentifier());
     inner.context = EvaluationFactory.context();
     inner.context.setRootObject(this);
     result = new SyncResult();
@@ -138,7 +136,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   /**
    *
-   * @see #SyncData(String, int, SimpleEventType, String, String, String, Object, NamedChange)
+   * @see #SyncData(DataId, SimpleEventType, String, String, String, Object, NamedChange)
    */
   @Override
   public boolean updated() {
@@ -250,10 +248,10 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public String getEventId() {
-    return inner.eventId;
+    return inner.dataId.eventId();
   }
 
-  public String getDataId() {
+  public DataId getDataId() {
     return inner.dataId;
   }
 
@@ -325,35 +323,24 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   private static class Meta {
-    private final String eventId;
-    private final String dataId;
-    private final int ordinal;
+    private final DataId dataId;
     private transient StandardEvaluationContext context;
     private boolean hasExtra = false;
     private String connectionIdentifier;
 
-    Meta(String eventId, int ordinal, int offset, String connectionIdentifier) {
-      this.eventId = eventId;
+    Meta(DataId dataId, String connectionIdentifier) {
+      this.dataId = dataId;
       this.connectionIdentifier = connectionIdentifier;
-      if (offset < 0) {
-        dataId = IdGenerator.fromEventId(eventId, ordinal);
-      } else {
-        dataId = IdGenerator.fromEventId(eventId, ordinal, offset);
-      }
-      this.ordinal = ordinal;
     }
 
     @Override
     public String toString() {
       return "Meta{" +
-          "eventId='" + eventId + '\'' +
-          ", dataId='" + dataId + '\'' +
-          ", ordinal=" + ordinal +
+          "dataId=" + dataId +
           ", context=" + context +
           ", hasExtra=" + hasExtra +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
           '}';
     }
-
   }
 }

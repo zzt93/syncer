@@ -31,6 +31,9 @@ public class DataGenerator {
   public static void main(String[] args) throws IOException {
     String outDir = args[0];
     String sqlFile = args[1];
+    String sqlFileName = Paths.get(sqlFile).getFileName().toString();
+    String dbName = sqlFileName.split("\\.")[0];
+
     long lines = Long.parseLong(args[2]);
     long idStart = args.length >= 4 ? Long.parseUnsignedLong(args[3]) : 0;
     long sqlFlags = args.length >= 5 ? Long.parseUnsignedLong(args[4]) : -1;
@@ -41,7 +44,7 @@ public class DataGenerator {
         continue;
       }
 
-      Path path = Paths.get(outDir, CSV, sqlFile.split("\\.")[0], tableName + "." + CSV);
+      Path path = Paths.get(outDir, CSV, dbName, tableName + "." + CSV);
       Files.createDirectories(path.getParent());
       System.out.println("Generate " + path);
       PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));
@@ -52,7 +55,7 @@ public class DataGenerator {
         if (((sqlFlags >> flag.ordinal()) & 1) == 0) {
           continue;
         }
-        path = Paths.get(outDir, SQL, sqlFile.split("\\.")[0], tableName + "-" + flag + "." + SQL);
+        path = Paths.get(outDir, SQL, dbName, tableName + "-" + flag + "." + SQL);
         Files.createDirectories(path.getParent());
         System.out.println("Generate " + path);
         out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(path.toFile())));

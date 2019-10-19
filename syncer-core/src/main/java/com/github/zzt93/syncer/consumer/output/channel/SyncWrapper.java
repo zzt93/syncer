@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel;
 
+import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.output.Retryable;
 
@@ -8,7 +9,7 @@ import com.github.zzt93.syncer.consumer.output.Retryable;
  */
 public class SyncWrapper<T> implements Retryable {
 
-  private final String syncDataId;
+  private final DataId syncDataId;
   private final String sourceId;
   private final T data;
   private final SyncData event;
@@ -25,7 +26,7 @@ public class SyncWrapper<T> implements Retryable {
     return sourceId;
   }
 
-  public String getSyncDataId() {
+  public DataId getSyncDataId() {
     return syncDataId;
   }
 

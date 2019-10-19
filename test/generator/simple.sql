@@ -1,5 +1,3 @@
-create database IF NOT EXISTS simple;
-use simple;
 
 CREATE TABLE IF NOT EXISTS  `simple_type` (
 	`id` bigint UNSIGNED NOT NULL AUTO_INCREMENT,

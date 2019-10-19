@@ -42,7 +42,7 @@ function esCompare() {
 }
 
 
-# tables in mysql_test.sql
+# tables in test.sql
 names="news correctness types"
 for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
     for table in ${names} ; do

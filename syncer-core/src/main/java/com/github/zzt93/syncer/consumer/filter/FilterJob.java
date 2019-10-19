@@ -1,7 +1,8 @@
 package com.github.zzt93.syncer.consumer.filter;
 
 import com.github.zzt93.syncer.ShutDownCenter;
-import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.common.LogbackLoggingField;
+import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
@@ -36,14 +37,16 @@ public class FilterJob implements EventLoop {
   private final CopyOnWriteArrayList<OutputChannel> outputChannels;
   private final List<SyncFilter> filters;
   private final String consumerId;
+  private final Ack ack;
 
   public FilterJob(String consumerId, BlockingDeque<SyncData> fromInput,
                    CopyOnWriteArrayList<OutputChannel> outputChannels,
-                   List<SyncFilter> filters) {
+                   List<SyncFilter> filters, Ack ack) {
     this.consumerId = consumerId;
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
     this.filters = filters;
+    this.ack = ack;
   }
 
   @Override
@@ -54,6 +57,7 @@ public class FilterJob implements EventLoop {
       try {
         SyncData poll = fromInput.takeFirst();
         filter(list, poll);
+        addOrDiscardAck(poll, list);
         output(list, remove);
       } catch (InterruptedException e) {
         logger.warn("[Shutting down] Filter job interrupted");
@@ -62,8 +66,23 @@ public class FilterJob implements EventLoop {
     }
   }
 
+  private void addOrDiscardAck(SyncData poll, LinkedList<SyncData> list) {
+    DataId dataId = poll.getDataId();
+    boolean hasOld = false;
+    for (SyncData syncData : list) {
+      if (dataId.equals(syncData.getDataId())) {
+        hasOld = true;
+      } else {
+        ack.append(syncData.getSourceIdentifier(), syncData.getDataId());
+      }
+    }
+    if (!hasOld) {
+      ack.remove(poll.getSourceIdentifier(), dataId);
+    }
+  }
+
   private void filter(LinkedList<SyncData> list, SyncData poll) {
-    MDC.put(IdGenerator.EID, poll.getEventId());
+    MDC.put(LogbackLoggingField.EID, poll.getEventId());
     logger.debug("Filter SyncData: {}", poll);
 
     list.clear();

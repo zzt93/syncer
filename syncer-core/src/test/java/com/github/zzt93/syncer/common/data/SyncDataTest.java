@@ -7,8 +7,6 @@ import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.InstanceCreator;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -27,7 +25,7 @@ import static org.junit.Assert.assertTrue;
 public class SyncDataTest {
 
   private static final int _1D = 24 * 60 * 60 * 1000;
-  private Gson gson = new GsonBuilder().registerTypeAdapter(SyncByQuery.class, (InstanceCreator<SyncByQuery>) type -> new ESScriptUpdate(null)).create();
+  private Gson gson = SyncDataGsonFactory.gson();
 
   @Before
   public void setUp() throws Exception {
@@ -35,10 +33,17 @@ public class SyncDataTest {
 
   @Test
   public void testSerialize() {
-    SyncData data = new SyncData("asdf", 1, SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()));
+    SyncData data = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()));
     data.syncByQuery().filter("id", 1);
     String s = gson.toJson(data);
     SyncData syncData = gson.fromJson(s, SyncData.class);
+    assertEquals(data.getEventId(), syncData.getEventId());
+    assertEquals(data.getRepo(), syncData.getRepo());
+
+    data = new SyncData(new MongoDataId(1114, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()));
+    data.syncByQuery().filter("id", 1);
+    s = gson.toJson(data);
+    syncData = gson.fromJson(s, SyncData.class);
     assertEquals(data.getEventId(), syncData.getEventId());
     assertEquals(data.getRepo(), syncData.getRepo());
   }
@@ -73,7 +78,7 @@ public class SyncDataTest {
     now.put("10", new BigDecimal(10000.10000));
     now.put("11", new Date(System.currentTimeMillis() + _1D));
     NamedFullRow row = new NamedFullRow(now).setBeforeFull(before);
-    SyncData data = new SyncData("asdf", 1, SimpleEventType.UPDATE, "test", "test", "id", 1L, row);
+    SyncData data = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, row);
     assertTrue(data.updated());
     assertTrue(!data.updated("1"));
     assertTrue(data.updated("2"));

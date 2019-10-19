@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 source ${LOG_LIB}
+source ${CONST}
 
 function dockerExec() {
   local service="$1"; shift
@@ -44,6 +45,8 @@ function extractMongoCount() {
     dockerExec mongo mongo ${db} --quiet --eval "db.${table}.count()"
 }
 
+
+
 function generateInitSqlFile() {
     logi "-------------------"
     logi "generateInitSqlFile"
@@ -52,11 +55,21 @@ function generateInitSqlFile() {
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
         tmp="data/mysql_init_${i}.sql"
         if [[ ! -e ${tmp} ]];then
-            echo -e "CREATE DATABASE IF NOT EXISTS test_$i;\n use test_$i;" > ${tmp}
-            cat generator/mysql_test.sql >> ${tmp}
-            cat generator/mysql_simple.sql >> ${tmp}
+            for db in ${allDBs} ; do
+                echo -e "CREATE DATABASE IF NOT EXISTS ${db}_$i;\n use ${db}_$i;" >> ${tmp}
+                cat generator/${db}.sql >> ${tmp}
+            done
         fi
         export mysql_init_${i}=$(pwd)/${tmp}
+    done
+
+    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
+        # only put back table in first database
+        tmp="data/mysql_init_0.sql"
+        for db in ${allDBs} ; do
+            echo -e "CREATE DATABASE IF NOT EXISTS ${db}_$i;\n use ${db}_$i;" >> ${tmp}
+            cat generator/${db}.sql >> ${tmp}
+        done
     done
 }
 
@@ -100,8 +113,6 @@ function extractConst() {
     echo $4
 }
 
-# tables in mysql_test.sql
-names="news correctness types"
 
 function cmpFromTo() {
     waitSyncer
@@ -109,36 +120,29 @@ function cmpFromTo() {
     fromF=$1
     toF=$2
     expected=$3
+    dbs=$4
+    if [[ -z ${dbs} ]]; then
+        dbs=${defaultDBs}
+    fi
+
     hasError=false
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
-        for table in ${names} ; do
-            instance=mysql_${i}
-            db=test_${i}
-
-            from=`${fromF} ${instance} ${db} ${table} ${expected}`
-            logi "[Sync input] -- ${db}.${table}: $from"
-            to=`${toF} ${instance} ${db} ${table} ${expected}`
-            logi "[Sync result] -- ${db}*.${table} in ES : $to"
-            if [[ ${to} -ne "$from" ]];then
-                loge "$table not right"
-                hasError=true
-            fi
+        instance=mysql_${i}
+        for dbPrefix in ${dbs} ; do
+            db=${dbPrefix}_${i}
+            for table in ${db2table[${dbPrefix}]} ; do
+                from=`${fromF} ${instance} ${db} ${table} ${expected}`
+                logi "[Sync input: $fromF] -- ${db}.${table}: $from"
+                # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
+                to=`${toF} mysql_0 ${db} ${table} ${expected}`
+                logi "[Sync result: $toF] -- ${db}*.${table}: $to"
+                if [[ ${to} -ne "$from" ]];then
+                    loge "$table not right"
+                    hasError=true
+                fi
+            done
         done
     done
-
-    # tables in mysql_simple.sql
-    instance=mysql_0
-    db=simple
-    table=simple_type
-
-    from=`${fromF} ${instance} ${db} ${table} ${expected}`
-    logi "[Sync input] -- ${db}.${table}: $from"
-    to=`${toF} ${instance} ${db} ${table} ${expected}`
-    logi "[Sync result] -- ${db}*.${table} in ES : $to"
-    if [[ ${to} -ne "$from" ]];then
-        loge "$table not right"
-        hasError=true
-    fi
 
 
     if [[ ${hasError} = true ]]; then

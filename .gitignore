@@ -31,3 +31,5 @@ mvnw
 mvnw.cmd
 *.log
 *.out
+
+FileBasedMapTest

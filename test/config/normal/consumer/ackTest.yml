@@ -1,0 +1,108 @@
+version: 1.2
+
+consumerId: ackTest
+
+
+input:
+  masters:
+    - connection:
+        clusterNodes: [${MYSQL_ADDR}]
+      scheduler: mod
+      repos:
+        - name: "test_.*"
+          entities:
+            - name: correctness
+              fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
+            - name: types
+              fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+            - name: news
+              fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
+        - name: "simple.*"
+          entities:
+            - name: simple_type
+              fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+        - name: "discard.*"
+          entities:
+            - name: toDiscard
+              fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
+        - name: "copy.*"
+          entities:
+            - name: toCopy
+              fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
+
+
+
+filter:
+  - method: '
+  public void filter(List<SyncData> list) {
+    SyncData sync = list.get(0);
+    sync.addExtra("suffix", "");
+    String entity = sync.getEntity();
+    switch (entity) {
+      case "news":
+      case "toCopy":
+        SyncUtil.toStr(sync, "thumb_content");
+        SyncUtil.toStr(sync, "content");
+        break;
+      case "types":
+      case "simple_type":
+        SyncUtil.toStr(sync, "text");
+        SyncUtil.unsignedByte(sync, "tinyint");
+        sync.addExtra("suffix", "-" + ((long) sync.getId())%2);
+        break;
+      case "correctness":
+        SyncUtil.unsignedByte(sync, "type");
+        break;
+    }
+
+    if (entity.equals("toDiscard")) { /* clear test */
+      list.clear();
+    } else if (entity.equals("toCopy")) { /* copy test */
+      SyncData copy = sync.copyMeta(0).setRepo(sync.getRepo()).setEntity(sync.getEntity())
+          .setId(((Number) sync.getId()).longValue() + Integer.MAX_VALUE);
+      copy.getFields().putAll(sync.getFields());
+      copy.addExtra("suffix", "");
+      list.add(copy);
+    }
+  }
+'
+
+
+output:
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+    requestMapping: # mapping from input data to es request
+      enableExtraQuery: true
+      retryOnUpdateConflict: 3
+      index: "repo + getExtra('suffix')" # default: repo
+      documentId: "id" # default: id
+      fieldsMapping: # default: fields.*.flatten
+        "fields": "fields.*.flatten"
+    batch:
+      size: 100
+      delay: 1000
+      maxRetry: 5
+    refreshInMillis: 0
+    failureLog:
+      countLimit: 1000
+  mysql:
+    connection:
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_OUT_PASS}
+    rowMapping:
+      schema: " repo "
+      table: "entity + '_bak'"
+      id: "id"
+      rows:
+        "fields": "fields.*.flatten"
+        "id": "id"
+    batch:
+      size: 100
+      delay: 100
+      maxRetry: 5
+    failureLog:
+      countLimit: 1000

@@ -45,13 +45,13 @@ function drdsAssert() {
     fi
 }
 
-# tables in mysql_test.sql
+# tables in test.sql
 names="news correctness types"
 for table in ${names} ; do
     drdsAssert ${table}
 done
 
-# tables in mysql_simple.sql
+# tables in simple.sql
 mysqlAssert mysql_0 simple simple_type
 
 

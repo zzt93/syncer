@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 env=drds
-num=100
-syncerDir=non-latest
+num=1000
+syncerDir=normal
 
 source ${UTIL_LIB}
 
@@ -24,8 +24,18 @@ function test-non-latest() {
     bash script/generateData.sh ${num} ${env} ${num}
     bash script/loadData.sh ${env}
 
-    # Then: count == num * 2
+    waitSyncer 60
+
+    # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
+    # Then: sync to mysql
+    cmpFromTo extractMySqlCount extractMySqlResultCount
+
+    # Then: test clear
+    cmpFromTo extractConst extractESCount 0 discard
+    # Then: test copy
+    all=$(( 4 * num ))
+    cmpFromTo extractConst extractESCount ${all} copy
 }
 
 function cleanup() {

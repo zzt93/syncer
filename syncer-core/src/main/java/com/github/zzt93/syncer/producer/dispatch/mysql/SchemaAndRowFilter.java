@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.producer.dispatch.mysql;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
+import com.github.zzt93.syncer.common.data.BinlogDataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.IndexedFullRow;
@@ -28,7 +29,7 @@ public class SchemaAndRowFilter {
     this.onlyUpdated = onlyUpdated;
   }
 
-  SyncData[] decide(SimpleEventType type, String eventId, Event... e) {
+  SyncData[] decide(SimpleEventType type, BinlogDataId dataId, Event... e) {
     TableMapEventData tableMap = e[0].getData();
     TableMeta table = consumerSchemaMeta.findTable(tableMap.getDatabase(), tableMap.getTable());
     if (table == null) {
@@ -45,7 +46,7 @@ public class SchemaAndRowFilter {
     for (int i = 0; i < res.length; i++) {
       NamedFullRow row = namedRow.get(i);
       if (onlyUpdated && type == SimpleEventType.UPDATE && row.getUpdated().isEmpty()) {
-        logger.debug("Discard {} because [{}]", eventId, row);
+        logger.debug("Discard {} because [{}]", dataId.eventId(), row);
         // even though in one update event, multiple rows can have different updated column,
         // so we can only skip one by one
         // e.g. we listening 'name1' but not 'name2' and the following update will make all updates in a single event
@@ -59,7 +60,7 @@ public class SchemaAndRowFilter {
         row.remove(primaryKey);
       }
       hasData = true;
-      res[i] = new SyncData(eventId, i, type, tableMap.getDatabase(), tableMap.getTable(), primaryKey, pk, row);
+      res[i] = new SyncData(dataId.copyAndSetOrdinal(i), type, tableMap.getDatabase(), tableMap.getTable(), primaryKey, pk, row);
     }
     if (hasData) {
       return res;

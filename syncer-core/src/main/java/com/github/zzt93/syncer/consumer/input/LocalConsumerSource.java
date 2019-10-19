@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.consumer.input;
 
-import com.github.zzt93.syncer.common.IdGenerator;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.common.Connection;
@@ -81,7 +80,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
       if (!sent(datum)) {
         ack.append(connectionIdentifier, datum.getDataId());
         res = scheduler.schedule(datum.setSourceIdentifier(connectionIdentifier)) && res;
-        logger.debug("Consumer receive: {} in {}", datum, data);
+        logger.debug("Consumer({}, {}) receive: {}", getSyncInitMeta(), clientId, datum);
       } else {
         logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, datum,
             connectionIdentifier);
@@ -105,7 +104,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     }
     // remembered position is not synced in last run,
     // if syncInitMeta.compareTo(now) == 0, is not sent
-    return isSent = getSyncInitMeta().compareTo(IdGenerator.getSyncMeta(data.getDataId())) > 0;
+    return isSent = getSyncInitMeta().compareTo(data.getDataId().getSyncInitMeta()) > 0;
   }
 
   @Override

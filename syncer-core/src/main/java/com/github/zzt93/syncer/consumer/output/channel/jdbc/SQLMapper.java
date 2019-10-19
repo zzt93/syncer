@@ -53,7 +53,6 @@ public class SQLMapper implements Mapper<SyncData, String> {
     String table = evalString(this.table, context);
     String id = evalString(this.id, context);
     HashMap<String, Object> map = kvMapper.map(data);
-    logger.debug("Convert SyncData to {}", map);
     // TODO 18/1/24 replace with `PreparedStatement`?
     switch (data.getType()) {
       case WRITE:

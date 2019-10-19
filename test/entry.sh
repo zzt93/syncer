@@ -22,6 +22,7 @@ function configEnvVar() {
     export LOG_LIB=`pwd`/script/log.sh
     source ${LOG_LIB}
     export UTIL_LIB=`pwd`/script/util.sh
+    export CONST=`pwd`/script/const.sh
 
     export TEST_DIR=`pwd`
     export CONFIG_DIR=`pwd`/config

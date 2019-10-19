@@ -1,6 +1,8 @@
 package com.github.zzt93.syncer.producer.dispatch.mongo;
 
-import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.common.LogbackLoggingField;
+import com.github.zzt93.syncer.common.data.DataId;
+import com.github.zzt93.syncer.common.data.MongoDataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.data.SimpleEventType;
@@ -47,11 +49,11 @@ public class MongoDispatcher implements Dispatcher {
   @Override
   public boolean dispatch(SimpleEventType simpleEventType, Object... data) {
     Document document = (Document) data[0];
-    String eventId = IdGenerator.fromDocument(document);
-    MDC.put(IdGenerator.EID, eventId);
+    MongoDataId dataId = DataId.fromDocument(document);
+    MDC.put(LogbackLoggingField.EID, dataId.eventId());
 
     String[] namespace = document.getString(MongoMasterConnector.NS).split("\\.");
-    SyncData syncData = fromDocument(document, eventId, namespace);
+    SyncData syncData = fromDocument(document, dataId, namespace);
     if (syncData == null) {
       return false;
     }
@@ -100,7 +102,7 @@ public class MongoDispatcher implements Dispatcher {
    * }
    * </pre>
    */
-  private SyncData fromDocument(Document document, String eventId, String[] namespace) {
+  private SyncData fromDocument(Document document, MongoDataId dataId, String[] namespace) {
     String op = document.getString("op");
     HashMap<String, Object> row = new HashMap<>();
     SimpleEventType type;
@@ -124,6 +126,6 @@ public class MongoDispatcher implements Dispatcher {
         return null;
     }
     Preconditions.checkState(row.containsKey(ID));
-    return new SyncData(eventId, 0, type, namespace[0], namespace[1], ID, row.get(ID), new NamedUpdatedDoc(row));
+    return new SyncData(dataId, type, namespace[0], namespace[1], ID, row.get(ID), new NamedUpdatedDoc(row));
   }
 }

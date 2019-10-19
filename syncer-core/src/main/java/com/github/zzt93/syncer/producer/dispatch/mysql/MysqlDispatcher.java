@@ -2,7 +2,9 @@ package com.github.zzt93.syncer.producer.dispatch.mysql;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.zzt93.syncer.common.Filter.FilterRes;
-import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.common.LogbackLoggingField;
+import com.github.zzt93.syncer.common.data.BinlogDataId;
+import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
@@ -47,14 +49,14 @@ public class MysqlDispatcher implements Dispatcher {
   public boolean dispatch(SimpleEventType simpleEventType, Object... data) {
     Preconditions.checkState(data.length == 2);
     Event[] events = new Event[]{(Event) data[0], (Event) data[1]};
-    String eventId = IdGenerator.fromEvent(events, binlogInfo.get().getBinlogFilename());
-    MDC.put(IdGenerator.EID, eventId);
+    BinlogDataId dataId = DataId.fromEvent(events, binlogInfo.get().getBinlogFilename());
+    MDC.put(LogbackLoggingField.EID, dataId.eventId());
     boolean res = true;
     for (FilterChain filterChain : filterChains) {
-      FilterRes decide = filterChain.decide(simpleEventType, eventId, events);
+      FilterRes decide = filterChain.decide(simpleEventType, dataId, events);
       res = res && FilterRes.ACCEPT == decide;
     }
-    MDC.remove(IdGenerator.EID);
+    MDC.remove(LogbackLoggingField.EID);
     return res;
   }
 

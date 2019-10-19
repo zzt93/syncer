@@ -21,22 +21,22 @@ function generateMysqlTestData() {
     logi "generateMysqlTestData"
     logi "---------------------"
 
+    lines=$1
     start=$2
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
-        for f in generator/*.sql; do
-            filename=`basename ${f}`
-            dir=${filename%".sql"}
-            mkdir -p data/mysql/${i}/csv/${dir}
-            exists=`find data/mysql/${i}/csv/${dir} -name '*.csv'`
+        for db in ${allDBs} ; do
+            mkdir -p data/mysql/${i}/csv/${db}
+            exists=`find data/mysql/${i}/csv/${db} -name '*.csv'`
         done
         if [[ -z "$exists" || ${reGenerate} = true ]]; then
-
-            for f in generator/*.sql; do
-                name=`basename ${f}`
-                docker run -v "$(pwd)"/data:/data --rm generator:test /data/mysql/${i} /${name} $1 ${start} 4  >> "${LOG_FILE}"
+            for db in ${allDBs} ; do
+                # @see const.sh
+                sqlFile="${db}.sql"
+                cp generator/${sqlFile} data/
+                docker run -v "$(pwd)"/data:/data --rm generator:test /data/mysql/${i} /data/${sqlFile} ${lines} ${start} 4  >> "${LOG_FILE}"
             done
         fi
-        start=$(($start + $1))
+        start=$(($start + ${lines}))
     done
 
     cd ${TEST_DIR}

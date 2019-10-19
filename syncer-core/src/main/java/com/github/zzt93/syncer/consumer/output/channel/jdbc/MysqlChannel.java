@@ -84,8 +84,8 @@ public class MysqlChannel implements BufferedChannel<String> {
     }
 
     String sql = sqlMapper.map(event);
-    boolean add = batchBuffer
-        .add(new SyncWrapper<>(event, sql));
+    boolean add = batchBuffer.add(new SyncWrapper<>(event, sql));
+    logger.debug("Add {}, {}", sql, add);
     BufferedChannel.super.flushAndSetFlushDone(true);
     return add;
   }

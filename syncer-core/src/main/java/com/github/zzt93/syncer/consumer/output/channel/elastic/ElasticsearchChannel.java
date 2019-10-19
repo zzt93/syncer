@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
-import com.github.zzt93.syncer.common.IdGenerator;
+import com.github.zzt93.syncer.common.LogbackLoggingField;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
@@ -149,7 +149,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     builder.execute(new ActionListener<BulkByScrollResponse>() {
       @Override
       public void onResponse(BulkByScrollResponse bulkByScrollResponse) {
-        MDC.put(IdGenerator.EID, data.getEventId());
+        MDC.put(LogbackLoggingField.EID, data.getEventId());
         if (bulkByScrollResponse.getUpdated() == 0
             && bulkByScrollResponse.getDeleted() == 0) {
           if (count == 0) {// only log at first failure
@@ -172,7 +172,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
       @Override
       public void onFailure(Exception e) {
-        MDC.put(IdGenerator.EID, data.getEventId());
+        MDC.put(LogbackLoggingField.EID, data.getEventId());
         logger.error("Fail to {}:\n {}", builder.request(), builder.source(), e);
         retry(e, true);
       }

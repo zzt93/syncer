@@ -62,8 +62,6 @@ public interface SyncData {
 
   String getEventId();
 
-  String getDataId();
-
   SyncData setSourceIdentifier(String identifier);
 
   String getSourceIdentifier();

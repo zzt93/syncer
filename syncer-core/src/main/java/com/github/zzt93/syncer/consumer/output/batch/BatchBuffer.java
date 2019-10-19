@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.consumer.output.batch;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.consumer.output.Retryable;
+import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -56,6 +57,7 @@ public class BatchBuffer<T extends Retryable> {
   /**
    * <h3>Equation</h3>
    * deque.size() >= estimateSize
+   * Notice: deque.size() may not accurate
    */
   private final ConcurrentLinkedDeque<T> deque = new ConcurrentLinkedDeque<>();
   private final AtomicInteger estimateSize = new AtomicInteger(0);
@@ -84,6 +86,7 @@ public class BatchBuffer<T extends Retryable> {
   public List<T> flushIfReachSizeLimit() {
     // The function should be side-effect-free, since it may be
     // re-applied when attempted updates fail due to contention among threads
+    logger.debug("{}, {}, {}", estimateSize, deque.size(), flushing);
     if (estimateSize.get() >= limit && flushing.compareAndSet(false, true)) {
       estimateSize.addAndGet(-limit);
       return flushContent(limit);
@@ -93,15 +96,19 @@ public class BatchBuffer<T extends Retryable> {
 
   public List<T> flush() {
     int size;
+    logger.debug("{}, {}, {}", estimateSize, deque.size(), flushing);
     if ((size = estimateSize.get()) > 0 && flushing.compareAndSet(false, true)) {
-      estimateSize.set(0);
-      return flushContent(size);
+      int toFlush = Math.min(size, limit);
+      estimateSize.addAndGet(-toFlush);
+      return flushContent(toFlush);
     }
     return null;
   }
 
   private List<T> flushContent(int size) {
-    logger.debug("{}, {}, {}", estimateSize, deque.size(), flushing);
+    Preconditions.checkArgument(flushing.get(), "Flushing");
+    logger.debug("{}, {}, Flushing", estimateSize, deque.size() - size);
+
     ArrayList<T> res = new ArrayList<>(size);
     for (int i = 0; i < size; i++) {
       try {

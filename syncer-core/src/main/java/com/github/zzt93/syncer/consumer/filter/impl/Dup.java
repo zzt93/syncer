@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.filter.impl;
 
-import com.github.zzt93.syncer.common.IdGenerator.Offset;
+import com.github.zzt93.syncer.common.data.MongoDataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.filter.ForkStatement;
 import org.springframework.expression.Expression;
@@ -34,7 +34,7 @@ public class Dup implements ForkStatement {
     LinkedList<SyncData> res = new LinkedList<>();
     for (int i = 0; i < newObjAction.size(); i++) {
       Statement statement = newObjAction.get(i);
-      SyncData dup = new SyncData(src, Offset.DUP.ordinal() + i);
+      SyncData dup = new SyncData(src, MongoDataId.Offset.DUP.ordinal() + i);
       for (Expression s : copyValue) {
         Object value = s.getValue(src.getContext());
         s.setValue(dup.getContext(), value);

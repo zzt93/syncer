@@ -18,7 +18,7 @@ input:
               fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
             - name: news
               fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
-        - name: "simple"
+        - name: "simple.*"
           entities:
             - name: simple_type
               fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]

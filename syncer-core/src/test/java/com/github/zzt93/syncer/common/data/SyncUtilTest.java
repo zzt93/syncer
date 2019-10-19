@@ -71,7 +71,7 @@ public class SyncUtilTest {
     row.put("f_p_u_bB", "1");
     row.put("g_p_u_BB", "1");
     row.put("hPuB", "1");
-    SyncData data = new SyncData("asdf", 1, SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(row));
+    SyncData data = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(row));
     SyncUtil.underscoreToCamel(data);
     Assert.assertEquals("1", data.getField("aPub"));
     Assert.assertEquals("1", data.getField("bPub"));

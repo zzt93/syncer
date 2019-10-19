@@ -316,6 +316,8 @@ input:
                      }'
                      
   ```
+  - Limitation: 
+    - Not support Single Line Comments or Slash-slash Comments
 
 The following part is implemented by [Spring EL](https://docs.spring.io/spring/docs/5.0.0.M5/spring-framework-reference/html/expressions.html), i.e. you can use any syntax Spring EL supported
 even if I didn't listed.
