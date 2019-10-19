@@ -2,13 +2,18 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.ExtraQueryMapper;
+import org.elasticsearch.action.search.SearchRequest;
+import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
+import org.elasticsearch.search.builder.SearchSourceBuilder;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,10 +28,10 @@ import java.util.Optional;
  */
 public class ESQueryMapper implements ExtraQueryMapper {
 
-  private final AbstractClient client;
+  private final RestHighLevelClient client;
   private final Logger logger = LoggerFactory.getLogger(ESQueryMapper.class);
 
-  public ESQueryMapper(AbstractClient client) {
+  public ESQueryMapper(RestHighLevelClient client) {
     this.client = client;
   }
 
@@ -35,13 +40,10 @@ public class ESQueryMapper implements ExtraQueryMapper {
     String[] select = extraQuery.getSelect();
     SearchResponse response;
     try {
-      response = client.prepareSearch(extraQuery.getIndexName())
-          .setTypes(extraQuery.getTypeName())
-          .setSearchType(SearchType.DEFAULT)
-          .setFetchSource(select, null)
-          .setQuery(getFilter(extraQuery))
-          .execute()
-          .actionGet();
+      SearchRequest searchRequest = new SearchRequest(extraQuery.getIndexName())
+          .source(new SearchSourceBuilder().fetchSource(select, null).query(getFilter(extraQuery)))
+          .types(extraQuery.getTypeName());
+      response = client.search(searchRequest, RequestOptions.DEFAULT);
     } catch (Exception e) {
       logger.error("Fail to do the extra query {}", extraQuery, e);
       return Collections.emptyMap();
