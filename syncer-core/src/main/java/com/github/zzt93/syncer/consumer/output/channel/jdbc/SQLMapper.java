@@ -26,7 +26,7 @@ import static com.github.zzt93.syncer.data.SimpleEventType.WRITE;
  */
 public class SQLMapper implements Mapper<SyncData, String> {
 
-  private static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3)";
+  private static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3) ON DUPLICATE KEY UPDATE (?4)=(?5)";
   private static final String DELETE_FROM_WHERE_ID = "delete from `?0`.`?1` where id = ?2";
   private static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = ?2";
   private static final String UPDATE_SET_WHERE = "update `?0`.`?1` set ?3 where ?2";
@@ -35,6 +35,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
   private final Expression schema;
   private final Expression table;
   private final Expression id;
+  private final String idName;
 
   public SQLMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
     SpelExpressionParser parser = new SpelExpressionParser();
@@ -42,6 +43,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
     schema = parser.parseExpression(rowMapping.getSchema());
     table = parser.parseExpression(rowMapping.getTable());
     id = parser.parseExpression(rowMapping.getId());
+    idName = rowMapping.getId();
 
     kvMapper = new KVMapper(rowMapping.getRows(), new JdbcNestedQueryMapper());
   }
@@ -58,7 +60,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
       case WRITE:
         String[] entry = join(map, WRITE);
         return ParameterReplace
-            .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1]);
+            .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1], idName, idName);
       case DELETE:
         return ParameterReplace.orderedParam(DELETE_FROM_WHERE_ID, schema, table, id);
       case UPDATE:
