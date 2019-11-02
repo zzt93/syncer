@@ -30,7 +30,7 @@ public class MysqlConnection extends Connection {
   }
 
   public String toConnectionUrl(String schema) {
-    return "jdbc:mysql://" + super.toConnectionUrl(null) + "/" + schema + "?autoReconnect=true&useSSL=false&useUnicode=yes&characterEncoding=UTF-8&rewriteBatchedStatements=true";
+    return "jdbc:mysql://" + super.toConnectionUrl(null) + "/" + schema + "?autoReconnect=true&useSSL=false&useUnicode=yes&characterEncoding=UTF-8";
   }
 
   private String toConnectionUrl() {

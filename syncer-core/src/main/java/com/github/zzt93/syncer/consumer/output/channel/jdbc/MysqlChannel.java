@@ -177,8 +177,19 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   @Override
   public void retryFailed(List<SyncWrapper<String>> sqls, Throwable e) {
-    // TODO 18/11/14 multiple sql has different errors, what spring behavior
     Throwable cause = e.getCause();
+    /*
+      After a command in a batch update fails to execute properly and a BatchUpdateException is thrown,
+      the driver may or may not continue to process the remaining commands in the batch.
+      If the driver continues processing after a failure,
+      the array returned by the method BatchUpdateException.getUpdateCounts will have an element for every command in the batch
+      rather than only elements for the commands that executed successfully before the error.
+      In the case where the driver continues processing commands,
+      the array element for any command that failed is Statement.EXECUTE_FAILED.
+     */
+    /*
+      Mysql with `rewriteBatchedStatements=true` not continue processing and return [-1, Statement.EXECUTE_FAILED, ...] in case of BatchUpdateException
+     */
     if (!(cause instanceof BatchUpdateException)) {
       logger.error("Unknown exception", e);
       throw new IllegalStateException();
