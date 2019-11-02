@@ -11,6 +11,8 @@ import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.net.UnknownHostException;
+import java.sql.BatchUpdateException;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -63,15 +65,16 @@ public class MysqlChannelTest {
     String[] sqls = {
         "delete from test_0.types_bak where id = 2125",
         "delete from test_0.types_bak where id = 2122",
-        "insert into `test_0`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.6055158,'D5v','k\"=cL<.w30]\"x''r]C.YXer''2\"Izbcd\"',26,2125,'/>$KffZgyP+^ZiK3(b3Hcm\"jJwbZ%t{RZ>4TS3HTA9G9E%ay9zM<^_^Pp{/.az0(_pK}ykCRn.Q(S^X ''WQS@S9&2V%Xa1s=U>9^Wg-j_r/Dz{E''2;}mbLE*Ma4/fWkNG-j#zj=',19265911.19,1366022492355224397,'2017-12-01 22:30:24.0')",
-        "insert into `test_0`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.6055158,'D5v','k\"=cL<.w30]\"x''r]C.YXer''2\"Izbcd\"',26,2125,'/>$KffZgyP+^ZiK3(b3Hcm\"jJwbZ%t{RZ>4TS3HTA9G9E%ay9zM<^_^Pp{/.az0(_pK}ykCRn.Q(S^X ''WQS@S9&2V%Xa1s=U>9^Wg-j_r/Dz{E''2;}mbLE*Ma4/fWkNG-j#zj=',19265911.19,1366022492355224397,'2017-12-01 22:30:24.0')",
-        "insert into `test_1`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.47148514,'v[e|','6P{N(hb=8C6!t5oAfLv2',161,2122,'Qria3&&V',19265911.19,3128612873388751949,'2005-06-07 08:46:12.0')",
-        "insert into `test_0`.`not_exists` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.6055158,'D5v','k\"=cL<.w30]\"x''r]C.YXer''2\"Izbcd\"',26,2125,'/>$KffZgyP+^ZiK3(b3Hcm\"jJwbZ%t{RZ>4TS3HTA9G9E%ay9zM<^_^Pp{/.az0(_pK}ykCRn.Q(S^X ''WQS@S9&2V%Xa1s=U>9^Wg-j_r/Dz{E''2;}mbLE*Ma4/fWkNG-j#zj=',19265911.19,1366022492355224397,'2017-12-01 22:30:24.0')",
+        "insert into `test_0`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.6055158,'D5v','k',26,2125,'/>$Kf',19265911.19,1366022492355224397,'2017-12-01 22:30:24.0')",
+        "insert into `test_0`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.6055158,'D5v','k',26,2125,'/>$Kf',19265911.19,1366022492355224397,'2017-12-01 22:30:24.0')",
+        "insert into `test_0`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.47148514,'v[e|','6P{N(hb=8C6!t5oAfLv2',161,2122,'Qria3&&V',19265911.19,3128612873388751949,'2005-06-07 08:46:12.0')",
+        "insert into `test_0`.`not_exists` (`double`) VALUES (1)",
         };
-    int[] ints;
     try {
-      ints = jdbcTemplate.batchUpdate(sqls);
+      jdbcTemplate.batchUpdate(sqls);
     } catch (DataAccessException e) {
+      int[] updateCounts = ((BatchUpdateException) e.getCause()).getUpdateCounts();
+      System.out.println(Arrays.toString(updateCounts));
       e.printStackTrace();
     }
   }
