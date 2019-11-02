@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 import com.github.shyiko.mysql.binlog.BinaryLogClient;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventType;
+import com.github.shyiko.mysql.binlog.event.QueryEventData;
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.data.SimpleEventType;
@@ -68,6 +69,11 @@ public class SyncListener implements BinaryLogClient.EventListener {
     switch (eventType) {
       case TABLE_MAP:
         this.last = event;
+        break;
+      case QUERY:
+        QueryEventData data = event.getData();
+        String query = data.getSql();
+//        ((EventHeaderV4) event.getHeader()).getFlags()
         break;
       default:
         SimpleEventType type = toSimpleEvent(eventType);

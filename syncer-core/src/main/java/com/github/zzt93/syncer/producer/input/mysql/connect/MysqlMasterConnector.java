@@ -67,7 +67,7 @@ public class MysqlMasterConnector implements MasterConnector {
     client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
-    client.setEventDeserializer(SyncDeserializer.defaultDeserialzer());
+    client.setEventDeserializer(SyncDeserializer.defaultDeserializer());
     client.setServerId(random.nextInt(Integer.MAX_VALUE));
     client.setSSLMode(SSLMode.DISABLED);
     BinlogInfo binlogInfo = registry.votedBinlogInfo(connection);
@@ -111,7 +111,7 @@ public class MysqlMasterConnector implements MasterConnector {
         throw new InvalidConfigException("Invalid producer.file config");
       }
     }
-    EventDeserializer eventDeserializer = SyncDeserializer.defaultDeserialzer();
+    EventDeserializer eventDeserializer = SyncDeserializer.defaultDeserializer();
     Event e;
     for (Path file : files) {
       logger.info("Consuming the binlog {}", file);

@@ -13,7 +13,7 @@ import java.util.Map;
  */
 public class SyncDeserializer {
 
-  public static EventDeserializer defaultDeserialzer() {
+  public static EventDeserializer defaultDeserializer() {
     Map<Long, TableMapEventData> tableMapEventByTableId = new HashMap<>();
     Map<EventType, EventDataDeserializer> eventDataDeserializers = new IdentityHashMap<>();
     eventDataDeserializers.put(EventType.WRITE_ROWS,
@@ -31,7 +31,9 @@ public class SyncDeserializer {
     eventDataDeserializers.put(EventType.EXT_DELETE_ROWS,
         new DeleteRowsEventDataDeserializer(tableMapEventByTableId).
             setMayContainExtraInformation(true));
+    eventDataDeserializers.put(EventType.QUERY, new QueryEventDataDeserializer());
     eventDataDeserializers.put(EventType.TABLE_MAP, new TableMapEventDataDeserializer());
+
     return new EventDeserializer(new EventHeaderV4Deserializer(), new NullEventDataDeserializer(),
         eventDataDeserializers, tableMapEventByTableId);
   }

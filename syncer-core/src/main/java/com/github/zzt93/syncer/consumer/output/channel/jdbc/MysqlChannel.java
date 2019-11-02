@@ -192,6 +192,7 @@ public class MysqlChannel implements BufferedChannel<String> {
         ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
         continue;
       }
+      // TODO 2019-10-28 maybe diff error reason!!!
       ErrorLevel level = level(e, stringSyncWrapper, batch.getMaxRetry());
       if (level.retriable()) {
         tmp.add(stringSyncWrapper);
@@ -213,7 +214,8 @@ public class MysqlChannel implements BufferedChannel<String> {
     batchBuffer.addAllInHead(tmp);
   }
 
-  private boolean succ(int updateCount) {
+  private boolean succ(long updateCount) {
+    // TODO 2019-10-28 -1?
     return updateCount != Statement.EXECUTE_FAILED;
   }
 

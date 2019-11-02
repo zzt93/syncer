@@ -3,6 +3,7 @@ package com.github.zzt93.syncer;
 import com.github.zzt93.syncer.common.thread.WaitingAckHook;
 import com.github.zzt93.syncer.common.util.RegexUtil;
 import com.github.zzt93.syncer.config.YamlEnvironmentPostProcessor;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
@@ -14,6 +15,7 @@ import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -48,10 +50,15 @@ public class SyncerApplication {
 
   public void run(String[] args) throws Exception {
     LinkedList<Starter> starters = new LinkedList<>();
+    HashSet<String> consumerIds = new HashSet<>();
     for (ConsumerConfig consumerConfig : consumerConfigs) {
       if (!validPipeline(consumerConfig)) {
         continue;
       }
+      if (consumerIds.contains(consumerConfig.getConsumerId())) {
+        throw new InvalidConfigException("Duplicate consumerId: " + consumerConfig.getConsumerId());
+      }
+      consumerIds.add(consumerConfig.getConsumerId());
       starters.add(new ConsumerStarter(consumerConfig, syncerConfig, consumerRegistry).start());
     }
     // add producer as first item, stop producer first

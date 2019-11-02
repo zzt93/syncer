@@ -7,6 +7,7 @@ import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.Assert;
 import org.junit.Test;
+import org.springframework.dao.DataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.net.UnknownHostException;
@@ -29,20 +30,25 @@ public class MysqlChannelTest {
   }
 
   public static void main(String[] args) throws UnknownHostException {
+    JdbcTemplate jdbcTemplate = getJdbcTemplate();
+
+//    testSqlEscape(jdbcTemplate);
+    testDiffError(jdbcTemplate);
+  }
+
+  private static JdbcTemplate getJdbcTemplate() throws UnknownHostException {
     MysqlConnection connection = new MysqlConnection();
-    connection.setAddress("localhost");
-    connection.setPort(43306);
-    connection.setUser("root");
-    connection.setPassword("root");
+    connection.setAddress("192.168.1.204");
+    connection.setPort(3306);
+    connection.setUser(System.getenv("MYSQL_USER"));
+    connection.setPassword(System.getenv("MYSQL_PASS"));
 
     HikariConfig config = connection.toConfig();
     config.setDriverClassName(Driver.class.getName());
     config.setInitializationFailTimeout(-1);
     HikariDataSource hikariDataSource = new HikariDataSource(config);
 
-    JdbcTemplate jdbcTemplate = new JdbcTemplate(hikariDataSource);
-
-    testSqlEscape(jdbcTemplate);
+    return new JdbcTemplate(hikariDataSource);
   }
 
   private static void testSqlEscape(JdbcTemplate jdbcTemplate) {
@@ -51,5 +57,22 @@ public class MysqlChannelTest {
         "'rt0s{4tioX^I39@nptPw-) ySA_''l]j]iro#}N].k8Zst2)(LF%1=JM3MvY=<T1&`[~(<8b}6;y)Zct0%`hsw`.h.POg@N9>\\\\'')6KZY#8rpe4Iu;wBL-zW9*Ef.<kr)3jH{%&AK~a]'" +
         ",614224.31,730230726375786120,'2027-05-27 21:50:17.0')";
     jdbcTemplate.execute(sql);
+  }
+
+  private static void testDiffError(JdbcTemplate jdbcTemplate) {
+    String[] sqls = {
+        "delete from test_0.types_bak where id = 2125",
+        "delete from test_0.types_bak where id = 2122",
+        "insert into `test_0`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.6055158,'D5v','k\"=cL<.w30]\"x''r]C.YXer''2\"Izbcd\"',26,2125,'/>$KffZgyP+^ZiK3(b3Hcm\"jJwbZ%t{RZ>4TS3HTA9G9E%ay9zM<^_^Pp{/.az0(_pK}ykCRn.Q(S^X ''WQS@S9&2V%Xa1s=U>9^Wg-j_r/Dz{E''2;}mbLE*Ma4/fWkNG-j#zj=',19265911.19,1366022492355224397,'2017-12-01 22:30:24.0')",
+        "insert into `test_0`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.6055158,'D5v','k\"=cL<.w30]\"x''r]C.YXer''2\"Izbcd\"',26,2125,'/>$KffZgyP+^ZiK3(b3Hcm\"jJwbZ%t{RZ>4TS3HTA9G9E%ay9zM<^_^Pp{/.az0(_pK}ykCRn.Q(S^X ''WQS@S9&2V%Xa1s=U>9^Wg-j_r/Dz{E''2;}mbLE*Ma4/fWkNG-j#zj=',19265911.19,1366022492355224397,'2017-12-01 22:30:24.0')",
+        "insert into `test_1`.`types_bak` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.47148514,'v[e|','6P{N(hb=8C6!t5oAfLv2',161,2122,'Qria3&&V',19265911.19,3128612873388751949,'2005-06-07 08:46:12.0')",
+        "insert into `test_0`.`not_exists` (`double`,`varchar`,`char`,`tinyint`,`id`,`text`,`decimal`,`bigint`,`timestamp`) values (0.6055158,'D5v','k\"=cL<.w30]\"x''r]C.YXer''2\"Izbcd\"',26,2125,'/>$KffZgyP+^ZiK3(b3Hcm\"jJwbZ%t{RZ>4TS3HTA9G9E%ay9zM<^_^Pp{/.az0(_pK}ykCRn.Q(S^X ''WQS@S9&2V%Xa1s=U>9^Wg-j_r/Dz{E''2;}mbLE*Ma4/fWkNG-j#zj=',19265911.19,1366022492355224397,'2017-12-01 22:30:24.0')",
+        };
+    int[] ints;
+    try {
+      ints = jdbcTemplate.batchUpdate(sqls);
+    } catch (DataAccessException e) {
+      e.printStackTrace();
+    }
   }
 }
