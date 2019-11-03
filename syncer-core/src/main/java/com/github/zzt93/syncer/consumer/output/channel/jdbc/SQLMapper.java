@@ -26,7 +26,7 @@ import static com.github.zzt93.syncer.data.SimpleEventType.WRITE;
  */
 public class SQLMapper implements Mapper<SyncData, String> {
 
-  private static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3) ON DUPLICATE KEY UPDATE (?4)=(?5)";
+  private static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3) ON DUPLICATE KEY UPDATE ?4=?5";
   private static final String DELETE_FROM_WHERE_ID = "delete from `?0`.`?1` where id = ?2";
   private static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = ?2";
   private static final String UPDATE_SET_WHERE = "update `?0`.`?1` set ?3 where ?2";
