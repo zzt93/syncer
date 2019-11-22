@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.producer.input.mysql.meta;
 
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
+import com.github.zzt93.syncer.config.consumer.input.Entity;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.github.zzt93.syncer.producer.input.Consumer;
@@ -198,9 +199,24 @@ public class ConsumerSchemaMeta {
         }
       }
       if (tableCount > nowCount) {
-        logger.error("Invalid schema config: want {} tables, only find {}", tableCount, nowCount);
+        logger.error("Invalid schema config: want {} but not found", diff(metaOfEachConsumer));
         throw new InvalidConfigException("Invalid schema config");
       }
+      return res;
+    }
+
+    private List<Entity> diff(Map<Repo, SchemaMeta> metaOfEachConsumer) {
+      List<Entity> res = new ArrayList<>();
+      metaOfEachConsumer.forEach((k, v) -> {
+        List<Entity> entities = k.getEntities();
+        if (entities.size() != v.size()) {
+          for (Entity entity : entities) {
+            if (v.findTable(k.getName(), entity.getName()) == null) {
+              res.add(entity);
+            }
+          }
+        }
+      });
       return res;
     }
 
