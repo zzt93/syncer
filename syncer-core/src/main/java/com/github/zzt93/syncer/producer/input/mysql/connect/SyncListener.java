@@ -73,6 +73,9 @@ public class SyncListener implements BinaryLogClient.EventListener {
       case QUERY:
         QueryEventData data = event.getData();
         String query = data.getSql();
+        // if SQL like alter xx after yy
+        // trigger retrieve meta info
+        // add new filterChain, remove old filter
 //        ((EventHeaderV4) event.getHeader()).getFlags()
         break;
       default:
