@@ -17,24 +17,79 @@ public class ESScriptUpdate extends SyncByQuery implements Serializable {
 
   // todo other script op: +=, contains
   private final HashMap<String, Object> append = new HashMap<>();
+  private final HashMap<String, NestedObjWithId> objAppend = new HashMap<>();
   private final HashMap<String, Object> remove = new HashMap<>();
+  private final HashMap<String, NestedObjWithId> objRemove = new HashMap<>();
+  private final HashMap<String, NestedObjWithId> objUpdate = new HashMap<>();
   private final transient SyncData outer;
+
+  public static class NestedObjWithId {
+    private final Object id;
+    private final Object newItem;
+    private Object beforeItem;
+
+    NestedObjWithId(Object id, Object newItem) {
+      this.id = id;
+      this.newItem = newItem;
+    }
+
+    public Object getId() {
+      return id;
+    }
+
+    public Object getNewItem() {
+      return newItem;
+    }
+
+    public Object getBeforeItem() {
+      return beforeItem;
+    }
+
+    public NestedObjWithId setBeforeItem(Object beforeItem) {
+      this.beforeItem = beforeItem;
+      return this;
+    }
+  }
 
   ESScriptUpdate(SyncData data) {
     super(data);
     outer = data;
   }
 
-  public ESScriptUpdate updateList(String listField, Object delta) {
+  public ESScriptUpdate updateList(String listFieldNameInEs, String syncDataFieldName) {
+    Object field = outer.getField(syncDataFieldName);
+    // TODO 2019-12-07 use name, convert type
+    // TODO 2019-12-07 not extends SyncByQuery
+//    if ()
+
     switch (outer.getType()) {
       case DELETE:
-        remove.put(listField, delta);
+        remove.put(listFieldNameInEs, syncDataFieldName);
         break;
       case WRITE:
-        append.put(listField, delta);
+        append.put(listFieldNameInEs, syncDataFieldName);
         break;
       default:
         logger.warn("Not support update list variable for {}", outer.getType());
+    }
+    outer.toUpdate();
+    return this;
+  }
+
+  public ESScriptUpdate updateObjectList(String listFieldNameInEs, String idName, String delta) {
+    Object id = outer.getField(idName);
+    switch (outer.getType()) {
+      case DELETE:
+        objRemove.put(listFieldNameInEs, new NestedObjWithId(id, delta));
+        break;
+      case WRITE:
+        objAppend.put(listFieldNameInEs, new NestedObjWithId(id, delta));
+        break;
+      case UPDATE:
+        objUpdate.put(listFieldNameInEs, new NestedObjWithId(id, delta));
+        break;
+      default:
+        throw new UnsupportedOperationException();
     }
     outer.toUpdate();
     return this;
@@ -50,6 +105,18 @@ public class ESScriptUpdate extends SyncByQuery implements Serializable {
 
   public HashMap<String, Object> getRemove() {
     return remove;
+  }
+
+  public HashMap<String, NestedObjWithId> getObjAppend() {
+    return objAppend;
+  }
+
+  public HashMap<String, NestedObjWithId> getObjRemove() {
+    return objRemove;
+  }
+
+  public HashMap<String, NestedObjWithId> getObjUpdate() {
+    return objUpdate;
   }
 
   @Override

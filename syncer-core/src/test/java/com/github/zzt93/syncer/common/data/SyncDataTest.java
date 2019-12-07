@@ -34,14 +34,14 @@ public class SyncDataTest {
   @Test
   public void testSerialize() {
     SyncData data = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()));
-    data.syncByQuery().filter("id", 1);
+    data.syncByQuery().syncBy("id", 1);
     String s = gson.toJson(data);
     SyncData syncData = gson.fromJson(s, SyncData.class);
     assertEquals(data.getEventId(), syncData.getEventId());
     assertEquals(data.getRepo(), syncData.getRepo());
 
     data = new SyncData(new MongoDataId(1114, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()));
-    data.syncByQuery().filter("id", 1);
+    data.syncByQuery().syncBy("id", 1);
     s = gson.toJson(data);
     syncData = gson.fromJson(s, SyncData.class);
     assertEquals(data.getEventId(), syncData.getEventId());

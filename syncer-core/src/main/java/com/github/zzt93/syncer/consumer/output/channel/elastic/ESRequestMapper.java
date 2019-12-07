@@ -35,10 +35,13 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
 
 /**
  * @author zzt
+ *
+ * https://www.elastic.co/guide/en/elasticsearch/reference/5.4/painless-api-reference.html
+ * https://www.elastic.co/guide/en/elasticsearch/painless/7.5/painless-api-reference-shared-java-util.html#painless-api-reference-shared-ArrayList
  */
 public class ESRequestMapper implements Mapper<SyncData, Object> {
 
-  public static final ArrayList<Object> NEW = new ArrayList<>();
+  private static final ArrayList<Object> NEW = new ArrayList<>();
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final ESRequestMapping esRequestMapping;
   private final AbstractClient client;
@@ -132,20 +135,42 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     if (syncByQuery instanceof ESScriptUpdate) {
       // handle append/remove elements from list/array field
       makeScript(code, ".add(params.", ");", ((ESScriptUpdate) syncByQuery).getAppend(), params);
-      makeRemoveScript(code, ((ESScriptUpdate) syncByQuery).getRemove(), params);
+      makeScript(code, ".removeIf(Predicate.isEqual(params.", ");", ((ESScriptUpdate) syncByQuery).getRemove(), params);
+      makeNestedObjScript(code, syncByQuery, params);
     } else {
       throw new InvalidSyncDataException("[syncByQuery] should be [SyncByQueryES]", data);
     }
     return new Script(ScriptType.INLINE, "painless", code.toString(), params);
   }
 
-  private void makeRemoveScript(StringBuilder code, HashMap<String, Object> remove,
-      HashMap<String, Object> params) {
-    for (String col : remove.keySet()) {
-      code.append("ctx._source.").append(col).append(".remove(ctx._source.").append(col)
-          .append(".indexOf(params.").append(col).append("));");
-    }
-    scriptCheck(code, remove, params);
+  private void makeNestedObjScript(StringBuilder code, SyncByQuery syncByQuery,
+                                   HashMap<String, Object> params) {
+    ESScriptUpdate esScriptUpdate = (ESScriptUpdate) syncByQuery;
+    HashMap<String, ESScriptUpdate.NestedObjWithId> objAppend = esScriptUpdate.getObjAppend();
+    objAppend.forEach((k, v) -> {
+      code.append("if (!ctx._source.%s.id.contains(params.%s_id)) {" +
+          "ctx._source.%s.id.add(params.%s_id); ctx._source.%s.list.add(params.%s_list); " +
+          "}");
+      params.put(k + "_id", v.getId());
+      params.put(k + "_list", v.getNewItem());
+    });
+    HashMap<String, ESScriptUpdate.NestedObjWithId> objUpdate = esScriptUpdate.getObjUpdate();
+    objUpdate.forEach((k, v) -> {
+      code.append("if (!ctx._source.%s.id.contains(params.%s_id)) {" +
+          "ctx._source.%s.list.set(ctx._source.%s.list.indexOf(params.%s_before), params.%s_list); " +
+          "}");
+      params.put(k + "_id", v.getId());
+      params.put(k + "_before", v.getBeforeItem());
+      params.put(k + "_list", v.getNewItem());
+    });
+    HashMap<String, ESScriptUpdate.NestedObjWithId> objRemove = esScriptUpdate.getObjRemove();
+    objRemove.forEach((k, v) -> {
+      code.append("if (ctx._source.%s.id.removeIf(Predicate.isEqual(params.%s_id))) {" +
+          "ctx._source.%s.list.removeIf(Predicate.isEqual(params.%s_list)); " +
+          "}");
+      params.put(k + "_id", v.getId());
+      params.put(k + "_list", v.getNewItem());
+    });
   }
 
   private void makeScript(StringBuilder code, String op, String endOp, HashMap<String, Object> data,

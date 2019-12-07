@@ -11,9 +11,11 @@ public interface SyncByQuery {
    * @param syncWithCol the column name in target repo
    * @param value the value to use
    */
-  SyncByQuery filter(String syncWithCol, Object value);
+  SyncByQuery syncBy(String syncWithCol, Object value);
 
-  SyncByQuery updateList(String listField, Object delta);
+  SyncByQuery updateList(String listFieldNameInEs, String syncDataFieldToAdd);
+
+  SyncByQuery updateObjectList(String listFieldName, String id, String delta);
 
   String toString();
 

@@ -20,7 +20,7 @@ public abstract class SyncByQuery implements com.github.zzt93.syncer.data.SyncBy
     this.data = data;
   }
 
-  public SyncByQuery filter(String syncWithCol, Object value) {
+  public SyncByQuery syncBy(String syncWithCol, Object value) {
     if (syncWithCol == null || value == null) {
       logger.warn("filter with {}={}", syncWithCol, value);
       return this;
