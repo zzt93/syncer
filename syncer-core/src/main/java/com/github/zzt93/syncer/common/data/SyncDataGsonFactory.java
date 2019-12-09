@@ -10,7 +10,8 @@ public class SyncDataGsonFactory {
 
   public static Gson gson() {
     return new GsonBuilder()
-        .registerTypeAdapter(SyncByQuery.class, (InstanceCreator<SyncByQuery>) type -> new ESScriptUpdate(null))
+        .registerTypeAdapter(SyncByQuery.class, (InstanceCreator<SyncByQuery>) type -> new SyncByQuery(null))
+        .registerTypeAdapter(ESScriptUpdate.class, (InstanceCreator<ESScriptUpdate>) type -> new ESScriptUpdate(null))
         .registerTypeAdapter(DataId.class, (JsonSerializer<DataId>) (src, typeOfSrc, context) -> new JsonPrimitive(src.dataId()))
         .registerTypeAdapter(DataId.class, (JsonDeserializer<DataId>) (json, typeOfT, context) -> DataId.fromString(json.getAsString()))
         .create();

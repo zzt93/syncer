@@ -73,6 +73,8 @@ public interface SyncData {
    */
   SyncByQuery syncByQuery();
 
+  ESScriptUpdate esScriptUpdate();
+
   ExtraQuery extraQuery(String indexName, String typeName);
 
   boolean hasExtra();

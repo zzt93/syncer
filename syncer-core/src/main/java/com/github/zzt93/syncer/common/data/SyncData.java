@@ -19,6 +19,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   private static final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
   private final Meta inner;
   private SyncByQuery syncByQuery;
+  private ESScriptUpdate esScriptUpdate;
   /**
    * sync result data fields
    */
@@ -276,9 +277,20 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
    */
   public SyncByQuery syncByQuery() {
     if (syncByQuery == null) {
-      syncByQuery = new ESScriptUpdate(this);
+      syncByQuery = new SyncByQuery(this);
     }
     return syncByQuery;
+  }
+
+  public ESScriptUpdate esScriptUpdate() {
+    if (esScriptUpdate == null) {
+      esScriptUpdate = new ESScriptUpdate(this);
+    }
+    return esScriptUpdate;
+  }
+
+  public ESScriptUpdate getEsScriptUpdate() {
+    return esScriptUpdate;
   }
 
   public ExtraQuery extraQuery(String indexName, String typeName) {

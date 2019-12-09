@@ -2,9 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.data.ESScriptUpdate;
 import com.github.zzt93.syncer.common.data.Mapper;
-import com.github.zzt93.syncer.common.data.SyncByQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.common.exception.InvalidSyncDataException;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
@@ -119,8 +117,8 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   }
 
   private static boolean needScript(SyncData data) {
-    SyncByQuery syncByQuery = data.syncByQuery();
-    return syncByQuery != null && ((ESScriptUpdate) syncByQuery).needScript();
+    ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
+    return esScriptUpdate != null && esScriptUpdate.needScript();
   }
 
   private String eval(Expression expr, StandardEvaluationContext context) {
@@ -131,21 +129,16 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     HashMap<String, Object> params = new HashMap<>();
     StringBuilder code = new StringBuilder();
     makeScript(code, " = params.", ";", toSet, params);
-    SyncByQuery syncByQuery = data.syncByQuery();
-    if (syncByQuery instanceof ESScriptUpdate) {
-      // handle append/remove elements from list/array field
-      makeScript(code, ".add(params.", ");", ((ESScriptUpdate) syncByQuery).getAppend(), params);
-      makeScript(code, ".removeIf(Predicate.isEqual(params.", ");", ((ESScriptUpdate) syncByQuery).getRemove(), params);
-      makeNestedObjScript(code, syncByQuery, params);
-    } else {
-      throw new InvalidSyncDataException("[syncByQuery] should be [SyncByQueryES]", data);
-    }
+    ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
+    // handle append/remove elements from list/array field
+    makeScript(code, ".add(params.", ");", ((ESScriptUpdate) esScriptUpdate).getAppend(), params);
+    makeScript(code, ".removeIf(Predicate.isEqual(params.", ");", ((ESScriptUpdate) esScriptUpdate).getRemove(), params);
+    makeNestedObjScript(code, esScriptUpdate, params);
     return new Script(ScriptType.INLINE, "painless", code.toString(), params);
   }
 
-  private void makeNestedObjScript(StringBuilder code, SyncByQuery syncByQuery,
+  private void makeNestedObjScript(StringBuilder code, ESScriptUpdate esScriptUpdate,
                                    HashMap<String, Object> params) {
-    ESScriptUpdate esScriptUpdate = (ESScriptUpdate) syncByQuery;
     HashMap<String, ESScriptUpdate.NestedObjWithId> objAppend = esScriptUpdate.getObjAppend();
     objAppend.forEach((k, v) -> {
       code.append("if (!ctx._source.%s.id.contains(params.%s_id)) {" +
@@ -206,11 +199,11 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   static Map getUpsert(SyncData data) {
     assert needScript(data);
     HashMap<String, Object> upsert = new HashMap<>();
-    ESScriptUpdate syncByQuery = (ESScriptUpdate) data.syncByQuery();
-    for (String col : syncByQuery.getAppend().keySet()) {
+    ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
+    for (String col : esScriptUpdate.getAppend().keySet()) {
       upsert.put(col, NEW);
     }
-    for (Entry<String, Object> entry : syncByQuery.getRemove().entrySet()) {
+    for (Entry<String, Object> entry : esScriptUpdate.getRemove().entrySet()) {
       upsert.put(entry.getKey(), Lists.newArrayList(entry.getValue()));
     }
     return upsert;

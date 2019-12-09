@@ -6,12 +6,14 @@ import org.slf4j.LoggerFactory;
 import java.io.Serializable;
 import java.util.HashMap;
 
+import static com.github.zzt93.syncer.common.util.EsTypeUtil.convertType;
+
 /**
  * @see ExtraQuery
  * @see SyncByQuery
  * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html#_scripted_updates
  */
-public class ESScriptUpdate extends SyncByQuery implements Serializable {
+public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.data.ESScriptUpdate {
 
   private static final Logger logger = LoggerFactory.getLogger(ESScriptUpdate.class);
 
@@ -45,29 +47,26 @@ public class ESScriptUpdate extends SyncByQuery implements Serializable {
       return beforeItem;
     }
 
-    public NestedObjWithId setBeforeItem(Object beforeItem) {
+    NestedObjWithId setBeforeItem(Object beforeItem) {
       this.beforeItem = beforeItem;
       return this;
     }
   }
 
   ESScriptUpdate(SyncData data) {
-    super(data);
     outer = data;
   }
 
   public ESScriptUpdate updateList(String listFieldNameInEs, String syncDataFieldName) {
-    Object field = outer.getField(syncDataFieldName);
-    // TODO 2019-12-07 use name, convert type
+    Object field = convertType(outer.getField(syncDataFieldName));
     // TODO 2019-12-07 not extends SyncByQuery
-//    if ()
 
     switch (outer.getType()) {
       case DELETE:
-        remove.put(listFieldNameInEs, syncDataFieldName);
+        remove.put(listFieldNameInEs, field);
         break;
       case WRITE:
-        append.put(listFieldNameInEs, syncDataFieldName);
+        append.put(listFieldNameInEs, field);
         break;
       default:
         logger.warn("Not support update list variable for {}", outer.getType());
@@ -76,17 +75,18 @@ public class ESScriptUpdate extends SyncByQuery implements Serializable {
     return this;
   }
 
-  public ESScriptUpdate updateObjectList(String listFieldNameInEs, String idName, String delta) {
-    Object id = outer.getField(idName);
+  public ESScriptUpdate updateListById(String listFieldNameInEs, String syncDataFieldName) {
+    Object id = convertType(outer.getId());
+    Object field = convertType(outer.getField(syncDataFieldName));
     switch (outer.getType()) {
       case DELETE:
-        objRemove.put(listFieldNameInEs, new NestedObjWithId(id, delta));
+        objRemove.put(listFieldNameInEs, new NestedObjWithId(id, field));
         break;
       case WRITE:
-        objAppend.put(listFieldNameInEs, new NestedObjWithId(id, delta));
+        objAppend.put(listFieldNameInEs, new NestedObjWithId(id, field));
         break;
       case UPDATE:
-        objUpdate.put(listFieldNameInEs, new NestedObjWithId(id, delta));
+        objUpdate.put(listFieldNameInEs, new NestedObjWithId(id, field).setBeforeItem(convertType(outer.getBefore(syncDataFieldName))));
         break;
       default:
         throw new UnsupportedOperationException();

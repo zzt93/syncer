@@ -13,10 +13,6 @@ public interface SyncByQuery {
    */
   SyncByQuery syncBy(String syncWithCol, Object value);
 
-  SyncByQuery updateList(String listFieldNameInEs, String syncDataFieldToAdd);
-
-  SyncByQuery updateObjectList(String listFieldName, String id, String delta);
-
   String toString();
 
 }
