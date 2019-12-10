@@ -50,12 +50,25 @@ public class ESRequestMapperTest {
     bulkItemResponses = bulkRequestBuilder.execute().get();
     assertFalse(Arrays.stream(bulkItemResponses.getItems()).anyMatch(BulkItemResponse::isFailed));
 
-    data = SyncDataTestUtil.delete();
-    data.addField("role", 1381034L);
+    data = SyncDataTestUtil.update();
+    data.getBefore().put("role", 1381034L);
+    data.addField("role", 13276746L);
     data.esScriptUpdate().mergeToListById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[test][test][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles_id.removeIf(Predicate.isEqual(params.roles_id))) {ctx._source.roles.removeIf(Predicate.isEqual(params.roles)); }', options={}, params={roles_id=1, roles=1381034}}], detect_noop[true]}",
+    assertEquals("", "update {[test][test][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles_id.contains(params.roles_id)) {ctx._source.roles.set(ctx._source.roles.indexOf(params.roles_before), params.roles); }', options={}, params={roles_before=1381034, roles_id=1, roles=13276746}}], detect_noop[true]}",
+        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+
+    bulkRequestBuilder = client.prepareBulk().add((UpdateRequestBuilder) builder);
+    bulkItemResponses = bulkRequestBuilder.execute().get();
+    assertFalse(Arrays.stream(bulkItemResponses.getItems()).anyMatch(BulkItemResponse::isFailed));
+
+    data = SyncDataTestUtil.delete();
+    data.addField("role", 13276746L);
+    data.esScriptUpdate().mergeToListById("roles", "role");
+
+    builder = mapper.map(data);
+    assertEquals("", "update {[test][test][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles_id.removeIf(Predicate.isEqual(params.roles_id))) {ctx._source.roles.removeIf(Predicate.isEqual(params.roles)); }', options={}, params={roles_id=1, roles=13276746}}], detect_noop[true]}",
         ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
 
     bulkRequestBuilder = client.prepareBulk().add((UpdateRequestBuilder) builder);

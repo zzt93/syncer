@@ -9,7 +9,7 @@ import com.google.common.collect.Maps;
  */
 public class SyncDataTestUtil {
   public static SyncData update() {
-    SyncData syncData = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()));
+    SyncData syncData = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, new NamedFullRow(Maps.newHashMap()).setBeforeFull(Maps.newHashMap()));
     syncData.setContext(EvaluationFactory.context());
     return syncData;
   }
