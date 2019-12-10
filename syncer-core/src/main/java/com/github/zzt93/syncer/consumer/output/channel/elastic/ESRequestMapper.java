@@ -48,7 +48,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private final Expression typeExpr;
   private final Expression idExpr;
 
-  public ESRequestMapper(AbstractClient client, ESRequestMapping esRequestMapping) {
+  ESRequestMapper(AbstractClient client, ESRequestMapping esRequestMapping) {
     this.esRequestMapping = esRequestMapping;
     this.client = client;
     SpelExpressionParser parser = new SpelExpressionParser();
@@ -131,38 +131,47 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     makeScript(code, " = params.", ";", toSet, params);
     ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
     // handle append/remove elements from list/array field
-    makeScript(code, ".add(params.", ");", ((ESScriptUpdate) esScriptUpdate).getAppend(), params);
-    makeScript(code, ".removeIf(Predicate.isEqual(params.", ");", ((ESScriptUpdate) esScriptUpdate).getRemove(), params);
+    makeScript(code, ".add(params.", ");", esScriptUpdate.getAppend(), params);
+    makeScript(code, ".removeIf(Predicate.isEqual(params.", ");", esScriptUpdate.getRemove(), params);
     makeNestedObjScript(code, esScriptUpdate, params);
     return new Script(ScriptType.INLINE, "painless", code.toString(), params);
   }
 
+  /**
+   * To avoid losing data, the update API retrieves the current _version of the document in the retrieve step,
+   * and passes that to the index request during the reindex step.
+   * If another process has changed the document between retrieve and reindex,
+   * then the _version number won’t match and the update request will fail.
+   */
   private void makeNestedObjScript(StringBuilder code, ESScriptUpdate esScriptUpdate,
                                    HashMap<String, Object> params) {
     HashMap<String, ESScriptUpdate.NestedObjWithId> objAppend = esScriptUpdate.getObjAppend();
     objAppend.forEach((k, v) -> {
-      code.append("if (!ctx._source.%s.id.contains(params.%s_id)) {" +
-          "ctx._source.%s.id.add(params.%s_id); ctx._source.%s.list.add(params.%s_list); " +
-          "}");
+      code.append(String.format(
+          "if (!ctx._source.%s_id.contains(params.%s_id)) {" +
+            "ctx._source.%s_id.add(params.%s_id); ctx._source.%s.add(params.%s); " +
+          "}", k, k, k, k, k, k));
       params.put(k + "_id", v.getId());
-      params.put(k + "_list", v.getNewItem());
+      params.put(k, v.getNewItem());
     });
     HashMap<String, ESScriptUpdate.NestedObjWithId> objUpdate = esScriptUpdate.getObjUpdate();
     objUpdate.forEach((k, v) -> {
-      code.append("if (!ctx._source.%s.id.contains(params.%s_id)) {" +
-          "ctx._source.%s.list.set(ctx._source.%s.list.indexOf(params.%s_before), params.%s_list); " +
-          "}");
+      code.append(String.format(
+          "if (ctx._source.%s_id.contains(params.%s_id)) {" +
+            "ctx._source.%s.set(ctx._source.%s.indexOf(params.%s_before), params.%s); " +
+          "}", k, k, k, k, k, k));
       params.put(k + "_id", v.getId());
       params.put(k + "_before", v.getBeforeItem());
-      params.put(k + "_list", v.getNewItem());
+      params.put(k, v.getNewItem());
     });
     HashMap<String, ESScriptUpdate.NestedObjWithId> objRemove = esScriptUpdate.getObjRemove();
     objRemove.forEach((k, v) -> {
-      code.append("if (ctx._source.%s.id.removeIf(Predicate.isEqual(params.%s_id))) {" +
-          "ctx._source.%s.list.removeIf(Predicate.isEqual(params.%s_list)); " +
-          "}");
+      code.append(String.format(
+          "if (ctx._source.%s_id.removeIf(Predicate.isEqual(params.%s_id))) {" +
+            "ctx._source.%s.removeIf(Predicate.isEqual(params.%s)); " +
+          "}", k, k, k, k));
       params.put(k + "_id", v.getId());
-      params.put(k + "_list", v.getNewItem());
+      params.put(k, v.getNewItem());
     });
   }
 

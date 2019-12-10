@@ -6,10 +6,18 @@ package com.github.zzt93.syncer.data;
  */
 public interface ESScriptUpdate {
 
+  /**
+   * Merge relational data into flatten json
+   * @param syncDataFieldName this field will be removed from `fields`
+   */
+  @Deprecated
+  ESScriptUpdate mergeToList(String listFieldNameInEs, String syncDataFieldName);
 
-  ESScriptUpdate updateList(String listFieldNameInEs, String syncDataFieldName);
-
-  ESScriptUpdate updateListById(String listFieldNameInEs, String syncDataFieldName);
+  /**
+   * Merge relational data into flatten json with idempotent id
+   * @param syncDataFieldName this field will be removed from `fields`
+   */
+  ESScriptUpdate mergeToListById(String listFieldNameInEs, String syncDataFieldName);
 
 
 }

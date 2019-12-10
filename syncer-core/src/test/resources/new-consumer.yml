@@ -126,7 +126,7 @@ filter:
 
       "announcement_member":
         - statement: ["table = 'announcement'", "#docType='announcement'", "#suffix = '-' + fields['alliance_id']/100",
-                              "id = fields['announcement_id']", "syncByQuery().updateList('roles', fields['role_id'])",
+                              "id = fields['announcement_id']", "syncByQuery().mergeToList('roles', fields['role_id'])",
                               "removeFields('announcement_id', 'role_id', 'alliance_id')"]
       "task":
         - statement: ["#suffix = '-' + fields['alliance_id']/1000000",
@@ -161,7 +161,7 @@ filter:
                   - statement: ["toWrite()"]
 
         - statement: ["table = 'task'", "#docType='task'", "#suffix = '-' + fields['alliance_id']/1000000",
-                      "id = fields['task_id']", "syncByQuery().updateList('roles', fields['role_id'] < T(Integer).MAX_VALUE ? fields['role_id'].intValue() : fields['role_id'])",
+                      "id = fields['task_id']", "syncByQuery().mergeToList('roles', fields['role_id'] < T(Integer).MAX_VALUE ? fields['role_id'].intValue() : fields['role_id'])",
                       "removeFields('task_id', 'role_id', 'alliance_id', 'state')",]
 
       "target":

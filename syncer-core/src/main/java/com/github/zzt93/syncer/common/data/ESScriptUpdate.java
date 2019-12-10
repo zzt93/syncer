@@ -57,10 +57,9 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     outer = data;
   }
 
-  public ESScriptUpdate updateList(String listFieldNameInEs, String syncDataFieldName) {
+  public ESScriptUpdate mergeToList(String listFieldNameInEs, String syncDataFieldName) {
     Object field = convertType(outer.getField(syncDataFieldName));
-    // TODO 2019-12-07 not extends SyncByQuery
-
+    outer.removeField(syncDataFieldName);
     switch (outer.getType()) {
       case DELETE:
         remove.put(listFieldNameInEs, field);
@@ -75,9 +74,10 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     return this;
   }
 
-  public ESScriptUpdate updateListById(String listFieldNameInEs, String syncDataFieldName) {
+  public ESScriptUpdate mergeToListById(String listFieldNameInEs, String syncDataFieldName) {
     Object id = convertType(outer.getId());
     Object field = convertType(outer.getField(syncDataFieldName));
+    outer.removeField(syncDataFieldName);
     switch (outer.getType()) {
       case DELETE:
         objRemove.put(listFieldNameInEs, new NestedObjWithId(id, field));
@@ -96,7 +96,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   }
 
   public boolean needScript() {
-    return !append.isEmpty() || !remove.isEmpty();
+    return !append.isEmpty() || !remove.isEmpty()
+        || !objUpdate.isEmpty() || !objAppend.isEmpty() || !objRemove.isEmpty() ;
   }
 
   public HashMap<String, Object> getAppend() {

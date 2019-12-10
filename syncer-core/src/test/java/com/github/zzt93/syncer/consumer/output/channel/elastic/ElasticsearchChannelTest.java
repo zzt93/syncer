@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
-import com.github.zzt93.syncer.config.common.ElasticsearchConnection;
 import com.google.common.collect.Lists;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequestBuilder;
@@ -57,11 +56,7 @@ public class ElasticsearchChannelTest {
    * https://discuss.elastic.co/t/java-api-plainless-script-indexof-give-wrong-answer/139016/7
    */
   public void scriptIndexOf() throws Exception {
-    ElasticsearchConnection elasticsearchConnection = new ElasticsearchConnection();
-    elasticsearchConnection.setClusterName("searcher-integration");
-    elasticsearchConnection.setClusterNodes(Lists.newArrayList("192.168.1.100:9300"));
-
-    AbstractClient client = elasticsearchConnection.esClient();
+    AbstractClient client = ElasticTestUtil.getIntClient();
 
     HashMap<String, Object> params = new HashMap<>();
     params.put("users", 540722L);
