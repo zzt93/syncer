@@ -7,7 +7,6 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
-import com.google.common.collect.Lists;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
@@ -23,7 +22,6 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -39,7 +37,6 @@ import static org.elasticsearch.index.query.QueryBuilders.termQuery;
  */
 public class ESRequestMapper implements Mapper<SyncData, Object> {
 
-  private static final ArrayList<Object> NEW = new ArrayList<>();
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final ESRequestMapping esRequestMapping;
   private final AbstractClient client;
@@ -125,72 +122,18 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     return expr.getValue(context, String.class);
   }
 
+  /**
+   * https://www.elastic.co/guide/en/elasticsearch/reference/5.4/painless-api-reference.html
+   */
   private Script getScript(SyncData data, HashMap<String, Object> toSet) {
     HashMap<String, Object> params = new HashMap<>();
     StringBuilder code = new StringBuilder();
-    makeScript(code, " = params.", ";", toSet, params);
+    ESScriptUpdate.makeScript(code, " = params.", ";", toSet, params);
+
     ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
-    // handle append/remove elements from list/array field
-    makeScript(code, ".add(params.", ");", esScriptUpdate.getAppend(), params);
-    makeScript(code, ".removeIf(Predicate.isEqual(params.", ");", esScriptUpdate.getRemove(), params);
-    makeNestedObjScript(code, esScriptUpdate, params);
+    esScriptUpdate.generateScript(code, params);
+
     return new Script(ScriptType.INLINE, "painless", code.toString(), params);
-  }
-
-  /**
-   * To avoid losing data, the update API retrieves the current _version of the document in the retrieve step,
-   * and passes that to the index request during the reindex step.
-   * If another process has changed the document between retrieve and reindex,
-   * then the _version number won’t match and the update request will fail.
-   */
-  private void makeNestedObjScript(StringBuilder code, ESScriptUpdate esScriptUpdate,
-                                   HashMap<String, Object> params) {
-    HashMap<String, ESScriptUpdate.NestedObjWithId> objAppend = esScriptUpdate.getObjAppend();
-    objAppend.forEach((k, v) -> {
-      code.append(String.format(
-          "if (!ctx._source.%s_id.contains(params.%s_id)) {" +
-            "ctx._source.%s_id.add(params.%s_id); ctx._source.%s.add(params.%s); " +
-          "}", k, k, k, k, k, k));
-      params.put(k + "_id", v.getId());
-      params.put(k, v.getNewItem());
-    });
-    HashMap<String, ESScriptUpdate.NestedObjWithId> objUpdate = esScriptUpdate.getObjUpdate();
-    objUpdate.forEach((k, v) -> {
-      code.append(String.format(
-          "if (ctx._source.%s_id.contains(params.%s_id)) {" +
-            "ctx._source.%s.set(ctx._source.%s.indexOf(params.%s_before), params.%s); " +
-          "}", k, k, k, k, k, k));
-      params.put(k + "_id", v.getId());
-      params.put(k + "_before", v.getBeforeItem());
-      params.put(k, v.getNewItem());
-    });
-    HashMap<String, ESScriptUpdate.NestedObjWithId> objRemove = esScriptUpdate.getObjRemove();
-    objRemove.forEach((k, v) -> {
-      code.append(String.format(
-          "if (ctx._source.%s_id.removeIf(Predicate.isEqual(params.%s_id))) {" +
-            "ctx._source.%s.removeIf(Predicate.isEqual(params.%s)); " +
-          "}", k, k, k, k));
-      params.put(k + "_id", v.getId());
-      params.put(k, v.getNewItem());
-    });
-  }
-
-  private void makeScript(StringBuilder code, String op, String endOp, HashMap<String, Object> data,
-      HashMap<String, Object> params) {
-    for (String col : data.keySet()) {
-      code.append("ctx._source.").append(col).append(op).append(col).append(endOp);
-    }
-    scriptCheck(code, data, params);
-  }
-
-  private void scriptCheck(StringBuilder code, HashMap<String, Object> data,
-      HashMap<String, Object> params) {
-    int before = params.size();
-    params.putAll(data);
-    if (before + data.size() != params.size()) {
-      throw new InvalidConfigException("Key conflict happens when making script [" + code + "], "
-          + "check config file about `syncByQuery()` (Notice the `syncByQuery()` will default use all fields for 'set' update)");
-    }
   }
 
   private QueryBuilder getFilter(SyncData data) {
@@ -209,12 +152,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     assert needScript(data);
     HashMap<String, Object> upsert = new HashMap<>();
     ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
-    for (String col : esScriptUpdate.getAppend().keySet()) {
-      upsert.put(col, NEW);
-    }
-    for (Entry<String, Object> entry : esScriptUpdate.getRemove().entrySet()) {
-      upsert.put(entry.getKey(), Lists.newArrayList(entry.getValue()));
-    }
+    esScriptUpdate.upsert(upsert);
     return upsert;
   }
 }
