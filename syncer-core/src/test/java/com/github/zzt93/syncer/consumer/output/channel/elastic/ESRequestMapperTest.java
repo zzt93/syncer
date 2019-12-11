@@ -122,7 +122,7 @@ public class ESRequestMapperTest {
 
   }
 
-  public void nestedByIdRemote() throws Exception {
+  public static void nestedByIdRemote() throws Exception {
     AbstractClient client = ElasticTestUtil.getDevClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
@@ -149,6 +149,18 @@ public class ESRequestMapperTest {
     bulkItemResponses = bulkRequestBuilder.execute().get();
     assertFalse(Arrays.stream(bulkItemResponses.getItems()).anyMatch(BulkItemResponse::isFailed));
 
+    data = SyncDataTestUtil.write("ann", "ann");
+    data.addField("role", 2381034L).addField("ann_id", 1L).setId(2345);
+    data.esScriptUpdate().mergeToNestedById("roles", "ann_id", "role");
+
+    builder = mapper.map(data);
+    assertEquals("", "update {[ann][ann][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.roles_id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={roles_id=2345, roles={role=2381034, id=2345}}}], detect_noop[true]}",
+        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+
+    bulkRequestBuilder = client.prepareBulk().add((UpdateRequestBuilder) builder);
+    bulkItemResponses = bulkRequestBuilder.execute().get();
+    assertFalse(Arrays.stream(bulkItemResponses.getItems()).anyMatch(BulkItemResponse::isFailed));
+
     data = SyncDataTestUtil.update("ann", "ann");
     data.getBefore().put("role", 1381034L);
     data.addField("role", 13276746L);
@@ -164,12 +176,11 @@ public class ESRequestMapperTest {
     assertFalse(Arrays.stream(bulkItemResponses.getItems()).anyMatch(BulkItemResponse::isFailed));
 
     data = SyncDataTestUtil.delete("ann", "ann");
-    data.addField("role", 13276746L);
-    data.addField("ann_id", 1L);
+    data.addField("role", 13276746L).addField("ann_id", 1L).setId(2345L);
     data.esScriptUpdate().mergeToNestedById("roles", "ann_id", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[ann][ann][1], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(e -> e.id.equals(params.roles_id)); ', options={}, params={roles_id=1234}}], detect_noop[true]}",
+    assertEquals("", "update {[ann][ann][1], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(e -> e.id.equals(params.roles_id)); ', options={}, params={roles_id=2345}}], detect_noop[true]}",
         ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
 
     bulkRequestBuilder = client.prepareBulk().add((UpdateRequestBuilder) builder);
@@ -218,4 +229,7 @@ public class ESRequestMapperTest {
 
   }
 
+  public static void main(String[] args) throws Exception {
+    nestedByIdRemote();
+  }
 }
