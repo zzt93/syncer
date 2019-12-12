@@ -71,6 +71,7 @@ public class SyncResult {
 
   /**
    * Not thread-safe, should not be invoked by multiple thread
+   * @return one instance for this SyncResult
    */
   public HashMap<String, Object> getExtras() {
     if (extras == null) {

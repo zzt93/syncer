@@ -16,7 +16,7 @@ public interface ESScriptUpdate {
   ESScriptUpdate mergeToList(String listFieldNameInEs, String toMergeFieldNameInSyncData);
 
   /**
-   * Merge relational data into flatten json with idempotent parentId & id
+   * Merge relational data into flatten json with idempotent parentId and id
    * @param listFieldNameInEs will use `listFieldNameInEs`, `listFieldNameInEs` + '_id' two fields
    * @param parentIdName name in `fields` to remove and add to `listFieldNameInEs` + '_id' list
    * @param toMergeFieldNameInSyncData this field will be removed from `fields` and add to `listFieldNameInEs`
@@ -26,7 +26,7 @@ public interface ESScriptUpdate {
   ESScriptUpdate mergeToListById(String listFieldNameInEs, String parentIdName, String toMergeFieldNameInSyncData);
 
   /**
-   * Merge relational data into flatten json with idempotent parentId & id
+   * Merge relational data into flatten json with idempotent parentId and id
    *
    * @param listFieldNameInEs will use `listFieldNameInEs`
    * @param parentIdName name in `fields` to remove and used in nested obj

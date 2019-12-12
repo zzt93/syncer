@@ -70,6 +70,7 @@ public interface SyncData {
 
   /**
    * update/delete by query
+   * @return one instance for this syncData
    */
   SyncByQuery syncByQuery();
 
