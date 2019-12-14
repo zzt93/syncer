@@ -2,34 +2,53 @@ package com.github.zzt93.syncer.producer.dispatch.mysql;
 
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.TableMapEventData;
+import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.data.BinlogDataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.IndexedFullRow;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.RowsEvent;
+import com.github.zzt93.syncer.producer.input.mysql.AlterMeta;
 import com.github.zzt93.syncer.producer.input.mysql.meta.ConsumerSchemaMeta;
 import com.github.zzt93.syncer.producer.input.mysql.meta.TableMeta;
+import com.github.zzt93.syncer.producer.output.ProducerSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
  * @author zzt
  */
-public class SchemaAndRowFilter {
+public class ConsumerChannel {
 
+  private final Logger logger = LoggerFactory.getLogger(ConsumerChannel.class);
+  private final ProducerSink producerSink;
   private final ConsumerSchemaMeta consumerSchemaMeta;
-  private final Logger logger = LoggerFactory.getLogger(SchemaAndRowFilter.class);
   private boolean onlyUpdated;
 
-  SchemaAndRowFilter(ConsumerSchemaMeta consumerSchemaMeta, boolean onlyUpdated) {
+  ConsumerChannel(ConsumerSchemaMeta consumerSchemaMeta, ProducerSink producerSink, boolean onlyUpdated) {
     this.consumerSchemaMeta = consumerSchemaMeta;
     this.onlyUpdated = onlyUpdated;
+    this.producerSink = producerSink;
   }
 
-  SyncData[] decide(SimpleEventType type, BinlogDataId dataId, Event... e) {
+  FilterRes decide(SimpleEventType simpleEventType, BinlogDataId dataId, Event[] events) {
+    if (logger.isTraceEnabled()) {
+      logger.trace("Receive binlog event: {}", Arrays.toString(events));
+    }
+    SyncData[] aim = toSyncData(simpleEventType, dataId, events[0], events[1]);
+    if (aim == null) { // not interested in this database+table
+      return FilterRes.DENY;
+    }
+
+    boolean output = producerSink.output(aim);
+    return output ? FilterRes.ACCEPT : FilterRes.DENY;
+  }
+
+  private SyncData[] toSyncData(SimpleEventType type, BinlogDataId dataId, Event... e) {
     TableMapEventData tableMap = e[0].getData();
     TableMeta table = consumerSchemaMeta.findTable(tableMap.getDatabase(), tableMap.getTable());
     if (table == null) {
@@ -68,5 +87,8 @@ public class SchemaAndRowFilter {
     return null;
   }
 
+  void updateSchemaMeta(AlterMeta alterMeta, TableMeta full) {
+    consumerSchemaMeta.updateSchemaMeta(alterMeta, full);
+  }
 
 }

@@ -9,6 +9,7 @@ public class Entity {
 
   private String name;
   private List<String> fields;
+  public static final String _all = "-all-";
 
   public Entity() {
   }

@@ -6,10 +6,7 @@ import com.github.zzt93.syncer.consumer.Hashable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.regex.Pattern;
 
 /**
@@ -126,7 +123,7 @@ public class Repo implements Hashable {
 
     Repo repo = (Repo) o;
 
-    return name != null ? name.equals(repo.name) : repo.name == null;
+    return Objects.equals(name, repo.name);
   }
 
   @Override

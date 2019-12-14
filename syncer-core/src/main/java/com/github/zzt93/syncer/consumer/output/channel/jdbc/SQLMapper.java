@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.common.data.Mapper;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.InvalidSyncDataException;
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
+import com.github.zzt93.syncer.common.util.SQLHelper;
 import com.github.zzt93.syncer.config.consumer.output.mysql.RowMapping;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 import com.github.zzt93.syncer.data.SimpleEventType;

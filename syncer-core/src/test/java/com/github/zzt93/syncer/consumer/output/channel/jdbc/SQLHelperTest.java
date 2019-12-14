@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
+import com.github.zzt93.syncer.common.util.SQLHelper;
 import org.junit.Assert;
 import org.junit.Test;
 
