@@ -150,6 +150,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   @Override
+  public Set<String> getUpdated() {
+    return updated;
+  }
+
+  @Override
   public Object getBefore(String key) {
     return result.getBefore(key);
   }

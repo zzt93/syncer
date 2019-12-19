@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.data;
 
 import java.util.HashMap;
+import java.util.Set;
 
 /**
  * Config operation interface
@@ -102,6 +103,8 @@ public interface SyncData {
    * @see java.util.Objects#deepEquals(Object, Object)
    */
   boolean updated(String key);
+
+  Set<String> getUpdated();
 
   Object getBefore(String key);
 
