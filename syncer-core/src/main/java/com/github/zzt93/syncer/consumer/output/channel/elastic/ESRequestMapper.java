@@ -130,8 +130,10 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     StringBuilder code = new StringBuilder();
     ESScriptUpdate.makeScript(code, " = params.", ";", toSet, params);
 
-    ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
-    esScriptUpdate.generateScript(code, params);
+    if (needScript(data)) {
+      ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
+      esScriptUpdate.generateScript(code, params);
+    }
 
     return new Script(ScriptType.INLINE, "painless", code.toString(), params);
   }

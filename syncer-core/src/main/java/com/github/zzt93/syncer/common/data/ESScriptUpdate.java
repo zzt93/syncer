@@ -103,6 +103,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   }
 
   /**
+   * https://www.elastic.co/guide/en/elasticsearch/reference/5.4/painless-api-reference.html
+   *
    * To avoid losing data, the update API retrieves the current _version of the document in the retrieve step,
    * and passes that to the index request during the reindex step.
    * If another process has changed the document between retrieve and reindex,
