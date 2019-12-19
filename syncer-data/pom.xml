@@ -14,7 +14,7 @@
 
     <groupId>com.github.zzt93</groupId>
     <artifactId>syncer-data</artifactId>
-    <version>1.0-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <description>Syncer Data Library</description>
     <url>https://github.com/zzt93/syncer/</url>
     <licenses>
