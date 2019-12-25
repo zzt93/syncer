@@ -23,7 +23,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
 
   private static final Logger logger = LoggerFactory.getLogger(ESScriptUpdate.class);
   private static final ArrayList<Object> NEW = new ArrayList<>(0);
-  private static final String BY_ID_SUFFIX = "_id";
+  public static final String BY_ID_SUFFIX = "_id";
 
   // todo other script op: +=, contains
   private final HashMap<String, Object> mergeToList = new HashMap<>();
@@ -43,7 +43,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   }
 
   private static void makeScript(StringBuilder code, String prefix, String op, String endOp, HashMap<String, Object> data,
-                         HashMap<String, Object> params) {
+                                 HashMap<String, Object> params) {
     for (String col : data.keySet()) {
       code.append(prefix).append(col).append(op).append(col).append(endOp);
     }
@@ -60,30 +60,44 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     }
   }
 
-  public ESScriptUpdate mergeToList(String listFieldNameInEs, String toMergeFieldNameInSyncData) {
-    Object field = convertType(outer.getField(toMergeFieldNameInSyncData));
-    outer.removeField(toMergeFieldNameInSyncData);
+  public ESScriptUpdate mergeToList(String listFieldNameInEs, String parentIdName, String toMergeFieldName) {
+    Object field = convertType(outer.getField(toMergeFieldName));
+    outer.removeField(toMergeFieldName);
+    oldType = outer.getType();
     switch (outer.getType()) {
       case DELETE:
       case WRITE:
         mergeToList.put(listFieldNameInEs, field);
         break;
       default:
-        logger.warn("Not support update list variable for {}", outer.getType());
+        logger.error("Not support `mergeToList` for UPDATE, use `mergeToListById` or `mergeToNestedById` instead");
+        throw new UnsupportedOperationException();
     }
-    outer.toUpdate();
+    outer.setId(outer.getField(parentIdName))
+        .removeField(parentIdName)
+        .toUpdate();
     return this;
   }
 
   private void generateFromMergeToList(StringBuilder code, HashMap<String, Object> params) {
-//    makeScript(code, ".add(params.", ");", esScriptUpdate.getMergeToList(), params);
-//    makeScript(code, ".removeIf(Predicate.isEqual(params.", ");", esScriptUpdate.getRemove(), params);
+    switch (oldType) {
+      case DELETE:
+        makeScript(code, ".removeIf(Predicate.isEqual(params.", "));", mergeToList, params);
+        break;
+      case WRITE:
+        makeScript(code, ".add(params.", ");", mergeToList, params);
+        break;
+      case UPDATE:
+        break;
+      default:
+        throw new UnsupportedOperationException();
+    }
   }
 
-  public ESScriptUpdate mergeToListById(String listFieldNameInEs, String parentIdName, String toMergeFieldNameInSyncData) {
+  public ESScriptUpdate mergeToListById(String listFieldNameInEs, String parentIdName, String toMergeFieldName) {
     Object id = convertType(outer.getId());
-    Object field = convertType(outer.getField(toMergeFieldNameInSyncData));
-    outer.removeField(toMergeFieldNameInSyncData);
+    Object field = convertType(outer.getField(toMergeFieldName));
+    outer.removeField(toMergeFieldName);
     oldType = outer.getType();
     switch (oldType) {
       case WRITE:
@@ -91,7 +105,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         mergeToListById.put(listFieldNameInEs, new FieldAndId(id, field));
         break;
       case UPDATE:
-        mergeToListById.put(listFieldNameInEs, new FieldAndId(id, field).setBeforeItem(convertType(outer.getBefore(toMergeFieldNameInSyncData))));
+        mergeToListById.put(listFieldNameInEs, new FieldAndId(id, field).setBeforeItem(convertType(outer.getBefore(toMergeFieldName))));
         break;
       default:
         throw new UnsupportedOperationException();
@@ -104,7 +118,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
 
   /**
    * https://www.elastic.co/guide/en/elasticsearch/reference/5.4/painless-api-reference.html
-   *
+   * <p>
    * To avoid losing data, the update API retrieves the current _version of the document in the retrieve step,
    * and passes that to the index request during the reindex step.
    * If another process has changed the document between retrieve and reindex,
@@ -151,7 +165,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   }
 
   @Override
-  public ESScriptUpdate mergeToNestedById(String listFieldNameInEs, String parentIdName, String... toMergeFieldsNameInSyncData) {
+  public ESScriptUpdate mergeToNestedById(String listFieldNameInEs, String parentIdName, String... toMergeFieldsName) {
     Object id = convertType(outer.getId());
     HashMap<String, Object> obj = Maps.newHashMap();
     obj.put("id", id);
@@ -162,7 +176,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         break;
       case WRITE:
       case UPDATE:
-        for (String s : toMergeFieldsNameInSyncData) {
+        for (String s : toMergeFieldsName) {
           Object field = convertType(outer.getField(s));
           obj.put(s, field);
         }
@@ -173,7 +187,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     }
     outer.setId(outer.getField(parentIdName))
         .removeField(parentIdName)
-        .removeFields(toMergeFieldsNameInSyncData)
+        .removeFields(toMergeFieldsName)
         .toUpdate();
     return this;
   }
@@ -192,8 +206,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         nested.forEach((k, v) -> {
           code.append(String.format(
               "if (ctx._source.%s.find(e -> e.id.equals(params.%s_id)) == null) {" +
-              "  ctx._source.%s.add(params.%s);" +
-              "}", k, k, k, k));
+                  "  ctx._source.%s.add(params.%s);" +
+                  "}", k, k, k, k));
           subParam.put(k + BY_ID_SUFFIX, v.get("id"));
           subParam.put(k, v);
         });
@@ -204,9 +218,9 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
           makeScript(setCode, "target.", " = params.", ";", v, params);
           code.append(String.format(
               "def target = ctx._source.%s.find(e -> e.id.equals(params.%s_id));" +
-              "if (target != null) {" +
-              " " + setCode.toString() +
-              "}", k, k));
+                  "if (target != null) {" +
+                  " " + setCode.toString() +
+                  "}", k, k));
           subParam.put(k + BY_ID_SUFFIX, v.get("id"));
         });
         break;
