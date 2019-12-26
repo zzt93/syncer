@@ -119,7 +119,7 @@ public class MasterSource {
     List<Connection> connections = realConnection.getReals();
     for (int i = 0; i < connections.size(); i++) {
       Connection connection = connections.get(i);
-      SyncInitMeta syncInitMeta = getSyncInitMeta(configSyncMetas[i], ackConnectionId2SyncInitMeta.get(connection.connectionIdentifier()), autoOffsetReset);
+      SyncInitMeta syncInitMeta = getSyncInitMeta(consumerId, configSyncMetas[i], ackConnectionId2SyncInitMeta.get(connection.connectionIdentifier()), autoOffsetReset);
       switch (getType()) {
         case Mongo:
           Preconditions
@@ -140,13 +140,13 @@ public class MasterSource {
     return res;
   }
 
-  private SyncInitMeta getSyncInitMeta(SyncMeta configSyncMeta, SyncInitMeta ackSyncMeta, AutoOffsetReset autoOffsetReset) {
+  private SyncInitMeta getSyncInitMeta(String consumerId, SyncMeta configSyncMeta, SyncInitMeta ackSyncMeta, AutoOffsetReset autoOffsetReset) {
     if (configSyncMeta != null) {
-      logger.warn("Override syncer remembered position with: {}", configSyncMeta);
+      logger.warn("Override [{}] remembered position with: {}", consumerId, configSyncMeta);
       return BinlogInfo.withFilenameCheck(configSyncMeta.getBinlogFilename(), configSyncMeta.getBinlogPosition());
     }
     if (autoOffsetReset != null) {
-      logger.warn("Override syncer remembered position with autoOffsetReset: {}", autoOffsetReset);
+      logger.warn("Override [{}] remembered position with autoOffsetReset: {}", consumerId, autoOffsetReset);
       switch (autoOffsetReset) {
         case latest:
           return SyncInitMeta.latest(getType());
@@ -157,7 +157,7 @@ public class MasterSource {
       }
     }
     if (ackSyncMeta == null) {
-      logger.info("Connect to earliest possible position because no config and no last run info");
+      logger.info("[{}] to earliest possible position because no config and no last run info", consumerId);
       ackSyncMeta = SyncInitMeta.earliest(getType());
     }
     return ackSyncMeta;
