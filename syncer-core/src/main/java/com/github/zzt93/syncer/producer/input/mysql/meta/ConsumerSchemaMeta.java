@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.config.consumer.input.Entity;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.github.zzt93.syncer.producer.input.Consumer;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Lists;
 import com.mysql.jdbc.Driver;
@@ -15,10 +16,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.*;
 import java.util.Map.Entry;
 import java.util.stream.Collectors;
@@ -155,11 +153,34 @@ public class ConsumerSchemaMeta {
             .getTables(null, null, "%", new String[]{"TABLE"})) {
           res = getSchemaMeta(metaData, tableResultSet, consumers);
         }
+        fetchLatestIfHas(connection, consumers);
       } finally {
         connection.close();
       }
       logger.info("Fetched {} for {}", res, consumers);
       return res;
+    }
+
+    private void fetchLatestIfHas(Connection connection, Set<Consumer> consumers) throws SQLException {
+      List<Consumer> mysqlLatest = consumers.stream().filter(Consumer::isMysqlLatest).collect(Collectors.toList());
+      if (!mysqlLatest.isEmpty()) {
+        String file; long position;
+        String query = "show master status";
+        try (Statement stmt = connection.createStatement(); ResultSet rs = stmt.executeQuery(query)) {
+          if (rs.next()) {
+            file = rs.getString("File");
+            position = rs.getLong("Position");
+          } else {
+            throw new InvalidConfigException("Failed to determine binlog filename/position");
+          }
+        } catch (SQLException e) {
+          throw new InvalidConfigException(e);
+        }
+
+        for (Consumer consumer : mysqlLatest) {
+          consumer.replaceLatest(new BinlogInfo(file, position));
+        }
+      }
     }
 
     private HashMap<Consumer, List<SchemaMeta>> getSchemaMeta(DatabaseMetaData metaData,

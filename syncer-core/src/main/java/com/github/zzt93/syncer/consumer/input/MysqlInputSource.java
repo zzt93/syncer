@@ -9,4 +9,6 @@ public interface MysqlInputSource {
 
   BinlogInfo getSyncInitMeta();
 
+  void replaceLatest(BinlogInfo latest);
+
 }

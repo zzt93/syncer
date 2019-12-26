@@ -12,7 +12,7 @@ import java.util.Set;
  */
 public class MysqlLocalConsumerSource extends LocalConsumerSource implements MysqlInputSource {
 
-  private final BinlogInfo syncInitMeta;
+  private BinlogInfo syncInitMeta;
 
   public MysqlLocalConsumerSource(String clientId,
                                   Connection connection,
@@ -26,5 +26,10 @@ public class MysqlLocalConsumerSource extends LocalConsumerSource implements Mys
   @Override
   public BinlogInfo getSyncInitMeta() {
     return syncInitMeta;
+  }
+
+  @Override
+  public void replaceLatest(BinlogInfo latest) {
+    syncInitMeta = latest;
   }
 }

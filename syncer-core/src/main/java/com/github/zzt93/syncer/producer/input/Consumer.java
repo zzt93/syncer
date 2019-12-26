@@ -3,6 +3,8 @@ package com.github.zzt93.syncer.producer.input;
 import com.github.zzt93.syncer.config.common.MasterSource;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
+import com.github.zzt93.syncer.consumer.input.MysqlLocalConsumerSource;
+import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 
 import java.util.Objects;
 import java.util.Set;
@@ -17,10 +19,12 @@ public class Consumer {
 
   private final Set<Repo> repos;
   private final String id;
+  private final ConsumerSource consumerSource;
 
   public Consumer(ConsumerSource consumerSource) {
     this.repos = consumerSource.copyRepos();
     id = consumerSource.clientId();
+    this.consumerSource = consumerSource;
   }
 
   public String getId() {
@@ -60,5 +64,14 @@ public class Consumer {
       }
     }
     return null;
+  }
+
+  public boolean isMysqlLatest() {
+    return consumerSource instanceof MysqlLocalConsumerSource
+        && ((MysqlLocalConsumerSource) consumerSource).getSyncInitMeta() == BinlogInfo.latest;
+  }
+
+  public void replaceLatest(BinlogInfo nowLatest) {
+    ((MysqlLocalConsumerSource) consumerSource).replaceLatest(nowLatest);
   }
 }
