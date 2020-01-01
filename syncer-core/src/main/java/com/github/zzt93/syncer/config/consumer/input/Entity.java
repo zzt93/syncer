@@ -9,7 +9,6 @@ public class Entity {
 
   private String name;
   private List<String> fields;
-  public static final String _all = "-all-";
 
   public Entity() {
   }
@@ -26,8 +25,8 @@ public class Entity {
     this.name = name;
   }
 
-  public List<String> getFields() {
-    return fields;
+  public Fields getFields() {
+    return new Fields(fields);
   }
 
   public void setFields(List<String> fields) {

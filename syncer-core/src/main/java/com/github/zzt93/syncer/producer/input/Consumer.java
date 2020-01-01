@@ -1,8 +1,11 @@
 package com.github.zzt93.syncer.producer.input;
 
 import com.github.zzt93.syncer.config.common.MasterSource;
+import com.github.zzt93.syncer.config.consumer.input.Entity;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
+import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 
 import java.util.Objects;
 import java.util.Set;
@@ -21,6 +24,11 @@ public class Consumer {
   public Consumer(ConsumerSource consumerSource) {
     this.repos = consumerSource.copyRepos();
     id = consumerSource.clientId();
+  }
+
+  private Consumer(Set<Repo> repos, String id) {
+    this.repos = repos;
+    this.id = id;
   }
 
   public String getId() {
@@ -60,5 +68,9 @@ public class Consumer {
       }
     }
     return null;
+  }
+
+  public static Consumer singleTable(String schema, String table) {
+    return new Consumer(Sets.newHashSet(new Repo(schema, Lists.newArrayList(new Entity(table)))), "single");
   }
 }

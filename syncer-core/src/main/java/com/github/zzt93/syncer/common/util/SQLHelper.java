@@ -53,7 +53,7 @@ public class SQLHelper {
     int tableIndex = lower.indexOf(words[1], alterIndex + words[0].length());
     if (alterIndex != -1 && tableIndex != -1) {
       int afterTable = tableIndex + words[1].length();
-      int addIndex = isAdd(lower, afterTable);
+      int addIndex = isAddAfter(lower, afterTable);
       if (addIndex != -1) {
         return sql.substring(afterTable, addIndex);
       }
@@ -69,7 +69,7 @@ public class SQLHelper {
     return null;
   }
 
-  private static int isAdd(String sql, int afterTable) {
+  private static int isAddAfter(String sql, int afterTable) {
     // alter table xx add yy after zz
     int i = sql.indexOf(" add ", afterTable);
     if (sql.indexOf(" after ", i) != -1) {
