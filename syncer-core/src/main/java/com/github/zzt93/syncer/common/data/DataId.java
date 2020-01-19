@@ -3,10 +3,8 @@ package com.github.zzt93.syncer.common.data;
 import com.github.shyiko.mysql.binlog.event.Event;
 import com.github.shyiko.mysql.binlog.event.EventHeaderV4;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
-import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import org.bson.BsonTimestamp;
-import org.bson.Document;
 
 /**
  * @author zzt
@@ -46,8 +44,7 @@ public interface DataId extends Comparable<DataId> {
     return new BinlogDataId(binlogFileName, tableMap.getPosition(), second.getPosition());
   }
 
-  static MongoDataId fromDocument(Document document) {
-    BsonTimestamp timestamp = (BsonTimestamp) document.get(MongoMasterConnector.TS);
+  static MongoDataId fromDocument(BsonTimestamp timestamp) {
     return new MongoDataId(timestamp.getTime(), timestamp.getInc());
   }
 

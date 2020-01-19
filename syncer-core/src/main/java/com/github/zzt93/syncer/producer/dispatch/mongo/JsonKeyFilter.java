@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer.dispatch.mongo;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.data.SimpleEventType;
+import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class JsonKeyFilter {
       }
     }
     tmp.forEach(fields::remove);
-    if ((fields.isEmpty() || fields.size() == 1 && fields.containsKey(MongoDispatcher.ID))
+    if ((fields.isEmpty() || fields.size() == 1 && fields.containsKey(MongoMasterConnector.ID))
         && data.getType() == SimpleEventType.UPDATE) {
       logger.debug("Discard {} because nothing to update", data);
       return false;

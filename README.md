@@ -83,6 +83,11 @@ The business database query request is delayed as little as possible.
 burden of remote master
 - Automatically skip synced item for consumers according to register info 
 
+
+The readConcern option allows you to control the consistency and isolation properties of the data read from replica sets and replica set shards.
+Through the effective use of write concerns and read concerns, you can adjust the level of consistency and availability guarantees as appropriate, such as waiting for stronger consistency guarantees, or loosening consistency requirements to provide higher availability.
+MongoDB drivers updated for MongoDB 3.2 or later support specifying read concern.
+
 ---
 
 After data items come out from `Input` module, it is converted to `SyncData`(s) -- the abstraction of
@@ -208,6 +213,11 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   ```
 - Mongo:
   - Not delete field from ES if sync to ES
+  - [Driver client compatibility](https://docs.mongodb.com/ecosystem/drivers/java/#mongodb-compatibility)
+  - For version 4.0 and later (Use [change stream](https://docs.mongodb.com/manual/changeStreams/)):
+    - Storage Engine: WiredTiger
+    - Replica Set Protocol Version: The replica sets and sharded clusters must use replica set protocol version 1 (pv1).
+    - [Read Concern “majority”](https://docs.mongodb.com/manual/reference/read-concern-majority/#readconcern.%22majority%22) Enabled.
   
 ### Notice
 

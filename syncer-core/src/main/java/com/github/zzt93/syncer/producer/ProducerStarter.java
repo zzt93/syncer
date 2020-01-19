@@ -10,7 +10,7 @@ import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
-import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector;
+import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnectorFactory;
 import com.github.zzt93.syncer.producer.input.mysql.connect.MysqlMasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import org.slf4j.Logger;
@@ -88,8 +88,8 @@ public class ProducerStarter implements Starter {
               masterSource.getFile(), consumerRegistry, masterSource.isOnlyUpdated());
           break;
         case Mongo:
-          masterConnector = new MongoMasterConnector(new MongoConnection(connection),
-              consumerRegistry);
+          masterConnector = new MongoMasterConnectorFactory(new MongoConnection(connection),
+              consumerRegistry).getMongoConnectorByServerVersion();
           break;
       }
       connectors.add(masterConnector);
