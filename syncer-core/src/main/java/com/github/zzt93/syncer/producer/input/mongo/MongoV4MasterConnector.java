@@ -20,6 +20,7 @@ import com.mongodb.client.model.Aggregates;
 import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
+import com.mongodb.client.model.changestream.UpdateDescription;
 import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
@@ -105,19 +106,23 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
     MongoNamespace namespace = d.getNamespace();
     HashMap<String, Object> full = new HashMap<>(), updated = null;
     full.put(ID, d.getDocumentKey().get(ID));
+    SimpleEventType type;
     switch (d.getOperationType()) {
       case UPDATE:
-        updated = new HashMap<>(d.getUpdateDescription().getUpdatedFields());
+        type = SimpleEventType.UPDATE;
+        UpdateDescription updateDescription = d.getUpdateDescription();
+        updated = new HashMap<>(updateDescription.getUpdatedFields());
+        removeField(updated, updateDescription.getRemovedFields());
         if (d.getFullDocument() != null) {
           full.putAll(d.getFullDocument());
         }
         break;
       case DELETE:
+        type = SimpleEventType.DELETE;
         break;
       case INSERT:
-        full.putAll(d.getFullDocument());
-        break;
-      case REPLACE:
+      case REPLACE: // write will overwrite for ES, not suitable for other output
+        type = SimpleEventType.WRITE;
         full.putAll(d.getFullDocument());
         break;
       case OTHER:
@@ -128,7 +133,16 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
       default:
         return null;
     }
-    return new SyncData(dataId, SimpleEventType.UPDATE, namespace.getDatabaseName(), namespace.getCollectionName(), ID, full.get(ID), new NamedChangeStream(full, updated));
+    return new SyncData(dataId, type, namespace.getDatabaseName(), namespace.getCollectionName(), ID, full.get(ID), new NamedChangeStream(full, updated));
+  }
+
+  private void removeField(HashMap<String, Object> updated, List<String> removedFields) {
+    if (removedFields == null) {
+      return;
+    }
+    for (String removedField : removedFields) {
+      updated.put(removedField, null);
+    }
   }
 
 }

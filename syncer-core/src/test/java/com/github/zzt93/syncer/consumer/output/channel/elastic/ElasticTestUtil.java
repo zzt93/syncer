@@ -19,7 +19,7 @@ public class ElasticTestUtil {
   public static AbstractClient getDevClient() throws Exception {
     ElasticsearchConnection elasticsearchConnection = new ElasticsearchConnection();
     elasticsearchConnection.setClusterName("searcher-dev");
-    elasticsearchConnection.setClusterNodes(Lists.newArrayList("192.168.1.204:9300"));
+    elasticsearchConnection.setClusterNodes(Lists.newArrayList("58.213.85.37:9300"));
 
     return elasticsearchConnection.esClient();
   }

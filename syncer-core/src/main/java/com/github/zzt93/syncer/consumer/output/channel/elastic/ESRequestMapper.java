@@ -39,6 +39,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
 
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final ESRequestMapping esRequestMapping;
+  // TODO use es7 branch to delete this dependency
   private final AbstractClient client;
   private final KVMapper requestBodyMapper;
   private final Expression indexExpr;
