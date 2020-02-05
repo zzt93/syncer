@@ -43,6 +43,8 @@ public interface SyncData {
 
   SyncData addField(String key, Object value);
 
+  SyncData setFieldNull(String key);
+
   SyncData renameField(String oldKey, String newKey);
 
   SyncData removeField(String key);
@@ -60,6 +62,8 @@ public interface SyncData {
   HashMap<String, Object> getExtras();
 
   Object getField(String key);
+
+  Long getFieldAsLong(String key);
 
   String getEventId();
 

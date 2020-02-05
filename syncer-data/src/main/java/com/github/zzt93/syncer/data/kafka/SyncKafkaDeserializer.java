@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.data.kafka;
 
 import com.github.zzt93.syncer.data.SimpleEventType;
-import com.github.zzt93.syncer.data.SyncResult;
 import com.google.gson.Gson;
 import org.apache.kafka.common.serialization.Deserializer;
 
@@ -10,7 +9,7 @@ import java.util.Map;
 /**
  * @author zzt
  */
-public class SyncKafkaDeserializer implements Deserializer<SyncResult> {
+public class SyncKafkaDeserializer implements Deserializer<SyncResultFromJson> {
   private static final Gson gson = new Gson();
 
   @Override
@@ -18,12 +17,12 @@ public class SyncKafkaDeserializer implements Deserializer<SyncResult> {
   }
 
   @Override
-  public SyncResult deserialize(String s, byte[] bytes) {
+  public SyncResultFromJson deserialize(String s, byte[] bytes) {
     try {
-      return gson.fromJson(new String(bytes), SyncResult.class);
+      return gson.fromJson(new String(bytes), SyncResultFromJson.class);
     } catch (Throwable e) {
       Map map = gson.fromJson(new String(bytes), Map.class);
-      SyncResult res = new SyncResult();
+      SyncResultFromJson res = new SyncResultFromJson();
       res.setEventType(tmp(map));
       res.getFields().putAll((Map<? extends String, ?>) map.get("fields"));
       res.setId(map.get("id"));

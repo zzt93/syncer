@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.common.data;
 
 import com.github.zzt93.syncer.data.SimpleEventType;
-import com.github.zzt93.syncer.data.SyncResult;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -178,6 +177,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return this;
   }
 
+  @Override
+  public SyncData setFieldNull(String key) {
+    getFields().put(key, null);
+    return this;
+  }
+
   public SyncData renameField(String oldKey, String newKey) {
     if (containField(oldKey)) {
       getFields().put(newKey, getFields().get(oldKey));
@@ -251,6 +256,15 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
       return null;
     }
     return result.getFields().get(key);
+  }
+
+  @Override
+  public Long getFieldAsLong(String key) {
+    Object res = getField(key);
+    if (res != null) {
+      return (long) res;
+    }
+    return null;
   }
 
   public String getEventId() {

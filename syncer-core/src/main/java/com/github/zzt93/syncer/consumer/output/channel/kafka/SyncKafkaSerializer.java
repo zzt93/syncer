@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.consumer.output.channel.kafka;
 
-import com.github.zzt93.syncer.data.SyncResult;
+import com.github.zzt93.syncer.common.data.SyncResult;
 import com.google.gson.Gson;
 import org.apache.kafka.common.serialization.Serializer;
 

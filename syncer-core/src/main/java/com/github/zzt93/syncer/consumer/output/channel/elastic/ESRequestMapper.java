@@ -23,6 +23,7 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -148,14 +149,22 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     for (Entry<String, Object> entry : syncBy.entrySet()) {
       String[] key = entry.getKey().split("\\.");
       if (key.length == 2) {
-        builder.filter(nestedQuery(key[0], boolQuery().filter(termQuery(entry.getKey(), entry.getValue())), ScoreMode.Avg));
+        builder.filter(nestedQuery(key[0], boolQuery().filter(getSingleFilter(entry)), ScoreMode.Avg));
       } else if (key.length == 1) {
-        builder.filter(termQuery(entry.getKey(), entry.getValue()));
+        builder.filter(getSingleFilter(entry));
       } else {
         logger.error("Only support one level nested obj for the time being");
       }
     }
     return builder;
+  }
+
+  private QueryBuilder getSingleFilter(Entry<String, Object> entry) {
+    Object value = entry.getValue();
+    if (value instanceof Collection || value.getClass().isArray()) {
+      return termsQuery(entry.getKey(), value);
+    }
+    return termQuery(entry.getKey(), value);
   }
 
   static Map getUpsert(SyncData data) {
