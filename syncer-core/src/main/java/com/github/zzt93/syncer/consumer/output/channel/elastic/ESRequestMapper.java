@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
@@ -26,8 +27,7 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 /**
  * @author zzt
@@ -146,7 +146,14 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
       throw new InvalidConfigException("No data used to do sync(update/delete) filter");
     }
     for (Entry<String, Object> entry : syncBy.entrySet()) {
-      builder.filter(termQuery(entry.getKey(), entry.getValue()));
+      String[] key = entry.getKey().split("\\.");
+      if (key.length == 2) {
+        builder.filter(nestedQuery(key[0], boolQuery().filter(termQuery(entry.getKey(), entry.getValue())), ScoreMode.Avg));
+      } else if (key.length == 1) {
+        builder.filter(termQuery(entry.getKey(), entry.getValue()));
+      } else {
+        logger.error("Only support one level nested obj for the time being");
+      }
     }
     return builder;
   }
