@@ -224,7 +224,7 @@ public class ESRequestMapperTest {
     res.add(builder);
 
     data = SyncDataTestUtil.update();
-    data.addField("int", null).addField("str", null).addField("list", null);
+    data.setFieldNull("int").setFieldNull("str").setFieldNull("list");
 
     builder = mapper.map(data);
     assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":null,\"list\":null,\"int\":null}]}], detect_noop[true]}",
@@ -241,7 +241,7 @@ public class ESRequestMapperTest {
 
 
     data = SyncDataTestUtil.update();
-    data.addField("int", null).addField("str", null).addField("list", null);
+    data.setFieldNull("int").setFieldNull("str").setFieldNull("list");
 
     builder = mapper.map(data);
     assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":null,\"list\":null,\"int\":null}]}], detect_noop[true]}",

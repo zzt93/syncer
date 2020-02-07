@@ -24,6 +24,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   private static final Logger logger = LoggerFactory.getLogger(ESScriptUpdate.class);
   private static final ArrayList<Object> NEW = new ArrayList<>(0);
   public static final String BY_ID_SUFFIX = "_id";
+  private static final String NULL_PARENT_ID_NAME = "";
 
   // todo other script op: +=, contains
   private final HashMap<String, Object> mergeToList = new HashMap<>();
@@ -167,20 +168,20 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   @Override
   public ESScriptUpdate mergeToNestedById(String listFieldNameInEs, String parentIdName, String... toMergeFieldsName) {
     Object id = convertType(outer.getId());
-    HashMap<String, Object> obj = Maps.newHashMap();
-    obj.put("id", id);
+    HashMap<String, Object> nestedObj = Maps.newHashMap();
+    nestedObj.put("id", id);
     oldType = outer.getType();
     switch (oldType) {
       case DELETE:
-        nested.put(listFieldNameInEs, obj);
+        nested.put(listFieldNameInEs, nestedObj);
         break;
       case WRITE:
       case UPDATE:
         for (String s : toMergeFieldsName) {
           Object field = convertType(outer.getField(s));
-          obj.put(s, field);
+          nestedObj.put(s, field);
         }
-        nested.put(listFieldNameInEs, obj);
+        nested.put(listFieldNameInEs, nestedObj);
         break;
       default:
         throw new UnsupportedOperationException();
@@ -192,36 +193,53 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     return this;
   }
 
+  @Override
+  public ESScriptUpdate mergeToNestedByQuery(String listFieldNameInEs, Map<String, Object> parentFilter, String... toMergeFieldsName) {
+    ESScriptUpdate esScriptUpdate = mergeToNestedById(listFieldNameInEs, NULL_PARENT_ID_NAME, toMergeFieldsName);
+    SyncByQuery syncByQuery = outer.syncByQuery();
+    for (Map.Entry<String, Object> e : parentFilter.entrySet()) {
+      syncByQuery.syncBy(e.getKey(), e.getValue());
+    }
+    return esScriptUpdate;
+  }
+
+  @Override
+  public com.github.zzt93.syncer.data.ESScriptUpdate mergeToNestedByQuery(String listFieldNameInEs, String parentFilterKey, Object parentFilterValue, String... toMergeFieldsName) {
+    ESScriptUpdate esScriptUpdate = mergeToNestedById(listFieldNameInEs, NULL_PARENT_ID_NAME, toMergeFieldsName);
+    outer.syncByQuery().syncBy(parentFilterKey, parentFilterValue);
+    return esScriptUpdate;
+  }
+
   private void generateFromMergeToNestedById(StringBuilder code, HashMap<String, Object> params) {
     HashMap<String, Object> subParam = new HashMap<>(nested.size() * 3);
     switch (oldType) {
       case DELETE:
-        nested.forEach((k, v) -> {
+        nested.forEach((nestedFieldName, nestedObj) -> {
           code.append(String.format(
-              "ctx._source.%s.removeIf(e -> e.id.equals(params.%s_id)); ", k, k));
-          subParam.put(k + BY_ID_SUFFIX, v.get("id"));
+              "ctx._source.%s.removeIf(e -> e.id.equals(params.%s_id)); ", nestedFieldName, nestedFieldName));
+          subParam.put(nestedFieldName + BY_ID_SUFFIX, nestedObj.get("id"));
         });
         break;
       case WRITE:
-        nested.forEach((k, v) -> {
+        nested.forEach((nestedFieldName, nestedObj) -> {
           code.append(String.format(
               "if (ctx._source.%s.find(e -> e.id.equals(params.%s_id)) == null) {" +
                   "  ctx._source.%s.add(params.%s);" +
-                  "}", k, k, k, k));
-          subParam.put(k + BY_ID_SUFFIX, v.get("id"));
-          subParam.put(k, v);
+                  "}", nestedFieldName, nestedFieldName, nestedFieldName, nestedFieldName));
+          subParam.put(nestedFieldName + BY_ID_SUFFIX, nestedObj.get("id"));
+          subParam.put(nestedFieldName, nestedObj);
         });
         break;
       case UPDATE:
-        nested.forEach((k, v) -> {
+        nested.forEach((nestedFieldName, nestedObj) -> {
           StringBuilder setCode = new StringBuilder();
-          makeScript(setCode, "target.", " = params.", ";", v, params);
+          makeScript(setCode, "target.", " = params.", ";", nestedObj, params);
           code.append(String.format(
               "def target = ctx._source.%s.find(e -> e.id.equals(params.%s_id));" +
                   "if (target != null) {" +
                   " " + setCode.toString() +
-                  "}", k, k));
-          subParam.put(k + BY_ID_SUFFIX, v.get("id"));
+                  "}", nestedFieldName, nestedFieldName));
+          subParam.put(nestedFieldName + BY_ID_SUFFIX, nestedObj.get("id"));
         });
         break;
       default:

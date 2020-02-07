@@ -74,8 +74,9 @@ public interface SyncData {
   HashMap<String, Object> getSyncBy();
 
   /**
-   * update/delete by query
-   * @return one instance for this syncData
+   * Call this method to update/delete/write by query
+   * @return one instance for this SyncByQuery
+   * @see SyncByQuery#syncBy(String, Object) add filter and will set id as null automatically
    */
   SyncByQuery syncByQuery();
 
