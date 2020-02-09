@@ -82,6 +82,11 @@ public interface SyncData {
 
   ESScriptUpdate esScriptUpdate();
 
+  /**
+   * @param docFilter filter for query a ES doc and apply script
+   */
+  ESScriptUpdate esScriptUpdate(Filter docFilter);
+
   ExtraQuery extraQuery(String indexName, String typeName);
 
   boolean hasExtra();

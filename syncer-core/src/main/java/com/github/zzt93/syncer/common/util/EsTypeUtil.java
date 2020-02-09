@@ -8,7 +8,7 @@ public class EsTypeUtil {
   /**
    * https://discuss.elastic.co/t/java-api-plainless-script-indexof-give-wrong-answer/139016/4
    */
-  public static Object convertType(Object value) {
+  public static Object scriptConvert(Object value) {
     if (value instanceof Long) {
       return ((Long) value) < Integer.MAX_VALUE ? ((Long) value).intValue() : value;
     }

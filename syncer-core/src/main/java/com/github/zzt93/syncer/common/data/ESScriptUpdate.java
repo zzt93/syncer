@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.common.data;
 
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
@@ -12,7 +13,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.github.zzt93.syncer.common.util.EsTypeUtil.convertType;
+import static com.github.zzt93.syncer.common.util.EsTypeUtil.scriptConvert;
 
 /**
  * @see ExtraQuery
@@ -24,7 +25,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   private static final Logger logger = LoggerFactory.getLogger(ESScriptUpdate.class);
   private static final ArrayList<Object> NEW = new ArrayList<>(0);
   public static final String BY_ID_SUFFIX = "_id";
-  private static final String NULL_PARENT_ID_NAME = "";
+  private static final String CHILD_FILTER_KEY = "";
+  private static final String CHILD_DOC_ID = "id";
 
   // todo other script op: +=, contains
   private final HashMap<String, Object> mergeToList = new HashMap<>();
@@ -33,9 +35,16 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
 
   private final transient SyncData outer;
   private SimpleEventType oldType;
+  private Filter parentFilter;
 
   ESScriptUpdate(SyncData data) {
     outer = data;
+    this.parentFilter = Filter.id();
+  }
+
+  ESScriptUpdate(SyncData syncData, Filter parentFilter) {
+    outer = syncData;
+    this.parentFilter = parentFilter;
   }
 
   public static void makeScript(StringBuilder code, String op, String endOp, HashMap<String, Object> data,
@@ -61,8 +70,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     }
   }
 
-  public ESScriptUpdate mergeToList(String listFieldNameInEs, String parentIdName, String toMergeFieldName) {
-    Object field = convertType(outer.getField(toMergeFieldName));
+  public ESScriptUpdate mergeToList(String listFieldNameInEs, String toMergeFieldName) {
+    Object field = scriptConvert(outer.getField(toMergeFieldName));
     outer.removeField(toMergeFieldName);
     oldType = outer.getType();
     switch (outer.getType()) {
@@ -74,9 +83,13 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         logger.error("Not support `mergeToList` for UPDATE, use `mergeToListById` or `mergeToNestedById` instead");
         throw new UnsupportedOperationException();
     }
-    outer.setId(outer.getField(parentIdName))
-        .removeField(parentIdName)
-        .toUpdate();
+    assert parentFilter.isId();
+    if (!parentFilter.fieldUseId()) {
+      String parentIdName = parentFilter.getFieldKeyName();
+      outer.setId(outer.getField(parentIdName))
+          .removeField(parentIdName);
+    }
+    outer.toUpdate();
     return this;
   }
 
@@ -95,9 +108,9 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     }
   }
 
-  public ESScriptUpdate mergeToListById(String listFieldNameInEs, String parentIdName, String toMergeFieldName) {
-    Object id = convertType(outer.getId());
-    Object field = convertType(outer.getField(toMergeFieldName));
+  public ESScriptUpdate mergeToListById(String listFieldNameInEs, String toMergeFieldName) {
+    Object id = scriptConvert(outer.getId());
+    Object field = scriptConvert(outer.getField(toMergeFieldName));
     outer.removeField(toMergeFieldName);
     oldType = outer.getType();
     switch (oldType) {
@@ -106,14 +119,18 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         mergeToListById.put(listFieldNameInEs, new FieldAndId(id, field));
         break;
       case UPDATE:
-        mergeToListById.put(listFieldNameInEs, new FieldAndId(id, field).setBeforeItem(convertType(outer.getBefore(toMergeFieldName))));
+        mergeToListById.put(listFieldNameInEs, new FieldAndId(id, field).setBeforeItem(scriptConvert(outer.getBefore(toMergeFieldName))));
         break;
       default:
         throw new UnsupportedOperationException();
     }
-    outer.setId(outer.getField(parentIdName))
-        .removeField(parentIdName)
-        .toUpdate();
+    assert parentFilter.isId();
+    if (!parentFilter.fieldUseId()) {
+      String parentIdName = parentFilter.getFieldKeyName();
+      outer.setId(outer.getField(parentIdName))
+          .removeField(parentIdName);
+    }
+    outer.toUpdate();
     return this;
   }
 
@@ -166,10 +183,17 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   }
 
   @Override
-  public ESScriptUpdate mergeToNestedById(String listFieldNameInEs, String parentIdName, String... toMergeFieldsName) {
-    Object id = convertType(outer.getId());
+  public ESScriptUpdate mergeToNestedById(String listFieldNameInEs, String... toMergeFieldsName) {
+    return mergeToNestedByFilter(listFieldNameInEs, Filter.id(), toMergeFieldsName);
+  }
+
+  private ESScriptUpdate mergeToNestedByFilter(String listFieldNameInEs, Filter childFilter, String... toMergeFieldsName) {
     HashMap<String, Object> nestedObj = Maps.newHashMap();
-    nestedObj.put("id", id);
+    nestedObj.put(CHILD_FILTER_KEY, childFilter);
+    String key = childFilter.getDocKeyNameOrDefault(CHILD_DOC_ID);
+    Object value = scriptConvert(childFilter.getFieldValue(outer));
+    nestedObj.put(key, value);
+
     oldType = outer.getType();
     switch (oldType) {
       case DELETE:
@@ -178,7 +202,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
       case WRITE:
       case UPDATE:
         for (String s : toMergeFieldsName) {
-          Object field = convertType(outer.getField(s));
+          Object field = outer.getField(s);
           nestedObj.put(s, field);
         }
         nested.put(listFieldNameInEs, nestedObj);
@@ -186,60 +210,71 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
       default:
         throw new UnsupportedOperationException();
     }
-    outer.setId(outer.getField(parentIdName))
-        .removeField(parentIdName)
-        .removeFields(toMergeFieldsName)
-        .toUpdate();
+
+    if (parentFilter.isId()) {
+      if (!parentFilter.fieldUseId()) {
+        String parentIdName = parentFilter.getFieldKeyName();
+        outer.setId(outer.getField(parentIdName)).removeField(parentIdName);
+      }
+    } else {
+      SyncByQuery syncByQuery = outer.syncByQuery();
+      do {
+        syncByQuery.syncBy(parentFilter.getDocKeyName(), outer.getField(parentFilter.getFieldKeyName()));
+        parentFilter = parentFilter.next();
+      } while (parentFilter != null);
+    }
+
+    outer.removeFields(toMergeFieldsName).toUpdate();
     return this;
   }
 
   @Override
-  public ESScriptUpdate mergeToNestedByQuery(String listFieldNameInEs, Map<String, Object> parentFilter, String... toMergeFieldsName) {
-    ESScriptUpdate esScriptUpdate = mergeToNestedById(listFieldNameInEs, NULL_PARENT_ID_NAME, toMergeFieldsName);
-    SyncByQuery syncByQuery = outer.syncByQuery();
-    for (Map.Entry<String, Object> e : parentFilter.entrySet()) {
-      syncByQuery.syncBy(e.getKey(), e.getValue());
+  public ESScriptUpdate mergeToNestedByQuery(String listFieldNameInEs, Filter childFilter, String... toMergeFieldsName) {
+    if (outer.getType() == SimpleEventType.WRITE) {
+      logger.error("Not support mergeToNestedByQuery for SimpleEventType.WRITE, ignore invocation");
+      return this;
     }
-    return esScriptUpdate;
+    return mergeToNestedByFilter(listFieldNameInEs, childFilter, toMergeFieldsName);
   }
 
-  @Override
-  public com.github.zzt93.syncer.data.ESScriptUpdate mergeToNestedByQuery(String listFieldNameInEs, String parentFilterKey, Object parentFilterValue, String... toMergeFieldsName) {
-    ESScriptUpdate esScriptUpdate = mergeToNestedById(listFieldNameInEs, NULL_PARENT_ID_NAME, toMergeFieldsName);
-    outer.syncByQuery().syncBy(parentFilterKey, parentFilterValue);
-    return esScriptUpdate;
-  }
-
-  private void generateFromMergeToNestedById(StringBuilder code, HashMap<String, Object> params) {
+  private void generateFromMergeToNested(StringBuilder code, HashMap<String, Object> params) {
     HashMap<String, Object> subParam = new HashMap<>(nested.size() * 3);
     switch (oldType) {
       case DELETE:
         nested.forEach((nestedFieldName, nestedObj) -> {
+          Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
+          String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
           code.append(String.format(
-              "ctx._source.%s.removeIf(e -> e.id.equals(params.%s_id)); ", nestedFieldName, nestedFieldName));
-          subParam.put(nestedFieldName + BY_ID_SUFFIX, nestedObj.get("id"));
+              "ctx._source.%s.removeIf(e -> e.%s.equals(params.%s)); ", nestedFieldName, docKeyNameOrDefault, docKeyNameOrDefault));
+          subParam.put(docKeyNameOrDefault, nestedObj.remove(docKeyNameOrDefault));
         });
         break;
       case WRITE:
         nested.forEach((nestedFieldName, nestedObj) -> {
+          Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
+          String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
           code.append(String.format(
-              "if (ctx._source.%s.find(e -> e.id.equals(params.%s_id)) == null) {" +
+              "if (ctx._source.%s.find(e -> e.%s.equals(params.%s)) == null) {" +
                   "  ctx._source.%s.add(params.%s);" +
-                  "}", nestedFieldName, nestedFieldName, nestedFieldName, nestedFieldName));
-          subParam.put(nestedFieldName + BY_ID_SUFFIX, nestedObj.get("id"));
+                  "}", nestedFieldName, docKeyNameOrDefault, docKeyNameOrDefault, nestedFieldName, nestedFieldName));
+          subParam.put(docKeyNameOrDefault, nestedObj.get(docKeyNameOrDefault));
           subParam.put(nestedFieldName, nestedObj);
         });
         break;
       case UPDATE:
         nested.forEach((nestedFieldName, nestedObj) -> {
+          Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
+          String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
+
+          // remove filterKey from nestedObj
+          subParam.put(docKeyNameOrDefault, nestedObj.remove(docKeyNameOrDefault));
           StringBuilder setCode = new StringBuilder();
           makeScript(setCode, "target.", " = params.", ";", nestedObj, params);
           code.append(String.format(
-              "def target = ctx._source.%s.find(e -> e.id.equals(params.%s_id));" +
+              "def target = ctx._source.%s.find(e -> e.%s.equals(params.%s));" +
                   "if (target != null) {" +
                   " " + setCode.toString() +
-                  "}", nestedFieldName, nestedFieldName));
-          subParam.put(nestedFieldName + BY_ID_SUFFIX, nestedObj.get("id"));
+                  "}", nestedFieldName, docKeyNameOrDefault, docKeyNameOrDefault));
         });
         break;
       default:
@@ -292,7 +327,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   public void generateScript(StringBuilder code, HashMap<String, Object> params) {
     generateFromMergeToList(code, params);
     generateFromMergeToListById(code, params);
-    generateFromMergeToNestedById(code, params);
+    generateFromMergeToNested(code, params);
   }
 
   public static class FieldAndId {

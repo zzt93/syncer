@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.common.data;
 
+import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 import org.slf4j.Logger;
@@ -304,6 +305,14 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   public ESScriptUpdate esScriptUpdate() {
     if (esScriptUpdate == null) {
       esScriptUpdate = new ESScriptUpdate(this);
+    }
+    return esScriptUpdate;
+  }
+
+  @Override
+  public ESScriptUpdate esScriptUpdate(Filter docFilter) {
+    if (esScriptUpdate == null) {
+      esScriptUpdate = new ESScriptUpdate(this, docFilter);
     }
     return esScriptUpdate;
   }
