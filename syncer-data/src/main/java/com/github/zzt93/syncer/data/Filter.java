@@ -21,6 +21,10 @@ public class Filter {
     return new Filter(null, fieldKeyName);
   }
 
+  public static Filter fieldId(String docKeyName) {
+    return new Filter(docKeyName, null);
+  }
+
   public static Filter id() {
     return id;
   }

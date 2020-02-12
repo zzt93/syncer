@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.google.common.collect.Lists;
@@ -65,8 +64,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     int before = params.size();
     params.putAll(data);
     if (before + data.size() != params.size()) {
-      throw new InvalidConfigException("Key conflict happens when making script [" + code + "], "
-          + "check config file about `syncByQuery()` (Notice the `syncByQuery()` will default use all fields for 'set' update)");
+      logger.warn("Key conflict happens when making script [{}] {}", code, params);
     }
   }
 
@@ -219,7 +217,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     } else {
       SyncByQuery syncByQuery = outer.syncByQuery();
       do {
-        syncByQuery.syncBy(parentFilter.getDocKeyName(), outer.getField(parentFilter.getFieldKeyName()));
+        syncByQuery.syncBy(parentFilter.getDocKeyName(), parentFilter.getFieldValue(outer));
         parentFilter = parentFilter.next();
       } while (parentFilter != null);
     }
