@@ -555,9 +555,63 @@ public class ESRequestMapperTest {
     remoteCheck(client, innerNestedByQuery());
   }
 
+  @Test
+  public void nestedWithExtraQuery() throws Exception {
+    AbstractClient client = ElasticTestUtil.getDevClient();
+    Elasticsearch elasticsearch = new Elasticsearch();
+    ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
+
+    SyncData data = SyncDataTestUtil.update("role", "role").setId(1234L);
+    data.setRepo("nested3").setEntity("nested3").addField("title", "b").addField("user_id", 2L);
+    data.extraQuery("user", "user").filter("_id", 2L).select("username").addField("username");
+    data.esScriptUpdate(Filter.fieldId("roles.id")).mergeToNestedById("roles", "title", "user_id", "username");
+
+    Object builder = mapper.map(data);
+    assertEquals("", "{\n" +
+            "  \"size\" : 1000,\n" +
+            "  \"query\" : {\n" +
+            "    \"bool\" : {\n" +
+            "      \"filter\" : [\n" +
+            "        {\n" +
+            "          \"nested\" : {\n" +
+            "            \"query\" : {\n" +
+            "              \"bool\" : {\n" +
+            "                \"filter\" : [\n" +
+            "                  {\n" +
+            "                    \"term\" : {\n" +
+            "                      \"roles.id\" : {\n" +
+            "                        \"value\" : 1234,\n" +
+            "                        \"boost\" : 1.0\n" +
+            "                      }\n" +
+            "                    }\n" +
+            "                  }\n" +
+            "                ],\n" +
+            "                \"disable_coord\" : false,\n" +
+            "                \"adjust_pure_negative\" : true,\n" +
+            "                \"boost\" : 1.0\n" +
+            "              }\n" +
+            "            },\n" +
+            "            \"path\" : \"roles\",\n" +
+            "            \"ignore_unmapped\" : false,\n" +
+            "            \"score_mode\" : \"avg\",\n" +
+            "            \"boost\" : 1.0\n" +
+            "          }\n" +
+            "        }\n" +
+            "      ],\n" +
+            "      \"disable_coord\" : false,\n" +
+            "      \"adjust_pure_negative\" : true,\n" +
+            "      \"boost\" : 1.0\n" +
+            "    }\n" +
+            "  }\n" +
+            "}",
+        ((AbstractBulkByScrollRequestBuilder)builder).source().toString());
+    assertEquals("", "update-by-query [nested3] updated with Script{type=inline, lang='painless', idOrCode='def target = ctx._source.roles.find(e -> e.id.equals(params.id));if (target != null) { target.user_id = params.user_id;target.title = params.title;target.username = params.username;}', options={}, params={id=1234, title=b, user_id=2, username=null}}",
+        ((UpdateByQueryRequestBuilder) builder).request().toString());
+  }
+
   public static void main(String[] args) throws Exception {
 //    nestedByParentIdRemote();
 //    mergeToListRemote();
-    setFieldNullRemote();
+//    setFieldNullRemote();
   }
 }

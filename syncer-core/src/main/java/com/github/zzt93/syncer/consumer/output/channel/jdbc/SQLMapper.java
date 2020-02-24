@@ -45,7 +45,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
     id = parser.parseExpression(rowMapping.getId());
     idName = rowMapping.getId();
 
-    kvMapper = new KVMapper(rowMapping.getRows(), new JdbcNestedQueryMapper());
+    kvMapper = new KVMapper(rowMapping.getRows());
   }
 
   @Override

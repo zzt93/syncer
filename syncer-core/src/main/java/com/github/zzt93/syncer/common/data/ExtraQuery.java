@@ -84,7 +84,11 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
   }
 
   public Object getQueryResult(String key) {
-    return queryResult.get(key);
+    Object o = queryResult.get(key);
+    if (o == null) {
+      logger.warn("Fail to query [{}] by {}", key, this);
+    }
+    return o;
   }
 
   public Object getField(String s) {

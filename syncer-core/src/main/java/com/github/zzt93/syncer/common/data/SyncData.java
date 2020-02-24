@@ -12,6 +12,13 @@ import java.util.HashMap;
 import java.util.Set;
 
 /**
+ * Output channel parse order (MySQL & ES):
+ * <ul>
+ *   <li>extraQuery</li>
+ *   <li>fields (support extraQuery), id, repo, entity</li>
+ *   <li>syncByQuery</li>
+ *   <li>EsScript (support extraQuery)</li>
+ * </ul>
  * @author zzt
  */
 public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializable {
@@ -322,15 +329,20 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public ExtraQuery extraQuery(String indexName, String typeName) {
-    if (inner.hasExtra) {
-      logger.warn("Multiple insert by query, not supported for mysql output channel: old query will be override");
+    if (extraQueryContext == null) {
+      extraQueryContext = new ExtraQueryContext();
     }
-    inner.hasExtra = true;
-    return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
+    return extraQueryContext.add(new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName));
   }
 
+  public ExtraQueryContext getExtraQueryContext() {
+    return extraQueryContext;
+  }
+
+  private ExtraQueryContext extraQueryContext;
+
   public boolean hasExtra() {
-    return inner.hasExtra;
+    return extraQueryContext != null;
   }
 
   private String getPrimaryKeyName() {
@@ -365,7 +377,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   private static class Meta {
     private final DataId dataId;
     private transient StandardEvaluationContext context;
-    private boolean hasExtra = false;
     private String connectionIdentifier;
 
     Meta(DataId dataId, String connectionIdentifier) {
@@ -378,7 +389,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
       return "Meta{" +
           "dataId=" + dataId +
           ", context=" + context +
-          ", hasExtra=" + hasExtra +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
           '}';
     }

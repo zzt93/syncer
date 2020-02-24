@@ -12,10 +12,8 @@ public class ESRequestMapping {
 
   private String index = "repo";
   private String type = "entity";
-  private String documentId = "id";
   private LinkedHashMap<String, Object> fieldsMapping = new LinkedHashMap<>();
   private boolean noUseIdForIndex = false;
-  private boolean enableExtraQuery = false;
   private int retryOnUpdateConflict = 0;
   private boolean upsert = false;
 
@@ -40,16 +38,8 @@ public class ESRequestMapping {
     this.type = type;
   }
 
-  public String getDocumentId() {
-    return documentId;
-  }
-
-  public void setDocumentId(String documentId) {
-    this.documentId = documentId;
-  }
-
   public LinkedHashMap<String, Object> getFieldsMapping() {
-    if (fieldsMapping.size() > 1 && fieldsMapping.containsKey(KVMapper.FAKE_KEY)) {
+    if (fieldsMapping.size() > 1) {
       fieldsMapping.remove(KVMapper.FAKE_KEY);
     }
     return fieldsMapping;
@@ -65,14 +55,6 @@ public class ESRequestMapping {
 
   public void setNoUseIdForIndex(boolean noUseIdForIndex) {
     this.noUseIdForIndex = noUseIdForIndex;
-  }
-
-  public boolean getEnableExtraQuery() {
-    return enableExtraQuery;
-  }
-
-  public void setEnableExtraQuery(boolean enableExtraQuery) {
-    this.enableExtraQuery = enableExtraQuery;
   }
 
   public int getRetryOnUpdateConflict() {

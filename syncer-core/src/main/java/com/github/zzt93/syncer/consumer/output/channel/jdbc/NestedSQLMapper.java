@@ -30,13 +30,15 @@ public class NestedSQLMapper extends SQLMapper {
   private final KVMapper kvMapper;
   private final Expression schema;
   private final Expression table;
+  private final JdbcNestedQueryMapper jdbcNestedQueryMapper;
 
   public NestedSQLMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
     super(rowMapping, jdbcTemplate);
     SpelExpressionParser parser = new SpelExpressionParser();
     schema = parser.parseExpression(rowMapping.getSchema());
     table = parser.parseExpression(rowMapping.getTable());
-    kvMapper = new KVMapper(rowMapping.getRows(), new JdbcNestedQueryMapper());
+    jdbcNestedQueryMapper = new JdbcNestedQueryMapper();
+    kvMapper = new KVMapper(rowMapping.getRows());
   }
 
   private String[] join(HashMap<String, Object> map) {
@@ -64,6 +66,8 @@ public class NestedSQLMapper extends SQLMapper {
     if (!data.hasExtra()) {
       return super.map(data);
     }
+    jdbcNestedQueryMapper.parseExtraQueryContext(data.getExtraQueryContext());
+
     StandardEvaluationContext context = data.getContext();
     String schema = evalString(this.schema, context);
     String table = evalString(this.table, context);

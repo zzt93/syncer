@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.common.data;
 
+import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.google.common.collect.Lists;
@@ -242,6 +243,9 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         nested.forEach((nestedFieldName, nestedObj) -> {
           Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
           String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
+
+          KVMapper.map(nestedObj, nestedObj);
+
           code.append(String.format(
               "ctx._source.%s.removeIf(e -> e.%s.equals(params.%s)); ", nestedFieldName, docKeyNameOrDefault, docKeyNameOrDefault));
           subParam.put(docKeyNameOrDefault, nestedObj.remove(docKeyNameOrDefault));
@@ -251,6 +255,9 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         nested.forEach((nestedFieldName, nestedObj) -> {
           Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
           String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
+
+          KVMapper.map(nestedObj, nestedObj);
+
           code.append(String.format(
               "if (ctx._source.%s.find(e -> e.%s.equals(params.%s)) == null) {" +
                   "  ctx._source.%s.add(params.%s);" +
@@ -264,7 +271,9 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
           Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
           String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
 
-          // remove filterKey from nestedObj
+          KVMapper.map(nestedObj, nestedObj);
+
+          // remove filterKey from nestedObj because filterKey has no change
           subParam.put(docKeyNameOrDefault, nestedObj.remove(docKeyNameOrDefault));
           StringBuilder setCode = new StringBuilder();
           makeScript(setCode, "target.", " = params.", ";", nestedObj, params);

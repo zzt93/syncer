@@ -9,6 +9,7 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
+ * Map extraQuery to sql
  * @author zzt
  */
 public class JdbcNestedQueryMapper implements ExtraQueryMapper {

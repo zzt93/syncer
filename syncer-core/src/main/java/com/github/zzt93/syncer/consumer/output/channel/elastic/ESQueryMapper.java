@@ -49,6 +49,7 @@ public class ESQueryMapper implements ExtraQueryMapper {
     }
     SearchHits hits = response.getHits();
     if (hits.totalHits > 1) {
+      // todo toList
       logger.warn("Multiple query results exists, only use the first");
     } else if (hits.totalHits == 0) {
       logger.warn("Fail to find any match by " + extraQuery);

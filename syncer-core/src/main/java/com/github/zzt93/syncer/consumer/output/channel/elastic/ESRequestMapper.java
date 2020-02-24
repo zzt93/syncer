@@ -45,7 +45,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private final KVMapper requestBodyMapper;
   private final Expression indexExpr;
   private final Expression typeExpr;
-  private final Expression idExpr;
+  private final ESQueryMapper esQueryMapper;
 
   ESRequestMapper(AbstractClient client, ESRequestMapping esRequestMapping) {
     this.esRequestMapping = esRequestMapping;
@@ -53,24 +53,20 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     SpelExpressionParser parser = new SpelExpressionParser();
     indexExpr = parser.parseExpression(esRequestMapping.getIndex());
     typeExpr = parser.parseExpression(esRequestMapping.getType());
-    idExpr = parser.parseExpression(esRequestMapping.getDocumentId());
 
-    ESQueryMapper esQueryMapper;
-    if (esRequestMapping.getEnableExtraQuery()) {
-      esQueryMapper = new ESQueryMapper(client);
-    } else {
-      esQueryMapper = null;
-    }
-    requestBodyMapper = new KVMapper(esRequestMapping.getFieldsMapping(), esQueryMapper);
+    esQueryMapper = new ESQueryMapper(client);
+    requestBodyMapper = new KVMapper(esRequestMapping.getFieldsMapping());
   }
 
   @ThreadSafe(safe = {SpelExpressionParser.class, ESRequestMapping.class, TransportClient.class})
   @Override
   public Object map(SyncData data) {
+    esQueryMapper.parseExtraQueryContext(data.getExtraQueryContext());
+
     StandardEvaluationContext context = data.getContext();
     String index = eval(indexExpr, context);
     String type = eval(typeExpr, context);
-    String id = eval(idExpr, context);
+    String id = data.getId() == null ? null : data.getId().toString();
     switch (data.getType()) {
       case WRITE:
         if (esRequestMapping.getNoUseIdForIndex()) {
