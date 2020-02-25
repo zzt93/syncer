@@ -82,13 +82,15 @@ function configEnvVar() {
         export MYSQL_INSTANCE=3
     elif [[ ${env} = "mongo" ]]; then
         export MYSQL_INSTANCE=0
+    elif [[ ${env} = "mongo_v4" ]]; then
+        export MYSQL_INSTANCE=0
     else
         loge "Unsupported env"
         exit 1
     fi
     export ENV_CONFIG=`pwd`/docker-compose/${env}.yml
 
-    if [[ ${env} != "mongo" ]]; then
+    if [[ ${env} != "mongo" && ${env} != "mongo_v4"  ]]; then
         generateInitSqlFile
     fi
 }

@@ -32,6 +32,10 @@ function cleanup() {
     cleanupAll
 }
 
-setup
-test-mongo-input
-cleanup
+# if it called by bash, not by source
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    setup
+    test-mongo-input
+    cleanup
+fi
+
