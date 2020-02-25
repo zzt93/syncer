@@ -25,10 +25,23 @@ public class SyncResultFromJson extends SyncResultBase {
     return null;
   }
 
+  public Long getIdAsLong(String key) {
+    return getLong(getId());
+  }
+
   public Long getFieldAsLong(String key) {
-    Object res = getFields().get(key);
+    return getLong(getFields().get(key));
+  }
+
+  private static Long getLong(Object res) {
     if (res != null) {
-      return ((Double) res).longValue();
+      try {
+        return Long.parseLong((String) res);
+      } catch (ClassCastException e) {
+        if (res instanceof Double) { // for backward compatible
+          return ((Double) res).longValue();
+        }
+      }
     }
     return null;
   }
