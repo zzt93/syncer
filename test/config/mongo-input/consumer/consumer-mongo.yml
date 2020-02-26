@@ -11,7 +11,7 @@ input:
       scheduler: hash
       type: Mongo
       repos:
-        - name: "simple"
+        - name: "simple_0"
           entities:
             - name: simple_type
               fields: [simples, nestedIn]

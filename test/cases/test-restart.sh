@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 env=drds
-num=1000
+num=100
 syncerDir=normal
 
 source ${UTIL_LIB}
@@ -13,18 +13,17 @@ function setup() {
 }
 
 
-function test-non-latest() {
-    docker stop syncer
+function test-restart() {
     # Given
     bash script/generate_data.sh ${num} ${env}
     bash script/load_data.sh ${env}
 
-    docker start syncer
+    docker restart syncer
     # Given
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
-    waitSyncer 60
+    checkLog syncer Duplicate
 
     # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
@@ -43,5 +42,5 @@ function cleanup() {
 }
 
 setup
-test-non-latest
+test-restart
 cleanup

@@ -128,8 +128,9 @@ function cmpFromTo() {
     fi
 
     hasError=false
-    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
-        instance=mysql_${i}
+    if [[ ${MYSQL_INSTANCE} = 0 ]]; then
+        instance=mongo
+        i=0
         for dbPrefix in ${dbs} ; do
             db=${dbPrefix}_${i}
             for table in ${db2table[${dbPrefix}]} ; do
@@ -138,13 +139,31 @@ function cmpFromTo() {
                 # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
                 to=`${toF} mysql_0 ${db} ${table} ${expected}`
                 logi "[Sync result: $toF] -- ${db}*.${table}: $to"
-                if [[ ${to} -ne "$from" ]];then
+                if [[ ${to} -ne "$from" || ${to} -eq 0 ]];then
                     loge "$table not right"
                     hasError=true
                 fi
             done
         done
-    done
+    else
+        for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
+            instance=mysql_${i}
+            for dbPrefix in ${dbs} ; do
+                db=${dbPrefix}_${i}
+                for table in ${db2table[${dbPrefix}]} ; do
+                    from=`${fromF} ${instance} ${db} ${table} ${expected}`
+                    logi "[Sync input: $fromF] -- ${db}.${table}: $from"
+                    # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
+                    to=`${toF} mysql_0 ${db} ${table} ${expected}`
+                    logi "[Sync result: $toF] -- ${db}*.${table}: $to"
+                    if [[ ${to} -ne "$from" || ${to} -eq 0 ]];then
+                        loge "$table not right"
+                        hasError=true
+                    fi
+                done
+            done
+        done
+    fi
 
 
     if [[ ${hasError} = true ]]; then
@@ -156,4 +175,14 @@ function cmpFromTo() {
 function cleanupAll() {
     docker-compose -f docker-compose/${env}.yml rm -fsv
     rm -rf data/*
+}
+
+
+function checkLog() {
+    container=$1
+    msg=$2
+    res=`docker logs ${container} | grep "$msg"`
+    if [[ -n "${res}" ]]; then
+        exit 77
+    fi
 }

@@ -36,7 +36,7 @@ function prepareEnv() {
     logi "----------------"
     docker-compose -f ${ENV_CONFIG} up -d
 
-    if [[ ${env} = "mongo" ]]; then
+    if [[ ${env} = "mongo" || ${env} = "mongo_v4" ]]; then
         dockerExec mongo mongo --eval "rs.initiate()"
     fi
 }

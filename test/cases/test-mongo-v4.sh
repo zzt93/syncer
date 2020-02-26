@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-source ./test-mongo-input.sh
+source cases/test-mongo-input.sh
 
 env=mongo_v4
 num=100

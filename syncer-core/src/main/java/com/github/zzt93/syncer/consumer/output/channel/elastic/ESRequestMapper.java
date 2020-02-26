@@ -103,6 +103,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
           logger.warn("Updating doc by query, may affect performance");
           return UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
               .source(index)
+//              .size(): default update all matched doc
               .filter(getFilter(data))
               .script(getScript(data, data.getFields()));
         }
