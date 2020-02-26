@@ -1,8 +1,11 @@
 package com.github.zzt93.syncer.config.common;
 
+import com.github.zzt93.syncer.config.ConsumerConfig;
+import com.github.zzt93.syncer.config.ProducerConfig;
 import com.github.zzt93.syncer.config.consumer.input.AutoOffsetReset;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
+import lombok.Data;
 import org.springframework.util.StringUtils;
 
 import java.util.Arrays;
@@ -11,6 +14,9 @@ import java.util.List;
 /**
  * @author zzt
  */
+@Data
+@ProducerConfig("input.masters[].connection")
+@ConsumerConfig("input.masters[].connection")
 public class MayClusterConnection {
 
   /**
@@ -57,78 +63,6 @@ public class MayClusterConnection {
       build();
     }
     return realConnection;
-  }
-
-  public String getClusterName() {
-    return clusterName;
-  }
-
-  public void setClusterName(String clusterName) {
-    this.clusterName = clusterName;
-  }
-
-  public List<String> getClusterNodes() {
-    return clusterNodes;
-  }
-
-  public void setClusterNodes(List<String> clusterNodes) {
-    this.clusterNodes = clusterNodes;
-  }
-
-  public SyncMeta[] getSyncMetas() {
-    return syncMetas;
-  }
-
-  public void setSyncMetas(SyncMeta[] syncMetas) {
-    this.syncMetas = syncMetas;
-  }
-
-  public String getAddress() {
-    return address;
-  }
-
-  public void setAddress(String address) {
-    this.address = address;
-  }
-
-  public int getPort() {
-    return port;
-  }
-
-  public void setPort(int port) {
-    this.port = port;
-  }
-
-  public String getUser() {
-    return user;
-  }
-
-  public void setUser(String user) {
-    this.user = user;
-  }
-
-  public String getPasswordFile() {
-    return passwordFile;
-  }
-
-  public void setPasswordFile(String passwordFile) {
-    this.passwordFile = passwordFile;
-  }
-
-  public String getPassword() {
-    return password;
-  }
-
-  public void setPassword(String password) {
-    this.password = password;
-  }
-
-  public AutoOffsetReset getAutoOffsetReset() {
-    return autoOffsetReset;
-  }
-
-  public void setAutoOffsetReset(AutoOffsetReset autoOffsetReset) {
-    this.autoOffsetReset = autoOffsetReset;
   }
 
   @Override

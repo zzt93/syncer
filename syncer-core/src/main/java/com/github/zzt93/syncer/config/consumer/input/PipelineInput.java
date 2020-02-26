@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.input;
 
 
+import com.github.zzt93.syncer.config.ConsumerConfig;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MasterSource;
 import org.slf4j.Logger;
@@ -14,6 +15,7 @@ import java.util.Set;
 /**
  * @author zzt
  */
+@ConsumerConfig("input")
 public class PipelineInput {
 
   private Logger logger = LoggerFactory.getLogger(PipelineInput.class);

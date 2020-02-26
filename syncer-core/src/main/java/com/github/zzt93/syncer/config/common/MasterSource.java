@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.common;
 
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
+import com.github.zzt93.syncer.config.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.input.AutoOffsetReset;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
@@ -23,6 +24,7 @@ import java.util.*;
 /**
  * @author zzt
  */
+@ConsumerConfig("input.masters[]")
 public class MasterSource {
 
   private final Logger logger = LoggerFactory.getLogger(MasterSource.class);

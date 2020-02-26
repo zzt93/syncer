@@ -1,10 +1,15 @@
 package com.github.zzt93.syncer.config.consumer.input;
 
+import com.github.zzt93.syncer.config.ConsumerConfig;
+import lombok.Data;
+
 import java.util.List;
 
 /**
  * @author zzt
  */
+@Data
+@ConsumerConfig("input.masters[].repos[].entities[]")
 public class Entity {
 
   private String name;
@@ -15,22 +20,6 @@ public class Entity {
 
   public Entity(String tableName) {
     this.name = tableName;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
-  }
-
-  public List<String> getFields() {
-    return fields;
-  }
-
-  public void setFields(List<String> fields) {
-    this.fields = fields;
   }
 
   @Override
@@ -52,11 +41,4 @@ public class Entity {
     return name.hashCode();
   }
 
-  @Override
-  public String toString() {
-    return "Entity{" +
-        "name='" + name + '\'' +
-        ", fields=" + fields +
-        '}';
-  }
 }

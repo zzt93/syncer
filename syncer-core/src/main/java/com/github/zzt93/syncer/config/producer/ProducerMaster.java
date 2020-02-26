@@ -1,12 +1,16 @@
 package com.github.zzt93.syncer.config.producer;
 
+import com.github.zzt93.syncer.config.ProducerConfig;
 import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.common.MayClusterConnection;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
+import lombok.Data;
 
 /**
  * @author zzt
  */
+@Data
+@ProducerConfig("input.masters[]")
 public class ProducerMaster {
 
   private MasterSourceType type = MasterSourceType.MySQL;
@@ -17,38 +21,6 @@ public class ProducerMaster {
   public Connection getRealConnection() {
     connection.validate(type);
     return connection.getRealConnection();
-  }
-
-  public MayClusterConnection getConnection() {
-    return connection;
-  }
-
-  public void setConnection(MayClusterConnection connection) {
-    this.connection = connection;
-  }
-
-  public MasterSourceType getType() {
-    return type;
-  }
-
-  public void setType(MasterSourceType type) {
-    this.type = type;
-  }
-
-  public String getFile() {
-    return file;
-  }
-
-  public void setFile(String file) {
-    this.file = file;
-  }
-
-  public boolean isOnlyUpdated() {
-    return onlyUpdated;
-  }
-
-  public void setOnlyUpdated(boolean onlyUpdated) {
-    this.onlyUpdated = onlyUpdated;
   }
 
   @Override
@@ -70,12 +42,4 @@ public class ProducerMaster {
     return connection.hashCode();
   }
 
-  @Override
-  public String toString() {
-    return "ProducerMaster{" +
-        "type=" + type +
-        ", connection=" + connection +
-        ", file='" + file + '\'' +
-        '}';
-  }
 }

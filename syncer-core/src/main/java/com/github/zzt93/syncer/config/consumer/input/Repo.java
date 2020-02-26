@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.input;
 
 import com.github.zzt93.syncer.common.util.RegexUtil;
+import com.github.zzt93.syncer.config.ConsumerConfig;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.consumer.Hashable;
 import org.slf4j.Logger;
@@ -15,6 +16,7 @@ import java.util.regex.Pattern;
 /**
  * @author zzt
  */
+@ConsumerConfig("input.masters[].repos[]")
 public class Repo implements Hashable {
 
   private final Logger logger = LoggerFactory.getLogger(Repo.class);

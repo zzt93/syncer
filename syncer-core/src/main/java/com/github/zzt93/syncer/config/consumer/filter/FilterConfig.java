@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.consumer.filter;
 
+import com.github.zzt93.syncer.config.ConsumerConfig;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
 import com.github.zzt93.syncer.consumer.filter.impl.*;
@@ -14,6 +15,7 @@ import java.util.Map;
 /**
  * @author zzt
  */
+@ConsumerConfig("filter")
 public class FilterConfig {
 
   private FilterType type;

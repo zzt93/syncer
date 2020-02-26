@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.producer;
 
 
+import com.github.zzt93.syncer.config.ProducerConfig;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -12,6 +13,7 @@ import java.util.Set;
 /**
  * @author zzt
  */
+@ProducerConfig("input")
 public class ProducerInput {
 
   private Logger logger = LoggerFactory.getLogger(ProducerInput.class);
