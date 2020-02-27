@@ -17,6 +17,7 @@ public class ProducerMaster {
   private MayClusterConnection connection;
   private String file;
   private boolean onlyUpdated = true;
+  private boolean updateLookUp = false;
 
   public Connection getRealConnection() {
     connection.validate(type);

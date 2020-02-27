@@ -38,9 +38,9 @@ public class MongoMasterConnectorFactory {
     return Integer.parseInt(version.split("\\.")[0]);
   }
 
-  public MongoConnectorBase getMongoConnectorByServerVersion() {
+  public MongoConnectorBase getMongoConnectorByServerVersion(boolean updateLookUp) {
     if (mainVersion >= DEPLOYMENT_CHANGE_STREAM_VERSION) { // https://docs.mongodb.com/manual/changeStreams/#watch-collection-database-deployment
-      return new MongoV4MasterConnector(connection, registry);
+      return new MongoV4MasterConnector(connection, registry, updateLookUp);
     }
     return new MongoMasterConnector(connection, registry);
   }

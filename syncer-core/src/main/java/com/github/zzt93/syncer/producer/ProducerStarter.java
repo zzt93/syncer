@@ -89,7 +89,7 @@ public class ProducerStarter implements Starter {
           break;
         case Mongo:
           masterConnector = new MongoMasterConnectorFactory(new MongoConnection(connection),
-              consumerRegistry).getMongoConnectorByServerVersion();
+              consumerRegistry).getMongoConnectorByServerVersion(masterSource.isUpdateLookUp());
           break;
       }
       connectors.add(masterConnector);

@@ -49,21 +49,26 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
   private ChangeStreamIterable<Document> changeStreamDocuments;
 
 
-  MongoV4MasterConnector(MongoConnection connection, ConsumerRegistry registry) {
+  MongoV4MasterConnector(MongoConnection connection, ConsumerRegistry registry, boolean updateLookUp) {
     super(connection);
 
     configDispatch(connection, registry);
-    configQuery(connection, registry);
+    configQuery(connection, registry, updateLookUp);
   }
 
-  private void configQuery(MongoConnection connection, ConsumerRegistry registry) {
+  private void configQuery(MongoConnection connection, ConsumerRegistry registry, boolean updateLookUp) {
     DocTimestamp docTimestamp = registry.votedMongoId(connection);
     Pattern namespaces = getNamespaces(connection, registry);
 
     List<Bson> pipeline = singletonList(Aggregates.match(Filters.and(
         Filters.regex(NS, namespaces), Filters.in("operationType", asList("insert", "delete", "replace", "update")))));
     changeStreamDocuments = client.watch(pipeline).batchSize(MONGO_CHANGE_STREAM_BATCH_SIZE)
-        .fullDocument(FullDocument.DEFAULT).startAtOperationTime(docTimestamp.getTimestamp());
+        .startAtOperationTime(docTimestamp.getTimestamp());
+    if (!updateLookUp) {
+      changeStreamDocuments.fullDocument(FullDocument.DEFAULT);
+    } else {
+      changeStreamDocuments.fullDocument(FullDocument.UPDATE_LOOKUP);
+    }
   }
 
 
