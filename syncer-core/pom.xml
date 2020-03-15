@@ -81,7 +81,7 @@
         <dependency>
             <groupId>org.mongodb</groupId>
             <artifactId>mongo-java-driver</artifactId>
-            <version>3.5.0</version>
+            <version>3.12.0</version>
         </dependency>
 
         <dependency>
@@ -112,7 +112,7 @@
         <dependency>
             <groupId>com.github.zzt93</groupId>
             <artifactId>syncer-data</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
         <dependency>

@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.input;
 
+import com.github.zzt93.syncer.config.ProducerConfig;
+
 /**
  * Only for config mysql/drds `BinlogInfo` for the time being,
  * may support `DocTimestamp` in future
@@ -9,6 +11,7 @@ package com.github.zzt93.syncer.config.consumer.input;
  * @see com.github.zzt93.syncer.producer.input.mongo.DocTimestamp
  * @author zzt
  */
+@ProducerConfig("input.masters[].connection.syncMetas[]")
 public class SyncMeta {
 
   private String binlogFilename;

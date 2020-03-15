@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.consumer.output;
 
+import com.github.zzt93.syncer.config.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.output.elastic.Elasticsearch;
 import com.github.zzt93.syncer.config.consumer.output.http.Http;
 import com.github.zzt93.syncer.config.consumer.output.kafka.Kafka;
@@ -15,6 +16,7 @@ import java.util.List;
 /**
  * @author zzt
  */
+@ConsumerConfig("output")
 public class PipelineOutput {
 
   private Elasticsearch elasticsearch;

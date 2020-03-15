@@ -40,7 +40,7 @@ public class JavaMethod {
             "\n" +
             "public class MethodFilterTemplate implements SyncFilter<SyncData> {\n" +
             "\n" +
-            "  private final Logger logger = LoggerFactory.getLogger(MethodFilter.class);\n" +
+            "  private final Logger logger = LoggerFactory.getLogger(getClass());\n" +
             "\n" +
             addNewline(method) +
             "\n" +

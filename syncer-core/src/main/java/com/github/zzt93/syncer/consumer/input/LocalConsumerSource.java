@@ -99,9 +99,6 @@ public abstract class LocalConsumerSource implements ConsumerSource {
       return false;
     }
 
-    if (SyncInitMeta.isLatest(getSyncInitMeta())) {
-      return isSent = false;
-    }
     // remembered position is not synced in last run,
     // if syncInitMeta.compareTo(now) == 0, is not sent
     return isSent = getSyncInitMeta().compareTo(data.getDataId().getSyncInitMeta()) > 0;

@@ -2,14 +2,12 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.data.ESScriptUpdate;
 import com.github.zzt93.syncer.common.data.Mapper;
-import com.github.zzt93.syncer.common.data.SyncByQuery;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.common.exception.InvalidSyncDataException;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
-import com.google.common.collect.Lists;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.TransportClient;
@@ -25,52 +23,50 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
-import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import static org.elasticsearch.index.query.QueryBuilders.boolQuery;
-import static org.elasticsearch.index.query.QueryBuilders.termQuery;
+import static org.elasticsearch.index.query.QueryBuilders.*;
 
 /**
  * @author zzt
+ *
+ * https://www.elastic.co/guide/en/elasticsearch/reference/5.4/painless-api-reference.html
+ * https://www.elastic.co/guide/en/elasticsearch/painless/7.5/painless-api-reference-shared-java-util.html#painless-api-reference-shared-ArrayList
  */
 public class ESRequestMapper implements Mapper<SyncData, Object> {
 
-  public static final ArrayList<Object> NEW = new ArrayList<>();
   private final Logger logger = LoggerFactory.getLogger(ElasticsearchChannel.class);
   private final ESRequestMapping esRequestMapping;
+  // TODO use es7 branch to delete this dependency
   private final AbstractClient client;
   private final KVMapper requestBodyMapper;
   private final Expression indexExpr;
   private final Expression typeExpr;
-  private final Expression idExpr;
+  private final ESQueryMapper esQueryMapper;
 
-  public ESRequestMapper(AbstractClient client, ESRequestMapping esRequestMapping) {
+  ESRequestMapper(AbstractClient client, ESRequestMapping esRequestMapping) {
     this.esRequestMapping = esRequestMapping;
     this.client = client;
     SpelExpressionParser parser = new SpelExpressionParser();
     indexExpr = parser.parseExpression(esRequestMapping.getIndex());
     typeExpr = parser.parseExpression(esRequestMapping.getType());
-    idExpr = parser.parseExpression(esRequestMapping.getDocumentId());
 
-    ESQueryMapper esQueryMapper;
-    if (esRequestMapping.getEnableExtraQuery()) {
-      esQueryMapper = new ESQueryMapper(client);
-    } else {
-      esQueryMapper = null;
-    }
-    requestBodyMapper = new KVMapper(esRequestMapping.getFieldsMapping(), esQueryMapper);
+    esQueryMapper = new ESQueryMapper(client);
+    requestBodyMapper = new KVMapper(esRequestMapping.getFieldsMapping());
   }
 
   @ThreadSafe(safe = {SpelExpressionParser.class, ESRequestMapping.class, TransportClient.class})
   @Override
   public Object map(SyncData data) {
+    esQueryMapper.parseExtraQueryContext(data.getExtraQueryContext());
+
     StandardEvaluationContext context = data.getContext();
     String index = eval(indexExpr, context);
     String type = eval(typeExpr, context);
-    String id = eval(idExpr, context);
+    String id = data.getId() == null ? null : data.getId().toString();
     switch (data.getType()) {
       case WRITE:
         if (esRequestMapping.getNoUseIdForIndex()) {
@@ -107,6 +103,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
           logger.warn("Updating doc by query, may affect performance");
           return UpdateByQueryAction.INSTANCE.newRequestBuilder(client)
               .source(index)
+//              .size(): default update all matched doc
               .filter(getFilter(data))
               .script(getScript(data, data.getFields()));
         }
@@ -116,54 +113,28 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   }
 
   private static boolean needScript(SyncData data) {
-    SyncByQuery syncByQuery = data.syncByQuery();
-    return syncByQuery != null && ((ESScriptUpdate) syncByQuery).needScript();
+    ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
+    return esScriptUpdate != null && esScriptUpdate.needScript();
   }
 
   private String eval(Expression expr, StandardEvaluationContext context) {
     return expr.getValue(context, String.class);
   }
 
+  /**
+   * https://www.elastic.co/guide/en/elasticsearch/reference/5.4/painless-api-reference.html
+   */
   private Script getScript(SyncData data, HashMap<String, Object> toSet) {
     HashMap<String, Object> params = new HashMap<>();
     StringBuilder code = new StringBuilder();
-    makeScript(code, " = params.", ";", toSet, params);
-    SyncByQuery syncByQuery = data.syncByQuery();
-    if (syncByQuery instanceof ESScriptUpdate) {
-      // handle append/remove elements from list/array field
-      makeScript(code, ".add(params.", ");", ((ESScriptUpdate) syncByQuery).getAppend(), params);
-      makeRemoveScript(code, ((ESScriptUpdate) syncByQuery).getRemove(), params);
-    } else {
-      throw new InvalidSyncDataException("[syncByQuery] should be [SyncByQueryES]", data);
-    }
-    return new Script(ScriptType.INLINE, "painless", code.toString(), params);
-  }
+    ESScriptUpdate.makeScript(code, " = params.", ";", toSet, params);
 
-  private void makeRemoveScript(StringBuilder code, HashMap<String, Object> remove,
-      HashMap<String, Object> params) {
-    for (String col : remove.keySet()) {
-      code.append("ctx._source.").append(col).append(".remove(ctx._source.").append(col)
-          .append(".indexOf(params.").append(col).append("));");
+    if (needScript(data)) {
+      ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
+      esScriptUpdate.generateMergeScript(code, params);
     }
-    scriptCheck(code, remove, params);
-  }
 
-  private void makeScript(StringBuilder code, String op, String endOp, HashMap<String, Object> data,
-      HashMap<String, Object> params) {
-    for (String col : data.keySet()) {
-      code.append("ctx._source.").append(col).append(op).append(col).append(endOp);
-    }
-    scriptCheck(code, data, params);
-  }
-
-  private void scriptCheck(StringBuilder code, HashMap<String, Object> data,
-      HashMap<String, Object> params) {
-    int before = params.size();
-    params.putAll(data);
-    if (before + data.size() != params.size()) {
-      throw new InvalidConfigException("Key conflict happens when making script [" + code + "], "
-          + "check config file about `syncByQuery()` (Notice the `syncByQuery()` will default use all fields for 'set' update)");
-    }
+    return new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, code.toString(), params);
   }
 
   private QueryBuilder getFilter(SyncData data) {
@@ -173,21 +144,31 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
       throw new InvalidConfigException("No data used to do sync(update/delete) filter");
     }
     for (Entry<String, Object> entry : syncBy.entrySet()) {
-      builder.filter(termQuery(entry.getKey(), entry.getValue()));
+      String[] key = entry.getKey().split("\\.");
+      if (key.length == 2) {
+        builder.filter(nestedQuery(key[0], boolQuery().filter(getSingleFilter(entry)), ScoreMode.Avg));
+      } else if (key.length == 1) {
+        builder.filter(getSingleFilter(entry));
+      } else {
+        logger.error("Only support one level nested obj for the time being");
+      }
     }
     return builder;
+  }
+
+  private QueryBuilder getSingleFilter(Entry<String, Object> entry) {
+    Object value = entry.getValue();
+    if (value instanceof Collection || value.getClass().isArray()) {
+      return termsQuery(entry.getKey(), value);
+    }
+    return termQuery(entry.getKey(), value);
   }
 
   static Map getUpsert(SyncData data) {
     assert needScript(data);
     HashMap<String, Object> upsert = new HashMap<>();
-    ESScriptUpdate syncByQuery = (ESScriptUpdate) data.syncByQuery();
-    for (String col : syncByQuery.getAppend().keySet()) {
-      upsert.put(col, NEW);
-    }
-    for (Entry<String, Object> entry : syncByQuery.getRemove().entrySet()) {
-      upsert.put(entry.getKey(), Lists.newArrayList(entry.getValue()));
-    }
+    ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
+    esScriptUpdate.upsert(upsert);
     return upsert;
   }
 }

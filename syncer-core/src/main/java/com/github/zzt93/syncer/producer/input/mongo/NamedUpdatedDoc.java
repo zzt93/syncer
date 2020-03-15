@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.producer.dispatch.mongo;
+package com.github.zzt93.syncer.producer.input.mongo;
 
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 

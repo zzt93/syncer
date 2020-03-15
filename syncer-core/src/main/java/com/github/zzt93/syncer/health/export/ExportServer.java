@@ -29,10 +29,11 @@ public class ExportServer {
 
 
   private static final int PORT = Integer.parseInt(System.getProperty("port", "40000"));
+  static final String HEALTH = "/health";
 
   public static void init(String[] args) throws Exception {
     Map<String, BiConsumer<ChannelHandlerContext, HttpRequest>> mapping = new HashMap<>();
-    mapping.put("/health", (channelHandlerContext, request) -> {
+    mapping.put(HEALTH, (channelHandlerContext, request) -> {
       ExportResult result = SyncerHealth.export();
       String json = result.getJson();
       Health.HealthStatus overall = result.getOverall();

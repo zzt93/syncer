@@ -9,20 +9,20 @@ source ${UTIL_LIB}
 
 function setup() {
     configEnvVar ${env}
-    bash script/setupEnv_new.sh ${env} ${syncerDir}
+    bash script/setup_env_new.sh ${env} ${syncerDir}
 }
 
 
 function test-non-latest() {
     docker stop syncer
     # Given
-    bash script/generateData.sh ${num} ${env}
-    bash script/loadData.sh ${env}
+    bash script/generate_data.sh ${num} ${env}
+    bash script/load_data.sh ${env}
 
     docker start syncer
     # Given
-    bash script/generateData.sh ${num} ${env} ${num}
-    bash script/loadData.sh ${env}
+    bash script/generate_data.sh ${num} ${env} ${num}
+    bash script/load_data.sh ${env}
 
     waitSyncer 60
 

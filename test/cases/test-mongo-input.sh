@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 env=mongo
-num=100
+num=200
 syncerDir=mongo-input
 
 source ${UTIL_LIB}
@@ -9,29 +9,41 @@ source ${UTIL_LIB}
 
 function setup() {
     configEnvVar ${env}
-    bash script/setupEnv_new.sh ${env} ${syncerDir}
+    bash script/setup_env_new.sh ${env} ${syncerDir}
 }
 
 
 function test-mongo-input() {
     docker stop syncer
     # Given
-    bash script/generateData.sh ${num} ${env}
-    bash script/loadData.sh ${env}
+    bash script/generate_data.sh ${num} ${env}
+    bash script/load_data.sh ${env}
 
     docker start syncer
     # Given
-    bash script/generateData.sh ${num} ${env} ${num}
-    bash script/loadData.sh ${env}
+    bash script/generate_data.sh ${num} ${env} ${num}
+    bash script/load_data.sh ${env}
 
     # Then: count == num * 2
-    cmpFromTo extractMongoCount extractESCount
+    cmpFromTo extractMongoCount extractESCount 0 simple
+
+    docker restart syncer
+    # Given
+    bash script/generate_data.sh ${num} ${env} ${num}
+    bash script/load_data.sh ${env}
+
+    # Then: count == num * 3
+    cmpFromTo extractMongoCount extractESCount 0 simple
 }
 
 function cleanup() {
     cleanupAll
 }
 
-setup
-test-mongo-input
-cleanup
+# if it called by bash, not by source
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+    setup
+    test-mongo-input
+    cleanup
+fi
+

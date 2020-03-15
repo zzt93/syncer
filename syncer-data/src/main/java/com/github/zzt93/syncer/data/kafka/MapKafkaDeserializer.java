@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.data.kafka;
 
 import com.github.zzt93.syncer.data.SimpleEventType;
-import com.github.zzt93.syncer.data.SyncResult;
 import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.apache.kafka.common.serialization.Deserializer;
 
 import java.util.Map;
@@ -10,20 +10,22 @@ import java.util.Map;
 /**
  * @author zzt
  */
-public class SyncKafkaDeserializer implements Deserializer<SyncResult> {
-  private static final Gson gson = new Gson();
+public class MapKafkaDeserializer implements Deserializer<RawMapSyncResult> {
+  private static final Gson gson = new GsonBuilder()
+      .registerTypeHierarchyAdapter(SimpleEventType.class, SimpleEventType.defaultDeserializer)
+      .create();
 
   @Override
   public void configure(Map<String, ?> map, boolean b) {
   }
 
   @Override
-  public SyncResult deserialize(String s, byte[] bytes) {
+  public RawMapSyncResult deserialize(String s, byte[] bytes) {
     try {
-      return gson.fromJson(new String(bytes), SyncResult.class);
+      return gson.fromJson(new String(bytes), RawMapSyncResult.class);
     } catch (Throwable e) {
       Map map = gson.fromJson(new String(bytes), Map.class);
-      SyncResult res = new SyncResult();
+      RawMapSyncResult res = new RawMapSyncResult();
       res.setEventType(tmp(map));
       res.getFields().putAll((Map<? extends String, ?>) map.get("fields"));
       res.setId(map.get("id"));

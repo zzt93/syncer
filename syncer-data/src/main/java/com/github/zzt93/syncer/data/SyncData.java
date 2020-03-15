@@ -1,6 +1,8 @@
 package com.github.zzt93.syncer.data;
 
 import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * Config operation interface
@@ -24,11 +26,11 @@ public interface SyncData {
 
   boolean isDelete();
 
-  boolean toWrite();
+  SyncData toWrite();
 
-  boolean toUpdate();
+  SyncData toUpdate();
 
-  boolean toDelete();
+  SyncData toDelete();
 
   SyncData setEntity(String entity);
 
@@ -42,11 +44,11 @@ public interface SyncData {
 
   SyncData addField(String key, Object value);
 
+  SyncData setFieldNull(String key);
+
   SyncData renameField(String oldKey, String newKey);
 
   SyncData removeField(String key);
-
-  boolean removePrimaryKey();
 
   SyncData removeFields(String... keys);
 
@@ -60,6 +62,8 @@ public interface SyncData {
 
   Object getField(String key);
 
+  Long getFieldAsLong(String key);
+
   String getEventId();
 
   SyncData setSourceIdentifier(String identifier);
@@ -69,13 +73,22 @@ public interface SyncData {
   HashMap<String, Object> getSyncBy();
 
   /**
-   * update/delete by query
+   * Call this method to update/delete/write by query
+   * @return one instance for this SyncByQuery
+   * @see SyncByQuery#syncBy(String, Object) add filter and will set id as null automatically
    */
   SyncByQuery syncByQuery();
 
-  ExtraQuery extraQuery(String indexName, String typeName);
+  ESScriptUpdate esScriptUpdate();
 
-  boolean hasExtra();
+  ESScriptUpdate esScriptUpdate(String script, Map<String, Object> params);
+
+  /**
+   * @param docFilter filter for query a ES doc and apply script
+   */
+  ESScriptUpdate esScriptUpdate(Filter docFilter);
+
+  ExtraQuery extraQuery(String indexName, String typeName);
 
   Object getExtra(String key);
 
@@ -99,6 +112,8 @@ public interface SyncData {
    * @see java.util.Objects#deepEquals(Object, Object)
    */
   boolean updated(String key);
+
+  Set<String> getUpdated();
 
   Object getBefore(String key);
 

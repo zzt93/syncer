@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.common.data;
 
+import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
-import com.github.zzt93.syncer.data.SyncResult;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -9,9 +9,18 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
+ * Output channel parse order (MySQL & ES):
+ * <ul>
+ *   <li>extraQuery</li>
+ *   <li>fields (support extraQuery), id, repo, entity</li>
+ *   <li>syncByQuery</li>
+ *   <li>EsScript (support extraQuery)</li>
+ * </ul>
  * @author zzt
  */
 public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializable {
@@ -19,6 +28,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   private static final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
   private final Meta inner;
   private SyncByQuery syncByQuery;
+  private ESScriptUpdate esScriptUpdate;
   /**
    * sync result data fields
    */
@@ -27,18 +37,24 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   public SyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName,
                   Object id, NamedChange row) {
-    inner = new Meta(dataId, null);
-    result = new SyncResult(row.getFull());
+    inner = innerSyncData(dataId, type, database, entity, primaryKeyName, id, row.getFull(), row.getBeforeFull(), row.getUpdated());
+  }
 
-    setPrimaryKeyName(primaryKeyName);
-    setId(id);
-    setEntity(entity);
-    setRepo(database);
-    result.setEventType(type);
+  private SyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
+                             HashMap<String, Object> full, HashMap<String, Object> beforeFull, Set<String> updated){
+    inner = innerSyncData(dataId, type, database, entity, primaryKeyName, id, full, beforeFull, updated);
+  }
+
+  private Meta innerSyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
+                             HashMap<String, Object> full, HashMap<String, Object> beforeFull, Set<String> updated) {
+    result = new SyncResult(type, database, entity, primaryKeyName, id, full);
+
     if (isUpdate()) {
-      result.setBefore(row.getBeforeFull());
-      updated = row.getUpdated();
+      result.setBefore(beforeFull);
+      this.updated = updated;
     }
+
+    return new Meta(dataId, null);
   }
 
   public SyncData(SyncData syncData, int offset) {
@@ -92,24 +108,23 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   @Override
-  public boolean toWrite() {
+  public SyncData toWrite() {
     return updateType(SimpleEventType.WRITE);
   }
 
   @Override
-  public boolean toUpdate() {
+  public SyncData toUpdate() {
     return updateType(SimpleEventType.UPDATE);
   }
 
   @Override
-  public boolean toDelete() {
+  public SyncData toDelete() {
     return updateType(SimpleEventType.DELETE);
   }
 
-  private boolean updateType(SimpleEventType type) {
-    boolean res = result.getEventType() == type;
+  private SyncData updateType(SimpleEventType type) {
     result.setEventType(type);
-    return res;
+    return this;
   }
 
 
@@ -149,6 +164,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   @Override
+  public Set<String> getUpdated() {
+    return updated;
+  }
+
+  @Override
   public Object getBefore(String key) {
     return result.getBefore(key);
   }
@@ -169,6 +189,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
       logger.warn("Adding column({}) with null, discarded", key);
     }
     getFields().put(key, value);
+    return this;
+  }
+
+  @Override
+  public SyncData setFieldNull(String key) {
+    getFields().put(key, null);
     return this;
   }
 
@@ -247,6 +273,15 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return result.getFields().get(key);
   }
 
+  @Override
+  public Long getFieldAsLong(String key) {
+    Object res = getField(key);
+    if (res != null) {
+      return (long) res;
+    }
+    return null;
+  }
+
   public String getEventId() {
     return inner.dataId.eventId();
   }
@@ -276,21 +311,53 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
    */
   public SyncByQuery syncByQuery() {
     if (syncByQuery == null) {
-      syncByQuery = new ESScriptUpdate(this);
+      syncByQuery = new SyncByQuery(this);
     }
     return syncByQuery;
   }
 
-  public ExtraQuery extraQuery(String indexName, String typeName) {
-    if (inner.hasExtra) {
-      logger.warn("Multiple insert by query, not supported for mysql output channel: old query will be override");
+  public ESScriptUpdate esScriptUpdate() {
+    if (esScriptUpdate == null) {
+      esScriptUpdate = new ESScriptUpdate(this);
     }
-    inner.hasExtra = true;
-    return new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName);
+    return esScriptUpdate;
   }
 
+  @Override
+  public ESScriptUpdate esScriptUpdate(String script, Map<String, Object> params) {
+    if (esScriptUpdate == null) {
+      esScriptUpdate = new ESScriptUpdate(this, script, params);
+    }
+    return esScriptUpdate;
+  }
+
+  @Override
+  public ESScriptUpdate esScriptUpdate(Filter docFilter) {
+    if (esScriptUpdate == null) {
+      esScriptUpdate = new ESScriptUpdate(this, docFilter);
+    }
+    return esScriptUpdate;
+  }
+
+  public ESScriptUpdate getEsScriptUpdate() {
+    return esScriptUpdate;
+  }
+
+  public ExtraQuery extraQuery(String indexName, String typeName) {
+    if (extraQueryContext == null) {
+      extraQueryContext = new ExtraQueryContext();
+    }
+    return extraQueryContext.add(new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName));
+  }
+
+  public ExtraQueryContext getExtraQueryContext() {
+    return extraQueryContext;
+  }
+
+  private ExtraQueryContext extraQueryContext;
+
   public boolean hasExtra() {
-    return inner.hasExtra;
+    return extraQueryContext != null;
   }
 
   private String getPrimaryKeyName() {
@@ -322,10 +389,15 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     result.setId(null);
   }
 
+  public SyncData copy() {
+    HashMap<String, Object> before = getBefore() != null ? new HashMap<>(getBefore()) : null;
+    Set<String> updated = getUpdated() != null ? new HashSet<>(getUpdated()) : null;
+    return new SyncData(getDataId(), getType(), getRepo(), getEntity(), getPrimaryKeyName(), getId(), new HashMap<>(getFields()), before, updated);
+  }
+
   private static class Meta {
     private final DataId dataId;
     private transient StandardEvaluationContext context;
-    private boolean hasExtra = false;
     private String connectionIdentifier;
 
     Meta(DataId dataId, String connectionIdentifier) {
@@ -338,7 +410,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
       return "Meta{" +
           "dataId=" + dataId +
           ", context=" + context +
-          ", hasExtra=" + hasExtra +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
           '}';
     }

@@ -26,17 +26,14 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
   public static final String FAKE_KEY = "any.Key";
   private final Logger logger = LoggerFactory.getLogger(KVMapper.class);
   private final Map<String, Object> mapping;
-  private final ExtraQueryMapper queryMapper;
 
   public KVMapper(Map<String, Object> mapping) {
     this.mapping = new LinkedHashMap<>();
-    queryMapper = null;
     initMapping(mapping, this.mapping, new SpelExpressionParser());
   }
 
-  public KVMapper(HashMap<String, Object> mapping, ExtraQueryMapper extraQueryMapper) {
+  public KVMapper(HashMap<String, Object> mapping) {
     this.mapping = new HashMap<>();
-    this.queryMapper = extraQueryMapper;
     initMapping(mapping, this.mapping, new SpelExpressionParser());
   }
 
@@ -75,9 +72,8 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
     }
   }
 
-  private void mapToRes(SyncData src, Map<String, Object> mapping, HashMap<String, Object> res,
+  private static void mapToRes(SyncData src, Map<String, Object> mapping, Map<String, Object> res,
       boolean interpretSpecialString) {
-    Map<String, Object> queryResultCache = new HashMap<>();
     for (String key : mapping.keySet()) {
       Object value = mapping.get(key);
       if (value instanceof Expression) {
@@ -104,32 +100,18 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
             throw new InvalidConfigException("Unknown special expression: " + expr);
         }
       } else if (value instanceof ExtraQuery) {
-        if (queryMapper != null) {
-          res.put(key, getQueryResult(queryResultCache, key, (ExtraQuery) value));
-        } else {
-          logger.warn(
-              "Not config `enable-extra-query` in `request-mapping`, `extraQuery()` is ignored");
-        }
+        res.put(key,  ((ExtraQuery) value).getQueryResult(key));
       } else {
         res.put(key, value);
       }
     }
   }
 
-  private Object getQueryResult(Map<String, Object> queryResultCache, String key,
-      ExtraQuery query) {
-    if (!queryResultCache.containsKey(key)) {
-      queryResultCache.putAll(queryMapper.map(query));
-    }
-    Object queryResult = queryResultCache.get(key);
-    if (queryResult == null) {
-      logger.warn("Fail to query record {} by {}", key, query);
-      queryResult = query.getQueryResult(key);
-    }
-    return queryResult;
+  public static void map(Map<String, Object> src, Map<String, Object> res) {
+    mapToRes(null, src, res, false);
   }
 
-  private void mapObj(SyncData src, HashMap<String, Object> res, String objKey, Map objMap,
+  private static void mapObj(SyncData src, Map<String, Object> res, String objKey, Map objMap,
       boolean interpretSpecialString) {
     HashMap<String, Object> sub = new HashMap<>();
     mapToRes(src, objMap, sub, interpretSpecialString);

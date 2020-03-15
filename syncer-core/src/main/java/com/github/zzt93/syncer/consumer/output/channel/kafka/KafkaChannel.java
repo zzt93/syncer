@@ -20,6 +20,7 @@ import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
+import org.springframework.kafka.core.KafkaProducerException;
 import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.kafka.support.SendResult;
 import org.springframework.util.concurrent.ListenableFuture;
@@ -81,6 +82,9 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
 
   @Override
   public ErrorLevel level(Throwable e, SyncWrapper wrapper, int maxTry) {
+    if (e instanceof KafkaProducerException) {
+      e = e.getCause();
+    }
     if (e instanceof TimeoutException || e instanceof NotLeaderForPartitionException) {
       return ErrorLevel.RETRIABLE_ERROR;
     }
