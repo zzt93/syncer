@@ -18,10 +18,12 @@ public class DocTimestampTest {
     DocTimestamp b0 = new DocTimestamp( new BsonTimestamp(0));
     DocTimestamp b1 = new DocTimestamp( new BsonTimestamp(1));
     DocTimestamp b2 = new DocTimestamp( new BsonTimestamp(2));
-    DocTimestamp bc = new DocTimestamp( new BsonTimestamp(System.currentTimeMillis()));
+    DocTimestamp b_b = new DocTimestamp( new BsonTimestamp((int) (System.currentTimeMillis() / 1000) - 1, 0));
+    DocTimestamp bc = new DocTimestamp( new BsonTimestamp((int) (System.currentTimeMillis() / 1000) + 1, 0));
 
     assertEquals(b_e.compareTo(b0), -1);
-    assertEquals(b_l.compareTo(bc), 1);
+    assertEquals(b_l.compareTo(b_b), 1);
+    assertEquals(b_l.compareTo(bc), -1);
     assertEquals(b_e.compareTo(b_l), -1);
     assertEquals(b_l.compareTo(b__l), 0);
     assertEquals(b0.compareTo(b2), -1);

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 env=drds
-num=100
+num=300
 syncerDir=normal
 
 source ${UTIL_LIB}

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 env=mongo
-num=100
+num=200
 syncerDir=mongo-input
 
 source ${UTIL_LIB}

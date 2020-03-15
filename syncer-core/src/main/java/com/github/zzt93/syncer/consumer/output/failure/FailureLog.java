@@ -27,6 +27,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FailureLog<T> implements Resource {
 
   private static final Gson gson = new GsonBuilder()
+      .disableHtmlEscaping()
       .create();
   private final Logger logger = LoggerFactory.getLogger(FailureLog.class);
   private final Type type;

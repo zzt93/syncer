@@ -29,6 +29,7 @@ import org.slf4j.MDC;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.StringJoiner;
 import java.util.regex.Pattern;
 
 /**
@@ -36,10 +37,8 @@ import java.util.regex.Pattern;
  */
 public class MongoMasterConnector extends MongoConnectorBase {
 
-  public static final String ID = "_id";
+  static final String ID = "_id";
   private static final String NS = "ns";
-  public static final String TS = "ts";
-  private static final String LOCAL = "local";
   private final Logger logger = LoggerFactory.getLogger(MongoMasterConnector.class);
 
   private MongoCursor<Document> cursor;
@@ -54,6 +53,12 @@ public class MongoMasterConnector extends MongoConnectorBase {
     client = new MongoClient(new MongoClientURI(connection.toConnectionUrl(null)));
     configDispatch(connection, registry);
     configQuery(connection, registry);
+  }
+
+  private Pattern getNamespaces(MongoConnection connection, ConsumerRegistry registry) {
+    StringJoiner joiner = new StringJoiner("|");
+    getNamespaces(connection, registry, (repoEntity) -> "(" + repoEntity[0] + "\\." + repoEntity[1] + ")").forEach(joiner::add);
+    return Pattern.compile(joiner.toString());
   }
 
   private void configQuery(MongoConnection connection, ConsumerRegistry registry) {
@@ -85,7 +90,7 @@ public class MongoMasterConnector extends MongoConnectorBase {
 
   private MongoCursor<Document> getReplicaCursor(MongoClient client, Document query) {
     MongoDatabase db = client.getDatabase(LOCAL);
-    MongoCollection<Document> coll = db.getCollection("oplog.rs");
+    MongoCollection<Document> coll = db.getCollection(OPLOG_RS);
 
     return coll.find(query)
         .cursorType(CursorType.TailableAwait)

@@ -20,7 +20,7 @@ public class NamedChangeStream implements NamedChange {
 
   @Override
   public Set<String> getUpdated() {
-    return updated.keySet();
+    return updated != null ? updated.keySet() : null;
   }
 
   @Override

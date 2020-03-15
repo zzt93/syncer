@@ -9,6 +9,8 @@ import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.Serializable;
 import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -35,18 +37,24 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   public SyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName,
                   Object id, NamedChange row) {
-    inner = new Meta(dataId, null);
-    result = new SyncResult(row.getFull());
+    inner = innerSyncData(dataId, type, database, entity, primaryKeyName, id, row.getFull(), row.getBeforeFull(), row.getUpdated());
+  }
 
-    setPrimaryKeyName(primaryKeyName);
-    setId(id);
-    setEntity(entity);
-    setRepo(database);
-    result.setEventType(type);
+  private SyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
+                             HashMap<String, Object> full, HashMap<String, Object> beforeFull, Set<String> updated){
+    inner = innerSyncData(dataId, type, database, entity, primaryKeyName, id, full, beforeFull, updated);
+  }
+
+  private Meta innerSyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
+                             HashMap<String, Object> full, HashMap<String, Object> beforeFull, Set<String> updated) {
+    result = new SyncResult(type, database, entity, primaryKeyName, id, full);
+
     if (isUpdate()) {
-      result.setBefore(row.getBeforeFull());
-      updated = row.getUpdated();
+      result.setBefore(beforeFull);
+      this.updated = updated;
     }
+
+    return new Meta(dataId, null);
   }
 
   public SyncData(SyncData syncData, int offset) {
@@ -100,24 +108,23 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   @Override
-  public boolean toWrite() {
+  public SyncData toWrite() {
     return updateType(SimpleEventType.WRITE);
   }
 
   @Override
-  public boolean toUpdate() {
+  public SyncData toUpdate() {
     return updateType(SimpleEventType.UPDATE);
   }
 
   @Override
-  public boolean toDelete() {
+  public SyncData toDelete() {
     return updateType(SimpleEventType.DELETE);
   }
 
-  private boolean updateType(SimpleEventType type) {
-    boolean res = result.getEventType() == type;
+  private SyncData updateType(SimpleEventType type) {
     result.setEventType(type);
-    return res;
+    return this;
   }
 
 
@@ -317,6 +324,14 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   @Override
+  public ESScriptUpdate esScriptUpdate(String script, Map<String, Object> params) {
+    if (esScriptUpdate == null) {
+      esScriptUpdate = new ESScriptUpdate(this, script, params);
+    }
+    return esScriptUpdate;
+  }
+
+  @Override
   public ESScriptUpdate esScriptUpdate(Filter docFilter) {
     if (esScriptUpdate == null) {
       esScriptUpdate = new ESScriptUpdate(this, docFilter);
@@ -372,6 +387,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   void syncByForeignKey() {
     result.setId(null);
+  }
+
+  public SyncData copy() {
+    HashMap<String, Object> before = getBefore() != null ? new HashMap<>(getBefore()) : null;
+    Set<String> updated = getUpdated() != null ? new HashSet<>(getUpdated()) : null;
+    return new SyncData(getDataId(), getType(), getRepo(), getEntity(), getPrimaryKeyName(), getId(), new HashMap<>(getFields()), before, updated);
   }
 
   private static class Meta {

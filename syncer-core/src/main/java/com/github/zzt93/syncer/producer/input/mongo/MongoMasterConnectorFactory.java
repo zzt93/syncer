@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.producer.input.mongo;
 
 import com.github.zzt93.syncer.config.common.MongoConnection;
+import com.github.zzt93.syncer.config.producer.ProducerMaster;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -38,9 +39,9 @@ public class MongoMasterConnectorFactory {
     return Integer.parseInt(version.split("\\.")[0]);
   }
 
-  public MongoConnectorBase getMongoConnectorByServerVersion(boolean updateLookUp) {
+  public MongoConnectorBase getMongoConnectorByServerVersion(ProducerMaster producerMaster) {
     if (mainVersion >= DEPLOYMENT_CHANGE_STREAM_VERSION) { // https://docs.mongodb.com/manual/changeStreams/#watch-collection-database-deployment
-      return new MongoV4MasterConnector(connection, registry, updateLookUp);
+      return new MongoV4MasterConnector(connection, registry, producerMaster.mongoV4Option());
     }
     return new MongoMasterConnector(connection, registry);
   }

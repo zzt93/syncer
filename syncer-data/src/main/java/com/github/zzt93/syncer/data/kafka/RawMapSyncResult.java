@@ -7,7 +7,7 @@ import lombok.ToString;
  * @author zzt
  */
 @ToString(callSuper = true)
-public class SyncResultFromJson extends SyncResultBase {
+public class RawMapSyncResult extends SyncResultBase {
 
   public Object getExtra(String key) {
     return extras != null ? extras.get(key) : null;
@@ -25,7 +25,7 @@ public class SyncResultFromJson extends SyncResultBase {
     return null;
   }
 
-  public Long getIdAsLong(String key) {
+  public Long getIdAsLong() {
     return getLong(getId());
   }
 

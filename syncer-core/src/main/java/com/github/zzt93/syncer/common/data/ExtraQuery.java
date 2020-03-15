@@ -76,7 +76,7 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
   }
 
   public String getAs(int i) {
-    return as[i];
+    return as != null ? as[i] : select[i];
   }
 
   public void addQueryResult(Map<String, Object> result) {

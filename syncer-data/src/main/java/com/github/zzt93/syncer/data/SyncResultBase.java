@@ -13,24 +13,11 @@ import java.util.LinkedHashMap;
 
 @Getter
 @Setter
-@ToString
-public class SyncResultBase {
+@ToString(callSuper = true)
+public class SyncResultBase extends SyncMeta {
 
-  /**
-   * {@link #fields} have to use `LinkedHashMap` to be in order to support multiple dependent {@link ExtraQuery}
-   */
   protected LinkedHashMap<String, Object> fields = new LinkedHashMap<>();
   protected LinkedHashMap<String, Object> extras;
   protected HashMap<String, Object> before;
-
-  protected SimpleEventType eventType;
-  protected String repo;
-  protected String entity;
-  /**
-   * entity primary key
-   */
-  protected Object id;
-  protected String primaryKeyName;
-
 
 }

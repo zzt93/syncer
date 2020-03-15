@@ -72,7 +72,7 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
     }
   }
 
-  private static void mapToRes(SyncData src, Map<String, Object> mapping, HashMap<String, Object> res,
+  private static void mapToRes(SyncData src, Map<String, Object> mapping, Map<String, Object> res,
       boolean interpretSpecialString) {
     for (String key : mapping.keySet()) {
       Object value = mapping.get(key);
@@ -107,11 +107,11 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
     }
   }
 
-  public static void map(HashMap<String, Object> src, HashMap<String, Object> res) {
+  public static void map(Map<String, Object> src, Map<String, Object> res) {
     mapToRes(null, src, res, false);
   }
 
-  private static void mapObj(SyncData src, HashMap<String, Object> res, String objKey, Map objMap,
+  private static void mapObj(SyncData src, Map<String, Object> res, String objKey, Map objMap,
       boolean interpretSpecialString) {
     HashMap<String, Object> sub = new HashMap<>();
     mapToRes(src, objMap, sub, interpretSpecialString);

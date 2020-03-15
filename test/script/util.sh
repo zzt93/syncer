@@ -156,7 +156,7 @@ function cmpFromTo() {
                     # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
                     to=`${toF} mysql_0 ${db} ${table} ${expected}`
                     logi "[Sync result: $toF] -- ${db}*.${table}: $to"
-                    if [[ ${to} -ne "$from" || ${to} -eq 0 ]];then
+                    if [[ ${to} -ne "$from" ]];then
                         loge "$table not right"
                         hasError=true
                     fi

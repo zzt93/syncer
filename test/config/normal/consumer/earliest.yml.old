@@ -63,7 +63,7 @@ output:
 
       retryOnUpdateConflict: 3
       index: "repo + getExtra('suffix')" # default: repo
-      documentId: "id" # default: id
+
       fieldsMapping: # default: fields.*.flatten
         "fields": "fields.*.flatten"
     batch:

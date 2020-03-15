@@ -8,7 +8,6 @@ import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.search.SearchHit;
 import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,10 +54,10 @@ public class ESQueryMapper implements ExtraQueryMapper {
       logger.warn("Fail to find any match by " + extraQuery);
       return Collections.emptyMap();
     }
-    SearchHit hit = hits.getAt(0);
+    Map<String, Object> hit = hits.getAt(0).getSource();
     Map<String, Object> res = new HashMap<>();
     for (int i = 0; i < select.length; i++) {
-      res.put(extraQuery.getAs(i), hit.getSource().get(select[i]));
+      res.put(extraQuery.getAs(i), hit.get(select[i]));
     }
     extraQuery.addQueryResult(res);
     return res;

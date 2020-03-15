@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -36,6 +37,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   private final transient SyncData outer;
   private SimpleEventType oldType;
   private Filter parentFilter;
+  private String script;
+  private Map<String, Object> params;
 
   ESScriptUpdate(SyncData data) {
     outer = data;
@@ -45,6 +48,12 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   ESScriptUpdate(SyncData syncData, Filter parentFilter) {
     outer = syncData;
     this.parentFilter = parentFilter;
+  }
+
+  ESScriptUpdate(SyncData syncData, String script, Map<String, Object> params) {
+    outer = syncData;
+    this.script = script;
+    this.params = params;
   }
 
   public static void makeScript(StringBuilder code, String op, String endOp, HashMap<String, Object> data,
@@ -292,7 +301,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
 
 
   public boolean needScript() {
-    return !mergeToList.isEmpty() || !mergeToListById.isEmpty() || !nested.isEmpty();
+    return StringUtils.isNotBlank(script) || !mergeToList.isEmpty() || !mergeToListById.isEmpty() || !nested.isEmpty();
   }
 
   @Override
@@ -305,6 +314,9 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   }
 
   public void upsert(HashMap<String, Object> upsert) {
+    if (notSupportUpsert()) {
+      return;
+    }
     switch (oldType) {
       case WRITE:
       case DELETE:
@@ -331,7 +343,17 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
 
   }
 
-  public void generateScript(StringBuilder code, HashMap<String, Object> params) {
+  public boolean notSupportUpsert() {
+    return oldType == null;
+  }
+
+  public void generateMergeScript(StringBuilder code, HashMap<String, Object> params) {
+    if (script != null && this.params != null) {
+      code.append(script);
+      KVMapper.map(this.params, this.params);
+      params.putAll(this.params);
+      return;
+    }
     generateFromMergeToList(code, params);
     generateFromMergeToListById(code, params);
     generateFromMergeToNested(code, params);

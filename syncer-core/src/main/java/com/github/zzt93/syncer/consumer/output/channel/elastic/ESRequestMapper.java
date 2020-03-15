@@ -131,10 +131,10 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
 
     if (needScript(data)) {
       ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
-      esScriptUpdate.generateScript(code, params);
+      esScriptUpdate.generateMergeScript(code, params);
     }
 
-    return new Script(ScriptType.INLINE, "painless", code.toString(), params);
+    return new Script(ScriptType.INLINE, Script.DEFAULT_SCRIPT_LANG, code.toString(), params);
   }
 
   private QueryBuilder getFilter(SyncData data) {

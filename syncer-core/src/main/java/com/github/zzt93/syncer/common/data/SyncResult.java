@@ -1,10 +1,11 @@
 package com.github.zzt93.syncer.common.data;
 
+import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.data.SyncResultBase;
 import lombok.ToString;
 
+import java.util.HashMap;
 import java.util.LinkedHashMap;
-import java.util.Map;
 
 /**
  * @author zzt
@@ -16,8 +17,14 @@ public class SyncResult extends SyncResultBase {
     fields = new LinkedHashMap<>();
   }
 
-  SyncResult(Map<String, Object> row) {
-    fields = new LinkedHashMap<>(row);
+  SyncResult(SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
+             HashMap<String, Object> full) {
+    fields = new LinkedHashMap<>(full);
+    setPrimaryKeyName(primaryKeyName);
+    setId(id);
+    setEntity(entity);
+    setRepo(database);
+    setEventType(type);
   }
 
   Object getExtra(String key) {

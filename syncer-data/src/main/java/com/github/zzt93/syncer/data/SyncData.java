@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.data;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -25,11 +26,11 @@ public interface SyncData {
 
   boolean isDelete();
 
-  boolean toWrite();
+  SyncData toWrite();
 
-  boolean toUpdate();
+  SyncData toUpdate();
 
-  boolean toDelete();
+  SyncData toDelete();
 
   SyncData setEntity(String entity);
 
@@ -48,8 +49,6 @@ public interface SyncData {
   SyncData renameField(String oldKey, String newKey);
 
   SyncData removeField(String key);
-
-  boolean removePrimaryKey();
 
   SyncData removeFields(String... keys);
 
@@ -82,14 +81,14 @@ public interface SyncData {
 
   ESScriptUpdate esScriptUpdate();
 
+  ESScriptUpdate esScriptUpdate(String script, Map<String, Object> params);
+
   /**
    * @param docFilter filter for query a ES doc and apply script
    */
   ESScriptUpdate esScriptUpdate(Filter docFilter);
 
   ExtraQuery extraQuery(String indexName, String typeName);
-
-  boolean hasExtra();
 
   Object getExtra(String key);
 

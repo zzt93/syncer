@@ -1,6 +1,6 @@
 version: 1.2
 
-consumerId: mongo
+consumerId: mongo2
 
 
 input:

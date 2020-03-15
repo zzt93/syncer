@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.config.ProducerConfig;
 import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.common.MayClusterConnection;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
+import lombok.AllArgsConstructor;
 import lombok.Data;
 
 /**
@@ -18,6 +19,7 @@ public class ProducerMaster {
   private String file;
   private boolean onlyUpdated = true;
   private boolean updateLookUp = false;
+  private boolean bsonConversion = true;
 
   public Connection getRealConnection() {
     connection.validate(type);
@@ -43,4 +45,14 @@ public class ProducerMaster {
     return connection.hashCode();
   }
 
+  public MongoV4Option mongoV4Option() {
+    return new MongoV4Option(updateLookUp, bsonConversion);
+  }
+
+  @Data
+  @AllArgsConstructor
+  public static class MongoV4Option {
+    private boolean updateLookUp;
+    private boolean bsonConversion;
+  }
 }

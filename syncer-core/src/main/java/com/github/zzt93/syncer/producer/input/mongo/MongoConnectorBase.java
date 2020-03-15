@@ -12,14 +12,20 @@ import com.mongodb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
-import java.util.regex.Pattern;
+import java.util.stream.Stream;
 
 /**
  * @author zzt
  */
 public abstract class MongoConnectorBase implements MasterConnector {
+  static final String OPLOG_RS = "oplog.rs";
+  static final String LOCAL = "local";
+  static final String TS = "ts";
   private final String identifier;
   private final Logger logger = LoggerFactory.getLogger(MongoConnectorBase.class);
   protected MongoClient client;
@@ -29,15 +35,16 @@ public abstract class MongoConnectorBase implements MasterConnector {
     identifier = connection.connectionIdentifier();
   }
 
-  Pattern getNamespaces(MongoConnection connection, ConsumerRegistry registry) {
+  <T> Stream<T> getNamespaces(MongoConnection connection, ConsumerRegistry registry, Function<String[], T> f) {
     Set<String> producerDbName = new HashSet<>();
     for (String dbName : client.listDatabaseNames()) {
       producerDbName.add(dbName);
     }
 
+    checkOplog(producerDbName);
+
     Set<Consumer> consumers = registry.outputSink(connection).keySet();
-    StringJoiner joiner = new StringJoiner("|");
-    consumers.stream().map(Consumer::getRepos).flatMap(Set::stream).flatMap(s -> {
+    return consumers.stream().map(Consumer::getRepos).flatMap(Set::stream).flatMap(s -> {
       if (!producerDbName.contains(s.getName())) {
         throw new InvalidConfigException("No such repo(" + s.getName() + ") in " + connection);
       }
@@ -47,16 +54,28 @@ public abstract class MongoConnectorBase implements MasterConnector {
       }
 
       List<Entity> entities = s.getEntities();
-      ArrayList<String> res = new ArrayList<>(entities.size());
+      ArrayList<T> res = new ArrayList<>(entities.size());
       for (Entity entity : entities) {
         if (!producerCollectionName.contains(entity.getName())) {
           throw new InvalidConfigException("No such collection(" + s.getName() + "." + entity.getName() + ") in " + connection);
         }
-        res.add("(" + s.getName() + "\\." + entity.getName() + ")");
+        res.add(f.apply(new String[]{s.getName(), entity.getName()}));
       }
       return res.stream();
-    }).forEach(joiner::add);
-    return Pattern.compile(joiner.toString());
+    });
+  }
+
+  private void checkOplog(Set<String> producerDbName) {
+    if (!producerDbName.contains(LOCAL)) {
+      throw new InvalidConfigException("Replication not detected. Enable by: rs.initiate()");
+    }
+    HashSet<String> names = new HashSet<>();
+    for (String collectionName : client.getDatabase(LOCAL).listCollectionNames()) {
+      names.add(collectionName);
+    }
+    if (!names.contains(OPLOG_RS)) {
+      throw new InvalidConfigException("Replication not detected. Enable by: rs.initiate()");
+    }
   }
 
 
