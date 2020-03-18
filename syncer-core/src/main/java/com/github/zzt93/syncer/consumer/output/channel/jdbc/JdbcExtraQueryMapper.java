@@ -34,7 +34,7 @@ public class JdbcExtraQueryMapper implements ExtraQueryMapper {
     if (maps.size() > 1) {
       logger.warn("Multiple query results exists, only use the first");
     } else if (maps.size() == 0) {
-      logger.warn("Fail to find any match by " + extraQuery);
+      logger.warn("Fail to find any match by {}", extraQuery);
       return Collections.emptyMap();
     }
     Map<String, Object> hit = maps.get(0);

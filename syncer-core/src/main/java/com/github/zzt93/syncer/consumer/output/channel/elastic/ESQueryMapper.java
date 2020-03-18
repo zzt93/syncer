@@ -51,13 +51,17 @@ public class ESQueryMapper implements ExtraQueryMapper {
       // todo toList
       logger.warn("Multiple query results exists, only use the first");
     } else if (hits.totalHits == 0) {
-      logger.warn("Fail to find any match by " + extraQuery);
+      logger.warn("Fail to find any match by {}", extraQuery);
       return Collections.emptyMap();
     }
     Map<String, Object> hit = hits.getAt(0).getSource();
     Map<String, Object> res = new HashMap<>();
     for (int i = 0; i < select.length; i++) {
-      res.put(extraQuery.getAs(i), hit.get(select[i]));
+      Object value = hit.get(select[i]);
+      if (value == null) {
+        logger.warn("No {} in {} by {}", select[i], hit, extraQuery);
+      }
+      res.put(extraQuery.getAs(i), value);
     }
     extraQuery.addQueryResult(res);
     return res;
