@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.common.Filter.FilterRes;
 import com.github.zzt93.syncer.common.LogbackLoggingField;
 import com.github.zzt93.syncer.common.data.BinlogDataId;
 import com.github.zzt93.syncer.common.data.DataId;
+import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.Dispatcher;
@@ -64,13 +65,17 @@ public class MysqlDispatcher implements Dispatcher {
   }
 
   public void updateSchemaMeta(AlterMeta alterMeta) {
-    TableMeta full;
-    try {
-      full = ConsumerSchemaMeta.MetaDataBuilder.tableMeta(alterMeta.getConnection(), alterMeta.getSchema(), alterMeta.getTable());
-    } catch (SQLException e) {
-      logger.error("Fail to fetch meta info after alter", e);
-      return;
+    TableMeta full = null;
+    long sleepInSecond = 1;
+    while (full == null) {
+      try {
+        full = ConsumerSchemaMeta.MetaDataBuilder.tableMeta(alterMeta.getConnection(), alterMeta.getSchema(), alterMeta.getTable());
+      } catch (SQLException e) {
+        logger.error("Fail to fetch meta info after alter", e);
+        sleepInSecond = FallBackPolicy.POW_2.sleep(sleepInSecond);
+      }
     }
+    logger.info("Fetch related {}", full);
     for (ConsumerChannel consumerChannel : consumerChannels) {
       consumerChannel.updateSchemaMeta(alterMeta, full);
     }

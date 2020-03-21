@@ -147,8 +147,7 @@ public class MysqlChannel implements BufferedChannel<String> {
         String error = "Fail to connect to DB, will retry in {} second(s)";
         logger.error(error, sleepInSecond, e);
         SyncerHealth.consumer(consumerId, output, Health.red(error));
-        sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
-        TimeUnit.SECONDS.sleep(sleepInSecond);
+        sleepInSecond = FallBackPolicy.POW_2.sleep(sleepInSecond);
       } catch (DataAccessException e) {
         retryFailed(sqls, e);
         return;
