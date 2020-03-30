@@ -208,9 +208,8 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return this;
   }
 
-  public SyncData removeField(String key) {
-    getFields().remove(key);
-    return this;
+  public Object removeField(String key) {
+    return getFields().remove(key);
   }
 
   public boolean removePrimaryKey() {

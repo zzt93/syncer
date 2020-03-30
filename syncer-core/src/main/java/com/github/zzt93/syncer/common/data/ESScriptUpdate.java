@@ -94,8 +94,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     assert parentFilter.isId();
     if (!parentFilter.fieldUseId()) {
       String parentIdName = parentFilter.getFieldKeyName();
-      outer.setId(outer.getField(parentIdName))
-          .removeField(parentIdName);
+      outer.setId(outer.removeField(parentIdName));
     }
     outer.toUpdate();
     return this;
@@ -135,8 +134,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     assert parentFilter.isId();
     if (!parentFilter.fieldUseId()) {
       String parentIdName = parentFilter.getFieldKeyName();
-      outer.setId(outer.getField(parentIdName))
-          .removeField(parentIdName);
+      outer.setId(outer.removeField(parentIdName));
     }
     outer.toUpdate();
     return this;
@@ -222,7 +220,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     if (parentFilter.isId()) {
       if (!parentFilter.fieldUseId()) {
         String parentIdName = parentFilter.getFieldKeyName();
-        outer.setId(outer.getField(parentIdName)).removeField(parentIdName);
+        outer.setId(outer.removeField(parentIdName));
       }
     } else {
       SyncByQuery syncByQuery = outer.syncByQuery();
