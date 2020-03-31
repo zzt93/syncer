@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.producer.dispatch.mongo;
 
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.config.consumer.input.Fields;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
@@ -28,7 +29,7 @@ public class JsonKeyFilter {
   }
 
   public boolean output(SyncData from) {
-    Set<String> tableRow = repo.getTableRow(from.getRepo(), from.getEntity());
+    Fields tableRow = repo.getTableRow(from.getRepo(), from.getEntity());
     if (tableRow == null) {
       return false;
     }

@@ -3,12 +3,15 @@ package com.github.zzt93.syncer.producer.input.mysql.meta;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.config.consumer.input.Entity;
+import com.github.zzt93.syncer.config.consumer.input.Fields;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.github.zzt93.syncer.producer.input.Consumer;
+import com.github.zzt93.syncer.producer.input.mysql.AlterMeta;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Lists;
+import com.google.common.collect.Sets;
 import com.mysql.jdbc.Driver;
 import com.mysql.jdbc.JDBC4Connection;
 import com.zaxxer.hikari.util.DriverDataSource;
@@ -22,11 +25,12 @@ import java.util.Map.Entry;
 import java.util.stream.Collectors;
 
 /**
- * All schema metas {@link SchemaMeta} that a DB has.
+ * All schema metas {@link SchemaMeta} that a consumer file has.
  * A DB is identified by connection identifier (host + port).
  *
  * @author zzt
  * @see SchemaMeta
+ * @see Consumer
  * @see com.github.zzt93.syncer.config.common.Connection#connectionIdentifier()
  */
 public class ConsumerSchemaMeta {
@@ -79,10 +83,18 @@ public class ConsumerSchemaMeta {
         '}';
   }
 
+  public void updateSchemaMeta(AlterMeta alterMeta, TableMeta full) {
+    for (SchemaMeta schemaMeta : schemaMetas) {
+      if (schemaMeta.updateTableMeta(alterMeta, full)) {
+        return;
+      }
+    }
+  }
+
   public static class MetaDataBuilder {
 
     static final int TIMEOUT = 10;
-    private final Logger logger = LoggerFactory.getLogger(MetaDataBuilder.class);
+    private static final Logger logger = LoggerFactory.getLogger(MetaDataBuilder.class);
 
     private final DataSource dataSource;
     private final HashMap<Consumer, ProducerSink> consumerSink;
@@ -138,6 +150,22 @@ public class ConsumerSchemaMeta {
       return repos;
     }
 
+    public static TableMeta tableMeta(MysqlConnection connection, String schema, String table) throws SQLException {
+      String jdbcUrl = connection.toConnectionUrl(schema);
+      DataSource dataSource = new DriverDataSource(jdbcUrl, Driver.class.getName(), new Properties(),
+          connection.getUser(), connection.getPassword());
+      Consumer single = Consumer.singleTable(schema, table);
+      HashMap<Consumer, List<SchemaMeta>> res;
+      try (Connection dataSourceConnection = dataSource.getConnection()) {
+        DatabaseMetaData metaData = dataSourceConnection.getMetaData();
+        try (ResultSet tableResultSet = metaData
+            .getTables(schema, null, table, new String[]{"TABLE"})) {
+          res = getSchemaMeta(metaData, tableResultSet, Sets.newHashSet(single));
+        }
+      }
+      return res.get(single).get(0).findTable(schema, table);
+    }
+
     private HashMap<Consumer, List<SchemaMeta>> build(Set<Consumer> consumers)
         throws SQLException {
       logger.info("Getting connection[{}], timeout in {}s", jdbcUrl,TIMEOUT);
@@ -183,7 +211,7 @@ public class ConsumerSchemaMeta {
       }
     }
 
-    private HashMap<Consumer, List<SchemaMeta>> getSchemaMeta(DatabaseMetaData metaData,
+    private static HashMap<Consumer, List<SchemaMeta>> getSchemaMeta(DatabaseMetaData metaData,
                                                               ResultSet tableResultSet,
                                                               Set<Consumer> consumers)
         throws SQLException {
@@ -208,8 +236,8 @@ public class ConsumerSchemaMeta {
               res.computeIfAbsent(consumer, key -> Lists.newLinkedList()).add(tmp);
               return tmp;
             });
-            // remove for drds situation re-enter
-            Set<String> tableRow = aim.removeTableRow(tableSchema, tableName);
+            // remove for drds situation: same table name re-enter
+            Fields tableRow = aim.removeTableRow(tableSchema, tableName);
             TableMeta tableMeta = new TableMeta();
             // TODO 18/1/18 may opt to get all columns then use
             String primaryKeyName = getPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
@@ -226,7 +254,7 @@ public class ConsumerSchemaMeta {
       return res;
     }
 
-    private List<Entity> diff(Map<Repo, SchemaMeta> metaOfEachConsumer) {
+    private static List<Entity> diff(Map<Repo, SchemaMeta> metaOfEachConsumer) {
       List<Entity> res = new ArrayList<>();
       metaOfEachConsumer.forEach((k, v) -> {
         List<Entity> entities = k.getEntities();
@@ -241,8 +269,8 @@ public class ConsumerSchemaMeta {
       return res;
     }
 
-    private void setInterestedCol(DatabaseMetaData metaData, String tableSchema, String tableName,
-                                  Set<String> tableRow, TableMeta tableMeta, String primaryKeyName) throws SQLException {
+    private static void setInterestedCol(DatabaseMetaData metaData, String tableSchema, String tableName,
+                                         Fields tableRow, TableMeta tableMeta, String primaryKeyName) throws SQLException {
       try (ResultSet columnResultSet = metaData
           .getColumns(tableSchema, "public", tableName, null)) {
         while (columnResultSet.next()) {
@@ -259,8 +287,8 @@ public class ConsumerSchemaMeta {
       }
     }
 
-    private String getPrimaryKey(DatabaseMetaData metaData, String tableSchema, String tableName,
-                                 Set<String> tableRow, TableMeta tableMeta) throws SQLException {
+    private static String getPrimaryKey(DatabaseMetaData metaData, String tableSchema, String tableName,
+                                        Fields tableRow, TableMeta tableMeta) throws SQLException {
       try (ResultSet primaryKeys = metaData.getPrimaryKeys(tableSchema, "", tableName)) {
         if (primaryKeys.next()) {
           String columnName = primaryKeys.getString("COLUMN_NAME");

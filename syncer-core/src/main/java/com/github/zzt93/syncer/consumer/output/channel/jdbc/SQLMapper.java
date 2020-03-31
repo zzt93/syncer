@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.common.data.Mapper;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.InvalidSyncDataException;
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
+import com.github.zzt93.syncer.common.util.SQLHelper;
 import com.github.zzt93.syncer.config.consumer.output.mysql.RowMapping;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 import com.github.zzt93.syncer.data.SimpleEventType;
@@ -12,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
-import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.HashMap;
 import java.util.Map.Entry;
@@ -26,10 +26,11 @@ import static com.github.zzt93.syncer.data.SimpleEventType.WRITE;
  */
 public class SQLMapper implements Mapper<SyncData, String> {
 
-  private static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3) ON DUPLICATE KEY UPDATE ?4=?5";
-  private static final String DELETE_FROM_WHERE_ID = "delete from `?0`.`?1` where id = ?2";
-  private static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = ?2";
-  private static final String UPDATE_SET_WHERE = "update `?0`.`?1` set ?3 where ?2";
+  // TODO 2019-11-23 ignore dup is right?
+  static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3) ON DUPLICATE KEY UPDATE ?4=?5";
+  static final String DELETE_FROM_WHERE_ID = "delete from `?0`.`?1` where id = ?2";
+  static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = ?2";
+  static final String UPDATE_SET_WHERE = "update `?0`.`?1` set ?3 where ?2";
   private final Logger logger = LoggerFactory.getLogger(SQLMapper.class);
   private final KVMapper kvMapper;
   private final Expression schema;
@@ -37,7 +38,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
   private final Expression id;
   private final String idName;
 
-  public SQLMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
+  public SQLMapper(RowMapping rowMapping) {
     SpelExpressionParser parser = new SpelExpressionParser();
 
     schema = parser.parseExpression(rowMapping.getSchema());

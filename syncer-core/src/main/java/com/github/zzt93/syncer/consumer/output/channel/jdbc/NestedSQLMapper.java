@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
+import com.github.zzt93.syncer.common.util.SQLHelper;
 import com.github.zzt93.syncer.config.consumer.output.mysql.RowMapping;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 import org.slf4j.Logger;
@@ -33,7 +34,7 @@ public class NestedSQLMapper extends SQLMapper {
   private final JdbcNestedQueryMapper jdbcNestedQueryMapper;
 
   public NestedSQLMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
-    super(rowMapping, jdbcTemplate);
+    super(rowMapping);
     SpelExpressionParser parser = new SpelExpressionParser();
     schema = parser.parseExpression(rowMapping.getSchema());
     table = parser.parseExpression(rowMapping.getTable());

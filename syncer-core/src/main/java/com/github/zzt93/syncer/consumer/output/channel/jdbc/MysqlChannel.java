@@ -147,8 +147,7 @@ public class MysqlChannel implements BufferedChannel<String> {
         String error = "Fail to connect to DB, will retry in {} second(s)";
         logger.error(error, sleepInSecond, e);
         SyncerHealth.consumer(consumerId, output, Health.red(error));
-        sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
-        TimeUnit.SECONDS.sleep(sleepInSecond);
+        sleepInSecond = FallBackPolicy.POW_2.sleep(sleepInSecond);
       } catch (DataAccessException e) {
         retryFailed(sqls, e);
         return;
@@ -177,8 +176,19 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   @Override
   public void retryFailed(List<SyncWrapper<String>> sqls, Throwable e) {
-    // TODO 18/11/14 multiple sql has different errors, what spring behavior
     Throwable cause = e.getCause();
+    /*
+      After a command in a batch update fails to execute properly and a BatchUpdateException is thrown,
+      the driver may or may not continue to process the remaining commands in the batch.
+      If the driver continues processing after a failure,
+      the array returned by the method BatchUpdateException.getUpdateCounts will have an element for every command in the batch
+      rather than only elements for the commands that executed successfully before the error.
+      In the case where the driver continues processing commands,
+      the array element for any command that failed is Statement.EXECUTE_FAILED.
+     */
+    /*
+      Mysql with `rewriteBatchedStatements=true` not continue processing and return [-1, Statement.EXECUTE_FAILED, ...] in case of BatchUpdateException
+     */
     if (!(cause instanceof BatchUpdateException)) {
       logger.error("Unknown exception", e);
       throw new IllegalStateException();
@@ -192,6 +202,7 @@ public class MysqlChannel implements BufferedChannel<String> {
         ack.remove(stringSyncWrapper.getSourceId(), stringSyncWrapper.getSyncDataId());
         continue;
       }
+      // TODO 2019-10-28 maybe diff error reason!!!
       ErrorLevel level = level(e, stringSyncWrapper, batch.getMaxRetry());
       if (level.retriable()) {
         tmp.add(stringSyncWrapper);
@@ -213,7 +224,8 @@ public class MysqlChannel implements BufferedChannel<String> {
     batchBuffer.addAllInHead(tmp);
   }
 
-  private boolean succ(int updateCount) {
+  private boolean succ(long updateCount) {
+    // TODO 2019-10-28 -1?
     return updateCount != Statement.EXECUTE_FAILED;
   }
 

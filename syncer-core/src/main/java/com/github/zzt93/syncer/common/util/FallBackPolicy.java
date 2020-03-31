@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.common.util;
 
+import lombok.extern.slf4j.Slf4j;
+
 import java.util.Random;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.TimeUnit;
@@ -7,6 +9,7 @@ import java.util.concurrent.TimeUnit;
 /**
  * @author zzt
  */
+@Slf4j
 public enum FallBackPolicy {
 
   POW_2 {
@@ -54,6 +57,20 @@ public enum FallBackPolicy {
 
   public abstract long next(long last, TimeUnit unit);
 
+  public long next(long last) {
+    return next(last, TimeUnit.SECONDS);
+  }
+
   public abstract long max(TimeUnit unit);
+
+  public long sleep(long last) {
+    try {
+      TimeUnit.SECONDS.sleep(last);
+    } catch (InterruptedException e) {
+      log.error("Interrupt fallback", e);
+      Thread.currentThread().interrupt();
+    }
+    return next(last);
+  }
 
 }

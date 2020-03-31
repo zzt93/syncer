@@ -18,6 +18,7 @@ public class AckTest implements MethodFilter {
     String entity = sync.getEntity();
     switch (entity) {
       case "news":
+        SyncUtil.unsignedByte(sync, "plate_sub_type");
       case "toCopy":
         SyncUtil.toStr(sync, "thumb_content");
         SyncUtil.toStr(sync, "content");

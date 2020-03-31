@@ -22,6 +22,10 @@ public class Entity {
     this.name = tableName;
   }
 
+  public Fields getField() {
+    return new Fields(fields);
+  }
+
   @Override
   public boolean equals(Object o) {
     if (this == o) {

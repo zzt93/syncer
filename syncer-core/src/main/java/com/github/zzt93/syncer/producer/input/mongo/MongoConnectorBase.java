@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Stream;
 
 /**
@@ -104,13 +103,7 @@ public abstract class MongoConnectorBase implements MasterConnector {
       } catch (MongoTimeoutException | MongoSocketException e) {
         logger
             .error("Fail to connect to remote: {}, retry in {} second", identifier, sleepInSecond);
-        try {
-          sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
-          TimeUnit.SECONDS.sleep(sleepInSecond);
-        } catch (InterruptedException e1) {
-          logger.error("Interrupt mongo {}", identifier, e1);
-          Thread.currentThread().interrupt();
-        }
+        sleepInSecond = FallBackPolicy.POW_2.sleep(sleepInSecond);
       } catch (MongoInterruptedException e) {
         logger.warn("Mongo master interrupted");
         throw new ShutDownException(e);

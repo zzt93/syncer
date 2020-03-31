@@ -29,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -67,7 +66,7 @@ public class MysqlMasterConnector implements MasterConnector {
     client = new BinaryLogClient(connection.getAddress(), connection.getPort(),
         connection.getUser(), password);
     client.registerLifecycleListener(new LogLifecycleListener());
-    client.setEventDeserializer(SyncDeserializer.defaultDeserialzer());
+    client.setEventDeserializer(SyncDeserializer.defaultDeserializer());
     client.setServerId(random.nextInt(Integer.MAX_VALUE));
     client.setSSLMode(SSLMode.DISABLED);
     BinlogInfo binlogInfo = registry.votedBinlogInfo(connection);
@@ -86,7 +85,7 @@ public class MysqlMasterConnector implements MasterConnector {
     } catch (SQLException e) {
       throw new SchemaUnavailableException(e);
     }
-    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, onlyUpdated), connectorIdentifier);
+    SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, onlyUpdated), connection);
     // Order of listener: client has the current event position (not next),
     // so first have it, then use it in SyncListener
     client.registerEventListener((event) -> this.binlogInfo
@@ -111,7 +110,7 @@ public class MysqlMasterConnector implements MasterConnector {
         throw new InvalidConfigException("Invalid producer.file config");
       }
     }
-    EventDeserializer eventDeserializer = SyncDeserializer.defaultDeserialzer();
+    EventDeserializer eventDeserializer = SyncDeserializer.defaultDeserializer();
     Event e;
     for (Path file : files) {
       logger.info("Consuming the binlog {}", file);
@@ -156,13 +155,7 @@ public class MysqlMasterConnector implements MasterConnector {
         client.setServerId(random.nextInt(Integer.MAX_VALUE));
       } catch (IOException e) {
         logger.error("Fail to connect to master. Reconnect in {}(s)", sleepInSecond, e);
-        try {
-          sleepInSecond = FallBackPolicy.POW_2.next(sleepInSecond, TimeUnit.SECONDS);
-          TimeUnit.SECONDS.sleep(sleepInSecond);
-        } catch (InterruptedException e1) {
-          logger.error("Interrupt mysql {}", connectorIdentifier, e1);
-          Thread.currentThread().interrupt();
-        }
+        sleepInSecond = FallBackPolicy.POW_2.sleep(sleepInSecond);
       }
     }
     logger.info("[Shutting down] Mysql master connector closed");

@@ -8,9 +8,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -25,9 +24,14 @@ public class Repo implements Hashable {
   private List<Entity> entities;
 
   private Pattern namePattern;
-  private HashMap<String, Set<String>> nameToRows = new HashMap<>();
+  private HashMap<String, Fields> nameToRows = new HashMap<>();
 
   public Repo() {
+  }
+
+  public Repo(String name, List<Entity> entities) {
+    this.name = name;
+    setEntities(entities);
   }
 
   /**
@@ -56,7 +60,7 @@ public class Repo implements Hashable {
   public void setEntities(List<Entity> entities) {
     this.entities = entities;
     for (Entity entity : entities) {
-      nameToRows.put(entity.getName(), new HashSet<>(entity.getFields()));
+      nameToRows.put(entity.getName(), entity.getField());
     }
     if (nameToRows.size() != entities.size()) {
       logger.warn("Duplicate entity name definition: {}", entities);
@@ -93,7 +97,7 @@ public class Repo implements Hashable {
         '}';
   }
 
-  public Set<String> getTableRow(String tableSchema, String tableName) {
+  public Fields getTableRow(String tableSchema, String tableName) {
     if (name.equals(tableSchema) ||
         (namePattern != null && namePattern.matcher(tableSchema).find())) {
       return nameToRows.getOrDefault((tableName), null);
@@ -101,7 +105,7 @@ public class Repo implements Hashable {
     return null;
   }
 
-  public Set<String> removeTableRow(String tableSchema, String tableName) {
+  public Fields removeTableRow(String tableSchema, String tableName) {
     if (name.equals(tableSchema) ||
         (namePattern != null && namePattern.matcher(tableSchema).find())) {
       return nameToRows.remove(tableName);
@@ -128,7 +132,7 @@ public class Repo implements Hashable {
 
     Repo repo = (Repo) o;
 
-    return name != null ? name.equals(repo.name) : repo.name == null;
+    return Objects.equals(name, repo.name);
   }
 
   @Override

@@ -34,6 +34,8 @@ function test-mongo-input() {
 
     # Then: count == num * 3
     cmpFromTo extractMongoCount extractESCount 0 simple
+
+    assertLogNotExist syncer ' ERROR '
 }
 
 function cleanup() {
