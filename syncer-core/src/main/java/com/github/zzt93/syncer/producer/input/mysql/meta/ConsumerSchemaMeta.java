@@ -85,9 +85,8 @@ public class ConsumerSchemaMeta {
 
   public void updateSchemaMeta(AlterMeta alterMeta, TableMeta full) {
     for (SchemaMeta schemaMeta : schemaMetas) {
-      TableMeta table = schemaMeta.findTable(alterMeta.getSchema(), alterMeta.getTable());
-      if (table != null) {
-//        table.update();
+      if (schemaMeta.updateTableMeta(alterMeta, full)) {
+        return;
       }
     }
   }

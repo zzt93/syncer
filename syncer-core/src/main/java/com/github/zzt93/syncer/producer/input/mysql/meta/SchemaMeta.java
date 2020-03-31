@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.producer.input.mysql.meta;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
+import com.github.zzt93.syncer.producer.input.mysql.AlterMeta;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -56,5 +57,18 @@ public class SchemaMeta {
         ", schemaPattern=" + schemaPattern +
         ", tableMetas(" + tableMetas.size() + ")=" + tableMetas +
         '}';
+  }
+
+  public boolean updateTableMeta(AlterMeta alterMeta, TableMeta full) {
+    TableMeta table = findTable(alterMeta.getSchema(), alterMeta.getTable());
+    if (table != null) {
+      if (table.isAll()) {
+        tableMetas.put(alterMeta.getTable(), full);
+      } else {
+        table.update(full);
+      }
+      return true;
+    }
+    return false;
   }
 }

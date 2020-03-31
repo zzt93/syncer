@@ -22,7 +22,7 @@ public class Entity {
     this.name = tableName;
   }
 
-  public Fields getFields() {
+  public Fields getField() {
     return new Fields(fields);
   }
 

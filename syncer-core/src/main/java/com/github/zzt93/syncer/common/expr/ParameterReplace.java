@@ -1,23 +1,23 @@
 package com.github.zzt93.syncer.common.expr;
 
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
+import java.util.Arrays;
 
 /**
  * @author zzt
  */
 public class ParameterReplace {
 
-  private static final Pattern PARAMETER_PLACEHOLDER = Pattern.compile("\\?(\\d+)");
-
   public static String orderedParam(String input, String... var) {
-    Matcher matcher = PARAMETER_PLACEHOLDER.matcher(input);
-    String result = input;
-    while (matcher.find()) {
-      String group = matcher.group();
-      int index = Integer.parseInt(matcher.group(1));
-      result = result.replace(group, var[index]);
+    StringBuilder sb = new StringBuilder(input.length() + Arrays.stream(var).mapToInt(String::length).sum());
+    char[] cs = input.toCharArray();
+    for (int i = 0; i < cs.length; i++) {
+      if (cs[i] == '?') {
+        // only support 0-9
+        sb.append(var[cs[++i] - '0']);
+      } else {
+        sb.append(cs[i]);
+      }
     }
-    return result;
+    return sb.toString();
   }
 }

@@ -95,8 +95,12 @@ public class SQLHelper {
   public static AlterMeta alterMeta(String database, String sql) {
     String alterTarget = isAlter(sql);
     if (alterTarget != null) {
+      if (!StringUtils.isEmpty(database)) {
+        return new AlterMeta(database, alterTarget);
+      }
       String[] split = alterTarget.split("\\.");
-      return new AlterMeta(database, split.length == 2 ? split[1] : alterTarget);
+      assert split.length == 2;
+      return new AlterMeta(split[0], split[1]);
     }
     return null;
   }

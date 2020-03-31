@@ -88,7 +88,7 @@ public class SyncListener implements BinaryLogClient.EventListener {
         if (alterMeta != null) {
           logger.info("Detect alter table {}, may affect column index, re-syncing", alterMeta);
           try {
-            mysqlDispatcher.updateSchemaMeta(alterMeta);
+            mysqlDispatcher.updateSchemaMeta(alterMeta.setConnection(connection));
           } catch (Throwable e) {
             logger.error("Fail to update meta {}, {}", event, alterMeta, e);
           }

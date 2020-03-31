@@ -178,10 +178,10 @@ function cleanupAll() {
 }
 
 
-function checkLog() {
+function assertLogNotExist() {
     container=$1
     msg=$2
-    res=`docker logs ${container} | grep "$msg"`
+    res=`docker logs ${container} | grep -v 'Invalid config for' | grep -v 'No such repo' | grep "$msg"`
     if [[ -n "${res}" ]]; then
         exit 77
     fi

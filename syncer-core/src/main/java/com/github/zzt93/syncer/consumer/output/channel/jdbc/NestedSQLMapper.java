@@ -34,7 +34,7 @@ public class NestedSQLMapper extends SQLMapper {
   private final JdbcNestedQueryMapper jdbcNestedQueryMapper;
 
   public NestedSQLMapper(RowMapping rowMapping, JdbcTemplate jdbcTemplate) {
-    super(rowMapping, jdbcTemplate);
+    super(rowMapping);
     SpelExpressionParser parser = new SpelExpressionParser();
     schema = parser.parseExpression(rowMapping.getSchema());
     table = parser.parseExpression(rowMapping.getTable());

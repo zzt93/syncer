@@ -7,7 +7,9 @@ import com.github.zzt93.syncer.consumer.Hashable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Objects;
 import java.util.regex.Pattern;
 
 /**
@@ -58,7 +60,7 @@ public class Repo implements Hashable {
   public void setEntities(List<Entity> entities) {
     this.entities = entities;
     for (Entity entity : entities) {
-      nameToRows.put(entity.getName(), entity.getFields());
+      nameToRows.put(entity.getName(), entity.getField());
     }
     if (nameToRows.size() != entities.size()) {
       logger.warn("Duplicate entity name definition: {}", entities);

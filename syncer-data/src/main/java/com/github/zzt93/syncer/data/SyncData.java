@@ -48,7 +48,7 @@ public interface SyncData {
 
   SyncData renameField(String oldKey, String newKey);
 
-  SyncData removeField(String key);
+  Object removeField(String key);
 
   SyncData removeFields(String... keys);
 

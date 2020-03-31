@@ -23,7 +23,7 @@ function test-restart() {
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
-    checkLog syncer Duplicate
+    assertLogNotExist syncer Duplicate
 
     # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
@@ -35,6 +35,8 @@ function test-restart() {
     # Then: test copy
     all=$(( 4 * num ))
     cmpFromTo extractConst extractESCount ${all} copy
+
+    assertLogNotExist syncer ' ERROR '
 }
 
 function cleanup() {

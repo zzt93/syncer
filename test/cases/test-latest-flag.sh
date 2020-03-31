@@ -25,6 +25,8 @@ function test-latest() {
 
     # Then: count == num
     cmpFromTo extractConst extractESCount ${num}
+
+    assertLogNotExist syncer ' ERROR '
 }
 
 

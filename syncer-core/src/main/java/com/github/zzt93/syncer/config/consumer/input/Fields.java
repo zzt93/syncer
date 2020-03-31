@@ -8,9 +8,12 @@ import java.util.List;
 public class Fields {
 
   private static final String _all = "-all-";
-  private final HashSet<String> names;
+  private HashSet<String> names;
 
   Fields(List<String> names) {
+    if (names == null) {
+      return;
+    }
     this.names = new HashSet<>(names);
     if (this.names.size() != names.size()) {
       throw new InvalidConfigException("Dup column config: " +  names);
@@ -18,7 +21,13 @@ public class Fields {
   }
 
   public boolean contains(String o) {
-    return names.contains(o);
+    return names == null || names.contains(o);
   }
 
+  @Override
+  public String toString() {
+    return "Fields{" +
+        "names=" + (names == null ? _all : names) +
+        '}';
+  }
 }

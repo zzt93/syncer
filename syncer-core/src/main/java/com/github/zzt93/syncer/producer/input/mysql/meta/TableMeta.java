@@ -10,6 +10,7 @@ public class TableMeta {
   private final List<Integer> interestedAndPkIndex = new ArrayList<>();
   private final HashMap<Integer, String> interestedAndPkIndexToName = new HashMap<>();
   private final Set<Integer> primaryKeys = new HashSet<>();
+  private final Set<String> primaryKeysName = new HashSet<>();
   private boolean interestedPK = true;
 
   void addInterestedCol(String columnName, int ordinalPosition) {
@@ -19,6 +20,7 @@ public class TableMeta {
 
   void addPrimaryKey(String columnName, int position) {
     primaryKeys.add(position);
+    primaryKeysName.add(columnName);
     addInterestedCol(columnName, position);
   }
 
@@ -50,5 +52,28 @@ public class TableMeta {
 
   public boolean isInterestedPK() {
     return interestedPK;
+  }
+
+  public void update(TableMeta all) {
+    Map<String, Integer> name2index = new HashMap<>();
+    for (Map.Entry<Integer, String> e : all.interestedAndPkIndexToName.entrySet()) {
+      name2index.put(e.getValue(), e.getKey());
+    }
+
+    ArrayList<String> names = new ArrayList<>(interestedAndPkIndexToName.values());
+    interestedAndPkIndexToName.clear();
+    for (String name : names) {
+      interestedAndPkIndexToName.put(name2index.get(name), name);
+    }
+    interestedAndPkIndex.clear();
+    interestedAndPkIndex.addAll(interestedAndPkIndexToName.keySet());
+    primaryKeys.clear();
+    for (String name : primaryKeysName) {
+      primaryKeys.add(name2index.get(name));
+    }
+  }
+
+  public boolean isAll() {
+    return false;
   }
 }
