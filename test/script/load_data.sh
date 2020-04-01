@@ -56,7 +56,7 @@ function loadToMongo() {
 env=$1
 
 
-if [[ ${env} = "mongo" || ${env} = "mongo_v4" ]]; then
+if [[ ${env} == mongo* ]]; then
     loadToMongo
 else
     loadToMysql

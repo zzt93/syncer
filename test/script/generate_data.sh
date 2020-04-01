@@ -53,7 +53,7 @@ function generateMongoTestData() {
     cd ${TEST_DIR}
 }
 
-if [[ ${env} = "mongo" || ${env} = "mongo_v4" ]]; then
+if [[ ${env} == mongo* ]]; then
     generateMongoTestData ${lines}
 else
     generateMysqlTestData ${lines} ${start}

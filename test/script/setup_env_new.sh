@@ -36,7 +36,7 @@ function prepareEnv() {
     logi "----------------"
     docker-compose -f ${ENV_CONFIG} up -d
 
-    if [[ ${env} = "mongo" || ${env} = "mongo_v4" ]]; then
+    if [[ ${env} == mongo* ]]; then
         dockerExec mongo mongo --eval "rs.initiate(); db.getSiblingDB('simple_0').createCollection('simple_type')"
     fi
 }
