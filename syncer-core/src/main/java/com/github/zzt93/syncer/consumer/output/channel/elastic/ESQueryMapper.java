@@ -3,12 +3,9 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.ExtraQueryMapper;
 import org.elasticsearch.action.search.SearchRequest;
-import org.elasticsearch.action.search.SearchRequestBuilder;
 import org.elasticsearch.action.search.SearchResponse;
-import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.RequestOptions;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -49,14 +46,14 @@ public class ESQueryMapper implements ExtraQueryMapper {
       return Collections.emptyMap();
     }
     SearchHits hits = response.getHits();
-    if (hits.totalHits > 1) {
+    if (hits.getTotalHits() > 1) {
       // todo toList
       logger.warn("Multiple query results exists, only use the first");
-    } else if (hits.totalHits == 0) {
+    } else if (hits.getTotalHits() == 0) {
       logger.warn("Fail to find any match by {}", extraQuery);
       return Collections.emptyMap();
     }
-    Map<String, Object> hit = hits.getAt(0).getSource();
+    Map<String, Object> hit = hits.getAt(0).getSourceAsMap();
     Map<String, Object> res = new HashMap<>();
     for (int i = 0; i < select.length; i++) {
       Object value = hit.get(select[i]);

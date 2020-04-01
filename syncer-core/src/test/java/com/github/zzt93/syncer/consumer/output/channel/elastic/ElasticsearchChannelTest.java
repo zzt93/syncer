@@ -2,24 +2,17 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.google.common.collect.Lists;
 import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.update.UpdateRequest;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.client.support.AbstractClient;
-import org.elasticsearch.cluster.ClusterModule;
-import org.elasticsearch.common.bytes.BytesArray;
-import org.elasticsearch.common.bytes.BytesReference;
-import org.elasticsearch.common.xcontent.NamedXContentRegistry;
-import org.elasticsearch.common.xcontent.XContent;
-import org.elasticsearch.common.xcontent.XContentParser;
-import org.elasticsearch.common.xcontent.json.JsonXContent;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.common.xcontent.XContentType;
 import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.junit.Assert;
 import org.junit.Test;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 
@@ -33,30 +26,23 @@ public class ElasticsearchChannelTest {
   private static Script mockInlineScript(final String script) {
     return new Script(ScriptType.INLINE, "mock", script, emptyMap());
   }
-  private XContentParser createParser(XContent xContent, BytesReference data) throws IOException {
-    return xContent.createParser(xContentRegistry(), data);
-  }
-  private NamedXContentRegistry xContentRegistry() {
-    return new NamedXContentRegistry(ClusterModule.getNamedXWriteables());
-  }
 
   @Test
   public void toStr() throws Exception {
     UpdateRequest request = new UpdateRequest("test", "type1", "1")
         .script(mockInlineScript("ctx._source.body = \"foo\""));
-    Assert.assertEquals(ElasticsearchChannel.toString(request),
-        "update {[test][type1][1], script[Script{type=inline, lang='mock', idOrCode='ctx._source.body = \"foo\"', options={}, params={}}], detect_noop[true]}");
-    request = new UpdateRequest("test", "type1", "1").fromXContent(
-        createParser(JsonXContent.jsonXContent, new BytesArray("{\"doc\": {\"body\": \"bar\"}}")));
-    Assert.assertEquals(ElasticsearchChannel.toString(request),
-        "update {[test][type1][1], doc[index {[null][null][null], source[{\"body\":\"bar\"}]}], detect_noop[true]}");
+    Assert.assertEquals("update {[test][type1][1], doc_as_upsert[false], script[Script{type=inline, lang='mock', idOrCode='ctx._source.body = \"foo\"', options={}, params={}}], scripted_upsert[false], detect_noop[true]}",
+        request.toString());
+    request = new UpdateRequest("test", "type1", "1").doc("{\"body\": \"bar\"}", XContentType.JSON);
+    Assert.assertEquals("update {[test][type1][1], doc_as_upsert[false], doc[index {[null][null][null], source[{\"body\": \"bar\"}]}], scripted_upsert[false], detect_noop[true]}",
+        request.toString());
   }
 
   /**
    * https://discuss.elastic.co/t/java-api-plainless-script-indexof-give-wrong-answer/139016/7
    */
   public void scriptIndexOf() throws Exception {
-    AbstractClient client = ElasticTestUtil.getIntClient();
+    RestHighLevelClient client = ElasticTestUtil.getIntClient();
 
     HashMap<String, Object> params = new HashMap<>();
     params.put("users", 540722L);
@@ -70,18 +56,18 @@ public class ElasticsearchChannelTest {
     Script remove = new Script(ScriptType.INLINE, "painless",
         "ctx._source.users.remove(ctx._source.users.indexOf(params.users));",
         params);
-    UpdateRequestBuilder addRequest = updateRequest(client, add);
-    UpdateRequestBuilder metaRequest = updateRequest(client, meta);
-    UpdateRequestBuilder removeRequest = updateRequest(client, remove);
+    UpdateRequest addRequest = updateRequest(client, add);
+    UpdateRequest metaRequest = updateRequest(client, meta);
+    UpdateRequest removeRequest = updateRequest(client, remove);
 
-    BulkRequestBuilder bulkRequest = client.prepareBulk();
-    bulkRequest.add(metaRequest.request());
-//    bulkRequest.add(removeRequest.request());
-    bulkRequest.add(removeRequest.request());
-//    bulkRequest.add(addRequest.request());
-//    bulkRequest.add(addRequest.request());
-    bulkRequest.add(metaRequest.request());
-    BulkResponse bulkItemResponses = bulkRequest.execute().actionGet();
+    BulkRequest bulkRequest = new BulkRequest();
+    bulkRequest.add(metaRequest);
+//    bulkRequest.add(removeRequest);
+    bulkRequest.add(removeRequest);
+//    bulkRequest.add(addRequest);
+//    bulkRequest.add(addRequest);
+    bulkRequest.add(metaRequest);
+    BulkResponse bulkItemResponses = client.bulk(bulkRequest, RequestOptions.DEFAULT);
     if (bulkItemResponses.hasFailures()) {
       for (BulkItemResponse itemResponse : bulkItemResponses.getItems()) {
         System.out.println(itemResponse.getFailure());
@@ -90,11 +76,11 @@ public class ElasticsearchChannelTest {
     }
   }
 
-  private UpdateRequestBuilder updateRequest(AbstractClient client, Script meta) {
+  private UpdateRequest updateRequest(RestHighLevelClient client, Script meta) {
     return
-        client.prepareUpdate("test", "test", "1")
+        new UpdateRequest("test", "test", "1")
 //      client.prepareUpdate("task-0", "task", "13031005")
-            .setScript(meta);
+            .script(meta);
   }
 
   @Test

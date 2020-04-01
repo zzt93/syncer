@@ -12,11 +12,7 @@
     <artifactId>syncer-core</artifactId>
 
     <repositories>
-        <repository>
-            <id>spring.plugin</id>
-            <name>Spring Plugins Repository</name>
-            <url>http://repo.spring.io/plugins-release/</url>
-        </repository>
+
     </repositories>
 
 

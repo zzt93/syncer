@@ -6,20 +6,20 @@ import com.github.zzt93.syncer.config.consumer.output.elastic.Elasticsearch;
 import com.github.zzt93.syncer.data.Filter;
 import com.google.common.collect.Lists;
 import org.elasticsearch.action.bulk.BulkItemResponse;
-import org.elasticsearch.action.bulk.BulkRequestBuilder;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
-import org.elasticsearch.action.delete.DeleteRequestBuilder;
-import org.elasticsearch.action.index.IndexRequestBuilder;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.client.support.AbstractClient;
-import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
-import org.elasticsearch.index.reindex.UpdateByQueryRequestBuilder;
+import org.elasticsearch.action.delete.DeleteRequest;
+import org.elasticsearch.action.index.IndexRequest;
+import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.RestHighLevelClient;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.junit.Test;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
-import java.util.concurrent.ExecutionException;
 
 import static com.github.zzt93.syncer.common.data.ESScriptUpdate.BY_ID_SUFFIX;
 import static org.junit.Assert.*;
@@ -30,14 +30,14 @@ import static org.junit.Assert.*;
 public class ESRequestMapperTest {
 
   public static void mergeToListRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     remoteCheck(client, innerMergeToList());
   }
 
   private static List<Object> innerMergeToList() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -45,7 +45,7 @@ public class ESRequestMapperTest {
     data.addField("roles", new ArrayList<>());
     Object builder = mapper.map(data);
     assertEquals("", "index {[list][list][1234], source[{\"roles\":[]}]}",
-        ((IndexRequestBuilder) builder).request().toString());
+        builder.toString());
     res.add(builder);
 
 
@@ -55,8 +55,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("test_id")).mergeToList("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[list][list][1234], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.add(params.roles);', options={}, params={roles=1381034}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+    assertEquals("", "update {[list][list][1234], doc_as_upsert[false], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.add(params.roles);', options={}, params={roles=1381034}}], scripted_upsert[false], detect_noop[true]}",
+        builder.toString());
     res.add(builder);
 
 
@@ -66,8 +66,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("test_id")).mergeToList("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[list][list][1234], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(Predicate.isEqual(params.roles));', options={}, params={roles=1381034}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+    assertEquals("", "update {[list][list][1234], doc_as_upsert[false], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(Predicate.isEqual(params.roles));', options={}, params={roles=1381034}}], scripted_upsert[false], detect_noop[true]}",
+        builder.toString());
     res.add(builder);
 
     return res;
@@ -79,14 +79,14 @@ public class ESRequestMapperTest {
   }
 
   public static void mergeToListByIdRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     remoteCheck(client, innerMergeToListById());
   }
 
   private static List<Object> innerMergeToListById() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -102,8 +102,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("test_id")).mergeToListById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[test][test][1234], script[Script{type=inline, lang='painless', idOrCode='if (!ctx._source.roles_id.contains(params.roles_id)) {ctx._source.roles_id.add(params.roles_id); ctx._source.roles.add(params.roles); }', options={}, params={roles_id=1234, roles=1381034}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[test][test][1234], script[Script{type=inline, lang='painless', idOrCode='if (!ctx._source.roles_id.contains(params.roles_id)) {ctx._source.roles_id.add(params.roles_id); ctx._source.roles.add(params.roles); }', options={}, params={roles_id=1234, roles=1381034}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.delete();
@@ -112,8 +112,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("test_id")).mergeToListById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[test][test][1234], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles_id.removeIf(Predicate.isEqual(params.roles_id))) {ctx._source.roles.removeIf(Predicate.isEqual(params.roles)); }', options={}, params={roles_id=1234, roles=13276746}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[test][test][1234], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles_id.removeIf(Predicate.isEqual(params.roles_id))) {ctx._source.roles.removeIf(Predicate.isEqual(params.roles)); }', options={}, params={roles_id=1234, roles=13276746}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     return res;
@@ -143,7 +143,7 @@ public class ESRequestMapperTest {
    * </pre>
    */
   public static void nestedByParentIdRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     remoteCheck(client, innerNestedByParentId());
   }
 
@@ -155,7 +155,7 @@ public class ESRequestMapperTest {
   private static List<Object> innerNestedByParentId() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -171,8 +171,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("ann_id")).mergeToNestedById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested][nested][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=1234, roles={role=1381034, id=1234}}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested][nested][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=1234, roles={role=1381034, id=1234}}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.write("nested", "nested");
@@ -180,8 +180,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("ann_id")).mergeToNestedById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested][nested][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=2345, roles={role=2381034, id=2345}}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested][nested][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=2345, roles={role=2381034, id=2345}}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.update("nested", "nested");
@@ -191,8 +191,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("ann_id")).mergeToNestedById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested][nested][1], script[Script{type=inline, lang='painless', idOrCode='def target = ctx._source.roles.find(e -> e.id.equals(params.id));if (target != null) { target.role = params.role;}', options={}, params={role=13276746, id=1234}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested][nested][1], script[Script{type=inline, lang='painless', idOrCode='def target = ctx._source.roles.find(e -> e.id.equals(params.id));if (target != null) { target.role = params.role;}', options={}, params={role=13276746, id=1234}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.delete("nested", "nested");
@@ -200,8 +200,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("ann_id")).mergeToNestedById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested][nested][1], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(e -> e.id.equals(params.id)); ', options={}, params={id=2345}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested][nested][1], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(e -> e.id.equals(params.id)); ', options={}, params={id=2345}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     return res;
@@ -215,7 +215,7 @@ public class ESRequestMapperTest {
   private static List<Object> innerSetFieldNull() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -223,23 +223,23 @@ public class ESRequestMapperTest {
     data.addField("list", Lists.newArrayList(1)).addField("int", 1).addField("str", "1");
     Object builder = mapper.map(data);
     assertEquals("", "index {[test][test][1234], source[{\"str\":\"1\",\"list\":[1],\"int\":1}]}",
-        ((IndexRequestBuilder) builder).request().toString());
+        builder.toString());
     res.add(builder);
 
     data = SyncDataTestUtil.update();
     data.setFieldNull("int").setFieldNull("str").setFieldNull("list");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":null,\"list\":null,\"int\":null}]}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":null,\"list\":null,\"int\":null}]}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.update();
     data.addField("int", 1381034L).addField("str", "1234").addField("list", Lists.newArrayList(2));
 
     builder = mapper.map(data);
-    assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":\"1234\",\"list\":[2],\"int\":1381034}]}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":\"1234\",\"list\":[2],\"int\":1381034}]}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
 
@@ -247,31 +247,31 @@ public class ESRequestMapperTest {
     data.setFieldNull("int").setFieldNull("str").setFieldNull("list");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":null,\"list\":null,\"int\":null}]}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":null,\"list\":null,\"int\":null}]}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     return res;
   }
 
   private static void setFieldNullRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     remoteCheck(client, innerSetFieldNull());
   }
 
-  private static void remoteCheck(AbstractClient client, List<Object> builderList) throws ExecutionException, InterruptedException {
+  private static void remoteCheck(RestHighLevelClient client, List<Object> builderList) throws IOException {
     for (Object builder : builderList) {
-      BulkRequestBuilder bulkRequestBuilder = null;
-      if (builder instanceof IndexRequestBuilder) {
-        bulkRequestBuilder = client.prepareBulk().add((IndexRequestBuilder) builder);
-      } else if (builder instanceof UpdateRequestBuilder) {
-        bulkRequestBuilder = client.prepareBulk().add((UpdateRequestBuilder) builder);
-      }  else if (builder instanceof DeleteRequestBuilder) {
-        bulkRequestBuilder = client.prepareBulk().add((DeleteRequestBuilder) builder);
+      BulkRequest bulkRequestBuilder = new BulkRequest();
+      if (builder instanceof IndexRequest) {
+        bulkRequestBuilder = bulkRequestBuilder.add((IndexRequest) builder);
+      } else if (builder instanceof UpdateRequest) {
+        bulkRequestBuilder = bulkRequestBuilder.add((UpdateRequest) builder);
+      }  else if (builder instanceof DeleteRequest) {
+        bulkRequestBuilder = bulkRequestBuilder.add((DeleteRequest) builder);
       } else {
         fail();
       }
-      BulkResponse bulkItemResponses = bulkRequestBuilder.execute().get();
+      BulkResponse bulkItemResponses = client.bulk(bulkRequestBuilder, RequestOptions.DEFAULT);
       assertFalse(Arrays.stream(bulkItemResponses.getItems()).anyMatch(BulkItemResponse::isFailed));
     }
   }
@@ -300,14 +300,14 @@ public class ESRequestMapperTest {
    * </pre>
    */
   public static void nestedByParentQueryRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     remoteCheck(client, innerNestedByParentQuery());
   }
 
   private static List<Object> innerNestedByParentQuery() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -322,8 +322,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("nested_id")).mergeToNestedById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested1][nested1][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=1234, roles={role=1381034, id=1234}}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested1][nested1][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=1234, roles={role=1381034, id=1234}}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.write("nested1", "nested1");
@@ -331,8 +331,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("nested_id")).mergeToNestedById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested1][nested1][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=2345, roles={role=2381034, id=2345}}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested1][nested1][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=2345, roles={role=2381034, id=2345}}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.update("role", "role").setId(1234L);
@@ -340,46 +340,10 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.fieldId("roles.id")).mergeToNestedById("roles", "title", "user_id");
 
     builder = mapper.map(data);
-    assertEquals("", "{\n" +
-            "  \"size\" : 1000,\n" +
-            "  \"query\" : {\n" +
-            "    \"bool\" : {\n" +
-            "      \"filter\" : [\n" +
-            "        {\n" +
-            "          \"nested\" : {\n" +
-            "            \"query\" : {\n" +
-            "              \"bool\" : {\n" +
-            "                \"filter\" : [\n" +
-            "                  {\n" +
-            "                    \"term\" : {\n" +
-            "                      \"roles.id\" : {\n" +
-            "                        \"value\" : 1234,\n" +
-            "                        \"boost\" : 1.0\n" +
-            "                      }\n" +
-            "                    }\n" +
-            "                  }\n" +
-            "                ],\n" +
-            "                \"disable_coord\" : false,\n" +
-            "                \"adjust_pure_negative\" : true,\n" +
-            "                \"boost\" : 1.0\n" +
-            "              }\n" +
-            "            },\n" +
-            "            \"path\" : \"roles\",\n" +
-            "            \"ignore_unmapped\" : false,\n" +
-            "            \"score_mode\" : \"avg\",\n" +
-            "            \"boost\" : 1.0\n" +
-            "          }\n" +
-            "        }\n" +
-            "      ],\n" +
-            "      \"disable_coord\" : false,\n" +
-            "      \"adjust_pure_negative\" : true,\n" +
-            "      \"boost\" : 1.0\n" +
-            "    }\n" +
-            "  }\n" +
-            "}",
-        ((AbstractBulkByScrollRequestBuilder)builder).source().toString());
+    assertEquals("", "{\"size\":1000,\"query\":{\"bool\":{\"filter\":[{\"nested\":{\"query\":{\"bool\":{\"filter\":[{\"term\":{\"roles.id\":{\"value\":1234,\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}},\"path\":\"roles\",\"ignore_unmapped\":false,\"score_mode\":\"avg\",\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}}",
+        ((UpdateByQueryRequest)builder).getSearchRequest().source().toString());
     assertEquals("", "update-by-query [nested1] updated with Script{type=inline, lang='painless', idOrCode='def target = ctx._source.roles.find(e -> e.id.equals(params.id));if (target != null) { target.user_id = params.user_id;target.title = params.title;}', options={}, params={title=b, user_id=2, id=1234}}",
-        ((UpdateByQueryRequestBuilder) builder).request().toString());
+        ((UpdateByQueryRequest) builder).getDescription());
     res.add(builder);
 
     data = SyncDataTestUtil.delete("role", "role");
@@ -387,46 +351,10 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.fieldId("roles.id")).mergeToNestedById("roles", "role");
 
     builder = mapper.map(data);
-    assertEquals("", "{\n" +
-            "  \"size\" : 1000,\n" +
-            "  \"query\" : {\n" +
-            "    \"bool\" : {\n" +
-            "      \"filter\" : [\n" +
-            "        {\n" +
-            "          \"nested\" : {\n" +
-            "            \"query\" : {\n" +
-            "              \"bool\" : {\n" +
-            "                \"filter\" : [\n" +
-            "                  {\n" +
-            "                    \"term\" : {\n" +
-            "                      \"roles.id\" : {\n" +
-            "                        \"value\" : 1234,\n" +
-            "                        \"boost\" : 1.0\n" +
-            "                      }\n" +
-            "                    }\n" +
-            "                  }\n" +
-            "                ],\n" +
-            "                \"disable_coord\" : false,\n" +
-            "                \"adjust_pure_negative\" : true,\n" +
-            "                \"boost\" : 1.0\n" +
-            "              }\n" +
-            "            },\n" +
-            "            \"path\" : \"roles\",\n" +
-            "            \"ignore_unmapped\" : false,\n" +
-            "            \"score_mode\" : \"avg\",\n" +
-            "            \"boost\" : 1.0\n" +
-            "          }\n" +
-            "        }\n" +
-            "      ],\n" +
-            "      \"disable_coord\" : false,\n" +
-            "      \"adjust_pure_negative\" : true,\n" +
-            "      \"boost\" : 1.0\n" +
-            "    }\n" +
-            "  }\n" +
-            "}",
-        ((AbstractBulkByScrollRequestBuilder)builder).source().toString());
+    assertEquals("", "{\"size\":1000,\"query\":{\"bool\":{\"filter\":[{\"nested\":{\"query\":{\"bool\":{\"filter\":[{\"term\":{\"roles.id\":{\"value\":1234,\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}},\"path\":\"roles\",\"ignore_unmapped\":false,\"score_mode\":\"avg\",\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}}",
+        ((UpdateByQueryRequest)builder).getSearchRequest().source().toString());
     assertEquals("", "update-by-query [nested1] updated with Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(e -> e.id.equals(params.id)); ', options={}, params={id=1234}}",
-        ((UpdateByQueryRequestBuilder) builder).request().toString());
+        ((UpdateByQueryRequest) builder).getDescription());
     res.add(builder);
 
     return res;
@@ -435,7 +363,7 @@ public class ESRequestMapperTest {
   private static List<Object> innerNestedByQuery() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -450,8 +378,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("nested_id")).mergeToNestedById("roles", "user_id", "username");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=1234, roles={user_id=1, id=1234, username=1}}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=1234, roles={user_id=1, id=1234, username=1}}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.write("nested2", "nested2");
@@ -459,8 +387,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("nested_id")).mergeToNestedById("roles", "user_id", "username");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=2345, roles={user_id=1, id=2345, username=1}}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=2345, roles={user_id=1, id=2345, username=1}}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.write("nested2", "nested2");
@@ -468,8 +396,8 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.id("nested_id")).mergeToNestedById("roles", "user_id", "username");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=3456, roles={user_id=2, id=3456, username=2}}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='if (ctx._source.roles.find(e -> e.id.equals(params.id)) == null) {  ctx._source.roles.add(params.roles);}', options={}, params={id=3456, roles={user_id=2, id=3456, username=2}}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     /**/
@@ -480,8 +408,8 @@ public class ESRequestMapperTest {
     data.removeField("user_id");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='def target = ctx._source.roles.find(e -> e.user_id.equals(params.user_id));if (target != null) { target.username = params.username;}', options={}, params={user_id=1, username=11}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='def target = ctx._source.roles.find(e -> e.user_id.equals(params.user_id));if (target != null) { target.username = params.username;}', options={}, params={user_id=1, username=11}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     data = SyncDataTestUtil.update("user", "user").setId(1);
@@ -489,46 +417,10 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.fieldId("roles.user_id")).mergeToNestedByQuery("roles", Filter.fieldId("user_id"), "username");
 
     builder = mapper.map(data);
-    assertEquals("", "{\n" +
-            "  \"size\" : 1000,\n" +
-            "  \"query\" : {\n" +
-            "    \"bool\" : {\n" +
-            "      \"filter\" : [\n" +
-            "        {\n" +
-            "          \"nested\" : {\n" +
-            "            \"query\" : {\n" +
-            "              \"bool\" : {\n" +
-            "                \"filter\" : [\n" +
-            "                  {\n" +
-            "                    \"term\" : {\n" +
-            "                      \"roles.user_id\" : {\n" +
-            "                        \"value\" : 1,\n" +
-            "                        \"boost\" : 1.0\n" +
-            "                      }\n" +
-            "                    }\n" +
-            "                  }\n" +
-            "                ],\n" +
-            "                \"disable_coord\" : false,\n" +
-            "                \"adjust_pure_negative\" : true,\n" +
-            "                \"boost\" : 1.0\n" +
-            "              }\n" +
-            "            },\n" +
-            "            \"path\" : \"roles\",\n" +
-            "            \"ignore_unmapped\" : false,\n" +
-            "            \"score_mode\" : \"avg\",\n" +
-            "            \"boost\" : 1.0\n" +
-            "          }\n" +
-            "        }\n" +
-            "      ],\n" +
-            "      \"disable_coord\" : false,\n" +
-            "      \"adjust_pure_negative\" : true,\n" +
-            "      \"boost\" : 1.0\n" +
-            "    }\n" +
-            "  }\n" +
-            "}",
-        ((AbstractBulkByScrollRequestBuilder)builder).source().toString());
+    assertEquals("", "{\"size\":1000,\"query\":{\"bool\":{\"filter\":[{\"nested\":{\"query\":{\"bool\":{\"filter\":[{\"term\":{\"roles.user_id\":{\"value\":1,\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}},\"path\":\"roles\",\"ignore_unmapped\":false,\"score_mode\":\"avg\",\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}}",
+        ((UpdateByQueryRequest)builder).getSearchRequest().source().toString());
     assertEquals("", "update-by-query [nested2] updated with Script{type=inline, lang='painless', idOrCode='def target = ctx._source.roles.find(e -> e.user_id.equals(params.user_id));if (target != null) { target.username = params.username;}', options={}, params={user_id=1, username=b}}",
-        ((UpdateByQueryRequestBuilder) builder).request().toString());
+        ((UpdateByQueryRequest) builder).getDescription());
     res.add(builder);
 
 
@@ -538,8 +430,8 @@ public class ESRequestMapperTest {
     data.removeField("user_id");
 
     builder = mapper.map(data);
-    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(e -> e.user_id.equals(params.user_id)); ', options={}, params={user_id=2}}], detect_noop[true]}",
-        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
+//    assertEquals("", "update {[nested2][nested2][1], script[Script{type=inline, lang='painless', idOrCode='ctx._source.roles.removeIf(e -> e.user_id.equals(params.user_id)); ', options={}, params={user_id=2}}], detect_noop[true]}",
+//        ElasticsearchChannel.toString(((UpdateRequestBuilder) builder).request()));
     res.add(builder);
 
     return res;
@@ -551,13 +443,13 @@ public class ESRequestMapperTest {
   }
 
   public static void nestedByQueryRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     remoteCheck(client, innerNestedByQuery());
   }
 
   @Test
   public void nestedWithExtraQuery() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -567,46 +459,10 @@ public class ESRequestMapperTest {
     data.esScriptUpdate(Filter.fieldId("roles.id")).mergeToNestedById("roles", "title", "user_id", "username");
 
     Object builder = mapper.map(data);
-    assertEquals("", "{\n" +
-            "  \"size\" : 1000,\n" +
-            "  \"query\" : {\n" +
-            "    \"bool\" : {\n" +
-            "      \"filter\" : [\n" +
-            "        {\n" +
-            "          \"nested\" : {\n" +
-            "            \"query\" : {\n" +
-            "              \"bool\" : {\n" +
-            "                \"filter\" : [\n" +
-            "                  {\n" +
-            "                    \"term\" : {\n" +
-            "                      \"roles.id\" : {\n" +
-            "                        \"value\" : 1234,\n" +
-            "                        \"boost\" : 1.0\n" +
-            "                      }\n" +
-            "                    }\n" +
-            "                  }\n" +
-            "                ],\n" +
-            "                \"disable_coord\" : false,\n" +
-            "                \"adjust_pure_negative\" : true,\n" +
-            "                \"boost\" : 1.0\n" +
-            "              }\n" +
-            "            },\n" +
-            "            \"path\" : \"roles\",\n" +
-            "            \"ignore_unmapped\" : false,\n" +
-            "            \"score_mode\" : \"avg\",\n" +
-            "            \"boost\" : 1.0\n" +
-            "          }\n" +
-            "        }\n" +
-            "      ],\n" +
-            "      \"disable_coord\" : false,\n" +
-            "      \"adjust_pure_negative\" : true,\n" +
-            "      \"boost\" : 1.0\n" +
-            "    }\n" +
-            "  }\n" +
-            "}",
-        ((AbstractBulkByScrollRequestBuilder)builder).source().toString());
+    assertEquals("", "{\"size\":1000,\"query\":{\"bool\":{\"filter\":[{\"nested\":{\"query\":{\"bool\":{\"filter\":[{\"term\":{\"roles.id\":{\"value\":1234,\"boost\":1.0}}}],\"adjust_pure_negative\":true,\"boost\":1.0}},\"path\":\"roles\",\"ignore_unmapped\":false,\"score_mode\":\"avg\",\"boost\":1.0}}],\"adjust_pure_negative\":true,\"boost\":1.0}}}",
+        ((UpdateByQueryRequest)builder).getSearchRequest().source().toString());
     assertEquals("", "update-by-query [nested3] updated with Script{type=inline, lang='painless', idOrCode='def target = ctx._source.roles.find(e -> e.id.equals(params.id));if (target != null) { target.user_id = params.user_id;target.title = params.title;target.username = params.username;}', options={}, params={id=1234, title=b, user_id=2, username=null}}",
-        ((UpdateByQueryRequestBuilder) builder).request().toString());
+        ((UpdateByQueryRequest) builder).getDescription());
   }
 
   public static void main(String[] args) throws Exception {
