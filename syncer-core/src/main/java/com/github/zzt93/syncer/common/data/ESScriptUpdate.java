@@ -349,7 +349,9 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
     if (script != null && this.params != null) {
       code.append(script);
       KVMapper.map(this.params, this.params);
-      params.putAll(this.params);
+      for (Map.Entry<String, Object> e : this.params.entrySet()) {
+        params.put(e.getKey(), scriptConvert(e.getValue()));
+      }
       return;
     }
     generateFromMergeToList(code, params);
