@@ -49,9 +49,15 @@ import static java.util.Collections.singletonList;
  */
 public class MongoV4MasterConnector extends MongoConnectorBase {
 
-  private static final Gson gson = new GsonBuilder().setLongSerializationPolicy(LongSerializationPolicy.STRING).create();
-  private static final JsonWriterSettings jsonWriterSettings = JsonWriterSettings.builder()
-      .int64Converter((value, writer) -> writer.writeString(value.toString()))
+  static final Gson gson = new GsonBuilder().setLongSerializationPolicy(LongSerializationPolicy.STRING).create();
+  static final String LONG = "long";
+  static final JsonWriterSettings jsonWriterSettings = JsonWriterSettings.builder()
+      .int64Converter((value, writer) -> {
+        writer.writeStartObject();
+        writer.writeName(LONG);
+        writer.writeString(Long.toString(value));
+        writer.writeEndObject();
+      })
       .objectIdConverter((value, writer) -> writer.writeString(value.toHexString()))
       .build();
 
@@ -189,7 +195,16 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
   }
 
   private Object getId(ChangeStreamDocument<Document> d) {
-    return gson.fromJson(d.getDocumentKey().toJson(jsonWriterSettings), Map.class).get(ID);
+    BsonDocument documentKey = d.getDocumentKey();
+    return getId(documentKey);
+  }
+
+  static Object getId(BsonDocument documentKey) {
+    Object o = gson.fromJson(documentKey.toJson(jsonWriterSettings), Map.class).get(ID);
+    if (o instanceof Map && ((Map) o).containsKey(LONG)) {
+      return Long.parseLong((String) ((Map) o).get(LONG));
+    }
+    return o;
   }
 
   private Document getFullDocument(ChangeStreamDocument<Document> d) {
