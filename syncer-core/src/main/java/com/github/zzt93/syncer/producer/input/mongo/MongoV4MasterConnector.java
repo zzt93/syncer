@@ -35,9 +35,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector.ID;
@@ -49,12 +47,22 @@ import static java.util.Collections.singletonList;
  */
 public class MongoV4MasterConnector extends MongoConnectorBase {
 
-  static final Gson gson = new GsonBuilder().setLongSerializationPolicy(LongSerializationPolicy.STRING).create();
-  static final String LONG = "long";
+  static final String LONG = "$$long$$";
+  static final String DATE = "$$date$$";
+  static final Gson gson = new GsonBuilder()
+      .setLongSerializationPolicy(LongSerializationPolicy.STRING)
+      .create();
+  // TODO 2020/4/4 https://docs.mongodb.com/manual/reference/operator/query/type/#document-type-available-types
   static final JsonWriterSettings jsonWriterSettings = JsonWriterSettings.builder()
       .int64Converter((value, writer) -> {
         writer.writeStartObject();
         writer.writeName(LONG);
+        writer.writeString(Long.toString(value));
+        writer.writeEndObject();
+      })
+      .dateTimeConverter((value, writer) -> {
+        writer.writeStartObject();
+        writer.writeName(DATE);
         writer.writeString(Long.toString(value));
         writer.writeEndObject();
       })
@@ -216,7 +224,8 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
     if (bsonConversion) {
       Document fullDocument = changeStreamDocument.getFullDocument();
       if (fullDocument == null) {
-        return gson.fromJson(updateDescription.getUpdatedFields().toJson(jsonWriterSettings), Map.class);
+        Map updated = gson.fromJson(updateDescription.getUpdatedFields().toJson(jsonWriterSettings), Map.class);
+        return (Map) parseBson(updated);
       }
       HashMap<String, Object> res = new HashMap<>();
       for (String key : updateDescription.getUpdatedFields().keySet()) {
@@ -225,6 +234,20 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
       return res;
     }
     return updateDescription.getUpdatedFields();
+  }
+
+  static Object parseBson(Map<String, Object> map) {
+    Set<Map.Entry<String, Object>> set = map.entrySet();
+    for (Map.Entry<String, Object> o : set) {
+      if (set.size() == 1 && o.getKey().equals(LONG)) {
+        return Long.parseLong((String) o.getValue());
+      } else if (set.size() == 1 && o.getKey().equals(DATE)) {
+        return new Date(Long.parseLong((String) o.getValue()));
+      } else if (o.getValue() instanceof Map) {
+        o.setValue(parseBson((Map<String, Object>) o.getValue()));
+      }
+    }
+    return map;
   }
 
   private void addRemovedFields(HashMap<String, Object> updated, List<String> removedFields) {
