@@ -42,6 +42,7 @@ function generateMysqlTestData() {
     cd ${TEST_DIR}
 }
 
+int='^[0-9]+$'
 function generateMongoTestData() {
     logi "---------------------"
     logi "generateMongoTestData"
@@ -51,7 +52,7 @@ function generateMongoTestData() {
 
     mkdir -p ${TEST_DIR}/data/mongo/
     cd ${TEST_DIR}/../syncer-core/
-    if [ -z "$start" ]; then
+    if ! [[ "$start" =~ $int ]]; then
       mvn test -q -Dtest=com.github.zzt93.syncer.common.data.MongoGenerator -DargLine="-Dnum=$1 -DfileName=${TEST_DIR}/data/mongo/simple_type.json" >> "${LOG_FILE}"
     else
       mvn test -q -Dtest=com.github.zzt93.syncer.common.data.MongoGenerator -DargLine="-Dnum=$1 -Dstart=$start -DfileName=${TEST_DIR}/data/mongo/simple_type.json" >> "${LOG_FILE}"

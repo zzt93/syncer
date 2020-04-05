@@ -16,7 +16,7 @@ function setup() {
 function test-mongo-input() {
     docker stop syncer
     # Given
-    bash script/generate_data.sh ${num} ${env}
+    bash script/generate_data.sh ${num} ${env} notId
     bash script/load_data.sh ${env}
 
     docker start syncer
