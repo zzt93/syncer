@@ -5,8 +5,10 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.config.common.ElasticsearchConnection;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
+import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.config.consumer.output.elastic.Elasticsearch;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
@@ -17,28 +19,40 @@ import com.github.zzt93.syncer.consumer.output.failure.FailureEntry;
 import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpStatus;
+import org.apache.http.client.methods.HttpGet;
+import org.elasticsearch.Version;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.DocWriteRequest;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
 import org.elasticsearch.action.update.UpdateRequest;
+import org.elasticsearch.client.Request;
 import org.elasticsearch.client.RequestOptions;
+import org.elasticsearch.client.Response;
 import org.elasticsearch.client.RestHighLevelClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
-import org.elasticsearch.index.reindex.*;
+import org.elasticsearch.index.reindex.AbstractBulkByScrollRequest;
+import org.elasticsearch.index.reindex.BulkByScrollResponse;
+import org.elasticsearch.index.reindex.DeleteByQueryRequest;
+import org.elasticsearch.index.reindex.UpdateByQueryRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringJoiner;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -49,6 +63,7 @@ import java.util.function.Function;
  */
 public class ElasticsearchChannel implements BufferedChannel<DocWriteRequest> {
 
+  private static Gson gson = new Gson();
   private final BatchBuffer<SyncWrapper<DocWriteRequest>> batchBuffer;
   private final Ack ack;
   // https://www.elastic.co/guide/en/elasticsearch/client/java-rest/current/java-rest-low-usage-maven.html
@@ -74,7 +89,7 @@ public class ElasticsearchChannel implements BufferedChannel<DocWriteRequest> {
     refreshInterval = elasticsearch.getRefreshInMillis();
     this.batchBuffer = new BatchBuffer<>(elasticsearch.getBatch());
     this.batchConfig = elasticsearch.getBatch();
-    this.esRequestMapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
+    this.esRequestMapper = new ESRequestMapper(client, updateRequestMappingByVersion(elasticsearch.getRequestMapping()));
     this.ack = ack;
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
     Path path = Paths.get(outputMeta.getFailureLogDir(), id);
@@ -82,6 +97,36 @@ public class ElasticsearchChannel implements BufferedChannel<DocWriteRequest> {
     });
   }
 
+  private ESRequestMapping updateRequestMappingByVersion(ESRequestMapping esRequestMapping) {
+    try {
+      Version version = getVersion(client);
+      if (version.before(Version.V_6_1_0)) {
+        logger.warn("Current ES rest client not compatible with `retryOnUpdateConflict` parameter, ignore it");
+        esRequestMapping.setRetryOnUpdateConflict(0);
+      }
+    } catch (IOException e) {
+      logger.error("", e);
+      throw new InvalidConfigException("Fail to fetch ES version");
+    }
+    return esRequestMapping;
+  }
+
+  static Version getVersion(RestHighLevelClient client) throws IOException {
+    Response response = client.getLowLevelClient().performRequest(new Request(HttpGet.METHOD_NAME, "/"));
+    if (response.getStatusLine().getStatusCode() != HttpStatus.SC_OK) {
+      throw new InvalidConfigException();
+    }
+    HttpEntity entity = response.getEntity();
+    ByteArrayOutputStream result = new ByteArrayOutputStream();
+    byte[] buffer = new byte[(int) entity.getContentLength()];
+    int length;
+    while ((length = entity.getContent().read(buffer)) != -1) {
+      result.write(buffer, 0, length);
+    }
+    String json = result.toString("UTF-8");
+    Map map = gson.fromJson(json, Map.class);
+    return Version.fromString((String) ((Map) map.get("version")).get("number"));
+  }
 
   @ThreadSafe(safe = {ESRequestMapper.class, BatchBuffer.class})
   @Override

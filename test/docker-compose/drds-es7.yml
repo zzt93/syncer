@@ -51,24 +51,29 @@ services:
     - dbnet
 
   elasticsearch:
-    command: -E cluster.name=test-cluster -E network.host=_site_
     image: elasticsearch:7.6.1
-    container_name: elasticsearch
+    container_name: es7
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
       interval: 30s
       timeout: 30s
       retries: 3
-    environment:
-    - "ES_JAVA_OPTS=-Xmx512m -Xms512m"
-    - bootstrap.memory_local=true
-    - cluster.name=test-cluster
     ports:
     - 49200:9200
     - 49300:9300
     networks:
     - dbnet
-
+    environment:
+      - node.name=es01
+      - cluster.name=test-cluster
+#      - discovery.seed_hosts=es01,es02
+      - cluster.initial_master_nodes=es01
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
 
   syncer:
     image: syncer:test
@@ -93,7 +98,7 @@ services:
     - ${TEST_DIR}/data:/data
     - ${TEST_DIR}/data/syncer/log:/log
     environment:
-    - ES_ADDR=elasticsearch
+    - ES_ADDR="elasticsearch:9200"
     - ES_CLUSTER=test-cluster
     - MYSQL_ADDR="mysql_0:3306","mysql_1:3306","mysql_2:3306"
     - MYSQL_IN_PASS=root

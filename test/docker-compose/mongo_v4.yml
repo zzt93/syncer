@@ -56,7 +56,7 @@ services:
     - ${TEST_DIR}/data:/data
     - ${TEST_DIR}/data/syncer/log:/log
     environment:
-    - ES_ADDR=elasticsearch
+    - ES_ADDR="elasticsearch:9200"
     - ES_CLUSTER=test-cluster
     - MYSQL_IN=mysql_0
     - MYSQL_IN_PASS=root

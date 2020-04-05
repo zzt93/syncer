@@ -225,7 +225,6 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   private boolean succ(long updateCount) {
-    // TODO 2019-10-28 -1?
     return updateCount != Statement.EXECUTE_FAILED;
   }
 

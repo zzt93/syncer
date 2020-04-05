@@ -23,6 +23,8 @@ function test-restart() {
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
+    waitSyncer $num
+
     assertLogNotExist syncer Duplicate
 
     # Then: sync to es

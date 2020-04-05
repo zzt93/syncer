@@ -23,6 +23,8 @@ function test-latest() {
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
+    waitSyncer $num
+
     # Then: count == num
     cmpFromTo extractConst extractESCount ${num}
 

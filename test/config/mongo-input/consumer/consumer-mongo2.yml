@@ -34,7 +34,7 @@ output:
   elasticsearch:
     connection:
       clusterName: ${ES_CLUSTER}
-      clusterNodes: ["${ES_ADDR}:9300"]
+      clusterNodes: [${ES_ADDR}]
     requestMapping: # mapping from input data to es request
 
       retryOnUpdateConflict: 3

@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.google.common.collect.Lists;
+import org.elasticsearch.Version;
 import org.elasticsearch.action.bulk.BulkItemResponse;
 import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.bulk.BulkResponse;
@@ -81,6 +82,11 @@ public class ElasticsearchChannelTest {
         new UpdateRequest("test", "test", "1")
 //      client.prepareUpdate("task-0", "task", "13031005")
             .script(meta);
+  }
+
+  public static void version() throws Exception {
+    RestHighLevelClient client = ElasticTestUtil.getDevClient();
+    Version version = ElasticsearchChannel.getVersion(client);
   }
 
   @Test

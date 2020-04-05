@@ -24,7 +24,7 @@ function test-non-latest() {
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
-    waitSyncer 60
+    waitSyncer $num
 
     # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
@@ -44,6 +44,8 @@ function cleanup() {
     cleanupAll
 }
 
-setup
-test-non-latest
-cleanup
+if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
+  setup
+  test-non-latest
+  cleanup
+fi

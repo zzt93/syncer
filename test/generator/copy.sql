@@ -1,5 +1,5 @@
 
-CREATE TABLE IF NOT EXISTS  `toCopy` (
+CREATE TABLE IF NOT EXISTS  `to_copy` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT ,
   `title` varchar(255) DEFAULT '',
   `content` longtext,
@@ -16,7 +16,7 @@ CREATE TABLE IF NOT EXISTS  `toCopy` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 ROW_FORMAT=COMPACT;
 
 
-CREATE TABLE IF NOT EXISTS  `toCopy_bak` (
+CREATE TABLE IF NOT EXISTS  `to_copy_bak` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT ,
   `title` varchar(255) DEFAULT '',
   `content` longtext,

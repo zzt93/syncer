@@ -51,24 +51,28 @@ services:
     - dbnet
 
   elasticsearch:
-    command: -E cluster.name=test-cluster -E network.host=_site_
-    image: elasticsearch:5.6
-    container_name: es5
+    image: elasticsearch:6.6.0
+    container_name: es6
     healthcheck:
       test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
       interval: 30s
       timeout: 30s
       retries: 3
-    environment:
-    - "ES_JAVA_OPTS=-Xmx512m -Xms512m"
-    - bootstrap.memory_local=true
-    - cluster.name=test-cluster
     ports:
     - 49200:9200
     - 49300:9300
     networks:
     - dbnet
-
+    environment:
+      - node.name=es01
+      - cluster.name=test-cluster
+#      - discovery.seed_hosts=es01,es02
+      - bootstrap.memory_lock=true
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
 
   syncer:
     image: syncer:test

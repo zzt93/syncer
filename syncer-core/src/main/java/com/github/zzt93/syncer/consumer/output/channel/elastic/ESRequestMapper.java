@@ -7,15 +7,11 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
-import com.google.common.collect.Lists;
+import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestHighLevelClient;
-import org.apache.lucene.search.join.ScoreMode;
-import org.elasticsearch.action.update.UpdateRequestBuilder;
-import org.elasticsearch.client.support.AbstractClient;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
 import org.elasticsearch.index.reindex.DeleteByQueryRequest;
@@ -28,6 +24,7 @@ import org.springframework.expression.Expression;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
+import java.sql.Timestamp;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
@@ -71,10 +68,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     String id = data.getId() == null ? null : data.getId().toString();
     switch (data.getType()) {
       case WRITE:
-        if (esRequestMapping.getNoUseIdForIndex()) {
-          return new IndexRequest(index, type).source(requestBodyMapper.map(data));
-        }
-        return new IndexRequest(index, type, id).source(requestBodyMapper.map(data));
+        return new IndexRequest(index, type, id).source(getMap(data));
       case DELETE:
         logger.info("Deleting doc from Elasticsearch, may affect performance");
         if (id != null) {
@@ -86,7 +80,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
         // Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
         if (id != null) { // update doc with `id`
           if (needScript(data)) { // scripted updates: update using script
-            HashMap<String, Object> map = requestBodyMapper.map(data);
+            HashMap<String, Object> map = getMap(data);
             UpdateRequest updateRequest = new UpdateRequest(index, type, id)
                 .script(getScript(data, map))
                 .retryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
@@ -95,7 +89,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
             }
             return updateRequest;
           } else { // update with partial doc
-            return new UpdateRequest(index, type, id).doc(requestBodyMapper.map(data))
+            return new UpdateRequest(index, type, id).doc(getMap(data))
                 .docAsUpsert(esRequestMapping.isUpsert()) // doc_as_upsert
                 .retryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
           }
@@ -106,6 +100,16 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
       default:
         throw new IllegalArgumentException("Unsupported row event type: " + data);
     }
+  }
+
+  private HashMap<String, Object> getMap(SyncData data) {
+    HashMap<String, Object> res = requestBodyMapper.map(data);
+    for (Entry<String, Object> e : res.entrySet()) {
+      if (e.getValue() instanceof Timestamp) {
+        e.setValue(e.getValue().toString());
+      }
+    }
+    return res;
   }
 
   private static boolean needScript(SyncData data) {

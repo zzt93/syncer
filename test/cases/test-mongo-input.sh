@@ -24,6 +24,8 @@ function test-mongo-input() {
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
+    waitSyncer $num
+
     # Then: count == num * 2
     cmpFromTo extractMongoCount extractESCount 0 simple
 
@@ -31,6 +33,8 @@ function test-mongo-input() {
     # Given
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
+
+    waitSyncer $num
 
     # Then: count == num * 3
     cmpFromTo extractMongoCount extractESCount 0 simple

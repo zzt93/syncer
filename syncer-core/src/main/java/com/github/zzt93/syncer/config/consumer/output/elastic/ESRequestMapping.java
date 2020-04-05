@@ -10,11 +10,11 @@ import java.util.LinkedHashMap;
  */
 public class ESRequestMapping {
 
+  // TODO 2020/4/3 change those config to FilterMethod
   private String index = "repo";
   private String type = "entity";
   private LinkedHashMap<String, Object> fieldsMapping = new LinkedHashMap<>();
-  private boolean noUseIdForIndex = false;
-  private int retryOnUpdateConflict = 0;
+  private int retryOnUpdateConflict = 3;
   private boolean upsert = false;
 
   public ESRequestMapping() {
@@ -47,14 +47,6 @@ public class ESRequestMapping {
 
   public void setFieldsMapping(LinkedHashMap<String, Object> fieldsMapping) {
     this.fieldsMapping = fieldsMapping;
-  }
-
-  public boolean getNoUseIdForIndex() {
-    return noUseIdForIndex;
-  }
-
-  public void setNoUseIdForIndex(boolean noUseIdForIndex) {
-    this.noUseIdForIndex = noUseIdForIndex;
   }
 
   public int getRetryOnUpdateConflict() {

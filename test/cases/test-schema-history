@@ -41,6 +41,8 @@ function test-non-latest() {
     bash script/generate_data.sh ${num} ${env} $(( 3 * num ))
     bash script/load_data.sh ${env}
 
+    waitSyncer $num
+
     # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
     # Then: sync to mysql

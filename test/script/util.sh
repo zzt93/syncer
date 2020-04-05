@@ -13,8 +13,17 @@ function extractESCount() {
     local db=$2
     local table=$3
 
-    local response=`curl -s -X GET "localhost:49200/${db}*/${table}/_count" -H 'Content-Type: application/json'`
+    local response=$(curl -s -X GET "localhost:49200/${db}*/${table}/_count" -H 'Content-Type: application/json')
     logi ${response} | egrep -o '\{"count":[0-9]+' | awk -F ':' '{print $NF}'
+}
+
+function extractES7Count() {
+    local instance=$1
+    local db=$2
+    local table=$3
+
+    local response=$(curl -s -X GET "localhost:49200/${table}*/${table}/_count" -H 'Content-Type: application/json')
+    logi "${response}" | egrep -o '\{"count":[0-9]+' | awk -F ':' '{print $NF}'
 }
 
 
@@ -94,10 +103,11 @@ function configEnvVar() {
 }
 
 function waitSyncer() {
-    times=$1
-    if [[ -z ${times} ]]; then
-        times=3
+    num=$1
+    if [[ -z ${num} ]]; then
+        num=100
     fi
+    times=$(( num * 3 / 100 ))
     for (( i = 0; i < $times; ++i )); do
         printf "Waiting Syncer to warm up .\r"
         sleep 1
@@ -115,7 +125,6 @@ function extractConst() {
 
 
 function cmpFromTo() {
-    waitSyncer
 
     fromF=$1
     toF=$2

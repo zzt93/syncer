@@ -77,7 +77,7 @@ output:
     requestMapping: # mapping from input data to es request
 
       retryOnUpdateConflict: 3
-      index: "repo + getExtra('suffix')" # default: repo
+      index: "entity + getExtra('suffix')" # default: repo
 
       fieldsMapping: # default: fields.*.flatten
         "fields": "fields.*.flatten"

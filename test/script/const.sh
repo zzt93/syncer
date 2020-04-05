@@ -7,7 +7,7 @@ db2table["test"]="news correctness types"
 # tables in simple.sql
 db2table["simple"]="simple_type"
 db2table["discard"]="toDiscard"
-db2table["copy"]="toCopy"
+db2table["copy"]="to_copy"
 
 defaultDBs="test simple"
 allDBs=""
