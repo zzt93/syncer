@@ -27,15 +27,24 @@ public class MongoGenerator {
   @Test
   public void generate() throws FileNotFoundException {
     int num = Integer.parseInt(System.getProperty("num"));
+    String start = System.getProperty("start");
+    Integer idStart = null;
+    if (start != null) {
+      idStart = Integer.parseInt(start);
+    }
     String fileName = System.getProperty("fileName");
     PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
     List<NestedOut> res = new ArrayList<>(num);
     for (int i = 0; i < num; i++) {
-      res.add(NestedOut.random());
+      res.add(NestedOut.random(idStart != null ? idStart + i : null));
     }
     out.print(gson.toJson(res));
     out.flush();
     out.close();
+  }
+
+  private static String randomStr() {
+    return RandomDataUtil.random(2, 10, true);
   }
 
   private static class Simple {
@@ -61,14 +70,10 @@ public class MongoGenerator {
 
     private static Simple random() {
       return new Simple(
-        r.nextLong(), RandomDataUtil.randomByte(), r.nextLong(), RandomDataUtil.randomAscii(), randomStr(),
-        RandomDataUtil.randomDecimal(), r.nextDouble() + r.nextInt(), RandomDataUtil.randomTimestamp()
+          r.nextLong(), RandomDataUtil.randomByte(), r.nextLong(), RandomDataUtil.randomAscii(), randomStr(),
+          RandomDataUtil.randomDecimal(), r.nextDouble() + r.nextInt(), RandomDataUtil.randomTimestamp()
       );
     }
-  }
-
-  private static String randomStr() {
-    return RandomDataUtil.random(2, 10, true);
   }
 
   private static class NestedIn {
@@ -102,6 +107,7 @@ public class MongoGenerator {
 
   private static class NestedOut {
 
+    private long _id;
     private List<Simple> simples;
     private NestedIn nestedIn;
 
@@ -109,16 +115,22 @@ public class MongoGenerator {
       this.simples = simples;
       this.nestedIn = nestedIn;
     }
+    NestedOut(long id, List<Simple> simples, NestedIn nestedIn) {
+      this._id = id;
+      this.simples = simples;
+      this.nestedIn = nestedIn;
+    }
 
-    private static NestedOut random() {
+    private static NestedOut random(Integer id) {
       int i = r.nextInt(10);
       ArrayList<Simple> simples = new ArrayList<>();
       for (int c = 0; c < i; c++) {
         simples.add(Simple.random());
       }
-      return new NestedOut(
-        simples, NestedIn.random()
-      );
+      if (id == null) {
+        return new NestedOut(simples, NestedIn.random());
+      }
+      return new NestedOut(id, simples, NestedIn.random());
     }
   }
 }

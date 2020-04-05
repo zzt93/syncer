@@ -21,7 +21,7 @@ function test-mongo-input() {
 
     docker start syncer
     # Given
-    bash script/generate_data.sh ${num} ${env} ${num}
+    bash script/generate_data.sh ${num} ${env} 0
     bash script/load_data.sh ${env}
 
     # Then: count == num * 2
