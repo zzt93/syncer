@@ -1,7 +1,8 @@
 package com.github.zzt93.syncer.common.data;
 
 import com.github.zzt93.syncer.common.util.RandomDataUtil;
-import com.google.gson.Gson;
+import org.bson.*;
+import org.bson.types.Decimal128;
 import org.junit.Test;
 
 import java.io.BufferedOutputStream;
@@ -14,6 +15,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Random;
+import java.util.stream.Collectors;
 
 /**
  * @author zzt
@@ -21,7 +23,6 @@ import java.util.Random;
 public class MongoGenerator {
 
 
-  private static Gson gson = new Gson();
   private static Random r = new Random();
 
   @Test
@@ -34,34 +35,38 @@ public class MongoGenerator {
     }
     String fileName = System.getProperty("fileName");
     PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
-    List<NestedOut> res = new ArrayList<>(num);
+    List<BsonDocument> res = new ArrayList<>(num);
     for (int i = 0; i < num; i++) {
       res.add(NestedOut.random(idStart != null ? idStart + i : null));
     }
-    out.print(gson.toJson(res));
+    out.print(res.stream().map(BsonDocument::toJson).collect(Collectors.joining(",", "[", "]")));
     out.flush();
     out.close();
+  }
+
+  private interface Doc {
+    BsonDocument toDoc();
   }
 
   private static String randomStr() {
     return RandomDataUtil.random(2, 10, true);
   }
 
-  private static class Simple {
-    private long id;
-    private byte tinyint;
-    private long bigint;
-    private char Char;
-    private String varchar;
-    private BigDecimal decimal;
-    private double aDouble;
-    private Timestamp timestamp;
+  private static class Simple implements Doc{
+    private final long id;
+    private final byte tinyint;
+    private final long bigint;
+    private final byte[] bytes;
+    private final String varchar;
+    private final BigDecimal decimal;
+    private final double aDouble;
+    private final Timestamp timestamp;
 
-    Simple(long id, byte tinyint, long bigint, char aChar, String varchar, BigDecimal decimal, double aDouble, Timestamp timestamp) {
+    Simple(long id, byte tinyint, long bigint, byte[] aBytes, String varchar, BigDecimal decimal, double aDouble, Timestamp timestamp) {
       this.id = id;
       this.tinyint = tinyint;
       this.bigint = bigint;
-      Char = aChar;
+      bytes = aBytes;
       this.varchar = varchar;
       this.decimal = decimal;
       this.aDouble = aDouble;
@@ -70,21 +75,35 @@ public class MongoGenerator {
 
     private static Simple random() {
       return new Simple(
-          r.nextLong(), RandomDataUtil.randomByte(), r.nextLong(), RandomDataUtil.randomAscii(), randomStr(),
+          r.nextLong(), RandomDataUtil.randomByte(), r.nextLong(), RandomDataUtil.randomBytes(50), randomStr(),
           RandomDataUtil.randomDecimal(), r.nextDouble() + r.nextInt(), RandomDataUtil.randomTimestamp()
       );
     }
+
+    @Override
+    public BsonDocument toDoc() {
+      return new BsonDocument()
+          .append("id", new BsonInt64(id))
+          .append("tinyint", new BsonInt32(tinyint))
+          .append("bigint", new BsonInt64(bigint))
+          .append("bytes", new BsonBinary(bytes))
+          .append("varchar", new BsonString(varchar))
+          .append("decimal", new BsonDecimal128(new Decimal128(decimal)))
+          .append("aDouble", new BsonDouble(aDouble))
+          .append("timestamp", new BsonTimestamp(timestamp.getTime()))
+          ;
+    }
   }
 
-  private static class NestedIn {
-    private long id;
-    private Date time;
-    private String currency;
-    private String total;
-    private int quantity;
-    private byte type;
-    private String name;
-    private String unit;
+  private static class NestedIn implements Doc {
+    private final long id;
+    private final Date time;
+    private final String currency;
+    private final String total;
+    private final int quantity;
+    private final byte type;
+    private final String name;
+    private final String unit;
 
     NestedIn(long id, Date time, String currency, String total, int quantity, byte type, String name, String unit) {
       this.id = id;
@@ -103,13 +122,27 @@ public class MongoGenerator {
         r.nextInt(Short.MAX_VALUE), RandomDataUtil.randomByte(), randomStr(), randomStr()
       );
     }
+
+    @Override
+    public BsonDocument toDoc() {
+      return new BsonDocument()
+          .append("id", new BsonInt64(id))
+          .append("time", new BsonDateTime(time.getTime()))
+          .append("currency", new BsonString(currency))
+          .append("total", new BsonString(total))
+          .append("quantity", new BsonInt32(quantity))
+          .append("type", new BsonInt32(type))
+          .append("name", new BsonString(name))
+          .append("unit", new BsonString(unit))
+          ;
+    }
   }
 
-  private static class NestedOut {
+  private static class NestedOut implements Doc {
 
-    private long _id;
-    private List<Simple> simples;
-    private NestedIn nestedIn;
+    private Long _id;
+    private final List<Simple> simples;
+    private final NestedIn nestedIn;
 
     NestedOut(List<Simple> simples, NestedIn nestedIn) {
       this.simples = simples;
@@ -121,16 +154,27 @@ public class MongoGenerator {
       this.nestedIn = nestedIn;
     }
 
-    private static NestedOut random(Integer id) {
+    private static BsonDocument random(Integer id) {
       int i = r.nextInt(10);
       ArrayList<Simple> simples = new ArrayList<>();
       for (int c = 0; c < i; c++) {
         simples.add(Simple.random());
       }
       if (id == null) {
-        return new NestedOut(simples, NestedIn.random());
+        return new NestedOut(simples, NestedIn.random()).toDoc();
       }
-      return new NestedOut(id, simples, NestedIn.random());
+      return new NestedOut(id, simples, NestedIn.random()).toDoc();
+    }
+
+    @Override
+    public BsonDocument toDoc() {
+      BsonDocument res = new BsonDocument()
+          .append("simples", new BsonArray(simples.stream().map(Simple::toDoc).collect(Collectors.toList())))
+          .append("nestedIn", nestedIn.toDoc());
+      if (_id != null) {
+        res.append("_id", new BsonInt64(_id));
+      }
+      return res;
     }
   }
 }

@@ -56,4 +56,11 @@ public class RandomDataUtil {
     return (byte) r.nextInt(Byte.MAX_VALUE);
   }
 
+  public static byte[] randomBytes(int len) {
+    byte[] bytes = new byte[len];
+    for (int i = 0; i < bytes.length; i++) {
+      bytes[i] = randomByte();
+    }
+    return bytes;
+  }
 }
