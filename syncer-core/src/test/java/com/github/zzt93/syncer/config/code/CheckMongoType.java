@@ -1,24 +1,20 @@
-version: 1.2
+package com.github.zzt93.syncer.config.code;
 
-consumerId: mongo2
+import com.github.zzt93.syncer.data.SyncData;
+import com.github.zzt93.syncer.data.util.MethodFilter;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.Date;
+import java.util.List;
+import java.util.Map;
 
-input:
-  masters:
-    - connection:
-        address: ${MONGO_IN}
-        port: 27017
-      scheduler: hash
-      type: Mongo
-      repos:
-        - name: "simple_0"
-          entities:
-            - name: simple_type
-              fields: [simples, nestedIn]
+/**
+ * @author zzt
+ */
+public class CheckMongoType implements MethodFilter {
 
-
-filter:
-  - method: '
+  @Override
   public void filter(List<SyncData> list) {
     SyncData sync = list.get(0);
     for (Map simple : ((List<Map>) sync.getField("simples"))) {
@@ -40,32 +36,6 @@ filter:
     Byte type = (Byte) nestedIn.get("type");
     String name = (String) nestedIn.get("name");
     String unit = (String) nestedIn.get("unit");
-  }'
+  }
 
-
-
-# Special expression
-# "field.*"
-# "field.*.flatten"
-# "extra.*"
-# "extra.*.flatten"
-
-output:
-  elasticsearch:
-    connection:
-      clusterName: ${ES_CLUSTER}
-      clusterNodes: ["${ES_ADDR}:9300"]
-    requestMapping: # mapping from input data to es request
-
-      retryOnUpdateConflict: 3
-      index: "repo + getExtra('suffix')" # default: repo
-
-      fieldsMapping: # default: fields.*.flatten
-        "fields": "fields.*.flatten"
-    batch:
-      size: 100
-      delay: 1000
-      maxRetry: 5
-    refreshInMillis: 0
-    failureLog:
-      countLimit: 1000
+}
