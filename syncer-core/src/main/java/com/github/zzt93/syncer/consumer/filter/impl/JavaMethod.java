@@ -32,9 +32,9 @@ public class JavaMethod {
         // syncer run config using com.github.zzt93.syncer.common.data
         "import com.github.zzt93.syncer.data.*;\n" +
             "import com.github.zzt93.syncer.data.util.*;\n" +
-            "\n" +
             "import java.util.*;\n" +
-            "\n" +
+            "import java.math.BigDecimal;\n" +
+            "import java.sql.Timestamp;\n" +
             "import org.slf4j.Logger;\n" +
             "import org.slf4j.LoggerFactory;\n" +
             "\n" +
