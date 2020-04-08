@@ -9,13 +9,13 @@ import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.mongodb.*;
+import org.bson.Document;
+import org.bson.types.Binary;
+import org.bson.types.Decimal128;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Stream;
 
 /**
@@ -32,6 +32,19 @@ public abstract class MongoConnectorBase implements MasterConnector {
   MongoConnectorBase(MongoConnection connection) {
     client = new MongoClient(new MongoClientURI(connection.toConnectionUrl(null)));
     identifier = connection.connectionIdentifier();
+  }
+
+  static Object mongoMapping(Object o) {
+    if (o instanceof Document) {
+      for (Map.Entry<String, Object> e : ((Document) o).entrySet()) {
+        e.setValue(mongoMapping(e.getValue()));
+      }
+    } else if (o instanceof Binary) {
+      return ((Binary) o).getData();
+    } else if (o instanceof Decimal128) {
+      return ((Decimal128) o).bigDecimalValue();
+    }
+    return o;
   }
 
   <T> Stream<T> getNamespaces(MongoConnection connection, ConsumerRegistry registry, Function<String[], T> f) {

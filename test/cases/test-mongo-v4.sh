@@ -4,7 +4,7 @@ source cases/test-mongo-input.sh
 
 env=mongo_v4
 num=200
-syncerDir=mongo-v4
+syncerDir=mongo-input
 
 source ${UTIL_LIB}
 

@@ -175,17 +175,13 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
     return new SyncData(dataId, type, namespace.getDatabaseName(), namespace.getCollectionName(), ID, full.get(ID), new NamedChangeStream(full, updated));
   }
 
-  private Object getId(ChangeStreamDocument<Document> d) {
+  static Object getId(ChangeStreamDocument<Document> d) {
     BsonDocument documentKey = d.getDocumentKey();
-    return getId(documentKey);
-  }
-
-  static Object getId(BsonDocument documentKey) {
     BsonValue o = documentKey.get(ID);
-    return mapping(o);
+    return bsonMapping(o);
   }
 
-  static Object mapping(BsonValue value) {
+  static Object bsonMapping(BsonValue value) {
     switch (value.getBsonType()) {
       case INT64:
         return value.asInt64().getValue();
@@ -214,13 +210,13 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
         List<BsonValue> values = value.asArray().getValues();
         List<Object> list = new ArrayList<>();
         for (BsonValue bsonValue : values) {
-          list.add(mapping(bsonValue));
+          list.add(bsonMapping(bsonValue));
         }
         return list;
       case DOCUMENT:
         HashMap<String, Object> map = new HashMap<>();
         for (Map.Entry<String, BsonValue> o : value.asDocument().entrySet()) {
-          map.put(o.getKey(), mapping(o.getValue()));
+          map.put(o.getKey(), bsonMapping(o.getValue()));
         }
         return map;
       default:
@@ -228,14 +224,14 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
     }
   }
 
-  private Document getFullDocument(ChangeStreamDocument<Document> d) {
-    return d.getFullDocument(); // value in Document is all java type, no need to do bson conversion
+  private Map getFullDocument(ChangeStreamDocument<Document> d) {
+    return (Map) mongoMapping(d.getFullDocument());
   }
 
   static Map getUpdatedFields(Document fullDocument, BsonDocument updatedFields, boolean bsonConversion) {
     if (bsonConversion) {
       if (fullDocument == null) {
-        return (Map) mapping(updatedFields);
+        return (Map) bsonMapping(updatedFields);
       }
       HashMap<String, Object> res = new HashMap<>();
       for (String key : updatedFields.keySet()) {

@@ -10,7 +10,6 @@ import java.util.Date;
 import java.util.Map;
 
 import static com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector.ID;
-import static com.github.zzt93.syncer.producer.input.mongo.MongoV4MasterConnector.getId;
 import static com.github.zzt93.syncer.producer.input.mongo.MongoV4MasterConnector.getUpdatedFields;
 import static org.junit.Assert.*;
 
@@ -31,9 +30,6 @@ public class MongoV4MasterConnectorTest {
         .objectIdConverter((value, writer) -> writer.writeString(value.toHexString()))
         .build()), Map.class).get(ID);
     assertNotEquals(v, o);
-
-    Object now = getId(key);
-    assertEquals(v, now);
   }
 
   @Test
