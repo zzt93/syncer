@@ -28,8 +28,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
-import java.sql.Timestamp;
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 import static com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector.ID;
@@ -179,49 +180,6 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
     BsonDocument documentKey = d.getDocumentKey();
     BsonValue o = documentKey.get(ID);
     return bsonMapping(o);
-  }
-
-  static Object bsonMapping(BsonValue value) {
-    switch (value.getBsonType()) {
-      case INT64:
-        return value.asInt64().getValue();
-      case INT32:
-        return value.asInt32().getValue();
-      case BINARY:
-        return value.asBinary().getData();
-      case DOUBLE:
-        return value.asDouble().getValue();
-      case STRING:
-        return value.asString().getValue();
-      case BOOLEAN:
-        return value.asBoolean().getValue();
-      case DATE_TIME:
-        return new Date(value.asDateTime().getValue());
-      case TIMESTAMP:
-        BsonTimestamp bsonTimestamp = value.asTimestamp();
-        return new Timestamp(bsonTimestamp.getTime() * 1000 + bsonTimestamp.getInc());
-      case DECIMAL128:
-        return value.asDecimal128().getValue().bigDecimalValue();
-      case OBJECT_ID:
-        return value.asObjectId().toString();
-      case NULL:
-        return null;
-      case ARRAY:
-        List<BsonValue> values = value.asArray().getValues();
-        List<Object> list = new ArrayList<>();
-        for (BsonValue bsonValue : values) {
-          list.add(bsonMapping(bsonValue));
-        }
-        return list;
-      case DOCUMENT:
-        HashMap<String, Object> map = new HashMap<>();
-        for (Map.Entry<String, BsonValue> o : value.asDocument().entrySet()) {
-          map.put(o.getKey(), bsonMapping(o.getValue()));
-        }
-        return map;
-      default:
-        return value;
-    }
   }
 
   private Map getFullDocument(ChangeStreamDocument<Document> d) {

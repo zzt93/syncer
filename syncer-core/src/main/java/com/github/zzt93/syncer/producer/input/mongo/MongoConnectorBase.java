@@ -9,12 +9,16 @@ import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.mongodb.*;
+import org.bson.BsonTimestamp;
+import org.bson.BsonValue;
 import org.bson.Document;
 import org.bson.types.Binary;
 import org.bson.types.Decimal128;
+import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -39,12 +43,64 @@ public abstract class MongoConnectorBase implements MasterConnector {
       for (Map.Entry<String, Object> e : ((Document) o).entrySet()) {
         e.setValue(mongoMapping(e.getValue()));
       }
+    } else if (o instanceof List) {
+      List list = (List) o;
+      for (int i = 0; i < list.size(); i++) {
+        list.set(i, mongoMapping(list.get(i)));
+      }
     } else if (o instanceof Binary) {
       return ((Binary) o).getData();
     } else if (o instanceof Decimal128) {
       return ((Decimal128) o).bigDecimalValue();
+    } else if (o instanceof BsonTimestamp) {
+      return bsonMapping((BsonValue) o);
+    } else if (o instanceof ObjectId) {
+      return o.toString();
     }
     return o;
+  }
+
+  static Object bsonMapping(BsonValue value) {
+    switch (value.getBsonType()) {
+      case INT64:
+        return value.asInt64().getValue();
+      case INT32:
+        return value.asInt32().getValue();
+      case BINARY:
+        return value.asBinary().getData();
+      case DOUBLE:
+        return value.asDouble().getValue();
+      case STRING:
+        return value.asString().getValue();
+      case BOOLEAN:
+        return value.asBoolean().getValue();
+      case DATE_TIME:
+        return new Date(value.asDateTime().getValue());
+      case TIMESTAMP:
+        BsonTimestamp bsonTimestamp = value.asTimestamp();
+        return new Timestamp(bsonTimestamp.getTime() * 1000 + bsonTimestamp.getInc());
+      case DECIMAL128:
+        return value.asDecimal128().getValue().bigDecimalValue();
+      case OBJECT_ID:
+        return value.asObjectId().toString();
+      case NULL:
+        return null;
+      case ARRAY:
+        List<BsonValue> values = value.asArray().getValues();
+        List<Object> list = new ArrayList<>();
+        for (BsonValue bsonValue : values) {
+          list.add(bsonMapping(bsonValue));
+        }
+        return list;
+      case DOCUMENT:
+        HashMap<String, Object> map = new HashMap<>();
+        for (Map.Entry<String, BsonValue> o : value.asDocument().entrySet()) {
+          map.put(o.getKey(), bsonMapping(o.getValue()));
+        }
+        return map;
+      default:
+        return value;
+    }
   }
 
   <T> Stream<T> getNamespaces(MongoConnection connection, ConsumerRegistry registry, Function<String[], T> f) {
