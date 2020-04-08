@@ -1,4 +1,4 @@
-package com.github.zzt93.syncer.common.data;
+package com.github.zzt93.syncer.test;
 
 import org.bson.*;
 import org.bson.json.JsonMode;

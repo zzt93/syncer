@@ -19,7 +19,7 @@ public class CheckMongoType implements MethodFilter {
     SyncData sync = list.get(0);
     for (Map simple : ((List<Map>) sync.getField("simples"))) {
       Long id = (Long) simple.get("id");
-      Byte tinyint = (Byte) simple.get("tinyint");
+      Integer tinyint = (Integer) simple.get("tinyint");
       Long bigint = (Long) simple.get("bigint");
       byte[] bytes = (byte[]) simple.get("bytes");
       String varchar = (String) simple.get("varchar");
@@ -33,7 +33,7 @@ public class CheckMongoType implements MethodFilter {
     String currency = (String) nestedIn.get("currency");
     String total = (String) nestedIn.get("total");
     Integer quantity = (Integer) nestedIn.get("quantity");
-    Byte type = (Byte) nestedIn.get("type");
+    Integer type = (Integer) nestedIn.get("type");
     String name = (String) nestedIn.get("name");
     String unit = (String) nestedIn.get("unit");
   }

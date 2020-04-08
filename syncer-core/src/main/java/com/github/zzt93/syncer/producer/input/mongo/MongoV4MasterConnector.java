@@ -14,9 +14,6 @@ import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.google.common.base.Throwables;
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.LongSerializationPolicy;
 import com.mongodb.MongoNamespace;
 import com.mongodb.client.ChangeStreamIterable;
 import com.mongodb.client.MongoCursor;
@@ -25,16 +22,13 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.model.changestream.UpdateDescription;
-import org.bson.BsonDocument;
-import org.bson.BsonString;
-import org.bson.BsonTimestamp;
-import org.bson.Document;
+import org.bson.*;
 import org.bson.conversions.Bson;
-import org.bson.json.JsonWriterSettings;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -46,28 +40,6 @@ import static java.util.Collections.singletonList;
  * @author zzt
  */
 public class MongoV4MasterConnector extends MongoConnectorBase {
-
-  static final String LONG = "$$long$$";
-  static final String DATE = "$$date$$";
-  static final Gson gson = new GsonBuilder()
-      .setLongSerializationPolicy(LongSerializationPolicy.STRING)
-      .create();
-  // TODO 2020/4/4 https://docs.mongodb.com/manual/reference/operator/query/type/#document-type-available-types
-  static final JsonWriterSettings jsonWriterSettings = JsonWriterSettings.builder()
-      .int64Converter((value, writer) -> {
-        writer.writeStartObject();
-        writer.writeName(LONG);
-        writer.writeString(Long.toString(value));
-        writer.writeEndObject();
-      })
-      .dateTimeConverter((value, writer) -> {
-        writer.writeStartObject();
-        writer.writeName(DATE);
-        writer.writeString(Long.toString(value));
-        writer.writeEndObject();
-      })
-      .objectIdConverter((value, writer) -> writer.writeString(value.toHexString()))
-      .build();
 
   private static final Logger logger = LoggerFactory.getLogger(MongoV4MasterConnector.class);
   private static final String NS = "ns";
@@ -172,7 +144,8 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
         type = SimpleEventType.UPDATE;
         assert d.getUpdateDescription() != null;
 
-        updated = new HashMap<>(getUpdatedFields(d));
+        UpdateDescription updateDescription = d.getUpdateDescription();
+        updated = new HashMap<>(getUpdatedFields(d.getFullDocument(), updateDescription.getUpdatedFields(), bsonConversion));
         if (d.getFullDocument() != null) {
           full.putAll(getFullDocument(d));
           // use UpdateDescription to overrides latest version
@@ -208,46 +181,69 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
   }
 
   static Object getId(BsonDocument documentKey) {
-    Object o = gson.fromJson(documentKey.toJson(jsonWriterSettings), Map.class).get(ID);
-    if (o instanceof Map && ((Map) o).containsKey(LONG)) {
-      return Long.parseLong((String) ((Map) o).get(LONG));
+    BsonValue o = documentKey.get(ID);
+    return mapping(o);
+  }
+
+  static Object mapping(BsonValue value) {
+    switch (value.getBsonType()) {
+      case INT64:
+        return value.asInt64().getValue();
+      case INT32:
+        return value.asInt32().getValue();
+      case BINARY:
+        return value.asBinary().getData();
+      case DOUBLE:
+        return value.asDouble().getValue();
+      case STRING:
+        return value.asString().getValue();
+      case BOOLEAN:
+        return value.asBoolean().getValue();
+      case DATE_TIME:
+        return new Date(value.asDateTime().getValue());
+      case TIMESTAMP:
+        BsonTimestamp bsonTimestamp = value.asTimestamp();
+        return new Timestamp(bsonTimestamp.getTime() * 1000 + bsonTimestamp.getInc());
+      case DECIMAL128:
+        return value.asDecimal128().getValue().bigDecimalValue();
+      case OBJECT_ID:
+        return value.asObjectId().toString();
+      case NULL:
+        return null;
+      case ARRAY:
+        List<BsonValue> values = value.asArray().getValues();
+        List<Object> list = new ArrayList<>();
+        for (BsonValue bsonValue : values) {
+          list.add(mapping(bsonValue));
+        }
+        return list;
+      case DOCUMENT:
+        HashMap<String, Object> map = new HashMap<>();
+        for (Map.Entry<String, BsonValue> o : value.asDocument().entrySet()) {
+          map.put(o.getKey(), mapping(o.getValue()));
+        }
+        return map;
+      default:
+        return value;
     }
-    return o;
   }
 
   private Document getFullDocument(ChangeStreamDocument<Document> d) {
     return d.getFullDocument(); // value in Document is all java type, no need to do bson conversion
   }
 
-  private Map getUpdatedFields(ChangeStreamDocument<Document> changeStreamDocument) {
-    UpdateDescription updateDescription = changeStreamDocument.getUpdateDescription();
+  static Map getUpdatedFields(Document fullDocument, BsonDocument updatedFields, boolean bsonConversion) {
     if (bsonConversion) {
-      Document fullDocument = changeStreamDocument.getFullDocument();
       if (fullDocument == null) {
-        Map updated = gson.fromJson(updateDescription.getUpdatedFields().toJson(jsonWriterSettings), Map.class);
-        return (Map) parseBson(updated);
+        return (Map) mapping(updatedFields);
       }
       HashMap<String, Object> res = new HashMap<>();
-      for (String key : updateDescription.getUpdatedFields().keySet()) {
+      for (String key : updatedFields.keySet()) {
         res.put(key, fullDocument.get(key));
       }
       return res;
     }
-    return updateDescription.getUpdatedFields();
-  }
-
-  static Object parseBson(Map<String, Object> map) {
-    Set<Map.Entry<String, Object>> set = map.entrySet();
-    for (Map.Entry<String, Object> o : set) {
-      if (set.size() == 1 && o.getKey().equals(LONG)) {
-        return Long.parseLong((String) o.getValue());
-      } else if (set.size() == 1 && o.getKey().equals(DATE)) {
-        return new Date(Long.parseLong((String) o.getValue()));
-      } else if (o.getValue() instanceof Map) {
-        o.setValue(parseBson((Map<String, Object>) o.getValue()));
-      }
-    }
-    return map;
+    return updatedFields;
   }
 
   private void addRemovedFields(HashMap<String, Object> updated, List<String> removedFields) {

@@ -1,6 +1,6 @@
 version: 1.2
 
-consumerId: mongo2
+consumerId: mongo
 
 
 input:
@@ -25,7 +25,7 @@ filter:
       Long id = (Long) simple.get("id");
       Integer tinyint = (Integer) simple.get("tinyint");
       Long bigint = (Long) simple.get("bigint");
-      byte[] bytes = (org.bson.types.Binary) simple.get("bytes").getData();
+      byte[] bytes = (byte[]) simple.get("bytes");
       String varchar = (String) simple.get("varchar");
       BigDecimal decimal = (BigDecimal) simple.get("decimal");
       Double aDouble = (Double) simple.get("aDouble");

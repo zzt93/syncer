@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.producer.input.mongo;
 
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
 import org.bson.*;
 import org.bson.json.JsonWriterSettings;
 import org.junit.Test;
@@ -8,13 +10,15 @@ import java.util.Date;
 import java.util.Map;
 
 import static com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector.ID;
-import static com.github.zzt93.syncer.producer.input.mongo.MongoV4MasterConnector.*;
+import static com.github.zzt93.syncer.producer.input.mongo.MongoV4MasterConnector.getId;
+import static com.github.zzt93.syncer.producer.input.mongo.MongoV4MasterConnector.getUpdatedFields;
 import static org.junit.Assert.*;
 
 /**
  * @author zzt
  */
 public class MongoV4MasterConnectorTest {
+  private static final Gson gson = new GsonBuilder().create();
 
   @Test
   public void int64Id() {
@@ -22,7 +26,7 @@ public class MongoV4MasterConnectorTest {
     long v = ((long) Math.pow(2, 53)) + 1;
     assertNotEquals(v, (double)v);
 
-    BsonDocument key = new BsonDocument("_id", new BsonInt64(v));
+    BsonDocument key = new BsonDocument(ID, new BsonInt64(v));
     Object o = gson.fromJson(key.toJson(JsonWriterSettings.builder()
         .objectIdConverter((value, writer) -> writer.writeString(value.toHexString()))
         .build()), Map.class).get(ID);
@@ -49,21 +53,18 @@ public class MongoV4MasterConnectorTest {
     String obj = "obj";
 
     BsonDocument updateDoc = new BsonDocument(time, new BsonInt64(v));
-    Map updated = gson.fromJson(updateDoc.toJson(jsonWriterSettings), Map.class);
-    Map map = (Map) parseBson(updated);
+    Map map = getUpdatedFields(null, updateDoc, true);
     assertEquals(1, map.size());
     assertEquals(v, map.get(time));
 
     updateDoc.append(id, new BsonInt64(v1));
-    updated = gson.fromJson(updateDoc.toJson(jsonWriterSettings), Map.class);
-    map = (Map) parseBson(updated);
+    map = getUpdatedFields(null, updateDoc, true);
     assertEquals(2, map.size());
     assertEquals(v, map.get(time));
     assertEquals(v1, map.get(id));
 
     updateDoc.append(deep, new BsonInt64(v2));
-    updated = gson.fromJson(updateDoc.toJson(jsonWriterSettings), Map.class);
-    map = (Map) parseBson(updated);
+    map = getUpdatedFields(null, updateDoc, true);
     assertEquals(3, map.size());
     assertEquals(v, map.get(time));
     assertEquals(v1, map.get(id));
@@ -74,8 +75,7 @@ public class MongoV4MasterConnectorTest {
     updateDoc.append(date, new BsonDateTime(v4));
     updateDoc.append(bool, new BsonBoolean(true));
     updateDoc.append(obj, new BsonDocument(str, new BsonString(str)).append(id, new BsonInt64(v1)));
-    updated = gson.fromJson(updateDoc.toJson(jsonWriterSettings), Map.class);
-    map = (Map) parseBson(updated);
+    map = getUpdatedFields(null, updateDoc, true);
     assertEquals(8, map.size());
     assertEquals(v, map.get(time));
     assertEquals(v1, map.get(id));
