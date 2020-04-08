@@ -11,7 +11,6 @@ import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.mongodb.*;
 import org.bson.BsonTimestamp;
 import org.bson.BsonValue;
-import org.bson.Document;
 import org.bson.types.Binary;
 import org.bson.types.Decimal128;
 import org.bson.types.ObjectId;
@@ -39,8 +38,8 @@ public abstract class MongoConnectorBase implements MasterConnector {
   }
 
   static Object mongoMapping(Object o) {
-    if (o instanceof Document) {
-      for (Map.Entry<String, Object> e : ((Document) o).entrySet()) {
+    if (o instanceof Map) {
+      for (Map.Entry<String, Object> e : ((Map<String, Object>) o).entrySet()) {
         e.setValue(mongoMapping(e.getValue()));
       }
     } else if (o instanceof List) {
