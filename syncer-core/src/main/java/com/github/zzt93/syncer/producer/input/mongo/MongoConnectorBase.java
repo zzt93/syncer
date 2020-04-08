@@ -17,6 +17,7 @@ import org.bson.types.ObjectId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.math.BigDecimal;
 import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Stream;
@@ -39,6 +40,9 @@ public abstract class MongoConnectorBase implements MasterConnector {
 
   static Object mongoMapping(Object o) {
     if (o instanceof Map) {
+      if (((Map) o).size() == 1 && ((Map) o).containsKey("$numberDecimal")) {
+        return new BigDecimal((String) ((Map) o).get("$numberDecimal"));
+      }
       for (Map.Entry<String, Object> e : ((Map<String, Object>) o).entrySet()) {
         e.setValue(mongoMapping(e.getValue()));
       }
