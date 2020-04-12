@@ -16,9 +16,6 @@ import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
-import com.mysql.jdbc.Driver;
-import com.zaxxer.hikari.HikariConfig;
-import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -27,7 +24,6 @@ import org.springframework.jdbc.BadSqlGrammarException;
 import org.springframework.jdbc.CannotGetJdbcConnectionException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
 import java.nio.file.Paths;
 import java.sql.BatchUpdateException;
 import java.sql.Statement;
@@ -55,7 +51,7 @@ public class MysqlChannel implements BufferedChannel<String> {
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
-    jdbcTemplate = new JdbcTemplate(dataSource(connection, Driver.class.getName()));
+    jdbcTemplate = new JdbcTemplate(connection.dataSource());
     batchBuffer = new BatchBuffer<>(mysql.getBatch());
     sqlMapper = new NestedSQLMapper(mysql.getRowMapping(), jdbcTemplate);
     this.batch = mysql.getBatch();
@@ -66,15 +62,6 @@ public class MysqlChannel implements BufferedChannel<String> {
         });
     output = connection.connectionIdentifier();
     consumerId = mysql.getConsumerId();
-  }
-
-  private DataSource dataSource(MysqlConnection connection, String className) {
-    HikariConfig config = connection.toConfig();
-    config.setDriverClassName(className);
-    // A value less than zero will not bypass any connection attempt and validation during startup,
-    // and therefore the pool will start immediately
-    config.setInitializationFailTimeout(-1);
-    return new HikariDataSource(config);
   }
 
   @Override

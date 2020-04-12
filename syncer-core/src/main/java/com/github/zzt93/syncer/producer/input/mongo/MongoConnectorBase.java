@@ -18,7 +18,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.*;
 import java.util.stream.Stream;
 
@@ -79,9 +78,6 @@ public abstract class MongoConnectorBase implements MasterConnector {
         return value.asBoolean().getValue();
       case DATE_TIME:
         return new Date(value.asDateTime().getValue());
-      case TIMESTAMP:
-        BsonTimestamp bsonTimestamp = value.asTimestamp();
-        return new Timestamp(bsonTimestamp.getTime() * 1000 + bsonTimestamp.getInc());
       case DECIMAL128:
         return value.asDecimal128().getValue().bigDecimalValue();
       case OBJECT_ID:
@@ -101,6 +97,7 @@ public abstract class MongoConnectorBase implements MasterConnector {
           map.put(o.getKey(), bsonMapping(o.getValue()));
         }
         return map;
+      case TIMESTAMP:
       default:
         return value;
     }

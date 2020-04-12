@@ -1,9 +1,12 @@
 package com.github.zzt93.syncer.config.common;
 
+import com.mysql.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
+import com.zaxxer.hikari.HikariDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import javax.sql.DataSource;
 import java.net.UnknownHostException;
 import java.util.Properties;
 
@@ -15,7 +18,11 @@ public class MysqlConnection extends Connection {
 
   public static final String DEFAULT_DB = "";
 
-  public MysqlConnection() {
+  public MysqlConnection(String addr, int port, String user, String pass) throws UnknownHostException {
+    setAddress(addr);
+    setPort(port);
+    setUser(user);
+    setPassword(pass);
   }
 
   public MysqlConnection(Connection connection) {
@@ -43,5 +50,15 @@ public class MysqlConnection extends Connection {
     properties.put("username", getUser());
     properties.put("password", getPassword());
     return new HikariConfig(properties);
+  }
+
+  public DataSource dataSource() {
+    String className = Driver.class.getName();
+    HikariConfig config = toConfig();
+    config.setDriverClassName(className);
+    // A value less than zero will not bypass any connection attempt and validation during startup,
+    // and therefore the pool will start immediately
+    config.setInitializationFailTimeout(-1);
+    return new HikariDataSource(config);
   }
 }

@@ -39,11 +39,7 @@ public class MysqlChannelTest {
   }
 
   private static JdbcTemplate getJdbcTemplate() throws UnknownHostException {
-    MysqlConnection connection = new MysqlConnection();
-    connection.setAddress("192.168.1.204");
-    connection.setPort(3306);
-    connection.setUser(System.getenv("MYSQL_USER"));
-    connection.setPassword(System.getenv("MYSQL_PASS"));
+    MysqlConnection connection = new MysqlConnection("192.168.1.204", 3306, System.getenv("MYSQL_USER"), System.getenv("MYSQL_PASS"));
 
     HikariConfig config = connection.toConfig();
     config.setDriverClassName(Driver.class.getName());

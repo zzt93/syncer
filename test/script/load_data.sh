@@ -44,13 +44,13 @@ function loadToMongo() {
     cd data/mongo
 
     logi "loading json"
-    for f in `find . -name "*.json"`; do
+    for f in $(find . -name "*.json"); do
         tmp=`basename $f`
         col=${tmp%".json"}
         dockerExec mongo mongoimport --db simple_0 --collection ${col} --file /Data/mongo/"${f}" --jsonArray >> "${LOG_FILE}"
     done
     logi "loading js to update/delete"
-    for f in `find . -name "*.js"`; do
+    for f in $(find . -name "*.js"); do
         dockerExec mongo mongo localhost:27017/simple_0 "/Data/mongo/$f" >> "${LOG_FILE}"
     done
 

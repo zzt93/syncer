@@ -12,6 +12,13 @@ public class MongoConnection extends Connection {
 
   private static final Logger logger = LoggerFactory.getLogger(MongoConnection.class);
 
+  public MongoConnection(String addr, int port, String user, String pass) throws UnknownHostException {
+    setAddress(addr);
+    setPort(port);
+    setUser(user);
+    setPassword(pass);
+  }
+
   public MongoConnection(Connection connection) {
     try {
       setAddress(connection.getAddress());

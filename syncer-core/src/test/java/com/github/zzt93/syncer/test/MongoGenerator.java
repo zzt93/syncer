@@ -28,6 +28,7 @@ public class MongoGenerator {
 
   public static final Double UPDATE_RATE = 0.3;
   public static final Double DELETE_RATE = 0.1;
+  public static final int _1s = 1000;
   private static Random r = new Random();
   private final JsonWriterSettings js = JsonWriterSettings.builder().outputMode(JsonMode.SHELL).build();
 
@@ -147,7 +148,8 @@ public class MongoGenerator {
         res.append("aDouble", new BsonDouble(aDouble));
       }
       if (timestamp != null) {
-        res.append("timestamp", new BsonTimestamp(timestamp.getTime()));
+        long time = timestamp.getTime();
+        res.append("timestamp", new BsonTimestamp((int) time / _1s, (int) time % _1s));
       }
       return res;
     }

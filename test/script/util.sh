@@ -171,6 +171,13 @@ function cmpFromTo() {
     fi
 }
 
+function detail() {
+  idMin=$1
+  idMax=$2
+  input=$3
+  output=$4
+  mvn test -q -Dtest=com.github.zzt93.syncer.test.CompareDetail -DargLine="-DidMin=$idMin -DidMax=$idMax -Dinput=$input -Doutput=$output" >> "${LOG_FILE}"
+}
 
 function cleanupAll() {
     docker-compose -f docker-compose/${env}.yml rm -fsv
