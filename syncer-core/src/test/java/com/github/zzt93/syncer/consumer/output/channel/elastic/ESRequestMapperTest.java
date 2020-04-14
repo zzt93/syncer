@@ -563,7 +563,7 @@ public class ESRequestMapperTest {
 
     SyncData data = SyncDataTestUtil.update("role", "role").setId(1234L);
     data.setRepo("nested3").setEntity("nested3").addField("title", "b").addField("user_id", 2L);
-    data.extraQuery("user", "user").filter("_id", 2L).select("username").addField("username");
+    data.extraQuery("user", "user").filter("_id", -1L).select("username").addField("username");
     data.esScriptUpdate(Filter.fieldId("roles.id")).mergeToNestedById("roles", "title", "user_id", "username");
 
     Object builder = mapper.map(data);
