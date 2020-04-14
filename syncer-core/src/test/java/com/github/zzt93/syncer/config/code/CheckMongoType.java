@@ -4,7 +4,6 @@ import com.github.zzt93.syncer.data.SyncData;
 import com.github.zzt93.syncer.data.util.MethodFilter;
 
 import java.math.BigDecimal;
-import java.sql.Timestamp;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
@@ -25,7 +24,7 @@ public class CheckMongoType implements MethodFilter {
       String varchar = (String) simple.get("varchar");
       BigDecimal decimal = (BigDecimal) simple.get("decimal");
       Double aDouble = (Double) simple.get("aDouble");
-      Timestamp timestamp = (Timestamp) simple.get("timestamp");
+      org.bson.BsonTimestamp timestamp = (org.bson.BsonTimestamp) simple.get("timestamp");
     }
     Map nestedIn = (Map) sync.getField("nestedIn");
     Long id = (Long) nestedIn.get("id");

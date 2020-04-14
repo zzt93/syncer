@@ -29,7 +29,7 @@ filter:
       String varchar = (String) simple.get("varchar");
       BigDecimal decimal = (BigDecimal) simple.get("decimal");
       Double aDouble = (Double) simple.get("aDouble");
-      Timestamp timestamp = (Timestamp) simple.get("timestamp");
+      org.bson.BsonTimestamp timestamp = (org.bson.BsonTimestamp) simple.get("timestamp");
     }
     Map nestedIn = (Map) sync.getField("nestedIn");
     Long id = (Long) nestedIn.get("id");
