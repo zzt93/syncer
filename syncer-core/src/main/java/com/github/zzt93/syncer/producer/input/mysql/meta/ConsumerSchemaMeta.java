@@ -19,9 +19,20 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.sql.*;
-import java.util.*;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.IdentityHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
+import java.util.Properties;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -248,13 +259,19 @@ public class ConsumerSchemaMeta {
         }
       }
       if (tableCount > nowCount) {
-        logger.error("Invalid schema config: want {} but not found", diff(metaOfEachConsumer));
+        logDiff(consumers, metaOfEachConsumer);
         throw new InvalidConfigException("Invalid schema config");
       }
       return res;
     }
 
-    private static List<Entity> diff(Map<Repo, SchemaMeta> metaOfEachConsumer) {
+    private static void logDiff(Set<Consumer> consumers, Map<Repo, SchemaMeta> metaOfEachConsumer) {
+      Set<Repo> repos = consumers.stream().flatMap(c -> c.getRepos().stream()).collect(Collectors.toSet());
+      if (repos.size() != metaOfEachConsumer.size()) {
+        repos.removeAll(metaOfEachConsumer.keySet());
+        logger.error("Invalid schema config: want {} but not found", repos);
+        return;
+      }
       List<Entity> res = new ArrayList<>();
       metaOfEachConsumer.forEach((k, v) -> {
         List<Entity> entities = k.getEntities();
@@ -266,7 +283,7 @@ public class ConsumerSchemaMeta {
           }
         }
       });
-      return res;
+      logger.error("Invalid schema config: want {} but not found", res);
     }
 
     private static void setInterestedCol(DatabaseMetaData metaData, String tableSchema, String tableName,
