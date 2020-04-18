@@ -19,6 +19,7 @@ import java.util.Random;
 import java.util.stream.Collectors;
 
 import static com.github.zzt93.syncer.common.util.RandomDataUtil.*;
+import static java.lang.String.*;
 
 /**
  * @author zzt
@@ -30,7 +31,8 @@ public class MongoGenerator {
   public static final Double DELETE_RATE = 0.1;
   public static final int _1s = 1000;
   private static Random r = new Random();
-  private final JsonWriterSettings js = JsonWriterSettings.builder().outputMode(JsonMode.SHELL).build();
+  private final JsonWriterSettings js = JsonWriterSettings.builder().outputMode(JsonMode.SHELL)
+      .int32Converter((value, writer) -> writer.writeRaw(format("NumberInt(%d)", value))).build();
 
   private static String randomStr() {
     return random(2, 10, true);
