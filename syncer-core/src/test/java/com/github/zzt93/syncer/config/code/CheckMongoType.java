@@ -28,15 +28,17 @@ public class CheckMongoType implements MethodFilter {
         org.bson.BsonTimestamp timestamp = (org.bson.BsonTimestamp) simple.get("timestamp");
       }
     }
-    Map nestedIn = (Map) sync.getField("nestedIn");
-    Long id = (Long) nestedIn.get("id");
-    Date time = (Date) nestedIn.get("time");
-    String currency = (String) nestedIn.get("currency");
-    String total = (String) nestedIn.get("total");
-    Integer quantity = (Integer) nestedIn.get("quantity");
-    Integer type = (Integer) nestedIn.get("type");
-    String name = (String) nestedIn.get("name");
-    String unit = (String) nestedIn.get("unit");
+    if (sync.containField("nestedIn")) {
+      Map nestedIn = (Map) sync.getField("nestedIn");
+      Long id = (Long) nestedIn.get("id");
+      Date time = (Date) nestedIn.get("time");
+      String currency = (String) nestedIn.get("currency");
+      String total = (String) nestedIn.get("total");
+      Integer quantity = (Integer) nestedIn.get("quantity");
+      Integer type = (Integer) nestedIn.get("type");
+      String name = (String) nestedIn.get("name");
+      String unit = (String) nestedIn.get("unit");
+    }
   }
 
 }
