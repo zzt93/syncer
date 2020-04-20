@@ -21,15 +21,17 @@ filter:
   - method: '
   public void filter(List<SyncData> list) {
     SyncData sync = list.get(0);
-    for (Map simple : ((List<Map>) sync.getField("simples"))) {
-      Long id = (Long) simple.get("id");
-      Integer tinyint = (Integer) simple.get("tinyint");
-      Long bigint = (Long) simple.get("bigint");
-      byte[] bytes = (byte[]) simple.get("bytes");
-      String varchar = (String) simple.get("varchar");
-      BigDecimal decimal = (BigDecimal) simple.get("decimal");
-      Double aDouble = (Double) simple.get("aDouble");
-      org.bson.BsonTimestamp timestamp = (org.bson.BsonTimestamp) simple.get("timestamp");
+    if (sync.containField("simples")) {
+      for (Map simple : ((List<Map>) sync.getField("simples"))) {
+        Long id = (Long) simple.get("id");
+        Integer tinyint = (Integer) simple.get("tinyint");
+        Long bigint = (Long) simple.get("bigint");
+        byte[] bytes = (byte[]) simple.get("bytes");
+        String varchar = (String) simple.get("varchar");
+        BigDecimal decimal = (BigDecimal) simple.get("decimal");
+        Double aDouble = (Double) simple.get("aDouble");
+        org.bson.BsonTimestamp timestamp = (org.bson.BsonTimestamp) simple.get("timestamp");
+      }
     }
     Map nestedIn = (Map) sync.getField("nestedIn");
     Long id = (Long) nestedIn.get("id");
