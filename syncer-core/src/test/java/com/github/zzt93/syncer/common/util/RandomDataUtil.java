@@ -12,7 +12,7 @@ public class RandomDataUtil {
   private static final int MIN = 32;
   private static final int MAX = 127;
   private static Random r = new Random();
-  private static final long EARLIEST = Timestamp.valueOf("1644-01-01 00:00:00").getTime();
+  private static final long EARLIEST = Timestamp.valueOf("1974-01-01 00:00:00").getTime();
   private static final long END = Timestamp.valueOf("2028-01-01 00:00:00").getTime();
 
   public static Timestamp randomTimestamp() {

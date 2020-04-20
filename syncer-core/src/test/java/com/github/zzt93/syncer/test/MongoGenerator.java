@@ -163,7 +163,8 @@ public class MongoGenerator {
       }
       if (timestamp != null) {
         long time = timestamp.getTime();
-        res.append("timestamp", new BsonTimestamp((int) time / _1s, (int) time % _1s));
+        BsonTimestamp value = new BsonTimestamp((int) (time / _1s), (int) (time % _1s));
+        res.append("timestamp", value);
       }
       return res;
     }
