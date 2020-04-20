@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.test;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
 import org.bson.*;
 import org.bson.json.JsonMode;
 import org.bson.json.JsonWriterSettings;
@@ -30,6 +32,8 @@ public class MongoGenerator {
   public static final Double UPDATE_RATE = 0.3;
   public static final Double DELETE_RATE = 0.1;
   public static final int _1s = 1000;
+  public static final String _4_0 = "4.0";
+  public static final String _3_2 = "3.2";
   private static Random r = new Random();
   private final JsonWriterSettings js = JsonWriterSettings.builder().outputMode(JsonMode.SHELL)
       .int32Converter((value, writer) -> writer.writeRaw(format("NumberInt(%d)", value))).build();
@@ -49,6 +53,12 @@ public class MongoGenerator {
   public void generate() throws FileNotFoundException {
     int num = Integer.parseInt(System.getProperty("num"));
     String start = System.getProperty("start");
+    String version = System.getProperty("env");
+    if (version.equals("mongo")) {
+      version = _3_2;
+    } else {
+      version = _4_0;
+    }
     Integer idStart = null;
     if (start != null) {
       idStart = Integer.parseInt(start);
@@ -57,7 +67,7 @@ public class MongoGenerator {
     PrintWriter out = new PrintWriter(new BufferedOutputStream(new FileOutputStream(fileName)));
     List<BsonDocument> res = new ArrayList<>(num);
     for (int i = 0; i < num; i++) {
-      res.add(NestedOut.random(idStart != null ? idStart + i : null));
+      res.add(NestedOut.random(version, idStart != null ? idStart + i : null));
     }
     out.print(res.stream().map(BsonDocument::toJson).collect(Collectors.joining(",", "[", "]")));
     out.flush();
@@ -71,14 +81,14 @@ public class MongoGenerator {
     for (int i = 0; i < num; i++) {
       if (r.nextDouble() < UPDATE_RATE) {
         int id = idStart + i;
-        out.println(String.format("db.simple_type.updateMany(%s,{$set :%s});", String.format(con, id), NestedOut.randomUpdate(id).toJson(js)));
+        out.println(String.format("db.simple_type.updateMany(%s,{$set :%s});", String.format(con, id), NestedOut.randomUpdate(version, id).toJson(js)));
       }
     }
 
     for (int i = 0; i < num; i++) {
       if (r.nextDouble() < DELETE_RATE) {
         int id = idStart + i;
-        out.println(String.format("db.simple_type.remove(%s);", String.format(con, id)));
+        out.println(String.format("db.simple_type.deleteOne(%s);", String.format(con, id)));
       }
     }
 
@@ -99,8 +109,10 @@ public class MongoGenerator {
     private final BigDecimal decimal;
     private final Double aDouble;
     private final Timestamp timestamp;
+    private final String version;
 
-    Simple(Long id, Byte tinyint, Long bigint, byte[] aBytes, String varchar, BigDecimal decimal, Double aDouble, Timestamp timestamp) {
+    Simple(String version, Long id, Byte tinyint, Long bigint, byte[] aBytes, String varchar, BigDecimal decimal, Double aDouble, Timestamp timestamp) {
+      this.version = version;
       this.id = id;
       this.tinyint = tinyint;
       this.bigint = bigint;
@@ -111,16 +123,16 @@ public class MongoGenerator {
       this.timestamp = timestamp;
     }
 
-    private static Simple random() {
-      return new Simple(
+    private static Simple random(String version) {
+      return new Simple(version,
           r.nextLong(), randomByte(), r.nextLong(), randomBytes(50), randomStr(),
           randomDecimal(), r.nextDouble() + r.nextInt(), randomTimestamp()
       );
     }
 
-    public static Simple randomUpdate() {
+    public static Simple randomUpdate(String version) {
       return new Simple(
-          randomNull(r.nextLong()), randomNull(randomByte()), randomNull(r.nextLong()), randomNull(randomBytes(50)), randomNull(randomStr()),
+          version, randomNull(r.nextLong()), randomNull(randomByte()), randomNull(r.nextLong()), randomNull(randomBytes(50)), randomNull(randomStr()),
           randomNull(randomDecimal()), randomNull(r.nextDouble() + r.nextInt()), randomNull(randomTimestamp())
       );
     }
@@ -143,7 +155,7 @@ public class MongoGenerator {
       if (varchar != null) {
         res.append("varchar", new BsonString(varchar));
       }
-      if (decimal != null) {
+      if (decimal != null && MongoVersion.from(version).onOrAfter(_3_4)) {
         res.append("decimal", new BsonDecimal128(new Decimal128(decimal)));
       }
       if (aDouble != null) {
@@ -157,6 +169,20 @@ public class MongoGenerator {
     }
   }
 
+  private static MongoVersion _3_4 = MongoVersion.from("3.4");
+  @Data
+  @AllArgsConstructor
+  private static class MongoVersion {
+    private int main;
+    private int sub;
+    public static MongoVersion from(String version) {
+      String[] split = version.split("\\.");
+      return new MongoVersion(Integer.parseInt(split[0]), Integer.parseInt(split[1]));
+    }
+    public boolean onOrAfter(MongoVersion version) {
+      return main > version.main || (main == version.main && sub >= version.sub);
+    }
+  }
   private static class NestedIn implements Doc {
     private final Long id;
     private final Date time;
@@ -240,11 +266,11 @@ public class MongoGenerator {
       this.nestedIn = nestedIn;
     }
 
-    private static BsonDocument random(Integer id) {
+    private static BsonDocument random(String version, Integer id) {
       int i = r.nextInt(10);
       ArrayList<Simple> simples = new ArrayList<>();
       for (int c = 0; c < i; c++) {
-        simples.add(Simple.random());
+        simples.add(Simple.random(version));
       }
       if (id == null) {
         return new NestedOut(simples, NestedIn.random()).toDoc();
@@ -252,12 +278,12 @@ public class MongoGenerator {
       return new NestedOut(id, simples, NestedIn.random()).toDoc();
     }
 
-    private static BsonDocument randomUpdate(long id) {
+    private static BsonDocument randomUpdate(String version, long id) {
       int i = r.nextInt(10);
       ArrayList<Simple> simples = new ArrayList<>();
       for (int c = 0; c < i; c++) {
         if (r.nextDouble() < UPDATE_RATE) {
-          simples.add(Simple.randomUpdate());
+          simples.add(Simple.randomUpdate(version));
         }
       }
       return new NestedOut(id, simples, NestedIn.randomUpdate()).toDoc();

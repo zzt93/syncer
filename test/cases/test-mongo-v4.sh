@@ -2,7 +2,7 @@
 
 source cases/test-mongo-input.sh
 
-env=mongo_v4
+env=mongo-v4
 num=200
 syncerDir=mongo-input
 

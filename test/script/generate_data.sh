@@ -53,14 +53,14 @@ function generateMongoTestData() {
     mkdir -p ${TEST_DIR}/data/mongo/
     cd ${TEST_DIR}/../syncer-core/
     if ! [[ "$start" =~ $int ]]; then
-      mvn test -q -Dtest=com.github.zzt93.syncer.test.MongoGenerator -DargLine="-Dnum=$1 -DfileName=${TEST_DIR}/data/mongo/simple_type.json" >> "${LOG_FILE}"
+      mvn test -q -Dtest=com.github.zzt93.syncer.test.MongoGenerator -DargLine="-Dnum=$1 -Denv=${env} -DfileName=${TEST_DIR}/data/mongo/simple_type.json" >> "${LOG_FILE}"
     else
-      mvn test -q -Dtest=com.github.zzt93.syncer.test.MongoGenerator -DargLine="-Dnum=$1 -Dstart=$start -DfileName=${TEST_DIR}/data/mongo/simple_type.json" >> "${LOG_FILE}"
+      mvn test -q -Dtest=com.github.zzt93.syncer.test.MongoGenerator -DargLine="-Dnum=$1 -Denv=${env} -Dstart=$start -DfileName=${TEST_DIR}/data/mongo/simple_type.json" >> "${LOG_FILE}"
     fi
     cd ${TEST_DIR}
 }
 
-if [[ ${env} = "mongo" || ${env} = "mongo_v4" ]]; then
+if [[ ${env} == mongo* ]]; then
     generateMongoTestData ${lines} ${start}
 else
     generateMysqlTestData ${lines} ${start}
