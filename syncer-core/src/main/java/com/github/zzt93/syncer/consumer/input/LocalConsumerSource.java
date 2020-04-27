@@ -77,6 +77,9 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   public boolean input(SyncData[] data) {
     boolean res = true;
     for (SyncData datum : data) {
+      if (datum == null) {
+        continue;
+      }
       if (!sent(datum)) {
         ack.append(connectionIdentifier, datum.getDataId());
         res = scheduler.schedule(datum.setSourceIdentifier(connectionIdentifier)) && res;
