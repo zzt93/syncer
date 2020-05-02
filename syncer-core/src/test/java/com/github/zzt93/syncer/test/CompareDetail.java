@@ -83,25 +83,23 @@ public class CompareDetail {
     for (Map.Entry<String, String[]> e : dbs.entrySet()) {
       String db = e.getKey();
       for (String table : e.getValue()) {
-        Selector t = new Selector(db, table, idMin);
-        Map<String, Object> inputRes = inputSupplier.apply(t);
-        Map<String, Object> outputRes = outputSupplier.apply(t);
-        int inputSize = inputRes.size();
-        int outputSize = outputRes.size();
-
         for (int id = idMin; id < idMax; id++) {
           if (r.nextDouble() >= cmpRate) {
             continue;
           }
-          t = new Selector(db, table, id);
-          inputRes = inputSupplier.apply(t);
-          outputRes = outputSupplier.apply(t);
+          Selector t = new Selector(db, table, idMin);
+          Map<String, Object> inputRes = inputSupplier.apply(t);
+          Map<String, Object> outputRes = outputSupplier.apply(t);
 
-          assertTrue(inputSize == inputRes.size() || inputRes.isEmpty());
-          assertTrue(outputSize == outputRes.size() || outputRes.isEmpty());
+          assertTrue("output > input", inputRes.size() >= outputRes.size());
           for (String s : outputRes.keySet()) {
             if (inputRes.containsKey(s)) {
-              assertEquals(inputRes.get(s), outputRes.get(s));
+              Object expected = inputRes.get(s);
+              if (expected.getClass().isArray()) {
+                assertEquals(expected.toString(), outputRes.get(s).toString());
+              } else {
+                assertEquals(expected, outputRes.get(s));
+              }
             } else {
               fail();
             }

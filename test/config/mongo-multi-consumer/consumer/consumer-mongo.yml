@@ -1,6 +1,6 @@
 version: 1.2
 
-consumerId: mongo2
+consumerId: mongo
 
 
 input:
@@ -62,7 +62,7 @@ output:
     requestMapping: # mapping from input data to es request
 
       retryOnUpdateConflict: 3
-      index: "repo + getExtra('suffix')" # default: repo
+      index: "repo" # default: repo
 
       fieldsMapping: # default: fields.*.flatten
         "fields": "fields.*.flatten"

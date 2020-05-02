@@ -1,12 +1,1 @@
-version: 1.2
-
-input:
-  masters:
-
-  - connection:
-      address: ${MONGO_IN}
-      port: 27017
-    type: Mongo
-
-
-
+mongo-multi-consumer/producer.yml
