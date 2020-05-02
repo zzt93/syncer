@@ -174,7 +174,13 @@ function detail() {
   idMax=$2
   input=$3
   output=$4
-  mvn test -q -Dtest=com.github.zzt93.syncer.test.CompareDetail -DargLine="-DidMin=$idMin -DidMax=$idMax -Dinput=$input -Doutput=$output" >> "${LOG_FILE}"
+
+  logi "---------------------"
+  logi "cmp detail"
+  logi "---------------------"
+  cd ${TEST_DIR}/../syncer-core/
+  mvn test -q -Dtest=com.github.zzt93.syncer.test.CompareDetail -DargLine="-DidMin=$idMin -DidMax=$idMax -Dinput=$input -Doutput=$output"
+  cd ${TEST_DIR}
 }
 
 function cleanupAll() {

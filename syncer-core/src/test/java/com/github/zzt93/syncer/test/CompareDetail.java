@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import lombok.AllArgsConstructor;
+import org.apache.commons.lang.StringUtils;
 import org.bson.BsonDocument;
 import org.bson.BsonInt64;
 import org.elasticsearch.action.search.SearchResponse;
@@ -119,7 +120,7 @@ public class CompareDetail {
 
   private Function<Selector, Map<String, Object>> getOutput() throws Exception {
     String outputEnv = System.getProperty("output");
-    if (outputEnv == null) {
+    if (StringUtils.isBlank(outputEnv)) {
       outputEnv = OutputType.es.name();
     }
     OutputType output = OutputType.valueOf(outputEnv);
@@ -146,7 +147,7 @@ public class CompareDetail {
 
   private Function<Selector, Map<String, Object>> getInput() throws UnknownHostException {
     String inputEnv = System.getProperty("input");
-    if (inputEnv == null) {
+    if (StringUtils.isBlank(inputEnv)) {
       inputEnv = MasterSourceType.MySQL.name();
     }
     MasterSourceType input = MasterSourceType.valueOf(inputEnv);
