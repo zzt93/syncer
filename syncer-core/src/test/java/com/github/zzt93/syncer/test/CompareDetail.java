@@ -11,6 +11,7 @@ import lombok.AllArgsConstructor;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonDocument;
 import org.bson.BsonInt64;
+import org.bson.Document;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -68,7 +69,8 @@ public class CompareDetail {
   }
 
   private static Map<String, Object> mongoDetail(MongoClient mongoClient, String db, String col, int id) {
-    return mongoClient.getDatabase(db).getCollection(col).find(new BsonDocument("_id", new BsonInt64(id))).first();
+    Document d = mongoClient.getDatabase(db).getCollection(col).find(new BsonDocument("_id", new BsonInt64(id))).first();
+    return d == null ? Collections.emptyMap() : d;
   }
 
   @Test

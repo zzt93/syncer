@@ -6,6 +6,8 @@ input:
   - connection:
       address: ${MONGO_IN}
       port: 27017
+      user: root
+      password: root
     type: Mongo
 
 

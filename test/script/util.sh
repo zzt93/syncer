@@ -180,6 +180,9 @@ function detail() {
   logi "---------------------"
   cd ${TEST_DIR}/../syncer-core/
   mvn test -q -Dtest=com.github.zzt93.syncer.test.CompareDetail -DargLine="-DidMin=$idMin -DidMax=$idMax -Dinput=$input -Doutput=$output"
+  if [[ $? != 0 ]]; then
+      exit 77
+  fi
   cd ${TEST_DIR}
 }
 
