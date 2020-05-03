@@ -8,6 +8,7 @@ import com.google.common.collect.Lists;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonDocument;
 import org.bson.BsonInt64;
@@ -33,6 +34,7 @@ import static org.junit.Assert.*;
 /**
  * @author zzt
  */
+@Slf4j
 public class CompareDetail {
 
   private static Random r = new Random();
@@ -96,7 +98,12 @@ public class CompareDetail {
           Map<String, Object> inputRes = inputSupplier.apply(t);
           Map<String, Object> outputRes = outputSupplier.apply(t);
 
-          cmp(inputRes, outputRes);
+          try {
+            cmp(inputRes, outputRes);
+          } catch (AssertionError ex) {
+            log.error("{}: \ninput: {}\noutput: {}", t, inputRes, outputRes, ex);
+            throw ex;
+          }
         }
       }
     }
@@ -104,7 +111,7 @@ public class CompareDetail {
 
   private void cmp(Object in, Object out) {
     if (in instanceof Map) {
-			assertSame(String.format("output:%s > input:%s", in, out), in.getClass(), out.getClass());
+			assertTrue(String.format("output:%s > input:%s", in, out), out instanceof Map);
 			Map<String, Object> inputRes = (Map) in;
 			Map<String, Object>  outputRes = (Map) out;
 			assertTrue(String.format("output:%s > input:%s", outputRes, inputRes), inputRes.size() >= outputRes.size());
