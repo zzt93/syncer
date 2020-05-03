@@ -158,11 +158,11 @@ public class CompareDetail {
     switch (input) {
       case MySQL:
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
-        inputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db, s.table, s.id);
+        inputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db + "_0", s.table, s.id);
         break;
       case Mongo:
         MongoClient client = getMongoClient();
-        inputSupplier = (Selector s) -> mongoDetail(client, s.db, s.table, s.id);
+        inputSupplier = (Selector s) -> mongoDetail(client, s.db + "_0", s.table, s.id);
         break;
       default:
         throw new UnsupportedOperationException();
