@@ -19,9 +19,11 @@ import org.elasticsearch.search.SearchHits;
 import org.junit.Test;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import java.lang.reflect.Array;
 import java.net.UnknownHostException;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Random;
 import java.util.function.Function;
@@ -94,22 +96,41 @@ public class CompareDetail {
           Map<String, Object> inputRes = inputSupplier.apply(t);
           Map<String, Object> outputRes = outputSupplier.apply(t);
 
-          assertTrue(String.format("output:%s > input:%s", outputRes, inputRes), inputRes.size() >= outputRes.size());
-          for (String s : outputRes.keySet()) {
-            if (inputRes.containsKey(s)) {
-              Object expected = inputRes.get(s);
-              if (expected.getClass().isArray()) {
-                assertEquals(String.format("output:%s > input:%s", outputRes, inputRes), expected.toString(), outputRes.get(s).toString());
-              } else {
-                assertEquals(String.format("output:%s > input:%s", outputRes, inputRes), expected, outputRes.get(s));
-              }
-            } else {
-              fail();
-            }
-          }
+          cmp(inputRes, outputRes);
         }
       }
     }
+  }
+
+  private void cmp(Object in, Object out) {
+    if (in instanceof Map) {
+			assertSame(String.format("output:%s > input:%s", in, out), in.getClass(), out.getClass());
+			Map<String, Object> inputRes = (Map) in;
+			Map<String, Object>  outputRes = (Map) out;
+			assertTrue(String.format("output:%s > input:%s", outputRes, inputRes), inputRes.size() >= outputRes.size());
+			for (String s : outputRes.keySet()) {
+				if (inputRes.containsKey(s)) {
+					Object expected = inputRes.get(s);
+					Object o = outputRes.get(s);
+					cmp(expected, o);
+				} else {
+					fail(String.format("output:%s > input:%s", outputRes, inputRes));
+				}
+			}
+		} else if (in.getClass().isArray()) {
+			assertEquals(String.format("output:%s > input:%s", in, out), in, out);
+			for(int i = 0; i< Array.getLength(in); i++){
+				cmp(Array.get(in, i), Array.get(out, i));
+			}
+		} else if (in instanceof List) {
+			assertSame(String.format("output:%s > input:%s", in, out), in.getClass(), out.getClass());
+			for (int i = 0; i < ((List) in).size(); i++) {
+				cmp(((List) in).get(i), ((List) out).get(i));
+			}
+		} else {
+			assertEquals(String.format("output:%s > input:%s", in, out), in, out);
+		}
+
   }
 
   private int getId(String prop, int defaultVal) {
