@@ -94,14 +94,14 @@ public class CompareDetail {
           Map<String, Object> inputRes = inputSupplier.apply(t);
           Map<String, Object> outputRes = outputSupplier.apply(t);
 
-          assertTrue("output > input", inputRes.size() >= outputRes.size());
+          assertTrue(String.format("output:%s > input:%s", outputRes, inputRes), inputRes.size() >= outputRes.size());
           for (String s : outputRes.keySet()) {
             if (inputRes.containsKey(s)) {
               Object expected = inputRes.get(s);
               if (expected.getClass().isArray()) {
-                assertEquals(expected.toString(), outputRes.get(s).toString());
+                assertEquals(String.format("output:%s > input:%s", outputRes, inputRes), expected.toString(), outputRes.get(s).toString());
               } else {
-                assertEquals(expected, outputRes.get(s));
+                assertEquals(String.format("output:%s > input:%s", outputRes, inputRes), expected, outputRes.get(s));
               }
             } else {
               fail();
