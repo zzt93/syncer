@@ -29,9 +29,9 @@ services:
     command: mongod --smallfiles --replSet test
     volumes:
     - ${TEST_DIR}/data:/Data
-    environment:
-      - MONGO_INITDB_ROOT_USERNAME=root
-      - MONGO_INITDB_ROOT_PASSWORD=root
+#    environment:
+#      - MONGO_INITDB_ROOT_USERNAME=root
+#      - MONGO_INITDB_ROOT_PASSWORD=root
     ports:
     - 47017:27017
     networks:

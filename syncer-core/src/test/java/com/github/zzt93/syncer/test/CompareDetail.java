@@ -238,7 +238,8 @@ public class CompareDetail {
   }
 
   private MongoClient getMongoClient() throws UnknownHostException {
-    MongoConnection connection = new MongoConnection("localhost", 47017, "root", "root");
+//    MongoConnection connection = new MongoConnection("localhost", 47017, "root", "root");
+    MongoConnection connection = new MongoConnection("localhost", 47017, null, null);
     return new MongoClient(new MongoClientURI(connection.toConnectionUrl(null)));
   }
 

@@ -59,7 +59,8 @@ The business database query request is delayed as little as possible.
   - Support reading from binlog file to do data recovering in case of loss of data (`input.masters[x].file`)
   - Support specify binlog file/position to start reading (`input.masters[x].connection.syncMeta[]`)
 - MongoDB master source filter:
-  - Version: 3.x
+  - Version: 3.x, 4.0
+    - Only 4.0 support field removed detection and sync (Because the limitation of ES/MySQL, it always means setting field to null in output target which may not what you want) 
   - Database filter (naming as `repos`), support regex
   - Collection name filter
   - In a `UPDATE`, only changed column will be received (different from `MySQL`)
