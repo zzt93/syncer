@@ -28,7 +28,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.*;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Random;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -148,6 +152,7 @@ public class MysqlMasterConnector implements MasterConnector {
         client.connect();
         logger.info("[Shutting down] Closing connection to mysql master");
         return;
+        // TODO 2020/4/28 catch MismatchedSchemaException
       } catch (InvalidBinlogException e) {
         oldestLog(e);
       } catch (DupServerIdException | EOFException e) {

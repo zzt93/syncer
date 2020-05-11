@@ -84,7 +84,7 @@ public interface SyncData {
   ESScriptUpdate esScriptUpdate(String script, Map<String, Object> params);
 
   /**
-   * @param docFilter filter for query a ES doc and apply script
+   * @param docFilter filter for query a ES doc and apply script, field value will be removed
    */
   ESScriptUpdate esScriptUpdate(Filter docFilter);
 

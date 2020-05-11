@@ -99,7 +99,7 @@ public class CompareDetail {
           Map<String, Object> outputRes = outputSupplier.apply(t);
 
           try {
-            cmp(inputRes, outputRes);
+            cmp(getInputType(), inputRes, outputRes);
           } catch (AssertionError ex) {
             log.error("{}: \ninput: {}\noutput: {}", t, inputRes, outputRes, ex);
             throw ex;
@@ -109,30 +109,41 @@ public class CompareDetail {
     }
   }
 
-  private void cmp(Object in, Object out) {
+  private void cmp(InputType inputType, Object in, Object out) {
     if (in instanceof Map) {
 			assertTrue(String.format("output:%s > input:%s", in, out), out instanceof Map);
 			Map<String, Object> inputRes = (Map) in;
 			Map<String, Object>  outputRes = (Map) out;
-			assertTrue(String.format("output:%s > input:%s", outputRes, inputRes), inputRes.size() >= outputRes.size());
-			for (String s : outputRes.keySet()) {
-				if (inputRes.containsKey(s)) {
-					Object expected = inputRes.get(s);
-					Object o = outputRes.get(s);
-					cmp(expected, o);
-				} else {
-					fail(String.format("output:%s > input:%s", outputRes, inputRes));
-				}
-			}
-		} else if (in.getClass().isArray()) {
+      if (!inputType.schemaChange()) {
+        assertTrue(String.format("output:%s > input:%s", outputRes, inputRes), inputRes.size() >= outputRes.size());
+        for (String s : outputRes.keySet()) {
+          if (inputRes.containsKey(s)) {
+            Object expected = inputRes.get(s);
+            Object o = outputRes.get(s);
+            cmp(inputType, expected, o);
+          } else {
+            fail(String.format("output:%s > input:%s", outputRes, inputRes));
+          }
+        }
+      } else {
+        // output >= input because the schema change
+        for (String s : outputRes.keySet()) {
+          if (inputRes.containsKey(s)) {
+            Object expected = inputRes.get(s);
+            Object o = outputRes.get(s);
+            cmp(inputType, expected, o);
+          }
+        }
+      }
+    } else if (in.getClass().isArray()) {
 			assertEquals(String.format("output:%s > input:%s", in, out), in, out);
 			for(int i = 0; i< Array.getLength(in); i++){
-				cmp(Array.get(in, i), Array.get(out, i));
+				cmp(inputType, Array.get(in, i), Array.get(out, i));
 			}
 		} else if (in instanceof List) {
 			assertSame(String.format("output:%s > input:%s", in, out), in.getClass(), out.getClass());
 			for (int i = 0; i < ((List) in).size(); i++) {
-				cmp(((List) in).get(i), ((List) out).get(i));
+				cmp(inputType, ((List) in).get(i), ((List) out).get(i));
 			}
 		} else {
 			assertEquals(String.format("output:%s > input:%s", in, out), in, out);
@@ -176,19 +187,27 @@ public class CompareDetail {
   }
 
   private Function<Selector, Map<String, Object>> getInput() throws UnknownHostException {
-    String inputEnv = System.getProperty("input");
-    if (StringUtils.isBlank(inputEnv)) {
-      inputEnv = MasterSourceType.MySQL.name();
-    }
-    MasterSourceType input = MasterSourceType.valueOf(inputEnv);
+    InputType input = getInputType();
 
     Function<Selector, Map<String, Object>> inputSupplier;
     switch (input) {
-      case MySQL:
+      case mysql0: {
         JdbcTemplate jdbcTemplate = getJdbcTemplate();
         inputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db + "_0", s.table, s.id);
         break;
-      case Mongo:
+      }
+      case mysql1:{
+        JdbcTemplate jdbcTemplate = getJdbcTemplate();
+        inputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db + "_1", s.table, s.id);
+        break;
+      }
+      case mysql2:{
+        JdbcTemplate jdbcTemplate = getJdbcTemplate();
+        inputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db + "_2", s.table, s.id);
+        break;
+      }
+      case mongo:
+      case mongo4:
         MongoClient client = getMongoClient();
         inputSupplier = (Selector s) -> mongoDetail(client, s.db + "_0", s.table, s.id);
         break;
@@ -196,6 +215,14 @@ public class CompareDetail {
         throw new UnsupportedOperationException();
     }
     return inputSupplier;
+  }
+
+  private InputType getInputType() {
+    String inputEnv = System.getProperty("input");
+    if (StringUtils.isBlank(inputEnv)) {
+      inputEnv = MasterSourceType.MySQL.name();
+    }
+    return InputType.valueOf(inputEnv);
   }
 
   private AbstractClient getAbstractClient() throws Exception {
@@ -217,6 +244,23 @@ public class CompareDetail {
 
   private enum OutputType {
     es, es7, mysql,
+  }
+  private enum InputType {
+    mysql0,mysql1,mysql2,mongo() {
+      @Override
+      public boolean schemaChange() {
+        return true;
+      }
+    },mongo4() {
+      @Override
+      public boolean schemaChange() {
+        return true;
+      }
+    };
+
+    public boolean schemaChange() {
+      return false;
+    }
   }
 
   @AllArgsConstructor

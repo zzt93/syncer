@@ -36,7 +36,7 @@ function test-mongo-input() {
     cmpFromTo extractMongoCount extractESCount 0 simple
 
     assertLogNotExist syncer ' ERROR '
-    detail 0 600 Mongo
+    detail 0 600 mongo
 }
 
 function cleanup() {
