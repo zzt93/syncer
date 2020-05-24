@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.output.http;
 
 
+import com.github.zzt93.syncer.common.util.SyncDataTypeUtil;
 import com.github.zzt93.syncer.config.common.HttpConnection;
 import com.github.zzt93.syncer.config.consumer.output.OutputChannelConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
@@ -22,7 +23,7 @@ public class Http implements OutputChannelConfig {
 
   public Http() {
     // default value of json mapper
-    jsonMapping.put(KVMapper.FAKE_KEY, KVMapper.ROW_FLATTEN);
+    jsonMapping.put(KVMapper.FAKE_KEY, SyncDataTypeUtil.ROW_FLATTEN);
   }
 
   public String getPath() {

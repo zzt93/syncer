@@ -38,6 +38,9 @@ function test-non-latest() {
     cmpFromTo extractConst extractESCount ${all} copy
 
     assertLogNotExist syncer ' ERROR '
+
+    detail 0 1000 mysql_0 es
+    detail 0 1000 mysql_0 mysql_0
 }
 
 function cleanup() {

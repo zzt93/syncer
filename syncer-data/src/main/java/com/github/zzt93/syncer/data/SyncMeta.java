@@ -22,5 +22,16 @@ public class SyncMeta {
   protected Object id;
   protected String primaryKeyName;
 
+  public boolean isWrite() {
+    return getEventType() == SimpleEventType.WRITE;
+  }
+
+  public boolean isUpdate() {
+    return getEventType() == SimpleEventType.UPDATE;
+  }
+
+  public boolean isDelete() {
+    return getEventType() == SimpleEventType.DELETE;
+  }
 
 }

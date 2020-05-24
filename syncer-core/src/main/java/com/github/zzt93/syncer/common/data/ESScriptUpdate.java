@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
+import com.github.zzt93.syncer.common.util.SyncDataTypeUtil;
 import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.google.common.collect.Lists;
@@ -14,7 +14,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static com.github.zzt93.syncer.common.util.EsTypeUtil.scriptConvert;
+import static com.github.zzt93.syncer.common.util.EsTypeUtil.*;
 
 /**
  * @see ExtraQuery
@@ -251,7 +251,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
           Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
           String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
 
-          KVMapper.map(nestedObj, nestedObj);
+          SyncDataTypeUtil.convert(nestedObj);
 
           code.append(String.format(
               "ctx._source.%s.removeIf(e -> e.%s.equals(params.%s)); ", nestedFieldName, docKeyNameOrDefault, docKeyNameOrDefault));
@@ -263,7 +263,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
           Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
           String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
 
-          KVMapper.map(nestedObj, nestedObj);
+          SyncDataTypeUtil.convert(nestedObj);
 
           code.append(String.format(
               "if (ctx._source.%s.find(e -> e.%s.equals(params.%s)) == null) {" +
@@ -278,7 +278,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
           Filter filter = (Filter) nestedObj.remove(CHILD_FILTER_KEY);
           String docKeyNameOrDefault = filter.getDocKeyNameOrDefault(CHILD_DOC_ID);
 
-          KVMapper.map(nestedObj, nestedObj);
+          SyncDataTypeUtil.convert(nestedObj);
 
           // remove filterKey from nestedObj because filterKey has no change
           subParam.put(docKeyNameOrDefault, nestedObj.remove(docKeyNameOrDefault));
@@ -348,7 +348,7 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
   public void generateMergeScript(StringBuilder code, HashMap<String, Object> params) {
     if (script != null && this.params != null) {
       code.append(script);
-      KVMapper.map(this.params, this.params);
+      SyncDataTypeUtil.convert(this.params);
       for (Map.Entry<String, Object> e : this.params.entrySet()) {
         params.put(e.getKey(), scriptConvert(e.getValue()));
       }

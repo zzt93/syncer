@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.common.LogbackLoggingField;
 import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.MongoDataId;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.util.MongoTypeUtil;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MongoConnection;
 import com.github.zzt93.syncer.data.SimpleEventType;
@@ -176,7 +177,7 @@ public class MongoMasterConnector extends MongoConnectorBase {
         return null;
     }
     Preconditions.checkState(row.containsKey(ID));
-    row = (HashMap<String, Object>) mongoMapping(row);
+    row = (HashMap<String, Object>) MongoTypeUtil.converBsonTypes(row);
     return new SyncData(dataId, type, namespace[0], namespace[1], ID, row.get(ID), new NamedUpdatedDoc(row));
   }
 

@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.common.LogbackLoggingField;
 import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.MongoDataId;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.util.MongoTypeUtil;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MongoConnection;
 import com.github.zzt93.syncer.config.producer.ProducerMaster;
@@ -22,7 +23,11 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.model.changestream.UpdateDescription;
-import org.bson.*;
+import org.bson.BsonDocument;
+import org.bson.BsonString;
+import org.bson.BsonTimestamp;
+import org.bson.BsonValue;
+import org.bson.Document;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -33,9 +38,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector.ID;
-import static java.util.Arrays.asList;
-import static java.util.Collections.singletonList;
+import static com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector.*;
+import static java.util.Arrays.*;
+import static java.util.Collections.*;
 
 /**
  * @author zzt
@@ -179,17 +184,17 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
   static Object getId(ChangeStreamDocument<Document> d) {
     BsonDocument documentKey = d.getDocumentKey();
     BsonValue o = documentKey.get(ID);
-    return bsonMapping(o);
+    return MongoTypeUtil.convertBson(o);
   }
 
   private Map getFullDocument(ChangeStreamDocument<Document> d) {
-    return (Map) mongoMapping(d.getFullDocument());
+    return (Map) MongoTypeUtil.converBsonTypes(d.getFullDocument());
   }
 
   static Map getUpdatedFields(Document fullDocument, BsonDocument updatedFields, boolean bsonConversion) {
     if (bsonConversion) {
       if (fullDocument == null) {
-        return (Map) bsonMapping(updatedFields);
+        return (Map) MongoTypeUtil.convertBson(updatedFields);
       }
       HashMap<String, Object> res = new HashMap<>();
       for (String key : updatedFields.keySet()) {

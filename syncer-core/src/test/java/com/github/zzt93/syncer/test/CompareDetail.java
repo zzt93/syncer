@@ -177,7 +177,7 @@ public class CompareDetail {
 //        outputSupplier = (Selector s) -> esDetail(esClient, s.table + "*", s.table, s.id);
 //        break;
       case mysql:
-        JdbcTemplate jdbcTemplate = getJdbcTemplate();
+        JdbcTemplate jdbcTemplate = getJdbcTemplate(43306);
         outputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db, s.table, s.id);
         break;
       default:
@@ -191,18 +191,18 @@ public class CompareDetail {
 
     Function<Selector, Map<String, Object>> inputSupplier;
     switch (input) {
-      case mysql0: {
-        JdbcTemplate jdbcTemplate = getJdbcTemplate();
+      case mysql_0: {
+        JdbcTemplate jdbcTemplate = getJdbcTemplate(43306);
         inputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db + "_0", s.table, s.id);
         break;
       }
-      case mysql1:{
-        JdbcTemplate jdbcTemplate = getJdbcTemplate();
+      case mysql_1:{
+        JdbcTemplate jdbcTemplate = getJdbcTemplate(43307);
         inputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db + "_1", s.table, s.id);
         break;
       }
-      case mysql2:{
-        JdbcTemplate jdbcTemplate = getJdbcTemplate();
+      case mysql_2:{
+        JdbcTemplate jdbcTemplate = getJdbcTemplate(43308);
         inputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db + "_2", s.table, s.id);
         break;
       }
@@ -232,8 +232,8 @@ public class CompareDetail {
     return elasticsearchConnection.esClient();
   }
 
-  private JdbcTemplate getJdbcTemplate() throws UnknownHostException {
-    MysqlConnection connection = new MysqlConnection("localhost", 43306, "root", "root");
+  private JdbcTemplate getJdbcTemplate(int port) throws UnknownHostException {
+    MysqlConnection connection = new MysqlConnection("localhost", port, "root", "root");
     return new JdbcTemplate(connection.dataSource());
   }
 
@@ -247,7 +247,7 @@ public class CompareDetail {
     es, es7, mysql,
   }
   private enum InputType {
-    mysql0,mysql1,mysql2,mongo() {
+    mysql_0, mysql_1, mysql_2,mongo() {
       @Override
       public boolean schemaChange() {
         return true;

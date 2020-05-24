@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.consumer.output.elastic;
 
+import com.github.zzt93.syncer.common.util.SyncDataTypeUtil;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 
@@ -19,7 +20,7 @@ public class ESRequestMapping {
 
   public ESRequestMapping() {
     // default value of mapper
-    fieldsMapping.put(KVMapper.FAKE_KEY, KVMapper.ROW_FLATTEN);
+    fieldsMapping.put(KVMapper.FAKE_KEY, SyncDataTypeUtil.ROW_FLATTEN);
   }
 
   public String getIndex() {
