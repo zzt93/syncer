@@ -22,7 +22,9 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.lang.reflect.Array;
 import java.net.UnknownHostException;
+import java.sql.Timestamp;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -145,8 +147,10 @@ public class CompareDetail {
 			for (int i = 0; i < ((List) in).size(); i++) {
 				cmp(inputType, ((List) in).get(i), ((List) out).get(i));
 			}
-		} else {
-			assertEquals(String.format("output:%s > input:%s", in, out), in, out);
+		} else if (in instanceof Date || in instanceof Timestamp) {
+      assertEquals(String.format("output:%s != input:%s", out, in), ((Date) in).getTime(), ((Date) out).getTime());
+    } else {
+			assertEquals(String.format("output:%s != input:%s", out, in), in, out);
 		}
 
   }
