@@ -23,8 +23,8 @@ function setupSyncerConfig() {
     mkdir -p ${TEST_DATA_DIR}/config/consumer
     rm -f ${TEST_DATA_DIR}/config/consumer/*
 
-    cp ${CONFIG_DIR}/${syncerDir}/producer.yml data/config/producer.yml
-    cp ${CONFIG_DIR}/${syncerDir}/consumer/* data/config/consumer/
+    cp ${CONFIG_DIR}/${syncerDir}/producer.yml ${TEST_DATA_DIR}/config/producer.yml
+    cp ${CONFIG_DIR}/${syncerDir}/consumer/* ${TEST_DATA_DIR}/config/consumer/
 }
 
 
@@ -39,6 +39,10 @@ function prepareEnv() {
     if [[ ${env} == mongo* ]]; then
         dockerExec mongo mongo --eval "rs.initiate(); db.getSiblingDB('simple_0').createCollection('simple_type')"
     fi
+
+    # prepare es template
+    cp ${CONFIG_DIR}/template.json ${TEST_DATA_DIR}/
+    dockerExec elasticsearch curl -XPUT "http://localhost:9200/_template/time_template" -H 'Content-Type: application/json' -d@/data/template.json
 }
 
 
