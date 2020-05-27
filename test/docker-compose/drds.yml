@@ -56,6 +56,8 @@ services:
 
   elasticsearch:
     command: -E cluster.name=test-cluster -E network.host=_site_
+    volumes:
+      - ${TEST_DIR}/data:/Data
     image: elasticsearch:5.6
     container_name: elasticsearch
     healthcheck:

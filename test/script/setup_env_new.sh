@@ -42,7 +42,7 @@ function prepareEnv() {
 
     # prepare es template
     cp ${CONFIG_DIR}/template.json ${TEST_DATA_DIR}/
-    dockerExec elasticsearch curl -XPUT "http://localhost:9200/_template/time_template" -H 'Content-Type: application/json' -d@/data/template.json
+    dockerExec elasticsearch curl -XPUT "http://localhost:9200/_template/time_template" -H 'Content-Type: application/json' -d@/Data/template.json
 }
 
 
