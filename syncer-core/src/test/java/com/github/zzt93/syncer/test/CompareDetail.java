@@ -187,7 +187,7 @@ public class CompareDetail {
 //        break;
       case mysql_0:
         JdbcTemplate jdbcTemplate = getJdbcTemplate(43306);
-        outputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db, s.table, s.id);
+        outputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db + "_0", s.table, s.id);
         break;
       default:
         throw new UnsupportedOperationException();
