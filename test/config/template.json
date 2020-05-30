@@ -26,7 +26,11 @@
         "createTime": {
           "type": "date",
           "format": "yyyy-MM-dd HH:mm:ss.SSS"
-        },
+        }
+      }
+    },
+    "simple_type": {
+      "properties": {
         "nestedIn": {
           "type": "object",
           "properties": {
