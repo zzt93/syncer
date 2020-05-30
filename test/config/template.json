@@ -1,7 +1,7 @@
 {
   "template": "*",
   "mappings": {
-    "task": {
+    "*": {
       "properties": {
         "modify_time": {
           "type": "date",
