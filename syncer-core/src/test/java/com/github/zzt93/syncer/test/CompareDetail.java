@@ -185,7 +185,7 @@ public class CompareDetail {
 //        AbstractClient esClient = getAbstractClient();
 //        outputSupplier = (Selector s) -> esDetail(esClient, s.table + "*", s.table, s.id);
 //        break;
-      case mysql:
+      case mysql_0:
         JdbcTemplate jdbcTemplate = getJdbcTemplate(43306);
         outputSupplier = (Selector s) -> mysqlDetail(jdbcTemplate, s.db, s.table, s.id);
         break;
@@ -253,7 +253,7 @@ public class CompareDetail {
   }
 
   private enum OutputType {
-    es, es7, mysql,
+    es, es7, mysql_0,
   }
   private enum InputType {
     mysql_0, mysql_1, mysql_2,mongo() {
