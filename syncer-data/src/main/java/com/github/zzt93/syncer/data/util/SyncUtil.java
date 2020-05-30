@@ -7,6 +7,8 @@ import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -88,10 +90,20 @@ public class SyncUtil {
     return sb.toString();
   }
 
+  /**
+   * @param key name for field which is byte[] in Java, which may come from blob type in db
+   */
   public static void toStr(SyncData sync, String key) {
     Object value = sync.getField(key);
     if (value != null) {
       sync.updateField(key, new String((byte[]) value, java.nio.charset.StandardCharsets.UTF_8));
+    }
+  }
+
+  public static void dateToTimestamp(SyncData sync, String key) {
+    Date value = (Date) sync.getField(key);
+    if (value != null) {
+      sync.updateField(key, new Timestamp(value.getTime()));
     }
   }
 

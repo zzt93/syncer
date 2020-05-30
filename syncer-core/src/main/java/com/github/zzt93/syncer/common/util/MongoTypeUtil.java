@@ -57,6 +57,7 @@ public class MongoTypeUtil {
 			case BOOLEAN:
 				return value.asBoolean().getValue();
 			case DATE_TIME:
+				// java mongo driver return date as java.util.Date
 				return new Date(value.asDateTime().getValue());
 			case DECIMAL128:
 				return value.asDecimal128().getValue().bigDecimalValue();

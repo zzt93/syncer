@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.test;
 import com.github.zzt93.syncer.config.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.common.MongoConnection;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
-import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.google.common.collect.Lists;
 import com.mongodb.MongoClient;
 import com.mongodb.MongoClientURI;
@@ -23,7 +22,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.lang.reflect.Array;
 import java.net.UnknownHostException;
-import java.sql.Timestamp;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
@@ -152,7 +150,7 @@ public class CompareDetail {
 			for (int i = 0; i < ((List) in).size(); i++) {
 				cmp(inputType, ((List) in).get(i), ((List) out).get(i));
 			}
-		} else if (in instanceof Date || in instanceof Timestamp) {
+		} else if (in instanceof Date) {
       assertEquals(String.format("output:%s != input:%s", out, in), ((Date) in).getTime(), ((Date) out).getTime());
     } else {
 			assertEquals(String.format("output:%s != input:%s", out, in), in, out);
@@ -229,7 +227,7 @@ public class CompareDetail {
   private InputType getInputType() {
     String inputEnv = System.getProperty("input");
     if (StringUtils.isBlank(inputEnv)) {
-      inputEnv = MasterSourceType.MySQL.name();
+      inputEnv = InputType.mysql_0.name();
     }
     return InputType.valueOf(inputEnv);
   }
@@ -237,7 +235,7 @@ public class CompareDetail {
   private AbstractClient getAbstractClient() throws Exception {
     ElasticsearchConnection elasticsearchConnection = new ElasticsearchConnection();
     elasticsearchConnection.setClusterName("test-cluster");
-    elasticsearchConnection.setClusterNodes(Lists.newArrayList("localhost:49300"));
+    elasticsearchConnection.setClusterNodes(Lists.newArrayList("192.168.1.249:49300"));
     return elasticsearchConnection.esClient();
   }
 
@@ -248,7 +246,7 @@ public class CompareDetail {
 
   private MongoClient getMongoClient() throws UnknownHostException {
 //    MongoConnection connection = new MongoConnection("localhost", 47017, "root", "root");
-    MongoConnection connection = new MongoConnection("localhost", 47017, null, null);
+    MongoConnection connection = new MongoConnection("192.168.1.249", 47017, null, null);
     return new MongoClient(new MongoClientURI(connection.toConnectionUrl(null)));
   }
 
