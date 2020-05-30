@@ -26,6 +26,15 @@
         "createTime": {
           "type": "date",
           "format": "yyyy-MM-dd HH:mm:ss.SSS"
+        },
+        "nestedIn": {
+          "type": "nested",
+          "properties": {
+            "time": {
+              "type": "date",
+              "format": "yyyy-MM-dd HH:mm:ss.SSS"
+            }
+          }
         }
       }
     }
