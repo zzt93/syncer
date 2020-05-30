@@ -28,7 +28,7 @@
           "format": "yyyy-MM-dd HH:mm:ss.SSS"
         },
         "nestedIn": {
-          "type": "nested",
+          "type": "object",
           "properties": {
             "time": {
               "type": "date",
