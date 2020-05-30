@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.bson.BsonDocument;
 import org.bson.BsonInt64;
+import org.bson.BsonTimestamp;
 import org.bson.Document;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.support.AbstractClient;
@@ -152,6 +153,8 @@ public class CompareDetail {
 			}
 		} else if (in instanceof Date) {
       assertEquals(String.format("output:%s != input:%s", out, in), ((Date) in).getTime(), ((Date) out).getTime());
+    } else if (in instanceof BsonTimestamp) {
+      assertEquals(String.format("output:%s != input:%s", out, in), in.toString(), out.toString());
     } else {
 			assertEquals(String.format("output:%s != input:%s", out, in), in, out);
 		}
