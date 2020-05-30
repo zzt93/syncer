@@ -18,6 +18,7 @@ import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.junit.Test;
+import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.lang.reflect.Array;
@@ -71,7 +72,11 @@ public class CompareDetail {
   }
 
   private static Map<String, Object> mysqlDetail(JdbcTemplate jdbcTemplate, String db, String table, int id) {
-    return jdbcTemplate.queryForMap(String.format("select * from %s.%s where id = %d", db, table, id));
+    try {
+      return jdbcTemplate.queryForMap(String.format("select * from %s.%s where id = %d", db, table, id));
+    } catch (EmptyResultDataAccessException e) {
+      return Collections.emptyMap();
+    }
   }
 
   private static Map<String, Object> mongoDetail(MongoClient mongoClient, String db, String col, int id) {
