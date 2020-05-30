@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.config.common;
 import com.mysql.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
+import lombok.NoArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -13,6 +14,7 @@ import java.util.Properties;
 /**
  * @author zzt
  */
+@NoArgsConstructor
 public class MysqlConnection extends Connection {
   private static final Logger logger = LoggerFactory.getLogger(MysqlConnection.class);
 

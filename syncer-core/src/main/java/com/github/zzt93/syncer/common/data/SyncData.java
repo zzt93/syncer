@@ -281,6 +281,15 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return null;
   }
 
+  @Override
+  public Integer getFieldAInt(String key) {
+    Object res = getField(key);
+    if (res != null) {
+      return (int) res;
+    }
+    return null;
+  }
+
   public String getEventId() {
     return inner.dataId.eventId();
   }

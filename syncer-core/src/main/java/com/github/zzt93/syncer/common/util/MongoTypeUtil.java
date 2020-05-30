@@ -17,18 +17,18 @@ import java.util.Map;
  * @author zzt
  */
 public class MongoTypeUtil {
-	public static Object converBsonTypes(Object o) {
+	public static Object convertBsonTypes(Object o) {
 		if (o instanceof Map) {
 			if (((Map) o).size() == 1 && ((Map) o).containsKey("$numberDecimal")) {
 				return new BigDecimal((String) ((Map) o).get("$numberDecimal"));
 			}
 			for (Map.Entry<String, Object> e : ((Map<String, Object>) o).entrySet()) {
-				e.setValue(converBsonTypes(e.getValue()));
+				e.setValue(convertBsonTypes(e.getValue()));
 			}
 		} else if (o instanceof List) {
 			List list = (List) o;
 			for (int i = 0; i < list.size(); i++) {
-				list.set(i, converBsonTypes(list.get(i)));
+				list.set(i, convertBsonTypes(list.get(i)));
 			}
 		} else if (o instanceof Binary) {
 			return ((Binary) o).getData();

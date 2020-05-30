@@ -188,7 +188,7 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
   }
 
   private Map getFullDocument(ChangeStreamDocument<Document> d) {
-    return (Map) MongoTypeUtil.converBsonTypes(d.getFullDocument());
+    return (Map) MongoTypeUtil.convertBsonTypes(d.getFullDocument());
   }
 
   static Map getUpdatedFields(Document fullDocument, BsonDocument updatedFields, boolean bsonConversion) {

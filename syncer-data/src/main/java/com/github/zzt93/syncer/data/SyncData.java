@@ -64,6 +64,8 @@ public interface SyncData {
 
   Long getFieldAsLong(String key);
 
+  Integer getFieldAInt(String key);
+
   String getEventId();
 
   SyncData setSourceIdentifier(String identifier);

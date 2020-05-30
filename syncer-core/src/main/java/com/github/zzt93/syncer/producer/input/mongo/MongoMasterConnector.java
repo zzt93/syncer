@@ -177,7 +177,7 @@ public class MongoMasterConnector extends MongoConnectorBase {
         return null;
     }
     Preconditions.checkState(row.containsKey(ID));
-    row = (HashMap<String, Object>) MongoTypeUtil.converBsonTypes(row);
+    row = (HashMap<String, Object>) MongoTypeUtil.convertBsonTypes(row);
     return new SyncData(dataId, type, namespace[0], namespace[1], ID, row.get(ID), new NamedUpdatedDoc(row));
   }
 
