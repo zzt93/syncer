@@ -23,12 +23,15 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.lang.reflect.Array;
 import java.net.UnknownHostException;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
+import java.util.TimeZone;
 import java.util.function.Function;
 
 import static org.junit.Assert.*;
@@ -40,6 +43,7 @@ import static org.junit.Assert.*;
 public class CompareDetail {
 
   private static Random r = new Random();
+  private static SimpleDateFormat df = new SimpleDateFormat("yyyy-MM-dd HH:mm:ss.SSS");
   private static Map<String, String[]> dbs = new HashMap<>();
 
   static {
@@ -115,7 +119,7 @@ public class CompareDetail {
     }
   }
 
-  private void cmp(InputType inputType, Object in, Object out) {
+  private void cmp(InputType inputType, Object in, Object out) throws ParseException {
     if (in instanceof Map) {
 			assertTrue(String.format("output:%s > input:%s", in, out), out instanceof Map);
 			Map<String, Object> inputRes = (Map) in;
@@ -152,7 +156,11 @@ public class CompareDetail {
 				cmp(inputType, ((List) in).get(i), ((List) out).get(i));
 			}
 		} else if (in instanceof Date) {
-      assertEquals(String.format("output:%s != input:%s", out, in), ((Date) in).getTime(), ((Date) out).getTime());
+      Object o = out;
+      if (out instanceof String) {
+        o = df.parse((String) out);
+      }
+      assertEquals(String.format("output:%s != input:%s", out, in), ((Date) in).getTime() - TimeZone.getDefault().getRawOffset(), ((Date) o).getTime());
     } else if (in instanceof BsonTimestamp) {
       assertEquals(String.format("output:%s != input:%s", out, in), in.toString(), out.toString());
     } else {

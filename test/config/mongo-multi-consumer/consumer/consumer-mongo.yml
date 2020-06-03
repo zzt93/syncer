@@ -27,6 +27,9 @@ filter:
         Integer tinyint = (Integer) simple.get("tinyint");
         Long bigint = (Long) simple.get("bigint");
         byte[] bytes = (byte[]) simple.get("bytes");
+        if (bytes != null) {
+          simple.put("bytes", new String(bytes));
+        }
         String varchar = (String) simple.get("varchar");
         BigDecimal decimal = (BigDecimal) simple.get("decimal");
         Double aDouble = (Double) simple.get("aDouble");
