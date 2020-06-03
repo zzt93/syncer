@@ -13,6 +13,7 @@ import org.bson.BsonDocument;
 import org.bson.BsonInt64;
 import org.bson.BsonTimestamp;
 import org.bson.Document;
+import org.bson.types.Binary;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.index.query.QueryBuilders;
@@ -163,6 +164,8 @@ public class CompareDetail {
       assertEquals(String.format("output:%s != input:%s", out, in), ((Date) in).getTime() - TimeZone.getDefault().getRawOffset(), ((Date) o).getTime());
     } else if (in instanceof BsonTimestamp) {
       assertEquals(String.format("output:%s != input:%s", out, in), in.toString(), out.toString());
+    } else if (in instanceof Binary) {
+      assertEquals(String.format("output:%s != input:%s", out, in), new String(((Binary) in).getData()), out.toString());
     } else {
 			assertEquals(String.format("output:%s != input:%s", out, in), in, out);
 		}
