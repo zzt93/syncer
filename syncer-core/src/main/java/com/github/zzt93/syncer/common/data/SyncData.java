@@ -405,8 +405,8 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public Long getPartitionId() {
-    Object o = partitionField != null && getField(partitionField) != null ? getField(partitionField) : getId();
-    return o instanceof Long ? ((Long) o) : o.hashCode();
+    Object o = partitionField == null || getField(partitionField) == null ? getId() : getField(partitionField);
+    return Math.abs(o instanceof Long ? ((Long) o) : o.hashCode());
   }
 
   public void setPartitionField(String fieldName) {
