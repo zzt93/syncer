@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.LogbackLoggingField;
+import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
@@ -40,6 +41,7 @@ import org.elasticsearch.index.reindex.BulkByScrollResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
+import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -171,10 +173,15 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       }
     }
   }
+  private static final ThreadLocal<StandardEvaluationContext> contexts = ThreadLocal.withInitial(
+      EvaluationFactory::context);
 
   public boolean mapAndFlush(BlockingQueue<SyncData> queue) throws InterruptedException {
     SyncData event = queue.take();
+    event.setContext(contexts.get());
     Object builder = esRequestMapper.map(event);
+    event.recycleParseContext(contexts);
+
     if (buffered(builder)) {
       boolean addRes = batchBuffer.add(
           new SyncWrapper<>(event, ((WriteRequestBuilder) builder).request()));
