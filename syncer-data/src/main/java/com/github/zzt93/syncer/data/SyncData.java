@@ -40,6 +40,13 @@ public interface SyncData {
 
   SimpleEventType getType();
 
+  /**
+   * Default use id as partitionKey, override with this method.
+   *
+   * @param fieldName name of field which is either int/long or String
+   */
+  void setPartitionField(String fieldName);
+
   SyncData addExtra(String key, Object value);
 
   SyncData addField(String key, Object value);

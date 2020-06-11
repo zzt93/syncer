@@ -2,8 +2,10 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.LogbackLoggingField;
 import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
+import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.common.ElasticsearchConnection;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
@@ -45,7 +47,11 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringJoiner;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -69,6 +75,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   private final String id;
   private final String consumerId;
   private final AtomicBoolean closed = new AtomicBoolean(false);
+  private final BlockingQueue<SyncData>[] queues;
+  private final int worker;
+  private final ExecutorService esService;
 
 
   public ElasticsearchChannel(Elasticsearch elasticsearch, SyncerOutputMeta outputMeta, Ack ack)
@@ -84,8 +93,22 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     this.ack = ack;
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
     Path path = Paths.get(outputMeta.getFailureLogDir(), id);
+    worker = outputMeta.getWorker();
+    queues = new ArrayBlockingQueue[worker];
+    esService = Executors
+        .newFixedThreadPool(worker, new NamedThreadFactory("syncer-" + id + "-output-es"));
+
+    for (int i = 0; i < queues.length; i++) {
+      queues[i] = new ArrayBlockingQueue<>(outputMeta.getCapacity());
+    }
     singleRequest = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncData>>() {
     });
+  }
+
+  public void start() {
+    for (int i = 0; i < worker; i++) {
+      esService.submit(new EsOutputJob(queues[i], this));
+    }
   }
 
   static String toString(UpdateRequest request) {
@@ -123,6 +146,34 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     if (event.removePrimaryKey()) {
       logger.warn("Include primary key in `_source` is usually not necessary, remove it");
     }
+
+    return queues[(int) (event.getPartitionId()%worker)].add(event);
+  }
+
+  public static class EsOutputJob implements EventLoop {
+    private final BlockingQueue<SyncData> queue;
+    private final ElasticsearchChannel elasticsearchChannel;
+
+    public EsOutputJob(BlockingQueue<SyncData> queue, ElasticsearchChannel elasticsearchChannel) {
+      this.queue = queue;
+      this.elasticsearchChannel = elasticsearchChannel;
+    }
+
+    @Override
+    public void loop() {
+      while (!Thread.currentThread().isInterrupted()) {
+        try {
+          elasticsearchChannel.mapAndFlush(queue);
+        } catch (InterruptedException e) {
+          logger.warn("[Shutting down] Filter job interrupted");
+          return;
+        }
+      }
+    }
+  }
+
+  public boolean mapAndFlush(BlockingQueue<SyncData> queue) throws InterruptedException {
+    SyncData event = queue.take();
     Object builder = esRequestMapper.map(event);
     if (buffered(builder)) {
       boolean addRes = batchBuffer.add(
@@ -391,6 +442,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     }
 
     return sleepInConnectionLost((sleepInSecond) -> {
+      // TODO 2020/6/9 change to callback
       ListenableActionFuture<BulkResponse> future = bulkRequest.execute();
       try {
         return future.get();

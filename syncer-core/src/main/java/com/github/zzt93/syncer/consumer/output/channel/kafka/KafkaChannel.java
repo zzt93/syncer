@@ -109,9 +109,9 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
     // require that messages with the same key (for instance, a unique id) are always seen in the correct order,
     // attaching a key to messages will ensure messages with the same key always go to the same partition in a topic
     ListenableFuture<SendResult<String, Object>> future;
-    if (event.getId() != null) {
-      String key = event.getId().toString();
-      future = kafkaTemplate.send(topic, key, event.getResult());
+    Long partitionId = event.getPartitionId();
+    if (partitionId != null) {
+      future = kafkaTemplate.send(topic, partitionId.toString(), event.getResult());
     } else {
       logger.warn("Send {} to {} without key", event, topic);
       future = kafkaTemplate.send(topic, event.getResult());

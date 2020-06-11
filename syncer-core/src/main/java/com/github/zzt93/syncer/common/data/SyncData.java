@@ -34,6 +34,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
    */
   private SyncResult result;
   private Set<String> updated;
+  private String partitionField;
 
   public SyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName,
                   Object id, NamedChange row) {
@@ -403,7 +404,16 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return new SyncData(getDataId(), getType(), getRepo(), getEntity(), getPrimaryKeyName(), getId(), new HashMap<>(getFields()), before, updated);
   }
 
-  private static class Meta {
+  public Long getPartitionId() {
+    Object o = partitionField != null && getField(partitionField) != null ? getField(partitionField) : getId();
+    return o instanceof Long ? ((Long) o) : o.hashCode();
+  }
+
+  public void setPartitionField(String fieldName) {
+    this.partitionField = fieldName;
+  }
+
+	private static class Meta {
     private final DataId dataId;
     private transient StandardEvaluationContext context;
     private String connectionIdentifier;

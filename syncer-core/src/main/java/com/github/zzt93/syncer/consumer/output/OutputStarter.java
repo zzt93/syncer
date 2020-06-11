@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.batch.BatchJob;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,6 +41,9 @@ public class OutputStarter {
         long delay = bufferedChannel.getDelay();
         batchService.scheduleWithFixedDelay(new BatchJob(consumerId, bufferedChannel), delay, delay,
             bufferedChannel.getDelayUnit());
+        if (outputChannel instanceof ElasticsearchChannel) {
+          ((ElasticsearchChannel) outputChannel).start();
+        }
       }
     }
   }

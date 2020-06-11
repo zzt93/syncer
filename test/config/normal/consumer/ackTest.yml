@@ -7,7 +7,6 @@ input:
   masters:
     - connection:
         clusterNodes: [${MYSQL_ADDR}]
-      scheduler: mod
       repos:
         - name: "test_.*"
           entities:

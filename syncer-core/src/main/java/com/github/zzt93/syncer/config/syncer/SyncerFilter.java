@@ -1,27 +1,16 @@
 package com.github.zzt93.syncer.config.syncer;
 
 
+import lombok.Data;
+
 /**
  * @author zzt
  */
+@Data
 public class SyncerFilter {
 
-  private int worker;
+  public static final int WORKER_THREAD_COUNT = 1;
+
   private SyncerFilterMeta filterMeta = new SyncerFilterMeta();
 
-  public SyncerFilterMeta getFilterMeta() {
-    return filterMeta;
-  }
-
-  public void setFilterMeta(SyncerFilterMeta filterMeta) {
-    this.filterMeta = filterMeta;
-  }
-
-  public int getWorker() {
-    return worker;
-  }
-
-  public void setWorker(int worker) {
-    this.worker = worker;
-  }
 }

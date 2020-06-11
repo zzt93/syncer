@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
+import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
@@ -30,6 +31,9 @@ import java.sql.Statement;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,6 +52,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   private final String output;
   private final String consumerId;
   private final AtomicBoolean closed = new AtomicBoolean(false);
+  private final ExecutorService mysqlService;
 
   public MysqlChannel(Mysql mysql, SyncerOutputMeta outputMeta, Ack ack) {
     MysqlConnection connection = mysql.getConnection();
@@ -62,6 +67,9 @@ public class MysqlChannel implements BufferedChannel<String> {
         });
     output = connection.connectionIdentifier();
     consumerId = mysql.getConsumerId();
+    mysqlService = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
+        new ArrayBlockingQueue<>(outputMeta.getCapacity()),
+        new NamedThreadFactory("syncer-" + connection.connectionIdentifier() + "-output-mysql"));
   }
 
   @Override
@@ -73,7 +81,15 @@ public class MysqlChannel implements BufferedChannel<String> {
     String sql = sqlMapper.map(event);
     boolean add = batchBuffer.add(new SyncWrapper<>(event, sql));
     logger.debug("Add {}, {}", sql, add);
-    BufferedChannel.super.flushAndSetFlushDone(true);
+
+    mysqlService.submit(() -> {
+      try {
+        BufferedChannel.super.flushAndSetFlushDone(true);
+      } catch (InterruptedException e) {
+        logger.warn("[Shutting down] Filter job interrupted");
+      }
+    });
+
     return add;
   }
 

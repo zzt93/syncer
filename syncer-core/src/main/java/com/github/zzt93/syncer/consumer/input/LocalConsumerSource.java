@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.BlockingDeque;
 
 /**
  * @author zzt
@@ -18,7 +19,7 @@ import java.util.Set;
 public abstract class LocalConsumerSource implements ConsumerSource {
 
   private static final Logger logger = LoggerFactory.getLogger(LocalConsumerSource.class);
-  private final EventScheduler scheduler;
+  private final BlockingDeque<SyncData> toFilter;
   private final Set<Repo> repos;
   private final Connection connection;
   private final SyncInitMeta syncInitMeta;
@@ -30,13 +31,13 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   public LocalConsumerSource(
       String clientId, Connection connection, Set<Repo> repos,
       SyncInitMeta syncInitMeta,
-      Ack ack, EventScheduler scheduler) {
+      Ack ack, BlockingDeque<SyncData> toFilter) {
     this.repos = repos;
     this.connection = connection;
     this.syncInitMeta = syncInitMeta;
     this.clientId = clientId;
     this.ack = ack;
-    this.scheduler = scheduler;
+    this.toFilter = toFilter;
     connectionIdentifier = connection.connectionIdentifier();
   }
 
@@ -70,7 +71,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     }
     logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data, data.hashCode());
     ack.append(connectionIdentifier, data.getDataId());
-    return scheduler.schedule(data.setSourceIdentifier(connectionIdentifier));
+    return toFilter.add(data.setSourceIdentifier(connectionIdentifier));
   }
 
   @Override
@@ -82,7 +83,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
       }
       if (!sent(datum)) {
         ack.append(connectionIdentifier, datum.getDataId());
-        res = scheduler.schedule(datum.setSourceIdentifier(connectionIdentifier)) && res;
+        res = toFilter.add(datum.setSourceIdentifier(connectionIdentifier)) && res;
         logger.debug("Consumer({}, {}) receive: {}", getSyncInitMeta(), clientId, datum);
       } else {
         logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, datum,

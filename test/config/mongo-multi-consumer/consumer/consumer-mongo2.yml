@@ -8,7 +8,6 @@ input:
     - connection:
         address: ${MONGO_IN}
         port: 27017
-      scheduler: hash
       type: Mongo
       repos:
         - name: "simple_0"

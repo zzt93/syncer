@@ -10,19 +10,21 @@ import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.input.PipelineInput;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
-import com.github.zzt93.syncer.config.syncer.*;
+import com.github.zzt93.syncer.config.syncer.SyncerAck;
+import com.github.zzt93.syncer.config.syncer.SyncerConfig;
+import com.github.zzt93.syncer.config.syncer.SyncerFilter;
+import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
+import com.github.zzt93.syncer.config.syncer.SyncerInput;
+import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.ack.PositionFlusher;
 import com.github.zzt93.syncer.consumer.filter.FilterJob;
-import com.github.zzt93.syncer.consumer.input.EventScheduler;
-import com.github.zzt93.syncer.consumer.input.SchedulerBuilder;
 import com.github.zzt93.syncer.consumer.output.OutputStarter;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
 import com.github.zzt93.syncer.data.util.SyncFilter;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
-import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -32,7 +34,13 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.*;
+import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.CopyOnWriteArrayList;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * Abstraction of a consumer which is initiated by a pipeline config file
@@ -44,9 +52,8 @@ public class ConsumerStarter implements Starter {
   private final Logger logger = LoggerFactory.getLogger(ConsumerStarter.class);
   private final String id;
   private final List<OutputChannel> outputChannels;
-  private ExecutorService filterOutputService;
-  private FilterJob[] filterJobs;
-  private int worker;
+  private ExecutorService filterService;
+  private FilterJob filterJob;
   private SyncerAck ackConfig;
   private Registrant registrant;
   private Ack ack;
@@ -62,10 +69,10 @@ public class ConsumerStarter implements Starter {
 
     outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput(), ack);
 
-    SchedulerBuilder schedulerBuilder = new SchedulerBuilder();
-    initFilterModule(syncer.getFilter(), pipeline.getFilter(), schedulerBuilder, outputChannels, ack);
+    LinkedBlockingDeque<SyncData> inputFilterQuery = new LinkedBlockingDeque<>();
+    initFilterModule(syncer.getFilter(), pipeline.getFilter(), outputChannels, ack, inputFilterQuery);
 
-    initRegistrant(id, consumerRegistry, schedulerBuilder, pipeline.getInput(), ackConnectionId2SyncInitMeta);
+    initRegistrant(id, consumerRegistry, inputFilterQuery, pipeline.getInput(), ackConnectionId2SyncInitMeta);
   }
 
   private HashMap<String, SyncInitMeta> initAckModule(String consumerId,
@@ -85,37 +92,26 @@ public class ConsumerStarter implements Starter {
   }
 
   private void initFilterModule(SyncerFilter module, List<FilterConfig> filters,
-                                SchedulerBuilder schedulerBuilder, List<OutputChannel> outputChannels, Ack ack) {
-    Preconditions
-        .checkArgument(module.getWorker() <= Runtime.getRuntime().availableProcessors() * 3,
-            "Too many worker thread");
-    Preconditions.checkArgument(module.getWorker() > 0, "Invalid worker thread number config");
-    filterOutputService = Executors
-        .newFixedThreadPool(module.getWorker(), new NamedThreadFactory("syncer-" + id + "-filter"));
+                                List<OutputChannel> outputChannels, Ack ack, BlockingDeque<SyncData> inputFilterQuery) {
+
+    filterService = Executors
+        .newFixedThreadPool(SyncerFilter.WORKER_THREAD_COUNT, new NamedThreadFactory("syncer-" + id + "-filter"));
 
     List<SyncFilter> syncFilters = fromPipelineConfig(filters, module);
-    worker = module.getWorker();
-    filterJobs = new FilterJob[worker];
-    BlockingDeque<SyncData>[] deques = new BlockingDeque[worker];
     // this list shared by multiple thread, and some channels may be removed when other threads iterate
     // see CopyOnWriteListTest for sanity test
     CopyOnWriteArrayList<OutputChannel> channels = new CopyOnWriteArrayList<>(outputChannels);
-    for (int i = 0; i < worker; i++) {
-      deques[i] = new LinkedBlockingDeque<>();
-      filterJobs[i] = new FilterJob(id, deques[i], channels, syncFilters, ack);
-    }
-    schedulerBuilder.setDeques(deques);
+    filterJob = new FilterJob(id, inputFilterQuery, channels, syncFilters, ack);
   }
 
   private void initRegistrant(String consumerId, ConsumerRegistry consumerRegistry,
-                              SchedulerBuilder schedulerBuilder,
+                              BlockingDeque<SyncData> inputFilterQueue,
                               PipelineInput input,
                               HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta) {
     registrant = new Registrant(consumerRegistry);
     for (MasterSource masterSource : input.getMasterSet()) {
-      EventScheduler scheduler = schedulerBuilder.setSchedulerType(masterSource.getScheduler()).build();
       List<? extends ConsumerSource> localConsumerSources =
-          masterSource.toConsumerSources(consumerId, ack, ackConnectionId2SyncInitMeta, scheduler);
+          masterSource.toConsumerSources(consumerId, ack, ackConnectionId2SyncInitMeta, inputFilterQueue);
       registrant.addDatasource(localConsumerSources);
     }
   }
@@ -132,9 +128,7 @@ public class ConsumerStarter implements Starter {
 
   public Starter start() throws InterruptedException, IOException {
     startAck();
-    for (int i = 0; i < worker; i++) {
-      filterOutputService.submit(filterJobs[i]);
-    }
+    filterService.submit(filterJob);
     return this;
   }
 
@@ -142,8 +136,8 @@ public class ConsumerStarter implements Starter {
     // close output channel first
     outputStarter.close();
     // stop filter-output threads
-    filterOutputService.shutdownNow();
-    while (!filterOutputService.awaitTermination(ShutDownCenter.SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
+    filterService.shutdownNow();
+    while (!filterService.awaitTermination(ShutDownCenter.SHUTDOWN_TIMEOUT, TimeUnit.SECONDS)) {
       logger.error("[Shutting down] consumer: {}", id);
     }
   }

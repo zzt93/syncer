@@ -8,7 +8,6 @@ input:
     - connection:
         clusterNodes: [${MYSQL_ADDR}]
 #        autoOffsetReset: earliest
-      scheduler: mod
       repos:
         - name: "test.*"
           entities:

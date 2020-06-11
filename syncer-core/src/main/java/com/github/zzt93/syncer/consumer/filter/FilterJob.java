@@ -98,8 +98,7 @@ public class FilterJob implements EventLoop {
       shutdown(e, outputChannels);
     } catch (Throwable e) {
       logger.error("Check [input & filter] config, otherwise syncer will be blocked: {}", poll, e);
-      SyncerHealth.consumer(this.consumerId, Health.red(e.getMessage()));
-      shutdown(new InvalidConfigException(e), outputChannels);
+      list.clear();
     }
   }
 

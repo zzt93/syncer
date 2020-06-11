@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.common;
 
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.config.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.input.AutoOffsetReset;
@@ -8,18 +9,22 @@ import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.consumer.ack.Ack;
-import com.github.zzt93.syncer.consumer.input.EventScheduler;
 import com.github.zzt93.syncer.consumer.input.LocalConsumerSource;
 import com.github.zzt93.syncer.consumer.input.MongoLocalConsumerSource;
 import com.github.zzt93.syncer.consumer.input.MysqlLocalConsumerSource;
-import com.github.zzt93.syncer.consumer.input.SchedulerBuilder.SchedulerType;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Set;
+import java.util.concurrent.BlockingDeque;
 
 /**
  * @author zzt
@@ -30,7 +35,6 @@ public class MasterSource {
   private final Logger logger = LoggerFactory.getLogger(MasterSource.class);
   private final Set<Repo> repoSet = new HashSet<>();
   private MasterSourceType type = MasterSourceType.MySQL;
-  private SchedulerType scheduler = SchedulerType.hash;
   private MayClusterConnection connection;
   private List<Repo> repos = new ArrayList<>();
 
@@ -71,14 +75,6 @@ public class MasterSource {
     this.type = type;
   }
 
-  public void setScheduler(SchedulerType scheduler) {
-    this.scheduler = scheduler;
-  }
-
-  public SchedulerType getScheduler() {
-    return scheduler;
-  }
-
   @Override
   public boolean equals(Object o) {
     if (this == o) {
@@ -113,7 +109,7 @@ public class MasterSource {
 
   public List<? extends ConsumerSource> toConsumerSources(String consumerId,
                                                           Ack ack, HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta,
-                                                          EventScheduler scheduler) {
+                                                          BlockingDeque<SyncData> toFilter) {
     List<LocalConsumerSource> res = new LinkedList<>();
     Connection realConnection = getRealConnection();
     AutoOffsetReset autoOffsetReset = connection.getAutoOffsetReset();
@@ -127,13 +123,13 @@ public class MasterSource {
           Preconditions
               .checkState(syncInitMeta instanceof DocTimestamp, "syncInitMeta is " + syncInitMeta);
           res.add(new MongoLocalConsumerSource(consumerId, connection,
-              getRepoSet(), (DocTimestamp) syncInitMeta, ack, scheduler));
+              getRepoSet(), (DocTimestamp) syncInitMeta, ack, toFilter));
           break;
         case MySQL:
           Preconditions
               .checkState(syncInitMeta instanceof BinlogInfo, "syncInitMeta is " + syncInitMeta);
           res.add(new MysqlLocalConsumerSource(consumerId, connection,
-              getRepoSet(), (BinlogInfo) syncInitMeta, ack, scheduler));
+              getRepoSet(), (BinlogInfo) syncInitMeta, ack, toFilter));
           break;
         default:
           throw new IllegalStateException("Not implemented type");
