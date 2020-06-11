@@ -180,7 +180,6 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     SyncData event = queue.take();
     event.setContext(contexts.get());
     Object builder = esRequestMapper.map(event);
-    event.recycleParseContext(contexts);
 
     if (buffered(builder)) {
       boolean addRes = batchBuffer.add(
