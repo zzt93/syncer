@@ -87,8 +87,6 @@ public class FilterJob implements EventLoop {
 
     list.clear();
     list.add(poll);
-    // one thread share one context to save much memory
-    poll.setContext(contexts.get());
     try {
       for (SyncFilter filter : filters) {
         filter.filter(list);
@@ -105,6 +103,9 @@ public class FilterJob implements EventLoop {
   private void output(LinkedList<SyncData> list, List<OutputChannel> remove) {
     for (SyncData syncData : list) {
       logger.debug("Output SyncData {}", syncData);
+      // one thread share one context to save much memory
+      // TODO 2020/6/11 remove Spring EL
+      syncData.setContext(contexts.get());
       for (OutputChannel outputChannel : this.outputChannels) {
         try {
           outputChannel.output(syncData);
@@ -122,7 +123,6 @@ public class FilterJob implements EventLoop {
           Throwables.throwIfUnchecked(e);
         }
       }
-      syncData.recycleParseContext(contexts);
     }
     failureChannelCleanUp(remove);
   }
