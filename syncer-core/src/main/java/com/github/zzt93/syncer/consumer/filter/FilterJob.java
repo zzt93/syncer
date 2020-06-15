@@ -17,7 +17,6 @@ import com.google.common.base.Throwables;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -29,8 +28,6 @@ import java.util.concurrent.CopyOnWriteArrayList;
  */
 public class FilterJob implements EventLoop {
 
-  private static final ThreadLocal<StandardEvaluationContext> contexts = ThreadLocal.withInitial(
-      EvaluationFactory::context);
 
   private final Logger logger = LoggerFactory.getLogger(FilterJob.class);
   private final BlockingDeque<SyncData> fromInput;
@@ -103,9 +100,8 @@ public class FilterJob implements EventLoop {
   private void output(LinkedList<SyncData> list, List<OutputChannel> remove) {
     for (SyncData syncData : list) {
       logger.debug("Output SyncData {}", syncData);
-      // one thread share one context to save much memory
       // TODO 2020/6/11 remove Spring EL
-      syncData.setContext(contexts.get());
+      syncData.setContext(EvaluationFactory.context());
       for (OutputChannel outputChannel : this.outputChannels) {
         try {
           outputChannel.output(syncData);

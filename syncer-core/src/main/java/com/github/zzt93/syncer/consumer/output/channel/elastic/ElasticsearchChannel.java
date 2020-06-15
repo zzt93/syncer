@@ -177,7 +177,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     Object builder = esRequestMapper.map(event);
 
     if (buffered(builder)) {
-      boolean addRes = batchBuffer.add(
+      batchBuffer.add(
           new SyncWrapper<>(event, ((WriteRequestBuilder) builder).request()));
       BufferedChannel.super.flushAndSetFlushDone(true);
     } else {
