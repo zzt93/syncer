@@ -174,7 +174,9 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   public void mapAndFlush(BlockingQueue<SyncData> queue) throws InterruptedException {
     SyncData event = queue.take();
+    logger.debug("{}", event);
     Object builder = esRequestMapper.map(event);
+    logger.debug("{}", event);
 
     if (buffered(builder)) {
       batchBuffer.add(

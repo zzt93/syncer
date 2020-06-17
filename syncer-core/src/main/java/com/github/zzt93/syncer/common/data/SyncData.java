@@ -425,9 +425,10 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
     @Override
     public String toString() {
+      Object value = context.getRootObject().getValue();
       return "Meta{" +
           "dataId=" + dataId +
-          ", context=" + context +
+          ", context=" + (value != null ? ((SyncData) value).inner == this : null) +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
           '}';
     }

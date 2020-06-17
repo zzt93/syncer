@@ -16,8 +16,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.*;
 
 /**
  * @author zzt
@@ -48,6 +47,13 @@ public class SyncDataTest {
     assertEquals(data.getRepo(), syncData.getRepo());
   }
 
+  @Test
+  public void testToStringDefault() {
+    SyncData write = SyncDataTestUtil.write("test", "test");
+    assertEquals("SyncData{inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null))}",
+        write.toString());
+  }
+
   /**
    * @see AbstractRowsEventDataDeserializer#deserializeCell(ColumnType, int, int, ByteArrayInputStream)
    */
@@ -62,8 +68,8 @@ public class SyncDataTest {
     before.put("6", "中文".getBytes(StandardCharsets.UTF_8));
     before.put("7", "中文".getBytes(StandardCharsets.UTF_8));
     before.put("8", 1.1);
-    before.put("9", new BigDecimal(10000.1));
-    before.put("10", new BigDecimal(10000.1));
+    before.put("9", new BigDecimal("10000.1"));
+    before.put("10", new BigDecimal("10000.1"));
     before.put("11", new Date(System.currentTimeMillis()));
     HashMap<String, Object> now = new HashMap<>();
     now.put("1", 1);
@@ -74,8 +80,8 @@ public class SyncDataTest {
     now.put("6", "中文".getBytes(StandardCharsets.UTF_8));
     now.put("7", "中文啊".getBytes(StandardCharsets.UTF_8));
     now.put("8", 1.10);
-    now.put("9", new BigDecimal(10000.10001));
-    now.put("10", new BigDecimal(10000.10000));
+    now.put("9", new BigDecimal("10000.10001"));
+    now.put("10", new BigDecimal("10000.10000"));
     now.put("11", new Date(System.currentTimeMillis() + _1D));
     NamedFullRow row = new NamedFullRow(now).setBeforeFull(before);
     SyncData data = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", 1L, row);

@@ -13,7 +13,7 @@ import java.util.LinkedHashMap;
 
 @Getter
 @Setter
-@ToString(callSuper = true)
+@ToString(callSuper = true, doNotUseGetters = true)
 public class SyncResultBase extends SyncMeta {
 
   protected LinkedHashMap<String, Object> fields = new LinkedHashMap<>();
