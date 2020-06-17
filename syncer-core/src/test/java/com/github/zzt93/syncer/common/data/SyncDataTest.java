@@ -95,7 +95,7 @@ public class SyncDataTest {
     assertTrue(data.updated("7"));
     assertTrue(!data.updated("8"));
     assertTrue(data.updated("9"));
-    assertTrue(!data.updated("10"));
+    assertTrue(data.updated("10"));
     assertTrue(data.updated("11"));
   }
 }
