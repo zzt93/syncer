@@ -52,6 +52,9 @@ public class SyncDataTest {
     SyncData write = SyncDataTestUtil.write("test", "test");
     assertEquals("SyncData{inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null))}",
         write.toString());
+    write.recycleParseContext(null);
+    assertEquals("SyncData{inner=Meta{dataId=mysql-bin.00001/4/6/0, context=null, connectionIdentifier='null'}, syncByQuery=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null))}",
+        write.toString());
   }
 
   /**

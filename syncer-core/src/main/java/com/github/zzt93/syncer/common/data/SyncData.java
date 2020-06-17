@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.expression.TypedValue;
 import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.Serializable;
@@ -252,7 +253,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   public void recycleParseContext(ThreadLocal<StandardEvaluationContext> contexts) {
     inner.context = null;
-    contexts.remove();
+//    contexts.remove();
   }
 
   @Override
@@ -425,10 +426,10 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
     @Override
     public String toString() {
-      Object value = context.getRootObject().getValue();
+      TypedValue rootObject = context != null ? context.getRootObject() : TypedValue.NULL;
       return "Meta{" +
           "dataId=" + dataId +
-          ", context=" + (value != null ? ((SyncData) value).inner == this : null) +
+          ", context=" + (rootObject.getValue() != null ? ((SyncData) rootObject.getValue()).inner == this : null) +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
           '}';
     }
