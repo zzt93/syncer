@@ -1,6 +1,5 @@
 package com.github.zzt93.syncer.consumer.output.failure;
 
-import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
@@ -11,7 +10,11 @@ import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.*;
+import java.io.BufferedWriter;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.lang.reflect.Type;
 import java.nio.file.Path;
 import java.time.LocalDateTime;
@@ -73,7 +76,7 @@ public class FailureLog<T> implements Resource {
     int count = itemCount.get();
     if (count > countLimit) {
       logger.error("Too many failure: {} > {}", count, countLimit);
-      throw new FailureException("Too many failed items, abort and need human influence");
+//      throw new FailureException("Too many failed items, abort and need human influence");
     }
     return true;
   }

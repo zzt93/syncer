@@ -11,6 +11,5 @@ public class SyncerOutputMeta {
 
   private String failureLogDir = "./failure/";
   private int worker = 2;
-  private int capacity = 100000;
 
 }

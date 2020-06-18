@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * @author zzt
@@ -20,7 +20,7 @@ public class MysqlLocalConsumerSource extends LocalConsumerSource implements Mys
                                   Connection connection,
                                   Set<Repo> repos,
                                   BinlogInfo syncInitMeta,
-                                  Ack ack, BlockingDeque<SyncData> input) {
+                                  Ack ack, BlockingQueue<SyncData> input) {
     super(clientId, connection, repos, syncInitMeta, ack, input);
     this.syncInitMeta = syncInitMeta;
   }

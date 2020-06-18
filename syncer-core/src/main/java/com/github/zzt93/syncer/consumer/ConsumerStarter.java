@@ -34,11 +34,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
@@ -69,7 +68,7 @@ public class ConsumerStarter implements Starter {
 
     outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput(), ack);
 
-    LinkedBlockingDeque<SyncData> inputFilterQuery = new LinkedBlockingDeque<>();
+    ArrayBlockingQueue<SyncData> inputFilterQuery = new ArrayBlockingQueue<>(syncer.getFilter().getCapacity());
     initFilterModule(syncer.getFilter(), pipeline.getFilter(), outputChannels, ack, inputFilterQuery);
 
     initRegistrant(id, consumerRegistry, inputFilterQuery, pipeline.getInput(), ackConnectionId2SyncInitMeta);
@@ -92,7 +91,7 @@ public class ConsumerStarter implements Starter {
   }
 
   private void initFilterModule(SyncerFilter module, List<FilterConfig> filters,
-                                List<OutputChannel> outputChannels, Ack ack, BlockingDeque<SyncData> inputFilterQuery) {
+                                List<OutputChannel> outputChannels, Ack ack, ArrayBlockingQueue<SyncData> inputFilterQuery) {
 
     filterService = Executors
         .newFixedThreadPool(SyncerFilter.WORKER_THREAD_COUNT, new NamedThreadFactory("syncer-" + id + "-filter"));
@@ -101,11 +100,11 @@ public class ConsumerStarter implements Starter {
     // this list shared by multiple thread, and some channels may be removed when other threads iterate
     // see CopyOnWriteListTest for sanity test
     CopyOnWriteArrayList<OutputChannel> channels = new CopyOnWriteArrayList<>(outputChannels);
-    filterJob = new FilterJob(id, inputFilterQuery, channels, syncFilters, ack);
+    filterJob = new FilterJob(id, inputFilterQuery, channels, syncFilters, ack, module);
   }
 
   private void initRegistrant(String consumerId, ConsumerRegistry consumerRegistry,
-                              BlockingDeque<SyncData> inputFilterQueue,
+                              ArrayBlockingQueue<SyncData> inputFilterQueue,
                               PipelineInput input,
                               HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta) {
     registrant = new Registrant(consumerRegistry);

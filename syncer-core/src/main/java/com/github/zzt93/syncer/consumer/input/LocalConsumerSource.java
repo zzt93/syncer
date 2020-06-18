@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * @author zzt
@@ -19,7 +19,7 @@ import java.util.concurrent.BlockingDeque;
 public abstract class LocalConsumerSource implements ConsumerSource {
 
   private static final Logger logger = LoggerFactory.getLogger(LocalConsumerSource.class);
-  private final BlockingDeque<SyncData> toFilter;
+  private final BlockingQueue<SyncData> toFilter;
   private final Set<Repo> repos;
   private final Connection connection;
   private final SyncInitMeta syncInitMeta;
@@ -31,7 +31,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
   public LocalConsumerSource(
       String clientId, Connection connection, Set<Repo> repos,
       SyncInitMeta syncInitMeta,
-      Ack ack, BlockingDeque<SyncData> toFilter) {
+      Ack ack, BlockingQueue<SyncData> toFilter) {
     this.repos = repos;
     this.connection = connection;
     this.syncInitMeta = syncInitMeta;

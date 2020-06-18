@@ -24,7 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * @author zzt
@@ -109,7 +109,7 @@ public class MasterSource {
 
   public List<? extends ConsumerSource> toConsumerSources(String consumerId,
                                                           Ack ack, HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta,
-                                                          BlockingDeque<SyncData> toFilter) {
+                                                          BlockingQueue<SyncData> toFilter) {
     List<LocalConsumerSource> res = new LinkedList<>();
     Connection realConnection = getRealConnection();
     AutoOffsetReset autoOffsetReset = connection.getAutoOffsetReset();

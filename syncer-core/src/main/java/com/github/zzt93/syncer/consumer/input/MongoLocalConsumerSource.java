@@ -7,7 +7,7 @@ import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 
 import java.util.Set;
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 
 /**
  * @author zzt
@@ -19,7 +19,7 @@ public class MongoLocalConsumerSource extends LocalConsumerSource implements Mon
   public MongoLocalConsumerSource(
       String clientId, Connection connection, Set<Repo> repos,
       DocTimestamp syncInitMeta,
-      Ack ack, BlockingDeque<SyncData> toFilter) {
+      Ack ack, BlockingQueue<SyncData> toFilter) {
     super(clientId, connection, repos, syncInitMeta, ack, toFilter);
     this.syncInitMeta = syncInitMeta;
   }

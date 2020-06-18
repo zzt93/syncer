@@ -47,11 +47,11 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingDeque;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
@@ -94,12 +94,12 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     FailureLogConfig failureLog = elasticsearch.getFailureLog();
     Path path = Paths.get(outputMeta.getFailureLogDir(), id);
     worker = outputMeta.getWorker();
-    queues = new ArrayBlockingQueue[worker];
+    queues = new LinkedBlockingDeque[worker];
     esService = Executors
         .newFixedThreadPool(worker, new NamedThreadFactory("syncer-" + id + "-output-es"));
 
     for (int i = 0; i < queues.length; i++) {
-      queues[i] = new ArrayBlockingQueue<>(outputMeta.getCapacity());
+      queues[i] = new LinkedBlockingDeque<>();
     }
     singleRequest = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncData>>() {
     });

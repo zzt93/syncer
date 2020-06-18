@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.syncer;
 
 
+import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import lombok.Data;
 
 /**
@@ -10,6 +11,8 @@ import lombok.Data;
 public class SyncerFilter {
 
   public static final int WORKER_THREAD_COUNT = 1;
+  private int capacity = 1000000;
+  private FailureLogConfig failureLog = new FailureLogConfig();
 
   private SyncerFilterMeta filterMeta = new SyncerFilterMeta();
 

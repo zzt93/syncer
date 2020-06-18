@@ -68,8 +68,9 @@ public class MysqlChannel implements BufferedChannel<String> {
     output = connection.connectionIdentifier();
     consumerId = mysql.getConsumerId();
     mysqlService = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
-        new ArrayBlockingQueue<>(outputMeta.getCapacity()),
-        new NamedThreadFactory("syncer-" + connection.connectionIdentifier() + "-output-mysql"));
+        new ArrayBlockingQueue<>(10),
+        new NamedThreadFactory("syncer-" + connection.connectionIdentifier() + "-output-mysql"),
+        new ThreadPoolExecutor.DiscardPolicy());
   }
 
   @Override

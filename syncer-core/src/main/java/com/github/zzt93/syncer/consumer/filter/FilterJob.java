@@ -8,19 +8,23 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.thread.EventLoop;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
+import com.github.zzt93.syncer.config.syncer.SyncerFilter;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.output.channel.OutputChannel;
+import com.github.zzt93.syncer.consumer.output.failure.FailureEntry;
+import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.github.zzt93.syncer.data.util.SyncFilter;
-import com.github.zzt93.syncer.health.Health;
-import com.github.zzt93.syncer.health.SyncerHealth;
-import com.google.common.base.Throwables;
+import com.google.gson.reflect.TypeToken;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BlockingDeque;
+import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
@@ -30,32 +34,36 @@ public class FilterJob implements EventLoop {
 
 
   private final Logger logger = LoggerFactory.getLogger(FilterJob.class);
-  private final BlockingDeque<SyncData> fromInput;
+  private final BlockingQueue<SyncData> fromInput;
   private final CopyOnWriteArrayList<OutputChannel> outputChannels;
   private final List<SyncFilter> filters;
   private final String consumerId;
   private final Ack ack;
+  private final FailureLog<Object> failureLog;
 
-  public FilterJob(String consumerId, BlockingDeque<SyncData> fromInput,
+  public FilterJob(String consumerId, BlockingQueue<SyncData> fromInput,
                    CopyOnWriteArrayList<OutputChannel> outputChannels,
-                   List<SyncFilter> filters, Ack ack) {
+                   List<SyncFilter> filters, Ack ack, SyncerFilter module) {
     this.consumerId = consumerId;
     this.fromInput = fromInput;
     this.outputChannels = outputChannels;
     this.filters = filters;
     this.ack = ack;
+    FailureLogConfig failureLog = module.getFailureLog();
+    Path path = Paths.get(module.getFilterMeta().getFailureLogDir(), consumerId);
+    this.failureLog = FailureLog.getLogger(path, failureLog, new TypeToken<FailureEntry<SyncData>>() {
+    });
   }
 
   @Override
   public void loop() {
     LinkedList<SyncData> list = new LinkedList<>();
-    List<OutputChannel> remove = new LinkedList<>();
     while (!Thread.currentThread().isInterrupted()) {
       try {
-        SyncData poll = fromInput.takeFirst();
+        SyncData poll = fromInput.take();
         filter(list, poll);
         addOrDiscardAck(poll, list);
-        output(list, remove);
+        output(list);
       } catch (InterruptedException e) {
         logger.warn("[Shutting down] Filter job interrupted");
         return;
@@ -92,12 +100,13 @@ public class FilterJob implements EventLoop {
       logger.error("Invalid config for {}", poll, e);
       shutdown(e, outputChannels);
     } catch (Throwable e) {
+      failureLog.log(poll, "Invalid config");
       logger.error("Check [input & filter] config, otherwise syncer will be blocked: {}", poll, e);
       list.clear();
     }
   }
 
-  private void output(LinkedList<SyncData> list, List<OutputChannel> remove) {
+  private void output(LinkedList<SyncData> list) {
     for (SyncData syncData : list) {
       logger.debug("Output SyncData {}", syncData);
       // TODO 2020/6/11 remove Spring EL
@@ -109,29 +118,19 @@ public class FilterJob implements EventLoop {
           logger.error("Invalid config for {}", syncData, e);
           shutdown(e, outputChannels);
         } catch (FailureException e) {
-          fromInput.addFirst(syncData);
           String err = FailureException.getErr(outputChannel, consumerId);
+          failureLog.log(syncData, err);
           logger.error(err, e);
-          SyncerHealth.consumer(this.consumerId, outputChannel.id(), Health.red(err));
-          remove.add(outputChannel);
+//          SyncerHealth.consumer(this.consumerId, outputChannel.id(), Health.red(err));
         } catch (Throwable e) {
+          failureLog.log(syncData, "Output failed");
           logger.error("Output {} failed", syncData, e);
-          Throwables.throwIfUnchecked(e);
+//          Throwables.throwIfUnchecked(e);
         }
       }
     }
-    failureChannelCleanUp(remove);
   }
 
-  private void failureChannelCleanUp(List<OutputChannel> remove) {
-    if (!remove.isEmpty()) {
-      outputChannels.removeAll(remove);
-      for (OutputChannel outputChannel : remove) {
-        outputChannel.close();
-      }
-      remove.clear();
-    }
-  }
 
   private void shutdown(Exception e, List<OutputChannel> all) {
     for (OutputChannel outputChannel : all) {
