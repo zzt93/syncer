@@ -32,7 +32,7 @@ public class FileBasedMapTest {
     BinlogDataId _115 = getFromString("mysql-bin.000115/1234360405/139/0");
     map.append(_115, 2);
     map.flush();
-    BinlogDataId s = getFromString(new String(FileBasedMap.readData(PATH)));
+    BinlogDataId s = getFromString(new String(map.readData()));
     Assert.assertEquals(s, _115);
     map.remove(_115, 1);
 
@@ -40,13 +40,13 @@ public class FileBasedMapTest {
     BinlogDataId _116 = getFromString("mysql-bin.000116/1305/139/0");
     map.append(_116, 1);
     map.flush();
-    s = getFromString(new String(FileBasedMap.readData(PATH)));
+    s = getFromString(new String(map.readData()));
     Assert.assertEquals(s, _115);
     map.remove(_115, 1);
-    s = getFromString(new String(FileBasedMap.readData(PATH)));
+    s = getFromString(new String(map.readData()));
     Assert.assertEquals(s, _115);
     map.flush();
-    s = getFromString(new String(FileBasedMap.readData(PATH)));
+    s = getFromString(new String(map.readData()));
     Assert.assertEquals(s, _116);
     map.remove(_116, 1);
 
@@ -54,7 +54,7 @@ public class FileBasedMapTest {
     BinlogDataId _117 = getFromString("mysql-bin.000117/1305/13/0");
     map.append(_117, 1);
     map.flush();
-    s = getFromString(new String(FileBasedMap.readData(PATH)));
+    s = getFromString(new String(map.readData()));
     Assert.assertEquals(s, _117);
   }
 
@@ -65,16 +65,16 @@ public class FileBasedMapTest {
     BinlogDataId _3 = getFromString("mysql-bin.000003/801814/478003/3");
     map.append(_3, 1);
     map.flush();
-    BinlogDataId s = getFromString(new String(FileBasedMap.readData(PATH)));
+    BinlogDataId s = getFromString(new String(map.readData()));
     Assert.assertEquals(_2, s);
     map.remove(_3, 1);
     map.flush();
-    s = getFromString(new String(FileBasedMap.readData(PATH)));
+    s = getFromString(new String(map.readData()));
     Assert.assertEquals(_2, s);
     BinlogDataId _10 = getFromString("mysql-bin.000003/1001814/478003/0");
     map.append(_10, 1);
     map.flush();
-    s = getFromString(new String(FileBasedMap.readData(PATH)));
+    s = getFromString(new String(map.readData()));
     Assert.assertEquals(_2, s);
   }
 
@@ -84,12 +84,17 @@ public class FileBasedMapTest {
     map.append(_115, 2);
     map.remove(_115, 2);
     map.flush();
-    BinlogDataId s = getFromString(new String(FileBasedMap.readData(PATH)));
+    BinlogDataId s = getFromString(new String(map.readData()));
     Assert.assertEquals(s, _115);
   }
 
   @Test
   public void multiThreadTest() {
 
+  }
+
+  @Test
+  public void testToString() {
+    Assert.assertEquals("FileBasedMap{path=LocalMetaFile{path=src/test/resources/FileBasedMapTest}, lastRemoved=null, map={}}", map.toString());
   }
 }

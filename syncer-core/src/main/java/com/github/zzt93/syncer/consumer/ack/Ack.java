@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -57,27 +56,22 @@ public class Ack {
 
   private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {
     Path path = Paths.get(metaDir, clientId, identifier);
+
+    FileBasedMap<DataId> fileBasedMap = new FileBasedMap<>(path);
+    ackMap.put(identifier, fileBasedMap);
+
     SyncInitMeta syncInitMeta = null;
-    if (!Files.exists(path)) {
-      logger.info("Last run meta file[{}] not exists, fresh run", path);
-    } else {
-      try {
-        syncInitMeta = recoverSyncInitMeta(path, sourceType, syncInitMeta);
-      } catch (IOException e) {
-        logger.error("Impossible to run to here", e);
-      }
-    }
     try {
-      ackMap.put(identifier, new FileBasedMap<>(path));
+      syncInitMeta = recoverSyncInitMeta(fileBasedMap, sourceType, syncInitMeta);
     } catch (IOException e) {
-      logger.error("Fail to create file {}", path);
+      logger.error("Impossible to run to here", e);
     }
     return syncInitMeta;
   }
 
-  private SyncInitMeta recoverSyncInitMeta(Path path,
-      MasterSourceType sourceType, SyncInitMeta syncInitMeta) throws IOException {
-    byte[] bytes = FileBasedMap.readData(path);
+  private SyncInitMeta recoverSyncInitMeta(FileBasedMap<DataId> fileBasedMap,
+                                           MasterSourceType sourceType, SyncInitMeta syncInitMeta) throws IOException {
+    byte[] bytes = fileBasedMap.readData();
     if (bytes.length > 0) {
       try {
         String data = new String(bytes, StandardCharsets.UTF_8);
@@ -90,10 +84,10 @@ public class Ack {
             break;
         }
       } catch (Exception e) {
-        logger.warn("Meta file in {} crashed, take as fresh run", path);
+        logger.warn("Meta file in {} crashed, take as fresh run", fileBasedMap);
       }
     } else {
-      logger.warn("Meta file in {} crashed, take as fresh run", path);
+      logger.warn("Meta file in {} crashed, take as fresh run", fileBasedMap);
     }
     return syncInitMeta;
   }

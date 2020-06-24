@@ -11,14 +11,6 @@
 
     <artifactId>syncer-core</artifactId>
 
-    <repositories>
-        <repository>
-            <id>spring.plugin</id>
-            <name>Spring Plugins Repository</name>
-            <url>http://repo.spring.io/plugins-release/</url>
-        </repository>
-    </repositories>
-
 
     <dependencies>
 
@@ -131,6 +123,12 @@
             <groupId>org.yaml</groupId>
             <artifactId>snakeyaml</artifactId>
             <version>1.19</version>
+        </dependency>
+
+        <dependency>
+            <groupId>io.etcd</groupId>
+            <artifactId>jetcd-core</artifactId>
+            <version>0.5.0</version>
         </dependency>
 
         <!--https://github.com/rzwitserloot/lombok/issues/1671-->
