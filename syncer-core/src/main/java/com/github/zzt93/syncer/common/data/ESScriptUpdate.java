@@ -1,8 +1,8 @@
 package com.github.zzt93.syncer.common.data;
 
 import com.github.zzt93.syncer.common.util.SyncDataTypeUtil;
-import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
+import com.github.zzt93.syncer.data.es.Filter;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
 import org.apache.commons.lang.StringUtils;
@@ -91,8 +91,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         logger.error("Not support `mergeToList` for UPDATE, use `mergeToListById` or `mergeToNestedById` instead");
         throw new UnsupportedOperationException();
     }
-    assert parentFilter.isId();
-    if (!parentFilter.fieldUseId()) {
+    assert parentFilter.esUseId();
+    if (!parentFilter.syncDataUseId()) {
       String parentIdName = parentFilter.getFieldKeyName();
       outer.setId(outer.removeField(parentIdName));
     }
@@ -131,8 +131,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
       default:
         throw new UnsupportedOperationException();
     }
-    assert parentFilter.isId();
-    if (!parentFilter.fieldUseId()) {
+    assert parentFilter.esUseId();
+    if (!parentFilter.syncDataUseId()) {
       String parentIdName = parentFilter.getFieldKeyName();
       outer.setId(outer.removeField(parentIdName));
     }
@@ -217,8 +217,8 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
         throw new UnsupportedOperationException();
     }
 
-    if (parentFilter.isId()) {
-      if (!parentFilter.fieldUseId()) {
+    if (parentFilter.esUseId()) {
+      if (!parentFilter.syncDataUseId()) {
         String parentIdName = parentFilter.getFieldKeyName();
         outer.setId(outer.removeField(parentIdName));
       }

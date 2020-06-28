@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.data;
 
+import com.github.zzt93.syncer.data.es.Filter;
+
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;

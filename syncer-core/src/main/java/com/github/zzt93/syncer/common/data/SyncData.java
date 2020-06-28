@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
+import com.github.zzt93.syncer.data.es.Filter;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
