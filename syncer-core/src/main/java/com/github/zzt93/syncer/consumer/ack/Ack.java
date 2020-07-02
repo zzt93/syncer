@@ -29,12 +29,12 @@ public class Ack {
   @ThreadSafe(sharedBy = {"main", "shutdown hook", "syncer-filter-output"}, des = "Thread start rule."
       + "main thread init ack before two other thread start")
   private Map<String, FileBasedMap<DataId>> ackMap = new HashMap<>();
-  private final String clientId;
+  private final String consumerId;
   private final int outputSize;
 
-  public static Ack build(String clientId, SyncerInputMeta syncerInputMeta, Set<MasterSource> masterSources,
+  public static Ack build(String consumerId, SyncerInputMeta syncerInputMeta, Set<MasterSource> masterSources,
       HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta, int outputSize) {
-    Ack ack = new Ack(clientId, syncerInputMeta, outputSize);
+    Ack ack = new Ack(consumerId, syncerInputMeta, outputSize);
     for (MasterSource masterSource : masterSources) {
       Set<String> ids = masterSource.remoteIds();
       for (String id : ids) {
@@ -48,14 +48,14 @@ public class Ack {
     return ack;
   }
 
-  private Ack(String clientId, SyncerInputMeta syncerInputMeta, int outputSize) {
-    this.clientId = clientId;
+  private Ack(String consumerId, SyncerInputMeta syncerInputMeta, int outputSize) {
+    this.consumerId = consumerId;
     this.metaDir = syncerInputMeta.getLastRunMetadataDir();
     this.outputSize = outputSize;
   }
 
   private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {
-    Path path = Paths.get(metaDir, clientId, identifier);
+    Path path = Paths.get(metaDir, consumerId, identifier);
 
     FileBasedMap<DataId> fileBasedMap = new FileBasedMap<>(path);
     ackMap.put(identifier, fileBasedMap);
