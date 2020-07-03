@@ -407,7 +407,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   public Long getPartitionId() {
     Object o = partitionField == null || getField(partitionField) == null ? getId() : getField(partitionField);
-    return Math.abs(o instanceof Long ? ((Long) o) : o.hashCode());
+    if (o != null) {
+      return Math.abs(o instanceof Long ? ((Long) o) : o.hashCode());
+    }
+    logger.warn("No primary key to use and no partitionId configured, {}", this);
+    return 0L;
   }
 
   public void setPartitionField(String fieldName) {

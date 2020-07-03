@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.data;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
@@ -133,4 +135,52 @@ public interface SyncData {
 
   @Override
   String toString();
+
+  /**
+   * @param key name for field which is byte[] in Java, which may come from blob type in db
+   * @return this instance
+   */
+  default SyncData bytesToStr(String key) {
+    Object value = getField(key);
+    if (value != null) {
+      updateField(key, new String((byte[]) value, java.nio.charset.StandardCharsets.UTF_8));
+    }
+    return this;
+  }
+
+  /**
+   * @param key name for field which is byte[] in Java, which may come from blob type in db
+   * @return this instance
+   */
+  default SyncData dateToTimestamp(String key) {
+    Date value = (Date) getField(key);
+    if (value != null) {
+      updateField(key, new Timestamp(value.getTime()));
+    }
+    return this;
+  }
+
+  /**
+   * @param key name for field which is java.sql.Timestamp in Java
+   * @return this instance
+   */
+  default SyncData timestampToUnix(String key) {
+    Timestamp value = (Timestamp) getField(key);
+    if (value != null) {
+      updateField(key, value.getTime());
+    }
+    return this;
+  }
+
+  /**
+   * convert this mysql unsigned byte to positive in Java
+   * @param key name for field which is int in Java
+   */
+  default SyncData recoverUnsignedByte(String key) {
+    Object field = getField(key);
+    if (field != null) {
+      updateField(key, Byte.toUnsignedInt((byte)(int) field));
+    }
+    return this;
+  }
 }
