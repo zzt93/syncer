@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.common.data;
 import com.github.shyiko.mysql.binlog.event.deserialization.AbstractRowsEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
+import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
 import com.google.common.collect.Maps;
@@ -50,10 +51,25 @@ public class SyncDataTest {
   @Test
   public void testToStringDefault() {
     SyncData write = SyncDataTestUtil.write("test", "test");
-    assertEquals("SyncData{inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null))}",
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, esScriptUpdate=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null)), updated=null, partitionField=null, extraQueryContext=null)",
         write.toString());
     write.recycleParseContext(null);
-    assertEquals("SyncData{inner=Meta{dataId=mysql-bin.00001/4/6/0, context=null, connectionIdentifier='null'}, syncByQuery=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null))}",
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, context=null, connectionIdentifier='null'}, syncByQuery=null, esScriptUpdate=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null)), updated=null, partitionField=null, extraQueryContext=null)",
+        write.toString());
+  }
+
+  @Test
+  public void testToStringWithQuery() {
+    SyncData write = SyncDataTestUtil.write("test", "test").addField("ann_id", 1L);
+    write.extraQuery("parent", "parent")
+        .filter("_id", write.getField("ann_id"))
+        .select("publicType")
+        .addField("publicType");
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, esScriptUpdate=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={ann_id=1, publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}, extras=null, before=null)), updated=null, partitionField=null, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}]))",
+        write.toString());
+
+    write.esScriptUpdate(Filter.id("ann_id")).mergeToNestedById("roles", "role_id", "type");
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, esScriptUpdate=ESScriptUpdate(mergeToList={}, mergeToListById={}, nested={roles={=Filter(docKeyName=null, fieldKeyName=null, next=null), role_id=null, id=1234, type=null}}, oldType=WRITE, parentFilter=Filter(docKeyName=null, fieldKeyName=ann_id, next=null), script=null, params=null), result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=UPDATE, repo=test, entity=test, id=1, primaryKeyName=id), fields={publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}, extras=null, before=null)), updated=null, partitionField=null, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}]))",
         write.toString());
   }
 

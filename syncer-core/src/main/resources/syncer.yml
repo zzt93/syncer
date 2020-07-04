@@ -8,6 +8,7 @@ input:
 filter:
   filter-meta:
     src: /data/syncer/filter/src
+    failure-log-dir: /data/syncer/filter/failure/
 
 output:
   worker: 2

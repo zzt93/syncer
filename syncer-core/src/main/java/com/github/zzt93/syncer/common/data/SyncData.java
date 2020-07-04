@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.common.data;
 import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
+import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.expression.TypedValue;
@@ -24,6 +25,7 @@ import java.util.Set;
  * </ul>
  * @author zzt
  */
+@ToString
 public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializable {
 
   private static final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
@@ -380,15 +382,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   public SimpleEventType getType() {
     return result.getEventType();
-  }
-
-  @Override
-  public String toString() {
-    return "SyncData{" +
-        "inner=" + inner +
-        ", syncByQuery=" + syncByQuery +
-        ", result=" + result +
-        '}';
   }
 
   public SyncResult getResult() {

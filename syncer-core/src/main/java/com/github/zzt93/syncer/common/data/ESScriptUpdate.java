@@ -5,6 +5,7 @@ import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Maps;
+import lombok.ToString;
 import org.apache.commons.lang.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +22,7 @@ import static com.github.zzt93.syncer.common.util.EsTypeUtil.*;
  * @see SyncByQuery
  * https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html#_scripted_updates
  */
+@ToString(exclude = "outer")
 public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.data.ESScriptUpdate {
 
   private static final Logger logger = LoggerFactory.getLogger(ESScriptUpdate.class);
@@ -300,15 +302,6 @@ public class ESScriptUpdate implements Serializable, com.github.zzt93.syncer.dat
 
   public boolean needScript() {
     return StringUtils.isNotBlank(script) || !mergeToList.isEmpty() || !mergeToListById.isEmpty() || !nested.isEmpty();
-  }
-
-  @Override
-  public String toString() {
-    return "SyncByQueryES{" +
-        "mergeToListById=" + mergeToListById +
-        ", nested=" + nested +
-        ", outer=SyncData@" + Integer.toHexString(outer.hashCode()) +
-        '}';
   }
 
   public void upsert(HashMap<String, Object> upsert) {
