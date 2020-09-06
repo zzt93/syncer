@@ -1,8 +1,6 @@
 package com.github.zzt93.syncer.consumer.ack;
 
-import com.github.zzt93.syncer.common.thread.WaitingAckHook;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
-import com.github.zzt93.syncer.consumer.output.channel.AckChannel;
 import com.google.common.primitives.Bytes;
 import lombok.extern.slf4j.Slf4j;
 
@@ -79,13 +77,6 @@ public class LocalMetaFile implements MetaFile {
 	}
 
 
-	/**
-	 * In most cases only invoke by PositionFlusher. When shutdown,
-	 * may invoke by shutdown hook thread
-	 * @see PositionFlusher
-	 * @see AckChannel#checkpoint()
-	 * @see WaitingAckHook
-	 */
 	@Override
 	public synchronized void putBytes(byte[] bytes) {
 		for (int i = 0; i < bytes.length; i++) {

@@ -11,7 +11,7 @@ public class LocalAndEtcdMetaFile implements MetaFile {
 	private final LocalMetaFile localMetaFile;
 	private final EtcdBasedFile etcdBasedFile;
 	private long lastUpdateTime;
-	private int lastHash;
+	private byte[] lastWrite;
 	private static final long _10s = 10 * 1000;
 
 
@@ -35,25 +35,32 @@ public class LocalAndEtcdMetaFile implements MetaFile {
 	@Override
 	public AckMetaData readData() throws IOException {
 		AckMetaData bytes = localMetaFile.readData();
-		if (bytes.isEmpty()) {
-			bytes = etcdBasedFile.readData();
-			localMetaFile.putBytes(bytes.getBytes());
+		if (!bytes.isEmpty()) { // first check local
 			return bytes;
 		}
+		// fallback to remote
+		bytes = etcdBasedFile.readData();
+		if (bytes.isEmpty()) { // remote is also empty
+			return bytes;
+		}
+		localMetaFile.putBytes(bytes.getBytes());
 		return bytes;
 	}
 
 	@Override
 	public void putBytes(byte[] bytes) throws IOException {
 		localMetaFile.putBytes(bytes);
+		syncToRemote(bytes);
+	}
+
+	private void syncToRemote(byte[] bytes) throws IOException {
 		if (System.currentTimeMillis() - lastUpdateTime > _10s) {
-			int thisHash = Arrays.hashCode(bytes);
-			if (lastHash != thisHash) {
+			if (Arrays.equals(lastWrite, bytes)) {
 				etcdBasedFile.putBytes(bytes);
-				lastHash = thisHash;
+				lastWrite = bytes;
 				lastUpdateTime = System.currentTimeMillis();
 			} else {
-				log.debug("{}, {}, {}", lastUpdateTime, lastHash, log.isDebugEnabled() ? new String(bytes) : null);
+				log.debug("{}, {}, {}", lastUpdateTime, lastWrite, log.isDebugEnabled() ? new String(bytes) : null);
 			}
 		}
 	}
