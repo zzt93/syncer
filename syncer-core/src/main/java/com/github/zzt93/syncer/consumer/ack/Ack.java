@@ -10,7 +10,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -71,10 +70,10 @@ public class Ack {
 
   private SyncInitMeta recoverSyncInitMeta(FileBasedMap<DataId> fileBasedMap,
                                            MasterSourceType sourceType, SyncInitMeta syncInitMeta) throws IOException {
-    byte[] bytes = fileBasedMap.readData();
-    if (bytes.length > 0) {
+    AckMetaData bytes = fileBasedMap.readData();
+    if (bytes.isEmpty()) {
       try {
-        String data = new String(bytes, StandardCharsets.UTF_8);
+        String data = bytes.toDataStr();
         switch (sourceType) {
           case MySQL:
             syncInitMeta = DataId.fromDataId(data);
@@ -82,6 +81,8 @@ public class Ack {
           case Mongo:
             syncInitMeta = DataId.fromMongoDataId(data);
             break;
+          default:
+            throw new IllegalStateException("Not implemented type");
         }
       } catch (Exception e) {
         logger.warn("Meta file in {} crashed, take as fresh run", fileBasedMap);

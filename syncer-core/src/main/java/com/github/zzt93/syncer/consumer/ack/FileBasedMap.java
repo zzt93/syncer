@@ -29,8 +29,7 @@ public class FileBasedMap<T extends Comparable<T>> {
 
   public FileBasedMap(Path path) {
     localMetaFile = new LocalMetaFile(path);
-    localMetaFile.createFile();
-    localMetaFile.initFile();
+    localMetaFile.createFileAndInitFile();
   }
 
   /**
@@ -87,7 +86,7 @@ public class FileBasedMap<T extends Comparable<T>> {
         '}';
   }
 
-  public byte[] readData() throws IOException {
+  AckMetaData readData() throws IOException {
     return localMetaFile.readData();
   }
 }

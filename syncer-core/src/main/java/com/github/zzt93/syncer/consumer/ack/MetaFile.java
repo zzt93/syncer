@@ -9,11 +9,9 @@ public interface MetaFile {
 
 	boolean isExists();
 
-	void createFile();
+	void createFileAndInitFile();
 
-	void initFile();
-
-	byte[] readData() throws IOException;
+	AckMetaData readData() throws IOException;
 
 	void putBytes(byte[] bytes) throws IOException;
 
