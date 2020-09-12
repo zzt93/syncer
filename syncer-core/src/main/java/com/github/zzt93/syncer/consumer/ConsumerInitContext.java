@@ -35,6 +35,7 @@ public class ConsumerInitContext {
 	public SyncerAck getAck() {
 		return syncerConfig.getAck();
 	}
+
 	public PipelineInput getInput() {
 		return consumerConfig.getInput();
 	}
@@ -68,7 +69,5 @@ public class ConsumerInitContext {
 		return consumerConfig.getConsumerId();
 	}
 
-	public String getVersion() {
-		return syncerConfig.getVersion();
-	}
+
 }

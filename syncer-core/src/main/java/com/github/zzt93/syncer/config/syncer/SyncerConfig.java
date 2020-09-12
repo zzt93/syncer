@@ -19,8 +19,6 @@ public class SyncerConfig {
   private static final int DEFAULT_START = 40000;
   private static final String RETRY = "10";
 
-  private String version;
-  private String instanceId;
   private int port;
   private SyncerAck ack;
   private SyncerInput input;
@@ -34,7 +32,12 @@ public class SyncerConfig {
   }
 
   public EtcdConnection getEtcd() {
+    String instanceId = generateInstanceId();
     return ack.getEtcd().setInstanceId(instanceId);
+  }
+
+  private String generateInstanceId() {
+    return null;
   }
 
   public boolean hasEtcd() {

@@ -14,6 +14,7 @@ public class ESRequestMapping {
   private String index = "repo";
   private String type = "entity";
   private LinkedHashMap<String, Object> fieldsMapping = new LinkedHashMap<>();
+  @Deprecated
   private boolean noUseIdForIndex = false;
   private int retryOnUpdateConflict = 0;
   private boolean upsert = false;

@@ -1,6 +1,6 @@
-package com.github.zzt93.syncer.stat;
+package com.github.zzt93.syncer.stat.vo;
 
-public class BufferStat<T> {
+public class BatchBufferStat<T> {
 
   private String outputChannelId;
   private int limit;
@@ -8,7 +8,7 @@ public class BufferStat<T> {
   private T firstKey;
   private T lastKey;
 
-  public BufferStat(String outputChannelId, int limit, int now, T firstKey, T lastKey) {
+  public BatchBufferStat(String outputChannelId, int limit, int now, T firstKey, T lastKey) {
     this.outputChannelId = outputChannelId;
     this.limit = limit;
     this.now = now;
@@ -18,7 +18,7 @@ public class BufferStat<T> {
 
   @Override
   public String toString() {
-    return "BufferStat{" +
+    return "BatchBufferStat{" +
         "outputChannelId='" + outputChannelId + '\'' +
         ", limit=" + limit +
         ", now=" + now +

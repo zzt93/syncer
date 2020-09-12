@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel;
 
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
-import com.github.zzt93.syncer.stat.BufferStat;
+import com.github.zzt93.syncer.stat.vo.BatchBufferStat;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -20,7 +20,7 @@ public interface BufferedChannel<T> extends OutputChannel, AckChannel<T> {
 
   TimeUnit getDelayUnit();
 
-  default BufferStat getBufferStatistic() {
+  default BatchBufferStat getBufferStatistic() {
     throw new UnsupportedOperationException();
   }
 

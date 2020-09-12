@@ -60,7 +60,7 @@ public class Ack {
     Path path = Paths.get(metaDir, consumerId, identifier);
     FileBasedMap<DataId> fileBasedMap;
     if (context.hasEtcd()) {
-      fileBasedMap = new FileBasedMap<>(path, context.getEtcd());
+      fileBasedMap = new FileBasedMap<>(path, context.getEtcd().setInputIdentifier(identifier));
     } else {
       fileBasedMap = new FileBasedMap<>(path);
     }

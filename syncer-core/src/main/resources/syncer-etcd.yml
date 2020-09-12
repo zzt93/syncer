@@ -1,0 +1,22 @@
+ack:
+  flushPeriod: 100
+  etcd:
+    address: 1
+    port: 2
+
+
+input:
+  input-meta:
+    last-run-metadata-dir: /data/syncer/input/last_position/
+
+filter:
+  filter-meta:
+    src: /data/syncer/filter/src
+
+output:
+  worker: 2
+  batch:
+    worker: 2
+  output-meta:
+    failure-log-dir: /data/syncer/output/failure/
+

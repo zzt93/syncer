@@ -1,0 +1,73 @@
+version: 1.3
+
+consumerId: simplest
+
+
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    repos:
+      - name: "test_.*"
+        entities:
+          - name: correctness
+            # @Default: no fields means all fields
+            fields: [time, news_id, currency, total, quantity, type, name, unit] # @Default id is not null, other can be null
+          - name: types
+            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+          - name: news
+            fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
+      - name: "simple.*"
+        entities:
+          - name: simple_type
+            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+
+
+filter:
+  - method: '
+  public void filter(List<SyncData> list) {
+  }
+'
+
+
+output:
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+    requestMapping: # mapping from input data to es request
+      retryOnUpdateConflict: 3
+      upsert: false
+      index: "repo" # @Default: repo
+      type: "entity" # @Deprecated @Default: entity
+      fieldsMapping: # @Default: fields.*.flatten
+        "fields": "fields.*.flatten"
+    batch:
+      size: 100
+      delay: 100
+      maxRetry: 5
+    refreshInMillis: 1000
+    failureLog:
+      countLimit: 100
+      timeLimit: 60
+      unit: SECONDS
+  mysql:
+    connection:
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_OUT_PASS}
+    rowMapping:
+      schema: " repo "
+      table: "entity"
+      id: "id"
+      rows:
+        "fields": "fields.*.flatten"
+        "id": "id"
+    batch:
+      size: 100
+      delay: 100
+      maxRetry: 5
+    failureLog:
+      countLimit: 100
+      timeLimit: 60
+      unit: SECONDS
