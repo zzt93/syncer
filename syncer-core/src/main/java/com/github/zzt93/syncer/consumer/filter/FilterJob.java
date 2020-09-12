@@ -24,24 +24,32 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 
 /**
+ * <ul>
+ *   <li>Use single thread to do filter & mapping (i.e. CPU related work) which is fast enough and thread safe
+ *  and order of event is ensured.</li>
+ *  <li>Use multiple thread to do IO in output</li>
+ *  <li>Use ArrayBlockingQueue to limit memory usage</li>
+ * </ul>
+ *
+ * @see OutputChannel#output(SyncData)
  * @author zzt
  */
 public class FilterJob implements EventLoop {
 
 
   private final Logger logger = LoggerFactory.getLogger(FilterJob.class);
-  private final BlockingQueue<SyncData> fromInput;
+  private final ArrayBlockingQueue<SyncData> fromInput;
   private final CopyOnWriteArrayList<OutputChannel> outputChannels;
   private final List<SyncFilter> filters;
   private final String consumerId;
   private final Ack ack;
   private final FailureLog<Object> failureLog;
 
-  public FilterJob(String consumerId, BlockingQueue<SyncData> fromInput,
+  public FilterJob(String consumerId, ArrayBlockingQueue<SyncData> fromInput,
                    CopyOnWriteArrayList<OutputChannel> outputChannels,
                    List<SyncFilter> filters, Ack ack, SyncerFilter module) {
     this.consumerId = consumerId;

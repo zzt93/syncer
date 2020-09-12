@@ -68,10 +68,10 @@ public class ConsumerStarter implements Starter {
 
     outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput(), ack);
 
-    ArrayBlockingQueue<SyncData> inputFilterQuery = new ArrayBlockingQueue<>(syncer.getFilter().getCapacity());
-    initFilterModule(syncer.getFilter(), pipeline.getFilter(), outputChannels, ack, inputFilterQuery);
+    ArrayBlockingQueue<SyncData> inputFilterQueue = new ArrayBlockingQueue<>(syncer.getFilter().getCapacity());
+    initFilterModule(syncer.getFilter(), pipeline.getFilter(), outputChannels, ack, inputFilterQueue);
 
-    initRegistrant(id, consumerRegistry, inputFilterQuery, pipeline.getInput(), ackConnectionId2SyncInitMeta);
+    initRegistrant(id, consumerRegistry, inputFilterQueue, pipeline.getInput(), ackConnectionId2SyncInitMeta);
   }
 
   private HashMap<String, SyncInitMeta> initAckModule(String consumerId,
@@ -91,7 +91,7 @@ public class ConsumerStarter implements Starter {
   }
 
   private void initFilterModule(SyncerFilter module, List<FilterConfig> filters,
-                                List<OutputChannel> outputChannels, Ack ack, ArrayBlockingQueue<SyncData> inputFilterQuery) {
+                                List<OutputChannel> outputChannels, Ack ack, ArrayBlockingQueue<SyncData> inputFilterQueue) {
 
     filterService = Executors
         .newFixedThreadPool(SyncerFilter.WORKER_THREAD_COUNT, new NamedThreadFactory("syncer-" + id + "-filter"));
@@ -100,7 +100,7 @@ public class ConsumerStarter implements Starter {
     // this list shared by multiple thread, and some channels may be removed when other threads iterate
     // see CopyOnWriteListTest for sanity test
     CopyOnWriteArrayList<OutputChannel> channels = new CopyOnWriteArrayList<>(outputChannels);
-    filterJob = new FilterJob(id, inputFilterQuery, channels, syncFilters, ack, module);
+    filterJob = new FilterJob(id, inputFilterQueue, channels, syncFilters, ack, module);
   }
 
   private void initRegistrant(String consumerId, ConsumerRegistry consumerRegistry,
