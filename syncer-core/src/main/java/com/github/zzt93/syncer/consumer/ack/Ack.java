@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.MasterSource;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.syncer.SyncerInputMeta;
+import com.github.zzt93.syncer.consumer.ConsumerInitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -31,13 +32,15 @@ public class Ack {
   private final String consumerId;
   private final int outputSize;
 
-  public static Ack build(String consumerId, SyncerInputMeta syncerInputMeta, Set<MasterSource> masterSources,
-      HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta, int outputSize) {
-    Ack ack = new Ack(consumerId, syncerInputMeta, outputSize);
+  public static Ack build(ConsumerInitContext context, HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta) {
+    Set<MasterSource> masterSources = context.getInput().getMasterSet();
+    String consumerId = context.getConsumerId();
+    SyncerInputMeta syncerInputMeta = context.getSyncerInput().getInputMeta();
+    Ack ack = new Ack(consumerId, syncerInputMeta, context.outputSize());
     for (MasterSource masterSource : masterSources) {
       Set<String> ids = masterSource.remoteIds();
       for (String id : ids) {
-        SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType());
+        SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType(), context);
         if (initMeta != null) {
           ackConnectionId2SyncInitMeta.put(id, initMeta);
         }
@@ -53,10 +56,14 @@ public class Ack {
     this.outputSize = outputSize;
   }
 
-  private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {
+  private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType, ConsumerInitContext context) {
     Path path = Paths.get(metaDir, consumerId, identifier);
-
-    FileBasedMap<DataId> fileBasedMap = new FileBasedMap<>(path);
+    FileBasedMap<DataId> fileBasedMap;
+    if (context.hasEtcd()) {
+      fileBasedMap = new FileBasedMap<>(path, context.getEtcd());
+    } else {
+      fileBasedMap = new FileBasedMap<>(path);
+    }
     ackMap.put(identifier, fileBasedMap);
 
     SyncInitMeta syncInitMeta = null;

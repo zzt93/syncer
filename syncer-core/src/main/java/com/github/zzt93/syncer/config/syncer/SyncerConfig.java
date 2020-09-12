@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.config.syncer;
 
+import com.github.zzt93.syncer.config.common.EtcdConnection;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import lombok.Getter;
 import lombok.Setter;
@@ -30,5 +31,13 @@ public class SyncerConfig {
   public void setPort(int port) {
     if (port <= 0 || port > 65535) throw new InvalidConfigException("Invalid port config " + port);
     this.port = port;
+  }
+
+  public EtcdConnection getEtcd() {
+    return ack.getEtcd().setInstanceId(instanceId);
+  }
+
+  public boolean hasEtcd() {
+    return ack.hasEtcd();
   }
 }

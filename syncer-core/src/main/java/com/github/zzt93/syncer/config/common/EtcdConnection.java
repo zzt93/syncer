@@ -7,7 +7,7 @@ public class EtcdConnection extends HttpConnection {
 
   private String instanceId;
   private String consumerId;
-  private String outputIdentifier;
+  private String inputIdentifier;
 
 
   public EtcdConnection setInstanceId(String instanceId) {
@@ -20,13 +20,13 @@ public class EtcdConnection extends HttpConnection {
     return this;
   }
 
-  public EtcdConnection setOutputIdentifier(String outputIdentifier) {
-    this.outputIdentifier = outputIdentifier;
+  public EtcdConnection setInputIdentifier(String inputIdentifier) {
+    this.inputIdentifier = inputIdentifier;
     return this;
   }
 
   public String getKey() {
-    return instanceId + "/" + consumerId + "/" + outputIdentifier;
+    return instanceId + "/" + consumerId + "/" + inputIdentifier;
   }
 
 

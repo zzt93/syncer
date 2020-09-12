@@ -14,7 +14,6 @@ import com.github.zzt93.syncer.config.syncer.SyncerAck;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerFilter;
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
-import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.ack.PositionFlusher;
@@ -33,7 +32,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -63,8 +61,8 @@ public class ConsumerStarter implements Starter {
 
     id = pipeline.getConsumerId();
 
-    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(id, pipeline.getInput(),
-        syncer.getInput(), syncer.getAck(), pipeline.outputSize());
+    ConsumerInitContext consumerInitContext = new ConsumerInitContext(syncer, pipeline);
+    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(consumerInitContext);
 
     outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput(), ack);
 
@@ -74,13 +72,10 @@ public class ConsumerStarter implements Starter {
     initRegistrant(id, consumerRegistry, inputFilterQuery, pipeline.getInput(), ackConnectionId2SyncInitMeta);
   }
 
-  private HashMap<String, SyncInitMeta> initAckModule(String consumerId,
-                                                      PipelineInput pipelineInput,
-                                                      SyncerInput input, SyncerAck ackConfig, int outputSize) {
-    Set<MasterSource> masterSet = pipelineInput.getMasterSet();
+  private HashMap<String, SyncInitMeta> initAckModule(ConsumerInitContext context) {
     HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = new HashMap<>();
-    this.ack = Ack.build(consumerId, input.getInputMeta(), masterSet, ackConnectionId2SyncInitMeta, outputSize);
-    this.ackConfig = ackConfig;
+    this.ack = Ack.build(context, ackConnectionId2SyncInitMeta);
+    this.ackConfig = context.getAck();
     return ackConnectionId2SyncInitMeta;
   }
 
