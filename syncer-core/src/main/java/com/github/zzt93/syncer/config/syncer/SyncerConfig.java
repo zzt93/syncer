@@ -14,9 +14,10 @@ import org.slf4j.LoggerFactory;
 @Getter
 public class SyncerConfig {
 
-  private static final String SERVER_PORT = "port";
+  public static final String SERVER_PORT = "port";
+  public static final String INSTANCE = "instance";
+  public static final String DEFAULT_START = "40000";
   private static final Logger logger = LoggerFactory.getLogger(SyncerConfig.class);
-  private static final int DEFAULT_START = 40000;
   private static final String RETRY = "10";
 
   private int port;
