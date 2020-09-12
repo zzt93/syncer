@@ -1,8 +1,10 @@
 package com.github.zzt93.syncer.consumer.ack;
 
+import com.github.zzt93.syncer.config.common.EtcdConnection;
 import lombok.extern.slf4j.Slf4j;
 
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Arrays;
 
 @Slf4j
@@ -15,9 +17,9 @@ public class LocalAndEtcdMetaFile implements MetaFile {
 	private static final long _10s = 10 * 1000;
 
 
-	public LocalAndEtcdMetaFile(LocalMetaFile localMetaFile, EtcdBasedFile etcdBasedFile) {
-		this.localMetaFile = localMetaFile;
-		this.etcdBasedFile = etcdBasedFile;
+	public LocalAndEtcdMetaFile(Path localPath, EtcdConnection etcdConnection) {
+		this.localMetaFile = new LocalMetaFile(localPath);
+		this.etcdBasedFile = new EtcdBasedFile(etcdConnection);
 	}
 
 	@Override
@@ -63,5 +65,15 @@ public class LocalAndEtcdMetaFile implements MetaFile {
 				log.debug("{}, {}, {}", lastUpdateTime, lastWrite, log.isDebugEnabled() ? new String(bytes) : null);
 			}
 		}
+	}
+
+	@Override
+	public String toString() {
+		return "LocalAndEtcdMetaFile{" +
+				"localMetaFile=" + localMetaFile +
+				", etcdBasedFile=" + etcdBasedFile +
+				", lastUpdateTime=" + lastUpdateTime +
+				", lastWrite=" + new String(lastWrite) +
+				'}';
 	}
 }

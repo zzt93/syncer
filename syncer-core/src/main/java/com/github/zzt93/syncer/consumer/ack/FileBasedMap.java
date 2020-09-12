@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.ack;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
+import com.github.zzt93.syncer.config.common.EtcdConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,13 +23,18 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class FileBasedMap<T extends Comparable<T>> {
 
   private static final AtomicInteger ZERO = new AtomicInteger();
-  private final LocalMetaFile localMetaFile;
+  private final MetaFile localMetaFile;
   private volatile T lastRemoved;
   private final ConcurrentSkipListMap<T, AtomicInteger> map = new ConcurrentSkipListMap<>();
   private final Logger logger = LoggerFactory.getLogger(FileBasedMap.class);
 
   public FileBasedMap(Path path) {
     localMetaFile = new LocalMetaFile(path);
+    localMetaFile.createFileAndInitFile();
+  }
+
+  public FileBasedMap(Path localPath, EtcdConnection remote) {
+    localMetaFile = new LocalAndEtcdMetaFile(localPath, remote);
     localMetaFile.createFileAndInitFile();
   }
 
@@ -59,7 +65,11 @@ public class FileBasedMap<T extends Comparable<T>> {
       return false;
     }
     byte[] bytes = toFlush.toString().getBytes(StandardCharsets.UTF_8);
-    localMetaFile.putBytes(bytes);
+    try {
+      localMetaFile.putBytes(bytes);
+    } catch (IOException e) {
+      logger.error("Fail to store {} in {}", toFlush, localMetaFile, e);
+    }
     return true;
   }
 

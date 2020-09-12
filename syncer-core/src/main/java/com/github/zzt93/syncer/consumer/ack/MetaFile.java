@@ -25,4 +25,6 @@ public interface MetaFile {
 	 */
 	void putBytes(byte[] bytes) throws IOException;
 
+	String toString();
+
 }

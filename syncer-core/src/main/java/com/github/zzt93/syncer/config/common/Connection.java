@@ -26,8 +26,19 @@ public class Connection implements Comparable<Connection> {
   private String user;
   private String passwordFile;
   private String password;
+  /**
+   * identifier for this connection, used to distinguish other connection
+   */
   private volatile String identifier;
+  /**
+   * utility field to replace address
+   */
   private String ip;
+  /**
+   * special field for input module
+   * @see com.github.zzt93.syncer.config.ConsumerConfig
+   * @see com.github.zzt93.syncer.config.consumer.input.PipelineInput
+   */
   private SyncMeta syncMeta;
 
   public Connection() {
