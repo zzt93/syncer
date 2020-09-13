@@ -1,21 +1,32 @@
 package com.github.zzt93.syncer.config.consumer;
 
 import com.github.zzt93.syncer.config.producer.ProducerInput;
+import com.github.zzt93.syncer.config.producer.ProducerMaster;
+import lombok.extern.slf4j.Slf4j;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
 
 /**
  * @author zzt
  */
+@Slf4j
 public class ProducerConfig {
 
   private String version;
-  private ProducerInput input;
+
+  private Set<ProducerMaster> inputSet = new HashSet<>();
 
   public ProducerInput getInput() {
-    return input;
+    return new ProducerInput(inputSet);
   }
 
-  public void setInput(ProducerInput input) {
-    this.input = input;
+  public void setInput(List<ProducerMaster> masters) {
+    inputSet.addAll(masters);
+    if (inputSet.size() < masters.size()) {
+      log.warn("Duplicate mysql master connection endpoint");
+    }
   }
 
   public String getVersion() {

@@ -36,7 +36,8 @@ function test-mongo-input() {
     cmpFromTo extractMongoCount extractESCount 0 simple
 
     assertLogNotExist syncer ' ERROR '
-    detail 0 600 mongo
+    all=$(( 3 * num ))
+    detail 0 ${all} mongo
 }
 
 function cleanup() {

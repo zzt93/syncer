@@ -29,7 +29,7 @@ import java.util.concurrent.BlockingQueue;
 /**
  * @author zzt
  */
-@ConsumerConfig("input.masters[]")
+@ConsumerConfig("input[]")
 public class MasterSource {
 
   private final Logger logger = LoggerFactory.getLogger(MasterSource.class);

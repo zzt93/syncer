@@ -111,7 +111,7 @@ public class ProducerStarter implements Starter {
 
 
   private Set<ProducerMaster> fromPipelineConfig(ProducerInput input) {
-    return input.masterSet();
+    return input.getMasterSet();
   }
 
   @Override

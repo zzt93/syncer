@@ -2,39 +2,21 @@ package com.github.zzt93.syncer.config.producer;
 
 
 import com.github.zzt93.syncer.config.ProducerConfig;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.Getter;
 
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 /**
  * @author zzt
  */
 @ProducerConfig("input")
+@Getter
 public class ProducerInput {
 
-  private Logger logger = LoggerFactory.getLogger(ProducerInput.class);
+  private final Set<ProducerMaster> masterSet;
 
-  private List<ProducerMaster> masters = new ArrayList<>();
-  private Set<ProducerMaster> masterSet = new HashSet<>();
 
-  public List<ProducerMaster> getMasters() {
-    return masters;
+  public ProducerInput(Set<ProducerMaster> masterSet) {
+    this.masterSet = masterSet;
   }
-
-  public void setMasters(List<ProducerMaster> masters) {
-    this.masters = masters;
-    masterSet.addAll(masters);
-    if (masterSet.size() < masters.size()) {
-      logger.warn("Duplicate mysql master connection endpoint");
-    }
-  }
-
-  public Set<ProducerMaster> masterSet() {
-    return masterSet;
-  }
-
 }

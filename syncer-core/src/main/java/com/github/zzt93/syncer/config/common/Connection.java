@@ -37,7 +37,7 @@ public class Connection implements Comparable<Connection> {
   /**
    * special field for input module
    * @see com.github.zzt93.syncer.config.ConsumerConfig
-   * @see com.github.zzt93.syncer.config.consumer.input.PipelineInput
+   * @see MasterSource
    */
   private SyncMeta syncMeta;
 

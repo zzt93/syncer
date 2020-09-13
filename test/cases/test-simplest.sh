@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-env=drds
-num=1000
-syncerDir=normal
+env=mysql-bak
+num=100
+syncerDir=simplest
 
 source ${UTIL_LIB}
 
@@ -14,12 +14,14 @@ function setup() {
 
 
 function test-non-latest() {
-    docker stop syncer
     # Given
     bash script/generate_data.sh ${num} ${env}
     bash script/load_data.sh ${env}
 
-    docker start syncer
+    dockerExec mysql_1 mysql -uroot -proot -N -B -e "alter table test_1.news add yy char(10) default 'aa' null after plate_type; "
+    instance=mysql_0
+    dockerExec ${instance} mysql -uroot -proot -N -B -e "alter table test_0.news add yy char(10) default 'aa' null after plate_type; "
+
     # Given
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
@@ -29,13 +31,7 @@ function test-non-latest() {
     # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
     # Then: sync to mysql
-    cmpFromTo extractMySqlCount extractMySqlResultCount
-
-    # Then: test clear
-    cmpFromTo extractConst extractESCount 0 discard
-    # Then: test copy
-    all=$(( 4 * num ))
-    cmpFromTo extractConst extractESCount ${all} copy
+    cmpFromTo extractMySqlCount extractMySqlResultCount2
 
     assertLogNotExist syncer ' ERROR '
 

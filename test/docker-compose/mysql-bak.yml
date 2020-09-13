@@ -1,0 +1,99 @@
+version: '2.1'
+services:
+  mysql_0:
+    image: mysql:5.7.15
+    command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
+    volumes:
+    - ${mysql_init_0}:/init.sql
+    - ${TEST_DIR}/data:/Data
+    environment:
+    - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - 43306:3306
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u root -proot ping --silent"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+    - dbnet
+
+  mysql_1:
+    image: mysql:5.7.15
+    command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
+    volumes:
+    - ${mysql_init_1}:/init.sql
+    - ${TEST_DIR}/data:/Data
+    environment:
+    - MYSQL_ROOT_PASSWORD=root
+    ports:
+      - 43307:3306
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin -h 'localhost' -u root -proot ping --silent"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    networks:
+    - dbnet
+
+
+  elasticsearch:
+    command: -E cluster.name=test-cluster -E network.host=_site_
+    volumes:
+      - ${TEST_DIR}/data:/Data
+    image: elasticsearch:5.6
+    container_name: elasticsearch
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:9200/_cluster/health || exit 1"]
+      interval: 30s
+      timeout: 30s
+      retries: 3
+    environment:
+    - "ES_JAVA_OPTS=-Xmx512m -Xms512m"
+    - bootstrap.memory_local=true
+    - cluster.name=test-cluster
+    ports:
+    - 49200:9200
+    - 49300:9300
+    networks:
+    - dbnet
+
+
+  syncer:
+    image: syncer:test
+    container_name: syncer
+    depends_on:
+      mysql_0:
+        condition: service_healthy
+      mysql_1:
+        condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl --silent --fail localhost:40000/health || exit 1"]
+      interval: 5s
+      timeout: 5s
+      retries: 12
+    ports:
+    - 40000:40000
+    volumes:
+    - ${TEST_DIR}/data:/data
+    - ${TEST_DIR}/data/syncer/log:/log
+    environment:
+    - ES_ADDR=elasticsearch
+    - ES_CLUSTER=test-cluster
+    - MYSQL_ADDR="mysql_0:3306"
+    - MYSQL_IN_PASS=root
+    - MYSQL_USER=root
+    - MYSQL_OUT=mysql_1
+    - MYSQL_OUT_PASS=root
+    - MONGO_IN=mongo
+    - SYNCER_PRODUCER=/data/config/producer.yml
+    - SYNCER_CONSUMER=/data/config/consumer/
+    - EXTRA_OPT=--debug
+    networks:
+    - dbnet
+
+networks:
+  dbnet:
+    driver: bridge

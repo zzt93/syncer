@@ -1,13 +1,13 @@
-version: 1.2
+version: 1.3
 
 input:
-  masters:
 
-    - connection:
-        clusterNodes: [${MYSQL_ADDR}]
-        user: root
-        password: ${MYSQL_IN_PASS}
-      onlyUpdated: false
+
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+      user: root
+      password: ${MYSQL_IN_PASS}
+    onlyUpdated: false
 
 
 
