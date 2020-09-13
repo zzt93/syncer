@@ -8,6 +8,7 @@ import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.producer.register.LocalConsumerRegistry;
+import com.github.zzt93.syncer.stat.SyncerInfo;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
@@ -65,7 +66,7 @@ public class YamlEnvironmentPostProcessor {
     }
 
     String version = getVersion();
-    return new SyncerApplication(producerConfig, syncerConfig, new LocalConsumerRegistry(), configs, version);
+    return new SyncerApplication(producerConfig, syncerConfig, new LocalConsumerRegistry(), configs, new SyncerInfo(version));
   }
 
   private static String getVersion() {

@@ -23,9 +23,6 @@ public class CmdProcessor {
     }
     SyncerApplication syncerApplication = YamlEnvironmentPostProcessor.processEnvironment(argKV);
     SyncerConfig syncerConfig = syncerApplication.getSyncerConfig();
-    if (argKV.containsKey(SyncerConfig.INSTANCE)) {
-//      syncerConfig.setInstanceId(argKV.get(SyncerConfig.INSTANCE));
-    }
     if (argKV.containsKey(SyncerConfig.SERVER_PORT)) {
       syncerConfig.setPort(Integer.parseInt(argKV.get(SyncerConfig.SERVER_PORT)));
     }

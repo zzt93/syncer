@@ -33,12 +33,7 @@ public class SyncerConfig {
   }
 
   public EtcdConnection getEtcd() {
-    String instanceId = generateInstanceId();
-    return ack.getEtcd().setInstanceId(instanceId);
-  }
-
-  private String generateInstanceId() {
-    return null;
+    return ack.getEtcd();
   }
 
   public boolean hasEtcd() {

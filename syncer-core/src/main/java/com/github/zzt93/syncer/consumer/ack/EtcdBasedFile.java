@@ -49,7 +49,7 @@ public class EtcdBasedFile implements MetaFile {
 	@Override
 	public AckMetaData readData() throws IOException {
 		CompletableFuture<GetResponse> getFuture = kvClient.get(key);
-		GetResponse response = null;
+		GetResponse response;
 		try {
 			response = getFuture.get();
 		} catch (InterruptedException | ExecutionException e) {
@@ -57,7 +57,7 @@ public class EtcdBasedFile implements MetaFile {
 			throw new InvalidConfigException("Fail to fetch");
 		}
 		List<KeyValue> kvs = response.getKvs();
-		if (kvs.size() == 0) {
+		if (kvs == null || kvs.size() == 0) {
 			return AckMetaData.empty();
 		}
 		return new AckMetaData(kvs.get(kvs.size() - 1).getValue().getBytes());

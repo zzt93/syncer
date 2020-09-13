@@ -10,6 +10,7 @@ import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerFilter;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
 import com.github.zzt93.syncer.config.syncer.SyncerOutput;
+import com.github.zzt93.syncer.stat.SyncerInfo;
 import lombok.AllArgsConstructor;
 
 import java.util.List;
@@ -17,11 +18,12 @@ import java.util.List;
 @AllArgsConstructor
 public class ConsumerInitContext {
 
+	private SyncerInfo syncerInfo;
 	private SyncerConfig syncerConfig;
 	private ConsumerConfig consumerConfig;
 
 	public EtcdConnection getEtcd() {
-		return syncerConfig.getEtcd().setConsumerId(getConsumerId());
+		return syncerConfig.getEtcd().setInstanceId(syncerInfo.getInstanceId()).setConsumerId(getConsumerId());
 	}
 
 	public boolean hasEtcd() {

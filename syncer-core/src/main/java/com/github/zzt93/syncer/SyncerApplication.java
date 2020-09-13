@@ -7,11 +7,13 @@ import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
+import com.github.zzt93.syncer.consumer.ConsumerInitContext;
 import com.github.zzt93.syncer.consumer.ConsumerStarter;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.health.export.ExportServer;
 import com.github.zzt93.syncer.producer.ProducerStarter;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
+import com.github.zzt93.syncer.stat.SyncerInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,15 +30,15 @@ public class SyncerApplication {
   private final SyncerConfig syncerConfig;
   private final ConsumerRegistry consumerRegistry;
   private final List<ConsumerConfig> consumerConfigs;
-  private final String version;
+  private final SyncerInfo syncerInfo;
 
   public SyncerApplication(ProducerConfig producerConfig, SyncerConfig syncerConfig,
-                           ConsumerRegistry consumerRegistry, List<ConsumerConfig> consumerConfigs, String version) {
+                           ConsumerRegistry consumerRegistry, List<ConsumerConfig> consumerConfigs, SyncerInfo info) {
     this.producerConfig = producerConfig;
     this.syncerConfig = syncerConfig;
     this.consumerRegistry = consumerRegistry;
     this.consumerConfigs = consumerConfigs;
-    this.version = version;
+    this.syncerInfo = info;
   }
 
   public static void main(String[] args) {
@@ -59,7 +61,8 @@ public class SyncerApplication {
         throw new InvalidConfigException("Duplicate consumerId: " + consumerConfig.getConsumerId());
       }
       consumerIds.add(consumerConfig.getConsumerId());
-      starters.add(new ConsumerStarter(consumerConfig, syncerConfig, consumerRegistry).start());
+      ConsumerInitContext consumerInitContext = new ConsumerInitContext(syncerInfo, syncerConfig, consumerConfig);
+      starters.add(new ConsumerStarter(consumerRegistry, consumerInitContext).start());
     }
     // add producer as first item, stop producer first
     starters.addFirst(ProducerStarter
@@ -74,7 +77,7 @@ public class SyncerApplication {
 
   private boolean validPipeline(ConsumerConfig consumerConfig) {
     if (!supportedVersion(consumerConfig.getVersion())) {
-      logger.error("Not supported version[{}] config file", consumerConfig.getVersion());
+      logger.error("Not supported version[{}] config file, current version is {}", consumerConfig.getVersion(), syncerInfo);
       return false;
     }
     String consumerId = consumerConfig.getConsumerId();
@@ -90,7 +93,7 @@ public class SyncerApplication {
   }
 
   private boolean supportedVersion(String version) {
-    return version.equals(this.version);
+    return version.equals(this.syncerInfo.getVersion());
   }
 
   public SyncerConfig getSyncerConfig() {
