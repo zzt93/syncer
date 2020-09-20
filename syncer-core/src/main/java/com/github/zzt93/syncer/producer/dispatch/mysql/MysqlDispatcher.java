@@ -22,6 +22,7 @@ import org.slf4j.MDC;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map.Entry;
 import java.util.concurrent.atomic.AtomicReference;
@@ -65,6 +66,17 @@ public class MysqlDispatcher implements Dispatcher {
   }
 
   public void updateSchemaMeta(AlterMeta alterMeta) {
+    List<ConsumerChannel> interested = new LinkedList<>();
+    for (ConsumerChannel consumerChannel : consumerChannels) {
+      if (consumerChannel.interestedSchemaMeta(alterMeta)) {
+        interested.add(consumerChannel);
+      }
+    }
+    if (interested.isEmpty()) {
+      return;
+    }
+
+    logger.info("Detect alter table {}, may affect column index, re-syncing", alterMeta);
     TableMeta full = null;
     long sleepInSecond = 1;
     while (full == null) {
@@ -76,7 +88,7 @@ public class MysqlDispatcher implements Dispatcher {
       }
     }
     logger.info("Fetch related {}", full);
-    for (ConsumerChannel consumerChannel : consumerChannels) {
+    for (ConsumerChannel consumerChannel : interested) {
       consumerChannel.updateSchemaMeta(alterMeta, full);
     }
   }

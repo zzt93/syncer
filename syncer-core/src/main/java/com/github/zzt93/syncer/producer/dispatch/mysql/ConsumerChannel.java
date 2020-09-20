@@ -91,4 +91,8 @@ public class ConsumerChannel {
     consumerSchemaMeta.updateSchemaMeta(alterMeta, full);
   }
 
+  boolean interestedSchemaMeta(AlterMeta alterMeta) {
+    return consumerSchemaMeta.findTable(alterMeta.getSchema(), alterMeta.getTable()) != null;
+  }
+
 }
