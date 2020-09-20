@@ -14,7 +14,7 @@ import com.github.zzt93.syncer.consumer.output.channel.jdbc.MysqlChannel;
 public class Mysql extends BufferedOutputChannelConfig {
 
   private MysqlConnection connection;
-  private RowMapping rowMapping;
+  private RowMapping rowMapping = new RowMapping();
 
   public MysqlConnection getConnection() {
     return connection;

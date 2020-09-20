@@ -1,5 +1,8 @@
 package com.github.zzt93.syncer.config.consumer.output.mysql;
 
+import com.github.zzt93.syncer.common.util.SyncDataTypeUtil;
+import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
+
 import java.util.LinkedHashMap;
 
 /**
@@ -12,6 +15,10 @@ public class RowMapping {
   private String table = "entity";
   private String id = "id";
   private LinkedHashMap<String, Object> rows = new LinkedHashMap<>();
+
+  public RowMapping() {
+    rows.put(KVMapper.FAKE_KEY, SyncDataTypeUtil.ROW_FLATTEN);
+  }
 
   public String getSchema() {
     return schema;
