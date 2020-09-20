@@ -37,6 +37,14 @@ function extractMySqlResultCount() {
     extractMySqlCount ${instance} ${db} ${table}
 }
 
+function extractMySqlResultCount2() {
+    local instance=$1
+    local db=$2
+    local table="$3$mysqlResultSuffix"
+
+    extractMySqlCount mysql_1 ${db} ${table}
+}
+
 function extractMongoCount() {
     local instance=$1
     local db=$2
