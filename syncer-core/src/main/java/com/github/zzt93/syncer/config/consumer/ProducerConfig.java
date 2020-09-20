@@ -6,7 +6,6 @@ import lombok.extern.slf4j.Slf4j;
 
 import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 /**
  * @author zzt
@@ -14,26 +13,15 @@ import java.util.Set;
 @Slf4j
 public class ProducerConfig {
 
-  private String version;
-
-  private Set<ProducerMaster> inputSet = new HashSet<>();
+  public String version;
+  public List<ProducerMaster> input;
 
   public ProducerInput getInput() {
+    HashSet<ProducerMaster> inputSet = new HashSet<>(input);
+    if (inputSet.size() < input.size()) {
+      log.warn("Duplicate mysql master connection endpoint");
+    }
     return new ProducerInput(inputSet);
   }
 
-  public void setInput(List<ProducerMaster> masters) {
-    inputSet.addAll(masters);
-    if (inputSet.size() < masters.size()) {
-      log.warn("Duplicate mysql master connection endpoint");
-    }
-  }
-
-  public String getVersion() {
-    return version;
-  }
-
-  public void setVersion(String version) {
-    this.version = version;
-  }
 }

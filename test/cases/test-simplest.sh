@@ -26,8 +26,6 @@ function test-non-latest() {
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
-    waitSyncer 60
-
     # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
     # Then: sync to mysql
@@ -36,7 +34,7 @@ function test-non-latest() {
     assertLogNotExist syncer ' ERROR '
 
     detail 0 ${num} mysql_0 es
-    detail 0 ${num} mysql_0 mysql_0
+    detail 0 ${num} mysql_0 mysql_1
 }
 
 function cleanup() {
