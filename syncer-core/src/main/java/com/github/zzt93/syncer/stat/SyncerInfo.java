@@ -23,9 +23,10 @@ public class SyncerInfo {
 	 *   <li>May conflict if start multiple instances in same machine at exactly same time</li>
 	 * </ul>
 	 * <pre>
-	 *   -----------------------
-	 *   machine | time | random
-	 *   -----------------------
+	 * InstanceId
+	 *   -------------------------
+	 *   machineId | time | random
+	 *   -------------------------
 	 * </pre>
 	 * @return syncer instanceId
 	 */

@@ -18,8 +18,7 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
 
-import static com.github.zzt93.syncer.data.SimpleEventType.UPDATE;
-import static com.github.zzt93.syncer.data.SimpleEventType.WRITE;
+import static com.github.zzt93.syncer.data.SimpleEventType.*;
 
 /**
  * @author zzt
@@ -56,9 +55,10 @@ public class SQLMapper implements Mapper<SyncData, String> {
     String table = evalString(this.table, context);
     String id = evalString(this.id, context);
     HashMap<String, Object> map = kvMapper.map(data);
-    // TODO 18/1/24 replace with `PreparedStatement`?
     switch (data.getType()) {
       case WRITE:
+        // add id for MySQL output, make it idempotent.
+        map.put(idName, id);
         String[] entry = join(map, WRITE);
         return ParameterReplace
             .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1], idName, idName);

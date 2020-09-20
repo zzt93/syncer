@@ -30,26 +30,6 @@ filter:
 
 
 output:
-  elasticsearch:
-    connection:
-      clusterName: ${ES_CLUSTER}
-      clusterNodes: ["${ES_ADDR}:9300"]
-    requestMapping: # mapping from input data to es request
-      retryOnUpdateConflict: 3
-      upsert: false
-      index: "repo" # @Default: repo
-      type: "entity" # @Deprecated @Default: entity
-      fieldsMapping: # @Default: fields.*.flatten
-        "fields": "fields.*.flatten"
-    batch:
-      size: 100
-      delay: 100
-      maxRetry: 5
-    refreshInMillis: 1000
-    failureLog:
-      countLimit: 100
-      timeLimit: 60
-      unit: SECONDS
   mysql:
     connection:
       address: ${MYSQL_OUT}
@@ -71,3 +51,24 @@ output:
       countLimit: 100
       timeLimit: 60
       unit: SECONDS
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+    requestMapping: # mapping from input data to es request
+      retryOnUpdateConflict: 3
+      upsert: false
+      index: "repo" # @Default: repo
+      type: "entity" # @Deprecated @Default: entity
+      fieldsMapping: # @Default: fields.*.flatten
+        "fields": "fields.*.flatten"
+    batch:
+      size: 100
+      delay: 100
+      maxRetry: 5
+    refreshInMillis: 1000
+    failureLog:
+      countLimit: 100
+      timeLimit: 60
+      unit: SECONDS
+

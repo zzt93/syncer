@@ -22,7 +22,7 @@ services:
     image: mysql:5.7.15
     command: --init-file /init.sql --log-bin=mysql-bin --server-id=1
     volumes:
-    - ${mysql_init_1}:/init.sql
+    - ${mysql_init_0_bak}:/init.sql
     - ${TEST_DIR}/data:/Data
     environment:
     - MYSQL_ROOT_PASSWORD=root

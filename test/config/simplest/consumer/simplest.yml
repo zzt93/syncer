@@ -18,13 +18,13 @@ input:
 
 
 output:
-  elasticsearch:
-    connection:
-      clusterName: ${ES_CLUSTER}
-      clusterNodes: ["${ES_ADDR}:9300"]
   mysql:
     connection:
       address: ${MYSQL_OUT}
       port: 3306
       user: root
       password: ${MYSQL_OUT_PASS}
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]

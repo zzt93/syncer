@@ -144,7 +144,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       return false;
     }
     if (event.removePrimaryKey()) {
-      logger.warn("Include primary key in `_source` is usually not necessary, remove it");
+      logger.info("Include primary key in `_source` is usually not necessary, remove it");
     }
 
     return queues[(int) (event.getPartitionId()%worker)].add(event);
