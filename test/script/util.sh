@@ -52,7 +52,8 @@ function generateInitSqlFile() {
     logi "generateInitSqlFile"
     logi "-------------------"
 
-    for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
+    all=$(( MYSQL_INSTANCE + MYSQL_BAK_INSTANCE ))
+    for (( i = 0; i < ${all}; ++i )); do
         tmp="data/mysql_init_${i}.sql"
         if [[ ! -e ${tmp} ]];then
             for db in ${allDBs} ; do
@@ -86,6 +87,13 @@ function configEnvVar() {
         loge "Unsupported env"
         exit 1
     fi
+
+    if [[ ${env} == mysql-bak ]]; then
+        export MYSQL_BAK_INSTANCE=1
+    else
+        export MYSQL_BAK_INSTANCE=0
+    fi
+
     export ENV_CONFIG=$(pwd)/docker-compose/${env}.yml
 
     if [[ ${env} != mongo* ]]; then
