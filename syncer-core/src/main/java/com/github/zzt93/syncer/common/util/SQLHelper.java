@@ -95,6 +95,7 @@ public class SQLHelper {
   public static AlterMeta alterMeta(String database, String sql) {
     String alterTarget = isAlter(sql);
     if (alterTarget != null) {
+      alterTarget = alterTarget.replaceAll("`|\\s", "");
       if (!StringUtils.isEmpty(database)) {
         return new AlterMeta(database, alterTarget);
       }

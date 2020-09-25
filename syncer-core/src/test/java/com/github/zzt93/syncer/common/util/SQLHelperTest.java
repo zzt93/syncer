@@ -36,6 +36,15 @@ public class SQLHelperTest {
     assertNotNull(test);
     assertEquals("", TEST, test.getSchema());
     assertEquals("", XX, test.getTable());
+    test = SQLHelper.alterMeta("", "alter table `test`.`xx` modify column `yy` int after `zz`");
+    assertNotNull(test);
+    assertEquals("", TEST, test.getSchema());
+    assertEquals("", XX, test.getTable());
+    test = SQLHelper.alterMeta("", "alter table `test`\n.`xx`\n modify column `yy` int after `zz`");
+    assertNotNull(test);
+    assertEquals("", TEST, test.getSchema());
+    assertEquals("", XX, test.getTable());
+
     test = SQLHelper.alterMeta(TEST, "alter table xx add yy int null");
     assertNull(test);
     test = SQLHelper.alterMeta("", "alter table test.xx add yy int null");

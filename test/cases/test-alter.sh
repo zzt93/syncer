@@ -19,20 +19,20 @@ function test-non-latest() {
     bash script/load_data.sh ${env}
 
     instance=mysql_0
-    dockerExec ${instance} mysql -uroot -proot -N -B -e "alter table test_0.news add yy char(10) default 'aa' null after plate_type; "
-    dockerExec mysql_1 mysql -uroot -proot -N -B -e "alter table test_1.news add yy char(10) default 'aa' null after plate_type; "
+    dockerExec ${instance} mysql -uroot -proot -N -B -e "alter table `test_0`.`news`\n add yy char(10) default 'aa' null after plate_type; "
+    dockerExec mysql_1 mysql -uroot -proot -N -B -e "alter table `test_1`.`news` add yy char(10) default 'aa' null after plate_type; "
 
     # Given
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
-    dockerExec ${instance} mysql -uroot -proot -N -B -e "alter table test_0.news modify yy char(101) default 'aa' null; "
+    dockerExec ${instance} mysql -uroot -proot -N -B -e "alter table `test_0`.`news` modify `yy` char(101) default 'aa' null; "
 
     # Given
     bash script/generate_data.sh ${num} ${env} $(( 2 * num ))
     bash script/load_data.sh ${env}
 
-    dockerExec ${instance} mysql -uroot -proot -N -B -e "alter table test_0.news drop column yy; "
+    dockerExec ${instance} mysql -uroot -proot -N -B -e "alter table `test_0`.`news` drop column `yy`; "
 
     # Given
     bash script/generate_data.sh ${num} ${env} $(( 3 * num ))
