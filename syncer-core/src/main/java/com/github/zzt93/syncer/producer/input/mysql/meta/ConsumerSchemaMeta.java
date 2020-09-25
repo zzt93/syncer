@@ -13,7 +13,6 @@ import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
 import com.mysql.jdbc.Driver;
-import com.mysql.jdbc.JDBC4Connection;
 import com.zaxxer.hikari.util.DriverDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -109,7 +108,6 @@ public class ConsumerSchemaMeta {
 
     private final DataSource dataSource;
     private final HashMap<Consumer, ProducerSink> consumerSink;
-    private final String calculatedSchemaName;
     private final String jdbcUrl;
 
     public MetaDataBuilder(MysqlConnection connection,
@@ -117,7 +115,7 @@ public class ConsumerSchemaMeta {
       this.consumerSink = consumerSink;
       Set<String> merged = consumerSink.keySet().stream().map(Consumer::getRepos)
           .flatMap(Set::stream).map(Repo::getConnectionName).collect(Collectors.toSet());
-      calculatedSchemaName = getSchemaName(merged);
+      String calculatedSchemaName = getSchemaName(merged);
       jdbcUrl = connection.toConnectionUrl(calculatedSchemaName);
       dataSource = new DriverDataSource(jdbcUrl,
           Driver.class.getName(), new Properties(),
@@ -181,10 +179,9 @@ public class ConsumerSchemaMeta {
         throws SQLException {
       logger.info("Getting connection[{}], timeout in {}s", jdbcUrl,TIMEOUT);
       Connection connection = dataSource.getConnection();
-      if (calculatedSchemaName.equals(MysqlConnection.DEFAULT_DB)) {
-        // make it to get all databases
-        ((JDBC4Connection) connection).setNullCatalogMeansCurrent(false);
-      }
+      // https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-properties-changed.html
+      // 8.0 default value changed `nullCatalogMeansCurrent` to false
+      // ((JDBC4Connection) connection).setNullCatalogMeansCurrent(false);
       HashMap<Consumer, List<SchemaMeta>> res;
       try {
         DatabaseMetaData metaData = connection.getMetaData();
