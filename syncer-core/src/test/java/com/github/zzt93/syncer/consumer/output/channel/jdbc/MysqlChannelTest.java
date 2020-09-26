@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
 import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.google.gson.reflect.TypeToken;
-import com.mysql.jdbc.Driver;
+import com.mysql.cj.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import org.junit.Assert;

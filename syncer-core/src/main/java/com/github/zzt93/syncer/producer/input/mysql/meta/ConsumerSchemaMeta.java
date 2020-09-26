@@ -12,7 +12,7 @@ import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
 import com.google.common.collect.Lists;
 import com.google.common.collect.Sets;
-import com.mysql.jdbc.Driver;
+import com.mysql.cj.jdbc.Driver;
 import com.zaxxer.hikari.util.DriverDataSource;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
