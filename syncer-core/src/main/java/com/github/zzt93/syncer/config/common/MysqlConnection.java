@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.config.common;
 
-import com.mysql.jdbc.Driver;
+import com.mysql.cj.jdbc.Driver;
 import com.zaxxer.hikari.HikariConfig;
 import com.zaxxer.hikari.HikariDataSource;
 import lombok.NoArgsConstructor;
