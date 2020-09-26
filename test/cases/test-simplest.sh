@@ -18,9 +18,9 @@ function test-non-latest() {
     bash script/generate_data.sh ${num} ${env}
     bash script/load_data.sh ${env}
 
-    dockerExec mysql_1 mysql -uroot -proot -N -B -e "alter table test_1.news add yy char(10) default 'aa' null after plate_type; "
+    dockerExec mysql_1 mysql -uroot -proot -N -B -e 'alter table test_1.news add yy char(10) default "aa" null after plate_type; '
     instance=mysql_0
-    dockerExec ${instance} mysql -uroot -proot -N -B -e "alter table test_0.news add yy char(10) default 'aa' null after plate_type; "
+    dockerExec ${instance} mysql -uroot -proot -N -B -e 'alter table test_0.news add yy char(10) default "aa" null after plate_type; '
 
     # Given
     bash script/generate_data.sh ${num} ${env} ${num}
