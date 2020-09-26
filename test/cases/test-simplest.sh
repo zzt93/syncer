@@ -13,6 +13,14 @@ function setup() {
 }
 
 
+function extractMySqlResultCount2() {
+    local instance=$1
+    local db=$2
+    local table="$3"
+
+    extractMySqlCount mysql_1 ${db} ${table}
+}
+
 function test-non-latest() {
     # Given
     bash script/generate_data.sh ${num} ${env}

@@ -37,13 +37,6 @@ function extractMySqlResultCount() {
     extractMySqlCount ${instance} ${db} ${table}
 }
 
-function extractMySqlResultCount2() {
-    local instance=$1
-    local db=$2
-    local table="$3$mysqlResultSuffix"
-
-    extractMySqlCount mysql_1 ${db} ${table}
-}
 
 function extractMongoCount() {
     local instance=$1
@@ -158,10 +151,10 @@ function cmpFromTo() {
             db=${dbPrefix}_${i}
             for table in ${db2table[${dbPrefix}]} ; do
                 from=`${fromF} ${instance} ${db} ${table} ${expected}`
-                logi "[Sync input: $fromF] -- ${db}.${table}: $from"
+                logi "[Sync input]: $fromF ${instance} ${db}.${table} ${expected}: $from"
                 # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
                 to=`${toF} mysql_0 ${db} ${table} ${expected}`
-                logi "[Sync result: $toF] -- ${db}*.${table}: $to"
+                logi "[Sync result]: $toF mysql_0 ${db} ${table} ${expected}: $to"
                 if [[ ${to} -ne "$from" || ${to} -eq 0 ]];then
                     loge "$table not right"
                     hasError=true
@@ -175,10 +168,10 @@ function cmpFromTo() {
                 db=${dbPrefix}_${i}
                 for table in ${db2table[${dbPrefix}]} ; do
                     from=`${fromF} ${instance} ${db} ${table} ${expected}`
-                    logi "[Sync input: $fromF] -- ${db}.${table}: $from"
+                    logi "[Sync input]: $fromF ${instance} ${db}.${table} ${expected}: $from"
                     # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
                     to=`${toF} mysql_0 ${db} ${table} ${expected}`
-                    logi "[Sync result: $toF] -- ${db}*.${table}: $to"
+                    logi "[Sync result: $toF mysql_0 ${db} ${table} ${expected}: $to"
                     if [[ ${to} -ne "$from" ]];then
                         loge "$table not right"
                         hasError=true
