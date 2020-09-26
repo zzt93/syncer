@@ -83,8 +83,9 @@ public abstract class LocalConsumerSource implements ConsumerSource {
       }
       if (!sent(datum)) {
         ack.append(connectionIdentifier, datum.getDataId());
-        res = toFilter.add(datum.setSourceIdentifier(connectionIdentifier)) && res;
         logger.debug("Consumer({}, {}) receive: {}", getSyncInitMeta(), clientId, datum);
+        // `toFilter.add` should be last call to avoid sharing SyncData in diff threads
+        res = toFilter.add(datum.setSourceIdentifier(connectionIdentifier)) && res;
       } else {
         logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, datum,
             connectionIdentifier);
