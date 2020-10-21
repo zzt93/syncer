@@ -19,65 +19,65 @@ import java.lang.reflect.Type;
 @Getter
 public class JsonSyncResult extends SyncMeta {
 
-  private static final Gson gson = new Gson();
-  private JsonObject fields;
-  private String extras;
-  private JsonObject before;
+	private static final Gson gson = new Gson();
+	private JsonObject fields;
+	private JsonObject extras;
+	private JsonObject before;
 
-  public JsonSyncResult(JsonObject fields, String extras, JsonObject before, SimpleEventType eventType, String repo, String entity, Object id, String primaryKeyName) {
-    this.fields = fields;
-    this.extras = extras;
-    this.before = before;
-    this.eventType = eventType;
-    this.repo = repo;
-    this.entity = entity;
-    this.id = id;
-    this.primaryKeyName = primaryKeyName;
-  }
+	public JsonSyncResult(JsonObject fields, JsonObject extras, JsonObject before, SimpleEventType eventType, String repo, String entity, Object id, String primaryKeyName) {
+		this.fields = fields;
+		this.extras = extras;
+		this.before = before;
+		this.eventType = eventType;
+		this.repo = repo;
+		this.entity = entity;
+		this.id = id;
+		this.primaryKeyName = primaryKeyName;
+	}
 
-  public Long getIdAsLong() {
-    return getLong(getId());
-  }
+	public Long getIdAsLong() {
+		return getLong(getId());
+	}
 
-  public <T> T getFields(Class<T> tClass) {
-    fields.add(primaryKeyName,new JsonPrimitive(id.toString()));
-    return gson.fromJson(fields, tClass);
-  }
+	public <T> T getFields(Class<T> tClass) {
+		fields.add(primaryKeyName, new JsonPrimitive(id.toString()));
+		return gson.fromJson(fields, tClass);
+	}
 
-  public <T> T getFields(Type typeOfT) throws JsonSyntaxException {
-    fields.add(primaryKeyName,new JsonPrimitive(id.toString()));
-    return gson.fromJson(fields, typeOfT);
-  }
+	public <T> T getFields(Type typeOfT) throws JsonSyntaxException {
+		fields.add(primaryKeyName, new JsonPrimitive(id.toString()));
+		return gson.fromJson(fields, typeOfT);
+	}
 
-  public <T> T getExtras(Type typeOfT) throws JsonSyntaxException {
-    return gson.fromJson(extras, typeOfT);
-  }
+	public <T> T getExtras(Type typeOfT) throws JsonSyntaxException {
+		return gson.fromJson(extras, typeOfT);
+	}
 
-  public <T> T getExtras(Class<T> tClass) {
-    return gson.fromJson(extras, tClass);
-  }
+	public <T> T getExtras(Class<T> tClass) {
+		return gson.fromJson(extras, tClass);
+	}
 
-  public <T> T getBefore(Type typeOfT) throws JsonSyntaxException {
-    before.add(primaryKeyName,new JsonPrimitive(id.toString()));
-    return gson.fromJson(before, typeOfT);
-  }
+	public <T> T getBefore(Type typeOfT) throws JsonSyntaxException {
+		before.add(primaryKeyName, new JsonPrimitive(id.toString()));
+		return gson.fromJson(before, typeOfT);
+	}
 
-  public <T> T getBefore(Class<T> tClass) {
-    before.add(primaryKeyName,new JsonPrimitive(id.toString()));
-    return gson.fromJson(before, tClass);
-  }
+	public <T> T getBefore(Class<T> tClass) {
+		before.add(primaryKeyName, new JsonPrimitive(id.toString()));
+		return gson.fromJson(before, tClass);
+	}
 
-  private static Long getLong(Object res) {
-    if (res != null) {
-      try {
-        return Long.parseLong((String) res);
-      } catch (ClassCastException e) {
-        if (res instanceof Double) { // for backward compatible
-          return ((Double) res).longValue();
-        }
-      }
-    }
-    return null;
-  }
+	private static Long getLong(Object res) {
+		if (res != null) {
+			try {
+				return Long.parseLong((String) res);
+			} catch (ClassCastException e) {
+				if (res instanceof Double) { // for backward compatible
+					return ((Double) res).longValue();
+				}
+			}
+		}
+		return null;
+	}
 
 }
