@@ -13,6 +13,7 @@ import java.util.Map;
 public class JsonKafkaDeserializer implements Deserializer<JsonSyncResult> {
   private static final Gson gson = new GsonBuilder()
       .registerTypeAdapter(String.class, new MapDeserializer())
+      .registerTypeAdapter(JsonObject.class, (JsonDeserializer<JsonObject>) (jsonElement, type, jsonDeserializationContext) -> jsonElement.isJsonObject() ? jsonElement.getAsJsonObject() : new JsonObject())
       .registerTypeHierarchyAdapter(SimpleEventType.class, SimpleEventType.defaultDeserializer)
       .create();
 
