@@ -52,12 +52,19 @@ public class JsonSyncResult extends SyncMeta {
   }
 
   public <T> T getFields(Class<T> tClass) {
-    fields.add(primaryKeyName, new JsonPrimitive(id.toString()));
+    fields.add(primaryKeyName, getValue());
     return gson.fromJson(fields, tClass);
   }
 
+  private JsonPrimitive getValue() {
+    if (!(id instanceof Double)) {
+      return new JsonPrimitive(id.toString());
+    }
+    return new JsonPrimitive((Double) id);  // for backward compatible
+  }
+
   public <T> T getFields(Type typeOfT) throws JsonSyntaxException {
-    fields.add(primaryKeyName, new JsonPrimitive(id.toString()));
+    fields.add(primaryKeyName, getValue());
     return gson.fromJson(fields, typeOfT);
   }
 
@@ -70,12 +77,12 @@ public class JsonSyncResult extends SyncMeta {
   }
 
   public <T> T getBefore(Type typeOfT) throws JsonSyntaxException {
-    before.add(primaryKeyName, new JsonPrimitive(id.toString()));
+    before.add(primaryKeyName, getValue());
     return gson.fromJson(before, typeOfT);
   }
 
   public <T> T getBefore(Class<T> tClass) {
-    before.add(primaryKeyName, new JsonPrimitive(id.toString()));
+    before.add(primaryKeyName, getValue());
     return gson.fromJson(before, tClass);
   }
 
