@@ -67,7 +67,7 @@ public class SyncUtil {
     fields.putAll(tmp);
   }
 
-  private static String underscoreToCamel(String from) {
+  public static String underscoreToCamel(String from) {
     char[] cs = from.toCharArray();
     StringBuilder sb = new StringBuilder(cs.length);
     boolean lastIsUnderscore = false;

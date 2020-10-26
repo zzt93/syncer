@@ -2,7 +2,9 @@ package com.github.zzt93.syncer.data.kafka;
 
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.data.SyncMeta;
+import com.github.zzt93.syncer.data.util.SyncUtil;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.JsonSyntaxException;
@@ -10,6 +12,7 @@ import lombok.Getter;
 import lombok.ToString;
 
 import java.lang.reflect.Type;
+import java.util.Map;
 
 /**
  * @author zzt
@@ -52,8 +55,9 @@ public class JsonSyncResult extends SyncMeta {
   }
 
   public <T> T getFields(Class<T> tClass) {
-    fields.add(primaryKeyName, getValue());
-    return gson.fromJson(fields, tClass);
+    JsonObject tmp= copyAndConvert(fields);
+    tmp.add(SyncUtil.underscoreToCamel(primaryKeyName),getValue());
+    return gson.fromJson(tmp, tClass);
   }
 
   private JsonPrimitive getValue() {
@@ -64,26 +68,37 @@ public class JsonSyncResult extends SyncMeta {
   }
 
   public <T> T getFields(Type typeOfT) throws JsonSyntaxException {
-    fields.add(primaryKeyName, getValue());
-    return gson.fromJson(fields, typeOfT);
+    JsonObject tmp= copyAndConvert(fields);
+    tmp.add(SyncUtil.underscoreToCamel(primaryKeyName),getValue());
+    return gson.fromJson(tmp, typeOfT);
   }
 
   public <T> T getExtras(Type typeOfT) throws JsonSyntaxException {
-    return gson.fromJson(extras, typeOfT);
+    return gson.fromJson(copyAndConvert(extras), typeOfT);
   }
 
   public <T> T getExtras(Class<T> tClass) {
-    return gson.fromJson(extras, tClass);
+    return gson.fromJson(copyAndConvert(extras), tClass);
   }
 
   public <T> T getBefore(Type typeOfT) throws JsonSyntaxException {
-    before.add(primaryKeyName, getValue());
-    return gson.fromJson(before, typeOfT);
+    JsonObject tmp= copyAndConvert(before);
+    tmp.add(primaryKeyName, getValue());
+    return gson.fromJson(tmp, typeOfT);
   }
 
   public <T> T getBefore(Class<T> tClass) {
-    before.add(primaryKeyName, getValue());
-    return gson.fromJson(before, tClass);
+    JsonObject tmp= copyAndConvert(before);
+    tmp.add(primaryKeyName, getValue());
+    return gson.fromJson(tmp, tClass);
+  }
+
+  private JsonObject copyAndConvert(JsonObject jsonObject){
+    JsonObject tmp=new JsonObject();
+    for (Map.Entry<String, JsonElement> stringJsonElementEntry : jsonObject.entrySet()) {
+      tmp.add(SyncUtil.underscoreToCamel(stringJsonElementEntry.getKey()),stringJsonElementEntry.getValue());
+    }
+    return tmp;
   }
 
 }
