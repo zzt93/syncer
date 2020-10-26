@@ -97,6 +97,33 @@ public class JsonSyncResultTest {
     assertEquals(SimpleEventType.UPDATE, deserialize.getEventType());
   }
 
+  @Test
+  public void testConvert(){
+    long id = 12345678;
+    SyncData update = SyncDataTestUtil.update("serial", "serial").setId(id);
+    String key = "key";
+    String name = "name";
+    // a value that can't represent by double
+    long value = ((long) Math.pow(2, 53)) + 1;
+    assertNotEquals(value, (double) value);
+
+    update.addField(key, value).addField(name, Temp.NAME).addField("i", 1).addField("first_name",name);
+    update.addExtra(key, value).addExtra(name, Temp.NAME).addExtra("first_name",name);;
+    byte[] serialize = deprecatedSyncKafkaSerializer.serialize("", update.getResult());
+    JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
+    Temp temp = deserialize.getFields(Temp.class);
+    Temp before = deserialize.getBefore(Temp.class);
+    Temp extras = deserialize.getExtras(Temp.class);
+    assertEquals(value, temp.getKey());
+    assertEquals(name, temp.getName());
+    assertEquals(id, temp.getId());
+    assertEquals(value, extras.getKey());
+    assertEquals(name, extras.getName());
+    assertEquals(id, before.getId());
+    assertEquals(id, deserialize.getIdAsLong().longValue());
+    assertEquals(SimpleEventType.UPDATE, deserialize.getEventType());
+  }
+
   @Getter
   private static class Temp {
     static final String NAME = "name";
@@ -104,6 +131,7 @@ public class JsonSyncResultTest {
     private String name;
     private long id;
     private int i;
+    private String firstName;
   }
 
 }
