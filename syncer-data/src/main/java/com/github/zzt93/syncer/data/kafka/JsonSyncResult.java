@@ -55,7 +55,7 @@ public class JsonSyncResult extends SyncMeta {
   }
 
   public <T> T getFields(Class<T> tClass) {
-    JsonObject tmp=convert(fields);
+    JsonObject tmp= copyAndConvert(fields);
     tmp.add(SyncUtil.underscoreToCamel(primaryKeyName),getValue());
     return gson.fromJson(tmp, tClass);
   }
@@ -68,32 +68,32 @@ public class JsonSyncResult extends SyncMeta {
   }
 
   public <T> T getFields(Type typeOfT) throws JsonSyntaxException {
-    JsonObject tmp=convert(fields);
+    JsonObject tmp= copyAndConvert(fields);
     tmp.add(SyncUtil.underscoreToCamel(primaryKeyName),getValue());
     return gson.fromJson(tmp, typeOfT);
   }
 
   public <T> T getExtras(Type typeOfT) throws JsonSyntaxException {
-    return gson.fromJson(convert(extras), typeOfT);
+    return gson.fromJson(copyAndConvert(extras), typeOfT);
   }
 
   public <T> T getExtras(Class<T> tClass) {
-    return gson.fromJson(convert(extras), tClass);
+    return gson.fromJson(copyAndConvert(extras), tClass);
   }
 
   public <T> T getBefore(Type typeOfT) throws JsonSyntaxException {
-    JsonObject tmp=convert(before);
+    JsonObject tmp= copyAndConvert(before);
     tmp.add(primaryKeyName, getValue());
     return gson.fromJson(tmp, typeOfT);
   }
 
   public <T> T getBefore(Class<T> tClass) {
-    JsonObject tmp=convert(before);
+    JsonObject tmp= copyAndConvert(before);
     tmp.add(primaryKeyName, getValue());
     return gson.fromJson(tmp, tClass);
   }
 
-  private JsonObject convert(JsonObject jsonObject){
+  private JsonObject copyAndConvert(JsonObject jsonObject){
     JsonObject tmp=new JsonObject();
     for (Map.Entry<String, JsonElement> stringJsonElementEntry : jsonObject.entrySet()) {
       tmp.add(SyncUtil.underscoreToCamel(stringJsonElementEntry.getKey()),stringJsonElementEntry.getValue());

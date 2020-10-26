@@ -117,6 +117,7 @@ public class JsonSyncResultTest {
     assertEquals(value, temp.getKey());
     assertEquals(name, temp.getName());
     assertEquals(id, temp.getId());
+    assertEquals(name,temp.getFirstName());
     assertEquals(value, extras.getKey());
     assertEquals(name, extras.getName());
     assertEquals(id, before.getId());
