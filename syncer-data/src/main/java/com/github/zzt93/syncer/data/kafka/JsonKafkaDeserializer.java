@@ -16,16 +16,16 @@ public class JsonKafkaDeserializer implements Deserializer<JsonSyncResult> {
       .create();
 
 
-	@Override
-	public void configure(Map<String, ?> map, boolean b) {
-	}
+  @Override
+  public void configure(Map<String, ?> map, boolean b) {
+  }
 
-	@Override
-	public JsonSyncResult deserialize(String s, byte[] bytes) {
-		return gson.fromJson(new String(bytes), JsonSyncResult.class);
-	}
+  @Override
+  public JsonSyncResult deserialize(String s, byte[] bytes) {
+    return gson.fromJson(new String(bytes), JsonSyncResult.class);
+  }
 
-	@Override
-	public void close() {
-	}
+  @Override
+  public void close() {
+  }
 }

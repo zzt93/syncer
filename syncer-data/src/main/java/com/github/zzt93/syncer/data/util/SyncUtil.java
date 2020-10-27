@@ -90,6 +90,7 @@ public class SyncUtil {
 
   /**
    * @param key name for field which is byte[] in Java, which may come from blob type in db
+   * @param sync SyncData
    */
   public static void toStr(SyncData sync, String key) {
     Object value = sync.getField(key);

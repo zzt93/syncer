@@ -96,6 +96,7 @@ public interface SyncData {
 
   /**
    * @param docFilter filter for query a ES doc and apply script, field value will be removed
+   * @return ESScriptUpdate which contains script and filter
    */
   ESScriptUpdate esScriptUpdate(Filter docFilter);
 
@@ -175,6 +176,7 @@ public interface SyncData {
   /**
    * convert this mysql unsigned byte to positive in Java
    * @param key name for field which is int in Java
+   * @return this
    */
   default SyncData recoverUnsignedByte(String key) {
     Object field = getField(key);
