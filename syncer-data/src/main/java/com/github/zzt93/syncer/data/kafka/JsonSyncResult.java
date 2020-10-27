@@ -6,8 +6,10 @@ import com.github.zzt93.syncer.data.util.SyncUtil;
 import com.google.gson.*;
 import lombok.Getter;
 import lombok.ToString;
+import lombok.extern.slf4j.Slf4j;
 
 import java.lang.reflect.Type;
+import java.sql.Timestamp;
 import java.util.Map;
 
 /**
@@ -15,9 +17,24 @@ import java.util.Map;
  */
 @ToString(callSuper = true)
 @Getter
+@Slf4j
 public class JsonSyncResult extends SyncMeta {
 
-  private static final Gson gson = new Gson();
+  private static final Gson gson = new GsonBuilder()
+      .registerTypeAdapter(Timestamp.class, (JsonDeserializer<Timestamp>) (jsonElement, type, jsonDeserializationContext) -> {
+        try{
+          return new Timestamp(jsonElement.getAsLong());
+        } catch(NumberFormatException e) {
+          try {
+            return Timestamp.valueOf(jsonElement.getAsString());
+          } catch (Exception exception) {
+            log.error("Unsupported timestamp format: {}", jsonElement, e);
+            return null;
+          }
+        }
+      })
+      .registerTypeHierarchyAdapter(SimpleEventType.class, SimpleEventType.defaultDeserializer)
+      .create();
   private JsonObject fields;
   private JsonObject extras;
   private JsonObject before;
