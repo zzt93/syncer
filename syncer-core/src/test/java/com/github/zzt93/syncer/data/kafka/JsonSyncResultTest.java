@@ -9,6 +9,8 @@ import lombok.Getter;
 import org.junit.Before;
 import org.junit.Test;
 
+import java.sql.Timestamp;
+
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNotEquals;
 
@@ -81,7 +83,10 @@ public class JsonSyncResultTest {
     long value = ((long) Math.pow(2, 53)) + 1;
     assertNotEquals(value, (double) value);
 
-    update.addField(key, value).addField(name, Temp.NAME).addField("i", 1);
+    long time=System.currentTimeMillis();
+    Timestamp timestamp=new Timestamp(time);
+    String timeStr=timestamp.toString();
+    update.addField(key, value).addField(name, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, name).addField(Temp.IDE, name).addField("create_time",time).addField("modify_time",timeStr);
     update.addExtra(key, value).addExtra(name, Temp.NAME);
     byte[] serialize = deprecatedSyncKafkaSerializer.serialize("", update.getResult());
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
@@ -90,6 +95,10 @@ public class JsonSyncResultTest {
     Temp extras = deserialize.getExtras(Temp.class);
     assertEquals(value, field.getKey());
     assertEquals(name, field.getName());
+    assertEquals(timestamp,field.getCreateTime());
+    assertEquals(timestamp,field.getModifyTime());
+    assertEquals(name, field.getFirstName());
+
     assertEquals(id, field.getId());
     assertEquals(value, extras.getKey());
     assertEquals(name, extras.getName());
@@ -104,12 +113,16 @@ public class JsonSyncResultTest {
     SyncData update = SyncDataTestUtil.update("serial", "serial").setId(id);
     String name = "name";
 
-    update.addField(name, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, name).addField(Temp.IDE, name);
+    long time=System.currentTimeMillis();
+    Timestamp timestamp=new Timestamp(time);
+    update.addField(name, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, name).addField(Temp.IDE, name).addField("create_time",time).addField("modify_time",timestamp);
     update.addExtra(name, Temp.NAME).addExtra(Temp.FIRST_NAME, name);
     byte[] serialize = serializer.serialize("", update.getResult());
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
     Temp field = deserialize.getFields(Temp.class);
     Temp extras = deserialize.getExtras(Temp.class);
+    assertEquals(timestamp,field.getCreateTime());
+    assertEquals(timestamp,field.getModifyTime());
     assertEquals(id, field.getId());
     assertEquals(name, field.getFirstName());
     assertEquals(name, field.getIde());
@@ -127,6 +140,8 @@ public class JsonSyncResultTest {
     private int i;
     private String firstName;
     private String Ide;
+    private Timestamp createTime;
+    private Timestamp modifyTime;
   }
 
 }
