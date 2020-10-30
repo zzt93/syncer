@@ -5,14 +5,15 @@ import com.github.zzt93.syncer.common.data.SyncDataTestUtil;
 import com.github.zzt93.syncer.consumer.output.channel.kafka.DeprecatedSyncKafkaSerializer;
 import com.github.zzt93.syncer.consumer.output.channel.kafka.SyncKafkaSerializer;
 import com.github.zzt93.syncer.data.SimpleEventType;
+import com.google.gson.JsonObject;
 import lombok.Getter;
 import org.junit.Before;
 import org.junit.Test;
 
 import java.sql.Timestamp;
+import java.util.Set;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertNotEquals;
+import static org.junit.Assert.*;
 
 public class JsonSyncResultTest {
 
@@ -86,7 +87,8 @@ public class JsonSyncResultTest {
     long time=System.currentTimeMillis();
     Timestamp timestamp=new Timestamp(time);
     String timeStr=timestamp.toString();
-    update.addField(key, value).addField(name, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, name).addField(Temp.IDE, name).addField("create_time",time).addField("modify_time",timeStr);
+    update.addField(key, value).addField(name, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, name).addField(Temp.IDE, name)
+        .addField("create_time",time).addField("modify_time",timeStr).addField("updated", update.getUpdated()).addField("before", update.getBefore());
     update.addExtra(key, value).addExtra(name, Temp.NAME);
     byte[] serialize = deprecatedSyncKafkaSerializer.serialize("", update.getResult());
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
@@ -111,12 +113,14 @@ public class JsonSyncResultTest {
   public void testConvert() {
     long id = 12345678;
     SyncData update = SyncDataTestUtil.update("serial", "serial").setId(id);
-    String name = "name";
+    Set<String> updated = update.getUpdated();
+    updated.add(Temp.NAME);
 
     long time=System.currentTimeMillis();
     Timestamp timestamp=new Timestamp(time);
-    update.addField(name, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, name).addField(Temp.IDE, name).addField("create_time",time).addField("modify_time",timestamp);
-    update.addExtra(name, Temp.NAME).addExtra(Temp.FIRST_NAME, name);
+    update.addField(Temp.NAME, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, Temp.NAME).addField(Temp.IDE, Temp.NAME)
+        .addField("create_time",time).addField("modify_time",timestamp).addField("updated", updated).addField("before", update.getBefore());
+    update.addExtra(Temp.NAME, Temp.NAME).addExtra(Temp.FIRST_NAME, Temp.NAME);
     byte[] serialize = serializer.serialize("", update.getResult());
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
     Temp field = deserialize.getFields(Temp.class);
@@ -124,9 +128,11 @@ public class JsonSyncResultTest {
     assertEquals(timestamp,field.getCreateTime());
     assertEquals(timestamp,field.getModifyTime());
     assertEquals(id, field.getId());
-    assertEquals(name, field.getFirstName());
-    assertEquals(name, field.getIde());
-    assertEquals(name, extras.getFirstName());
+    assertEquals(Temp.NAME, field.getFirstName());
+    assertEquals(Temp.NAME, field.getIde());
+    assertEquals(1, field.getUpdated().size());
+    assertTrue(field.getUpdated().contains(Temp.NAME));
+    assertEquals(Temp.NAME, extras.getFirstName());
   }
 
   @Getter
@@ -142,6 +148,8 @@ public class JsonSyncResultTest {
     private String Ide;
     private Timestamp createTime;
     private Timestamp modifyTime;
+    private Set<String> updated;
+    private JsonObject before;
   }
 
 }
