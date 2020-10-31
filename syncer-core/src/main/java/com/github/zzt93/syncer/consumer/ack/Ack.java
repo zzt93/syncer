@@ -6,12 +6,11 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.MasterSource;
 import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.config.syncer.SyncerInputMeta;
+import com.github.zzt93.syncer.consumer.ConsumerInitContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
@@ -30,16 +29,18 @@ public class Ack {
   @ThreadSafe(sharedBy = {"main", "shutdown hook", "syncer-filter-output"}, des = "Thread start rule."
       + "main thread init ack before two other thread start")
   private Map<String, FileBasedMap<DataId>> ackMap = new HashMap<>();
-  private final String clientId;
+  private final String consumerId;
   private final int outputSize;
 
-  public static Ack build(String clientId, SyncerInputMeta syncerInputMeta, Set<MasterSource> masterSources,
-      HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta, int outputSize) {
-    Ack ack = new Ack(clientId, syncerInputMeta, outputSize);
+  public static Ack build(ConsumerInitContext context, HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta) {
+    Set<MasterSource> masterSources = context.getInput().getMasterSet();
+    String consumerId = context.getConsumerId();
+    SyncerInputMeta syncerInputMeta = context.getSyncerInput().getInputMeta();
+    Ack ack = new Ack(consumerId, syncerInputMeta, context.outputSize());
     for (MasterSource masterSource : masterSources) {
       Set<String> ids = masterSource.remoteIds();
       for (String id : ids) {
-        SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType());
+        SyncInitMeta initMeta = ack.addDatasource(id, masterSource.getType(), context);
         if (initMeta != null) {
           ackConnectionId2SyncInitMeta.put(id, initMeta);
         }
@@ -49,38 +50,37 @@ public class Ack {
     return ack;
   }
 
-  private Ack(String clientId, SyncerInputMeta syncerInputMeta, int outputSize) {
-    this.clientId = clientId;
+  private Ack(String consumerId, SyncerInputMeta syncerInputMeta, int outputSize) {
+    this.consumerId = consumerId;
     this.metaDir = syncerInputMeta.getLastRunMetadataDir();
     this.outputSize = outputSize;
   }
 
-  private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType) {
-    Path path = Paths.get(metaDir, clientId, identifier);
-    SyncInitMeta syncInitMeta = null;
-    if (!Files.exists(path)) {
-      logger.info("Last run meta file[{}] not exists, fresh run", path);
+  private SyncInitMeta addDatasource(String identifier, MasterSourceType sourceType, ConsumerInitContext context) {
+    Path path = Paths.get(metaDir, consumerId, identifier);
+    FileBasedMap<DataId> fileBasedMap;
+    if (context.hasEtcd()) {
+      fileBasedMap = new FileBasedMap<>(path, context.getEtcd().setInputIdentifier(identifier));
     } else {
-      try {
-        syncInitMeta = recoverSyncInitMeta(path, sourceType, syncInitMeta);
-      } catch (IOException e) {
-        logger.error("Impossible to run to here", e);
-      }
+      fileBasedMap = new FileBasedMap<>(path);
     }
+    ackMap.put(identifier, fileBasedMap);
+
+    SyncInitMeta syncInitMeta = null;
     try {
-      ackMap.put(identifier, new FileBasedMap<>(path));
+      syncInitMeta = recoverSyncInitMeta(fileBasedMap, sourceType, syncInitMeta);
     } catch (IOException e) {
-      logger.error("Fail to create file {}", path);
+      logger.error("Impossible to run to here", e);
     }
     return syncInitMeta;
   }
 
-  private SyncInitMeta recoverSyncInitMeta(Path path,
-      MasterSourceType sourceType, SyncInitMeta syncInitMeta) throws IOException {
-    byte[] bytes = FileBasedMap.readData(path);
-    if (bytes.length > 0) {
+  private SyncInitMeta recoverSyncInitMeta(FileBasedMap<DataId> fileBasedMap,
+                                           MasterSourceType sourceType, SyncInitMeta syncInitMeta) throws IOException {
+    AckMetaData bytes = fileBasedMap.readData();
+    if (bytes.isEmpty()) {
       try {
-        String data = new String(bytes, StandardCharsets.UTF_8);
+        String data = bytes.toDataStr();
         switch (sourceType) {
           case MySQL:
             syncInitMeta = DataId.fromDataId(data);
@@ -88,12 +88,14 @@ public class Ack {
           case Mongo:
             syncInitMeta = DataId.fromMongoDataId(data);
             break;
+          default:
+            throw new IllegalStateException("Not implemented type");
         }
       } catch (Exception e) {
-        logger.warn("Meta file in {} crashed, take as fresh run", path);
+        logger.warn("Meta file in {} crashed, take as fresh run", fileBasedMap);
       }
     } else {
-      logger.warn("Meta file in {} crashed, take as fresh run", path);
+      logger.warn("Meta file in {} crashed, take as fresh run", fileBasedMap);
     }
     return syncInitMeta;
   }

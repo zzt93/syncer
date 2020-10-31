@@ -1,8 +1,6 @@
 package com.github.zzt93.syncer.config;
 
-import ch.qos.logback.classic.Level;
 import com.github.zzt93.syncer.SyncerApplication;
-import com.github.zzt93.syncer.common.util.ArgUtil;
 import com.github.zzt93.syncer.common.util.FileUtil;
 import com.github.zzt93.syncer.common.util.RegexUtil;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
@@ -10,6 +8,7 @@ import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.ProducerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.producer.register.LocalConsumerRegistry;
+import com.github.zzt93.syncer.stat.SyncerInfo;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Preconditions;
 import org.slf4j.Logger;
@@ -26,8 +25,12 @@ import java.nio.file.DirectoryStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Set;
 import java.util.regex.Matcher;
 
 /**
@@ -39,16 +42,9 @@ public class YamlEnvironmentPostProcessor {
   private static final String CONSUMER_CONFIG = "consumerConfig";
   private static final String PRODUCER_CONFIG = "producerConfig";
   private static final String CONFIG = "config";
-  private static final String DEBUG = "debug";
   private static final String APPLICATION = "application.yml";
 
-  public static SyncerApplication processEnvironment(String[] args) {
-    HashMap<String, String> argKV = ArgUtil.toMap(args);
-    if (argKV.containsKey(DEBUG)) {
-      ch.qos.logback.classic.Logger root = (ch.qos.logback.classic.Logger) org.slf4j.LoggerFactory.getLogger(ch.qos.logback.classic.Logger.ROOT_LOGGER_NAME);
-      root.setLevel(Level.DEBUG);
-    }
-
+  public static SyncerApplication processEnvironment(HashMap<String, String> argKV) {
     String configFile = argKV.get(CONFIG);
     if (configFile == null) {
       configFile = "syncer.yml";
@@ -70,7 +66,7 @@ public class YamlEnvironmentPostProcessor {
     }
 
     String version = getVersion();
-    return new SyncerApplication(producerConfig, syncerConfig, new LocalConsumerRegistry(), configs, version);
+    return new SyncerApplication(producerConfig, syncerConfig, new LocalConsumerRegistry(), configs, new SyncerInfo(version));
   }
 
   private static String getVersion() {

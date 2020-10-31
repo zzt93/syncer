@@ -3,7 +3,11 @@ package com.github.zzt93.syncer.producer;
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
-import com.github.zzt93.syncer.config.common.*;
+import com.github.zzt93.syncer.config.common.Connection;
+import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.MongoConnection;
+import com.github.zzt93.syncer.config.common.MysqlConnection;
+import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
 import com.github.zzt93.syncer.config.producer.ProducerInput;
 import com.github.zzt93.syncer.config.producer.ProducerMaster;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
@@ -91,6 +95,8 @@ public class ProducerStarter implements Starter {
           masterConnector = new MongoMasterConnectorFactory(new MongoConnection(connection),
               consumerRegistry).getMongoConnectorByServerVersion(masterSource);
           break;
+        default:
+          throw new IllegalStateException("Not implemented type");
       }
       connectors.add(masterConnector);
       service.submit(masterConnector);
@@ -105,7 +111,7 @@ public class ProducerStarter implements Starter {
 
 
   private Set<ProducerMaster> fromPipelineConfig(ProducerInput input) {
-    return input.masterSet();
+    return input.getMasterSet();
   }
 
   @Override

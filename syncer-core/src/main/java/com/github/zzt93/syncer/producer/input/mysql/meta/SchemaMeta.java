@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.producer.input.mysql.meta;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.producer.input.mysql.AlterMeta;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
@@ -11,6 +12,7 @@ import java.util.regex.Pattern;
  *
  * @author zzt
  */
+@Slf4j
 public class SchemaMeta {
 
   /**
@@ -59,9 +61,10 @@ public class SchemaMeta {
         '}';
   }
 
-  public boolean updateTableMeta(AlterMeta alterMeta, TableMeta full) {
+  boolean updateTableMeta(AlterMeta alterMeta, TableMeta full) {
     TableMeta table = findTable(alterMeta.getSchema(), alterMeta.getTable());
     if (table != null) {
+      log.info("Updating table meta for {} with {}", table, full);
       if (table.isAll()) {
         tableMetas.put(alterMeta.getTable(), full);
       } else {

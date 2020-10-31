@@ -1,6 +1,8 @@
 package com.github.zzt93.syncer.data;
 
 
+import com.github.zzt93.syncer.data.es.Filter;
+
 /**
  * update es field by script
  */

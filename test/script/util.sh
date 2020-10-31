@@ -37,6 +37,7 @@ function extractMySqlResultCount() {
     extractMySqlCount ${instance} ${db} ${table}
 }
 
+
 function extractMongoCount() {
     local instance=$1
     local db=$2
@@ -62,9 +63,19 @@ function generateInitSqlFile() {
         fi
         export mysql_init_${i}=$(pwd)/${tmp}
     done
-
+    # backup instance has same db/table
+    for (( i = 0; i < ${MYSQL_BAK_INSTANCE}; ++i )); do
+        tmp="data/mysql_init_${i}_bak.sql"
+        if [[ ! -e ${tmp} ]];then
+            for db in ${allDBs} ; do
+                echo -e "CREATE DATABASE IF NOT EXISTS ${db}_$i;\n use ${db}_$i;" >> ${tmp}
+                cat generator/${db}.sql >> ${tmp}
+            done
+        fi
+        export mysql_init_${i}_bak=$(pwd)/${tmp}
+    done
+    # only put backup table in first database
     for (( i = 0; i < ${MYSQL_INSTANCE}; ++i )); do
-        # only put back table in first database
         tmp="data/mysql_init_0.sql"
         for db in ${allDBs} ; do
             echo -e "CREATE DATABASE IF NOT EXISTS ${db}_$i;\n use ${db}_$i;" >> ${tmp}
@@ -86,6 +97,13 @@ function configEnvVar() {
         loge "Unsupported env"
         exit 1
     fi
+
+    if [[ ${env} == mysql-bak ]]; then
+        export MYSQL_BAK_INSTANCE=1
+    else
+        export MYSQL_BAK_INSTANCE=0
+    fi
+
     export ENV_CONFIG=$(pwd)/docker-compose/${env}.yml
 
     if [[ ${env} != mongo* ]]; then
@@ -133,10 +151,10 @@ function cmpFromTo() {
             db=${dbPrefix}_${i}
             for table in ${db2table[${dbPrefix}]} ; do
                 from=`${fromF} ${instance} ${db} ${table} ${expected}`
-                logi "[Sync input: $fromF] -- ${db}.${table}: $from"
+                logi "[Sync input]: $fromF ${instance} ${db}.${table} ${expected}: $from"
                 # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
                 to=`${toF} mysql_0 ${db} ${table} ${expected}`
-                logi "[Sync result: $toF] -- ${db}*.${table}: $to"
+                logi "[Sync result]: $toF mysql_0 ${db} ${table} ${expected}: $to"
                 if [[ ${to} -ne "$from" || ${to} -eq 0 ]];then
                     loge "$table not right"
                     hasError=true
@@ -150,10 +168,10 @@ function cmpFromTo() {
                 db=${dbPrefix}_${i}
                 for table in ${db2table[${dbPrefix}]} ; do
                     from=`${fromF} ${instance} ${db} ${table} ${expected}`
-                    logi "[Sync input: $fromF] -- ${db}.${table}: $from"
+                    logi "[Sync input]: $fromF ${instance} ${db}.${table} ${expected}: $from"
                     # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
                     to=`${toF} mysql_0 ${db} ${table} ${expected}`
-                    logi "[Sync result: $toF] -- ${db}*.${table}: $to"
+                    logi "[Sync result: $toF mysql_0 ${db} ${table} ${expected}: $to"
                     if [[ ${to} -ne "$from" ]];then
                         loge "$table not right"
                         hasError=true

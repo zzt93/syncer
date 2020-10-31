@@ -6,16 +6,11 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
 import com.github.zzt93.syncer.config.common.MasterSource;
-import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.input.PipelineInput;
-import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.SyncerAck;
-import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerFilter;
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
-import com.github.zzt93.syncer.config.syncer.SyncerInput;
-import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
 import com.github.zzt93.syncer.consumer.ack.PositionFlusher;
 import com.github.zzt93.syncer.consumer.filter.FilterJob;
@@ -33,7 +28,6 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 import java.util.concurrent.ArrayBlockingQueue;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutorService;
@@ -58,49 +52,42 @@ public class ConsumerStarter implements Starter {
   private Ack ack;
   private OutputStarter outputStarter;
 
-  public ConsumerStarter(ConsumerConfig pipeline, SyncerConfig syncer,
-                         ConsumerRegistry consumerRegistry) throws Exception {
+  public ConsumerStarter(ConsumerRegistry consumerRegistry, ConsumerInitContext consumerInitContext) throws Exception {
+    id = consumerInitContext.getConsumerId();
 
-    id = pipeline.getConsumerId();
+    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(consumerInitContext);
 
-    HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = initAckModule(id, pipeline.getInput(),
-        syncer.getInput(), syncer.getAck(), pipeline.outputSize());
+    outputChannels = initBatchOutputModule(consumerInitContext, ack);
 
-    outputChannels = initBatchOutputModule(id, pipeline.getOutput(), syncer.getOutput(), ack);
+    ArrayBlockingQueue<SyncData> inputFilterQueue = new ArrayBlockingQueue<>(consumerInitContext.getSyncerFilter().getCapacity());
+    initFilterModule(consumerInitContext, outputChannels, ack, inputFilterQueue);
 
-    ArrayBlockingQueue<SyncData> inputFilterQueue = new ArrayBlockingQueue<>(syncer.getFilter().getCapacity());
-    initFilterModule(syncer.getFilter(), pipeline.getFilter(), outputChannels, ack, inputFilterQueue);
-
-    initRegistrant(id, consumerRegistry, inputFilterQueue, pipeline.getInput(), ackConnectionId2SyncInitMeta);
+    initRegistrant(id, consumerRegistry, inputFilterQueue, consumerInitContext.getInput(), ackConnectionId2SyncInitMeta);
   }
 
-  private HashMap<String, SyncInitMeta> initAckModule(String consumerId,
-                                                      PipelineInput pipelineInput,
-                                                      SyncerInput input, SyncerAck ackConfig, int outputSize) {
-    Set<MasterSource> masterSet = pipelineInput.getMasterSet();
+  private HashMap<String, SyncInitMeta> initAckModule(ConsumerInitContext context) {
     HashMap<String, SyncInitMeta> ackConnectionId2SyncInitMeta = new HashMap<>();
-    this.ack = Ack.build(consumerId, input.getInputMeta(), masterSet, ackConnectionId2SyncInitMeta, outputSize);
-    this.ackConfig = ackConfig;
+    this.ack = Ack.build(context, ackConnectionId2SyncInitMeta);
+    this.ackConfig = context.getAck();
     return ackConnectionId2SyncInitMeta;
   }
 
-  private List<OutputChannel> initBatchOutputModule(String id, PipelineOutput pipeline,
-                                                    SyncerOutput syncer, Ack ack) throws Exception {
-    outputStarter = new OutputStarter(id, pipeline, syncer, ack);
+  private List<OutputChannel> initBatchOutputModule(ConsumerInitContext initContext, Ack ack) throws Exception {
+    outputStarter = new OutputStarter(initContext.getConsumerId(), initContext.getOutput(), initContext.getSyncerOutput(), ack);
     return outputStarter.getOutputChannels();
   }
 
-  private void initFilterModule(SyncerFilter module, List<FilterConfig> filters,
-                                List<OutputChannel> outputChannels, Ack ack, ArrayBlockingQueue<SyncData> inputFilterQueue) {
+  private void initFilterModule(ConsumerInitContext initContext,
+                                List<OutputChannel> outputChannels, Ack ack, ArrayBlockingQueue<SyncData> inputFilterQuery) {
 
     filterService = Executors
         .newFixedThreadPool(SyncerFilter.WORKER_THREAD_COUNT, new NamedThreadFactory("syncer-" + id + "-filter"));
 
-    List<SyncFilter> syncFilters = fromPipelineConfig(filters, module);
+    List<SyncFilter> syncFilters = fromPipelineConfig(initContext.getFilter(), initContext.getSyncerFilter());
     // this list shared by multiple thread, and some channels may be removed when other threads iterate
     // see CopyOnWriteListTest for sanity test
     CopyOnWriteArrayList<OutputChannel> channels = new CopyOnWriteArrayList<>(outputChannels);
-    filterJob = new FilterJob(id, inputFilterQueue, channels, syncFilters, ack, module);
+    filterJob = new FilterJob(id, inputFilterQuery, channels, syncFilters, ack, initContext.getSyncerFilter());
   }
 
   private void initRegistrant(String consumerId, ConsumerRegistry consumerRegistry,

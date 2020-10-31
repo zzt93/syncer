@@ -5,7 +5,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.UnknownHostException;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
@@ -117,7 +121,7 @@ public class ClusterConnection extends Connection {
   private Connection getConnection(String clusterNode) {
     Connection connection = new Connection(this);
     String[] split = clusterNode.split(COLON);
-    if (split.length != 2) throw new InvalidConfigException(clusterNode);
+    if (split.length != 2) throw new InvalidConfigException("Invalid clusterNode: " + clusterNode + ". Not `addr:port` format.");
     connection.setPort(Integer.parseUnsignedInt(split[1]));
     try {
       connection.setAddress(split[0]);

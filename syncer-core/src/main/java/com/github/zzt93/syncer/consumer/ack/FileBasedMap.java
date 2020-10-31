@@ -1,22 +1,13 @@
 package com.github.zzt93.syncer.consumer.ack;
 
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
-import com.google.common.primitives.Bytes;
+import com.github.zzt93.syncer.config.common.EtcdConnection;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.nio.MappedByteBuffer;
-import java.nio.channels.FileChannel;
-import java.nio.channels.FileChannel.MapMode;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
-import java.util.EnumSet;
-import java.util.LinkedList;
 import java.util.NoSuchElementException;
 import java.util.concurrent.ConcurrentSkipListMap;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -31,38 +22,20 @@ import java.util.concurrent.atomic.AtomicInteger;
 @ThreadSafe
 public class FileBasedMap<T extends Comparable<T>> {
 
-  private static final int _1K = 1024;
   private static final AtomicInteger ZERO = new AtomicInteger();
+  private final MetaFile localMetaFile;
   private volatile T lastRemoved;
-  private final MappedByteBuffer file;
   private final ConcurrentSkipListMap<T, AtomicInteger> map = new ConcurrentSkipListMap<>();
   private final Logger logger = LoggerFactory.getLogger(FileBasedMap.class);
 
-  public FileBasedMap(Path path) throws IOException {
-    Files.createDirectories(path.toAbsolutePath().getParent());
-    try (FileChannel fileChannel = (FileChannel) Files.newByteChannel(path, EnumSet
-        .of(StandardOpenOption.WRITE, StandardOpenOption.READ, StandardOpenOption.CREATE))) {
-      file = fileChannel.map(MapMode.READ_WRITE, 0, _1K);
-    }
-    int i;
-    for (i = 0; i < _1K && file.get(i) != 0; i++) ;
-    file.position(i);
+  public FileBasedMap(Path path) {
+    localMetaFile = new LocalMetaFile(path);
+    localMetaFile.createFileAndInitFile();
   }
 
-  public static byte[] readData(Path path) throws IOException {
-    LinkedList<Integer> bytes = new LinkedList<>();
-    try (BufferedReader br = new BufferedReader(
-        new InputStreamReader(Files.newInputStream(path)))) {
-      int ch;
-      while ((ch = br.read()) != -1) {
-        if (ch == 0) {
-          break;
-        } else {
-          bytes.add(ch);
-        }
-      }
-    }
-    return Bytes.toArray(bytes);
+  public FileBasedMap(Path localPath, EtcdConnection remote) {
+    localMetaFile = new LocalAndEtcdMetaFile(localPath, remote);
+    localMetaFile.createFileAndInitFile();
   }
 
   /**
@@ -92,8 +65,11 @@ public class FileBasedMap<T extends Comparable<T>> {
       return false;
     }
     byte[] bytes = toFlush.toString().getBytes(StandardCharsets.UTF_8);
-    putBytes(file, bytes);
-    file.force();
+    try {
+      localMetaFile.putBytes(bytes);
+    } catch (IOException e) {
+      logger.error("Fail to store {} in {}", toFlush, localMetaFile, e);
+    }
     return true;
   }
 
@@ -111,16 +87,16 @@ public class FileBasedMap<T extends Comparable<T>> {
     return first;
   }
 
-  private void putBytes(MappedByteBuffer file, byte[] bytes) {
-    for (int i = 0; i < bytes.length; i++) {
-      file.put(i, bytes[i]);
-    }
-    int position = file.position();
-    for (int i = bytes.length; i < position; i++) {
-      file.put(i, (byte) 0);
-    }
-    file.position(bytes.length);
+  @Override
+  public String toString() {
+    return "FileBasedMap{" +
+        "path=" + localMetaFile +
+        ", lastRemoved=" + lastRemoved +
+        ", map=" + map +
+        '}';
   }
 
-
+  AckMetaData readData() throws IOException {
+    return localMetaFile.readData();
+  }
 }

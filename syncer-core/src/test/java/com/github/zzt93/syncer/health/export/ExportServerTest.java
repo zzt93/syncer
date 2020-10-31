@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.health.export;
 
 import com.github.zzt93.syncer.config.common.HttpConnection;
+import com.github.zzt93.syncer.config.syncer.SyncerConfig;
 import com.github.zzt93.syncer.consumer.output.channel.http.HttpClientInitializer;
 import com.github.zzt93.syncer.consumer.output.channel.http.NettyHttpClient;
 import io.netty.handler.codec.http.HttpMethod;
@@ -18,7 +19,9 @@ public class ExportServerTest {
   public void setUp() throws Exception {
     thread = new Thread(() -> {
       try {
-        ExportServer.init(new String[]{"--port=" + PORT});
+        SyncerConfig syncerConfig = new SyncerConfig();
+        syncerConfig.setPort(PORT);
+        ExportServer.init(syncerConfig);
       } catch (Exception e) {
         e.printStackTrace();
       }

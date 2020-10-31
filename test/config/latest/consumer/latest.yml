@@ -1,26 +1,26 @@
-version: 1.2
+version: 1.3
 
 consumerId: latest
 
 
 input:
-  masters:
-    - connection:
-        clusterNodes: [${MYSQL_ADDR}]
-        autoOffsetReset: latest
-      repos:
-        - name: "test.*"
-          entities:
-            - name: correctness
-              fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
-            - name: types
-              fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
-            - name: news
-              fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
-        - name: "simple.*"
-          entities:
-            - name: simple_type
-              fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+      autoOffsetReset: latest
+    repos:
+      - name: "test.*"
+        entities:
+          - name: correctness
+            fields: [time, news_id, currency, total, quantity, type, name, unit] # default id is not null, other can be null
+          - name: types
+            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+          - name: news
+            fields: [title, content, thumb_content, tags, affair_id, modify_time, plate_type, state, alliance_id, number, plate_sub_type]
+      - name: "simple.*"
+        entities:
+          - name: simple_type
+            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
 
 
 

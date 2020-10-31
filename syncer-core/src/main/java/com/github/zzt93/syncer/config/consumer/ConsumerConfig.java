@@ -1,58 +1,36 @@
 package com.github.zzt93.syncer.config.consumer;
 
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import com.github.zzt93.syncer.config.common.MasterSource;
 import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.input.PipelineInput;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
+import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 
 /**
  * @author zzt
  */
+@Slf4j
+@Getter
 public class ConsumerConfig {
 
-  private String version;
-  private String consumerId;
-  private PipelineInput input;
-  private PipelineOutput output;
+  public String version;
+  public String consumerId;
+  public List<MasterSource> input;
+  public PipelineOutput output;
   private List<FilterConfig> filter = new ArrayList<>();
 
-  public String getVersion() {
-    return version;
-  }
-
-  public void setVersion(String version) {
-    this.version = version;
-  }
-
-  public String getConsumerId() {
-    return consumerId;
-  }
-
-  public void setConsumerId(String consumerId) {
-    this.consumerId = consumerId;
-  }
-
   public PipelineInput getInput() {
-    return input;
-  }
-
-  public void setInput(PipelineInput pipelineInput) {
-    this.input = pipelineInput;
-  }
-
-  public PipelineOutput getOutput() {
-    return output;
-  }
-
-  public void setOutput(PipelineOutput pipelineOutput) {
-    this.output = pipelineOutput;
-  }
-
-  public List<FilterConfig> getFilter() {
-    return filter;
+    HashSet<MasterSource> inputSet = new HashSet<>(input);
+    if (inputSet.size() < input.size()) {
+      log.error("Duplicate master source: {}", input);
+    }
+    return new PipelineInput(inputSet);
   }
 
   public void setFilter(List<FilterConfig> filter) {

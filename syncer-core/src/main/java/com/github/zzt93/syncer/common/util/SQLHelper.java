@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.common.util;
 
 import com.github.zzt93.syncer.data.util.SQLFunction;
 import com.github.zzt93.syncer.producer.input.mysql.AlterMeta;
+import org.apache.commons.codec.binary.Hex;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.ClassUtils;
@@ -35,6 +36,8 @@ public class SQLHelper {
       }
     } else if (SQLFunction.class.isAssignableFrom(aClass)) {
       value = value.toString();
+    } else if (aClass == byte[].class) {
+      value = "0x" + Hex.encodeHexString(((byte[]) value));
     } else {
       logger.error("Unhandled complex type: {}, value: {}", aClass, value);
     }

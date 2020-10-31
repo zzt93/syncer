@@ -39,8 +39,8 @@ function test-non-latest() {
 
     assertLogNotExist syncer ' ERROR '
 
-    detail 0 1000 mysql_0 es
-    detail 0 1000 mysql_0 mysql_0
+    detail 0 ${num} mysql_0 es
+    detail 0 ${num} mysql_0 mysql_0
 }
 
 function cleanup() {

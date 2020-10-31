@@ -31,6 +31,7 @@ public class JavaMethod {
         // User write config using com.github.zzt93.syncer.data,
         // syncer run config using com.github.zzt93.syncer.common.data
         "import com.github.zzt93.syncer.data.*;\n" +
+            "import com.github.zzt93.syncer.data.es.*;\n" +
             "import com.github.zzt93.syncer.data.util.*;\n" +
             "import java.util.*;\n" +
             "import java.math.BigDecimal;\n" +

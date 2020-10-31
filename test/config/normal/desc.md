@@ -17,3 +17,13 @@ mysql_1          mysql_0
 mysql_2          mysql_0
   db_2.table.id[2*num, 3*num) ->  db_2.table_bak.id
 ```
+
+Why not? @see util.sh#generateInitSqlFile
+```
+mysql_0          mysql_0
+  db_0.table.id[0, num) ->  db_0_bak.table.id
+mysql_1          mysql_0
+  db_1.table.id[num, 2*num) ->  db_1_bak.table.id
+mysql_2          mysql_0
+  db_2.table.id[2*num, 3*num) ->  db_2_bak.table.id
+```
