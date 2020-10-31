@@ -47,4 +47,14 @@ public class SyncDataTestUtil {
     return delete;
   }
 
+
+  public void addUpdated(SyncData update) {
+    update.getUpdated().addAll(new NamedFullRow(update.getFields()).setBeforeFull(update.getBefore()).getUpdated());
+  }
+
+  public SyncDataTestUtil addBefore(SyncData update, String key, Object value) {
+    update.getBefore().put(key, value);
+    return this;
+  }
+
 }

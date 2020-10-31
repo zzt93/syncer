@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.data.SyncDataTestUtil;
 import com.github.zzt93.syncer.consumer.output.channel.kafka.DeprecatedSyncKafkaSerializer;
 import com.github.zzt93.syncer.consumer.output.channel.kafka.SyncKafkaSerializer;
 import com.github.zzt93.syncer.data.SimpleEventType;
-import com.google.gson.JsonObject;
+import com.github.zzt93.syncer.util.NumTestUtil;
 import lombok.Getter;
 import org.junit.Before;
 import org.junit.Test;
@@ -17,7 +17,7 @@ import static org.junit.Assert.*;
 
 public class JsonSyncResultTest {
 
-  private SyncKafkaSerializer serializer;
+	private SyncKafkaSerializer serializer;
   private DeprecatedSyncKafkaSerializer deprecatedSyncKafkaSerializer;
   private JsonKafkaDeserializer jsonKafkaDeserializer;
 
@@ -31,18 +31,16 @@ public class JsonSyncResultTest {
   @Test
   public void getFields() {
     SyncData write = SyncDataTestUtil.write("serial", "serial");
-    String key = "key";
-    String name = "name";
     // a value that can't represent by double
-    long value = ((long) Math.pow(2, 53)) + 1;
-    assertNotEquals(value, (double) value);
+    long value = NumTestUtil.notDoubleLong();
 
-    write.addField(key, value).addField(name, Temp.NAME);
+    write.addField(Temp.KEY, value).addField(Temp.NAME, Temp.NAME);
+
     byte[] serialize = serializer.serialize("", write.getResult());
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
     Temp temp = deserialize.getFields(Temp.class);
     assertEquals(value, temp.getKey());
-    assertEquals(name, temp.getName());
+    assertEquals(Temp.NAME, temp.getName());
     assertEquals(SyncDataTestUtil.ID, temp.getId());
     assertEquals(SyncDataTestUtil.ID, deserialize.getIdAsLong().longValue());
     assertEquals(SimpleEventType.WRITE, deserialize.getEventType());
@@ -54,12 +52,12 @@ public class JsonSyncResultTest {
     String key = "key";
     String name = "name";
     // a value that can't represent by double
-    long value = ((long) Math.pow(2, 53)) + 1;
-    assertNotEquals(value, (double) value);
+    long value = NumTestUtil.notDoubleLong();
 
     update.addField(key, value).addField(name, Temp.NAME).addField("i", 1);
     update.addExtra(key, value).addExtra(name, Temp.NAME);
     byte[] serialize = serializer.serialize("", update.getResult());
+
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
     Temp field = deserialize.getFields(Temp.class);
     Temp before = deserialize.getBefore(Temp.class);
@@ -78,60 +76,68 @@ public class JsonSyncResultTest {
   public void testBackCompatible() {
     long id = 12345678;
     SyncData update = SyncDataTestUtil.update("serial", "serial").setId(id);
-    String key = "key";
-    String name = "name";
     // a value that can't represent by double
-    long value = ((long) Math.pow(2, 53)) + 1;
-    assertNotEquals(value, (double) value);
+    long value = NumTestUtil.notDoubleLong();
 
     long time=System.currentTimeMillis();
     Timestamp timestamp=new Timestamp(time);
     String timeStr=timestamp.toString();
-    update.addField(key, value).addField(name, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, name).addField(Temp.IDE, name)
-        .addField("create_time",time).addField("modify_time",timeStr).addField("updated", update.getUpdated()).addField("before", update.getBefore());
-    update.addExtra(key, value).addExtra(name, Temp.NAME);
+    update.addField(Temp.KEY, value).addField(Temp.NAME, Temp.NAME).addField(Temp.I, 1).addField(Temp.FIRST_NAME, Temp.NAME).addField(Temp.IDE, Temp.NAME).addField(Temp.CREATE_TIME, time).addField(Temp.MODIFY_TIME, timeStr);
+    new SyncDataTestUtil().addBefore(update, Temp.NAME, Temp.NAME).addBefore(update, Temp.I, 1).addUpdated(update);
+
+    update.addField(Temp.UPDATED, update.getUpdated()).addField(Temp.BEFORE, update.getBefore());
+    update.addExtra(Temp.KEY, value).addExtra(Temp.NAME, Temp.NAME);
+
+
     byte[] serialize = deprecatedSyncKafkaSerializer.serialize("", update.getResult());
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
     Temp field = deserialize.getFields(Temp.class);
     Temp before = deserialize.getBefore(Temp.class);
     Temp extras = deserialize.getExtras(Temp.class);
     assertEquals(value, field.getKey());
-    assertEquals(name, field.getName());
-    assertEquals(timestamp,field.getCreateTime());
-    assertEquals(timestamp,field.getModifyTime());
-    assertEquals(name, field.getFirstName());
-
+    assertEquals(Temp.NAME, field.getName());
+    assertEquals(timestamp, field.getCreateTime());
+    assertEquals(timestamp, field.getModifyTime());
+    assertEquals(Temp.NAME, field.getFirstName());
     assertEquals(id, field.getId());
     assertEquals(value, extras.getKey());
-    assertEquals(name, extras.getName());
+    assertEquals(Temp.NAME, extras.getName());
     assertEquals(id, before.getId());
     assertEquals(id, deserialize.getIdAsLong().longValue());
+    assertEquals(5, field.getUpdated().size());
+		assertFalse(field.getUpdated().contains(Temp.NAME));
+		assertFalse(field.getUpdated().contains(Temp.I));
     assertEquals(SimpleEventType.UPDATE, deserialize.getEventType());
   }
 
-  @Test
+
+	@Test
   public void testConvert() {
     long id = 12345678;
     SyncData update = SyncDataTestUtil.update("serial", "serial").setId(id);
-    Set<String> updated = update.getUpdated();
-    updated.add(Temp.NAME);
 
     long time=System.currentTimeMillis();
     Timestamp timestamp=new Timestamp(time);
-    update.addField(Temp.NAME, Temp.NAME).addField("i", 1).addField(Temp.FIRST_NAME, Temp.NAME).addField(Temp.IDE, Temp.NAME)
-        .addField("create_time",time).addField("modify_time",timestamp).addField("updated", updated).addField("before", update.getBefore());
+    update.addField(Temp.NAME, Temp.NAME).addField(Temp.I, 1).addField(Temp.FIRST_NAME, Temp.NAME).addField(Temp.IDE, Temp.NAME).addField(Temp.CREATE_TIME,time).addField(Temp.MODIFY_TIME,timestamp);
+    new SyncDataTestUtil().addBefore(update, Temp.NAME, Temp.NAME).addBefore(update, Temp.I, 1).addUpdated(update);
+
+		update.addField(Temp.UPDATED, update.getUpdated()).addField(Temp.BEFORE, update.getBefore());
     update.addExtra(Temp.NAME, Temp.NAME).addExtra(Temp.FIRST_NAME, Temp.NAME);
+
+
     byte[] serialize = serializer.serialize("", update.getResult());
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
     Temp field = deserialize.getFields(Temp.class);
-    Temp extras = deserialize.getExtras(Temp.class);
     assertEquals(timestamp,field.getCreateTime());
     assertEquals(timestamp,field.getModifyTime());
     assertEquals(id, field.getId());
     assertEquals(Temp.NAME, field.getFirstName());
     assertEquals(Temp.NAME, field.getIde());
-    assertEquals(1, field.getUpdated().size());
-    assertTrue(field.getUpdated().contains(Temp.NAME));
+    assertEquals(4, field.getUpdated().size());
+    assertFalse(field.getUpdated().contains(Temp.NAME));
+    assertFalse(field.getUpdated().contains(Temp.I));
+
+    Temp extras = deserialize.getExtras(Temp.class);
     assertEquals(Temp.NAME, extras.getFirstName());
   }
 
@@ -139,7 +145,13 @@ public class JsonSyncResultTest {
   private static class Temp {
     public static final String FIRST_NAME = "first_name";
     public static final String IDE = "_ide";
-    static final String NAME = "name";
+    public static final String CREATE_TIME = "create_time";
+    public static final String MODIFY_TIME = "modify_time";
+    public static final String UPDATED = "updated";
+    public static final String BEFORE = "before";
+		public static final String KEY = "key";
+		public static final String I = "i";
+		static final String NAME = "name";
     private long key;
     private String name;
     private long id;
@@ -149,7 +161,7 @@ public class JsonSyncResultTest {
     private Timestamp createTime;
     private Timestamp modifyTime;
     private Set<String> updated;
-    private JsonObject before;
+    private Temp before;
   }
 
 }
