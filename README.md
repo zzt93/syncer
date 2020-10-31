@@ -34,7 +34,7 @@
 
 ---
 
-If you are changing the `id` of event, it always means you are doing joining like I do, which 
+If you are changing the `id` of event **but not call `SyncData.setPartitionField(x)`**, it always means you are doing joining like I do, which 
  - may fail consistency promise because the order between events may not scheduled as it should be;
  - may cause dup item because Syncer only make sure `exactly once semantic`;
 
@@ -44,7 +44,7 @@ The business database query request is delayed as little as possible.
 ### Input -- DataSource
 
 - Support listening to both MySQL & MongoDB & DRDS of Aliyun (https://www.aliyun.com/product/drds)
-- If fail to connect to input data source, will abort
+- If Syncer fail to connect to input data source, will abort
 - MySQL master source filter:
   - Schema filter (naming as `repos`), support regex
   - Table name filter
@@ -108,25 +108,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
     - `com.github.zzt93.syncer.data.*`
     - `com.github.zzt93.syncer.data.util.*`
     - Use full class name if you need other class, like `java.util.function.Function`
-- `if`
-- `switcher`
-- `foreach`
-- all public method in `SyncData`:
-  - `addField(String key, Object value)` 
-  - `renameField(String oldKey, String newKey)` 
-  - `removeField(String key)`
-  - `removeFields(String... keys)` 
-  - `containField(String key)` 
-  - `updateField(String key, Object value)` 
-  - ...
-  - `syncByQuery()`
-  - `extraQuery(String schemaName, String tableName)`
-- all data field in `SyncData`:
-  - `repo`
-  - `entity`
-  - `id`
-  - `fields`
-  - `extra`
+
 
 ### Output -- DataSink
 
@@ -194,12 +176,14 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   
 ### Limitation
 - MySQL:
+  - Don't change the numeric suffix naming of binlog, or it will fail the voting of binlog
   - Supported version: depend on this [binlog connector lib](https://github.com/shyiko/mysql-binlog-connector-java)
   - Not support composite primary key
   - Not support update primary key
   - Only support update/delete by query exact value, i.e. no support query analyzed field (`text` query when update)
   - Data of numeric types (tinyint, etc) always returned **signed** regardless of whether column definition includes "unsigned" keyword or not.
   You may need to convert to unsigned if necessary.
+    - If your output is MySQL, Syncer will handle this situation for you in new binlog connector
   ```
      Byte.toUnsignedInt((byte)(int) fields['xx'])
      // or
@@ -207,6 +191,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   ```
   - data of `*text`/`*blob` types always returned as a byte array (for `var*` this is true in future).
   You may need to convert to string if necessary.
+    - If your output is MySQL, Syncer handle this situation for you.
   ```
     new String(fields['xx'])
     // or 
@@ -220,11 +205,9 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
     - Replica Set Protocol Version: The replica sets and sharded clusters must use replica set protocol version 1 (pv1).
     - [Read Concern “majority”](https://docs.mongodb.com/manual/reference/read-concern-majority/#readconcern.%22majority%22) Enabled.
   
-### Notice
-
-- Don't update/delete use `syncer` and other way (REST api or Java api) at the same time, it may cause version conflict and fail the change
-- Update/Delete by query will be executed at once, i.e. will not be buffered or use batch
-- Don't change the numeric suffix naming of binlog, or it will fail the voting of binlog
+- ES
+  - Don't update/delete use `syncer` and other way (REST api or Java api) at the same time, it may cause version conflict and fail the change
+  - Update/Delete by query will be executed at once, i.e. will not be buffered or use batch
 
 ## Use Syncer
 
@@ -241,7 +224,7 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - init replication set in shell: `rs.initiate()`
 
 ### Producer Data Source Config
-- `input.masters[x]`
+- `input[]`
  - `type`: MySQL, Mongo
  - <a name="connection"></a>`connection`: `ip`, `address`, `port`, `user`, `password`, `passwordFile`
  - `file`: absolute path to binlog file
@@ -249,22 +232,21 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
 ```yml
 
 input:
-  masters:
-    - connection:
-        address: ${HOST_ADDRESS}
-        port: 3306
-        user: xxx
-        password: yyy
+- connection:
+    address: ${HOST_ADDRESS}
+    port: 3306
+    user: xxx
+    password: yyy
 
-    - connection:
-        address: ${HOST_ADDRESS}
-        port: 27018
-      type: mongo
+- connection:
+    address: ${HOST_ADDRESS}
+    port: 27018
+  type: mongo
 ```
 ### <a name="consumer_config"></a>Consumer Pipeline Config
 
 #### Input
-- `input.master[x]`:
+- `input[]`:
   - `type`: same as producer
   - `connection`: [same as producer](#connection)
   - `syncMeta`:
@@ -274,7 +256,7 @@ input:
     - `name`: repo name, allow regex
     - `entities[x]`:
       - `name`: entity name
-      - `fields`: entity fields list
+      - `fields`: entity fields list, can omit it which represents all fields
   - `scheduler`:
     - `mod`: `mod` integral primary key to make same row change always handled in order;
     - `hash`: hash primary key of data row, then `mod` hash value to schedule -- default value now;
@@ -284,16 +266,30 @@ input:
   - `onlyUpdated`: whether sync not `updated` event (only for `MySQL`)
     - `updated` definition: `Objects.deepEquals` == true 
 
+```yml
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    repos:
+      - name: "test_0"
+        entities:
+          - name: correctness
+          - name: types
+          - name: news
+      - name: "simple_0"
+        entities:
+          - name: simple_type
+```
 #### Filter
 
 
-- `method` (**preferred: more powerful and easier to wirte**) : write a java class implements `MethodFilter`  to handle `SyncData`
+- `method` (**preferred: more powerful and easier to write**) : write a java class implements `MethodFilter`  to handle `SyncData`
   - Import dependency:
   ```xml
         <dependency>
             <groupId>com.github.zzt93</groupId>
             <artifactId>syncer-data</artifactId>
-            <version>1.0-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 
   ```
@@ -330,163 +326,85 @@ input:
   - Limitation: 
     - Not support Single Line Comments or Slash-slash Comments
 
-The following part is implemented by [Spring EL](https://docs.spring.io/spring/docs/5.0.0.M5/spring-framework-reference/html/expressions.html), i.e. you can use any syntax Spring EL supported
-even if I didn't listed.
 
-- `statement`: list of String code to be executed.
-  - e.g.
-  ```yml
-    - statement: ["#type=entity", "isWrite()"]
-  ```
-- `switcher`
-  - support `default` case
-  - only execute one case
-  - e.g.
-  ```yml
-    - switcher:
-        switch: "entity"
-        case:
-          "file": ["#docType='plain'", "renameField('uploader_id', 'uploaderId').renameField('parent_id', 'parentId')"]
-          "user": ["#suffix='' ", "renameField('superid', 'superId')"]
 
-  ```
-- `foreach`: in most cases, you can use [Spring EL's collection projection](https://docs.spring.io/spring/docs/5.0.0.M5/spring-framework-reference/html/expressions.html#expressions-collection-projection) rather than this feature
-- `if`
-  - `create`: create a new event (or a bunch) and cp value & execute post creation statement
-  - `drop`: drop this event
-  - `statement`: same with outer `statement`
-  - `switcher`: same as above
-  - `foreach`
-  ```yml
-    - if:
-        condition: "entity == 'user' && isUpdate()"
-        ifBody:
-          - create:
-              copy: ["id", "entity", "#suffix", "#title", "#docType"]
-              postCreation: ["addField('ownerTitle', #title)", "syncByQuery().filter('ownerId', id)", "id = null"]
-        elseBody:
-          - drop: {}
-  ```
-- all public method in [`SyncData`](./syncer-data/src/main/java/com/github/zzt93/syncer/data/SyncData.java):
-  - `isWrite()`
-  - `isUpdate()`
-  - `isDelete()`
-  - `toWrite()`
-  - `toUpdate()`
-  - `toDelete()`
-  - `getField(String key)`
-  - `addExtra(String key, Object value)`
-  - `addField(String key, Object value)`
-  - `renameField(String oldKey, String newKey)`
-  - `removeField(String key)`
-  - `removeFields(String... keys)` 
-  - `containField(String key)` 
-  - `updateField(String key, Object value)` 
-  - `syncByQuery()`: update/delete by query, supported by ES/MySQL output channel
-    - `SyncByQueryES`
-  - `extraQuery(String schemaName, String tableName)`: usually work with `create` to convert one event to multiple events
-    - `ExtraQuery`: enhance syncer with multiple dependent query;
-- all data field in `SyncData`:
-  - `repo`: repo/db/index
-  - `entity`: entity or collection
-  - `id`: data primary key or similar thing
-  - `fields`: data content of this sync event converted from log content according to your `repo` config
-  **Notice**:
-    - if your interested column config (`fields`) has name of `primary key`, records will have it. Otherwise, it will only in `id` field;
-  - `extra`: an extra map to store extra info
+For more config, see [doc/filter-el.md](doc/filter-el.md)
 
 #### Output
 
-- Special expression to do output mapping:
-  - "fields.*": map.put('your_key', `fields`)
-  - "fields.*.flatten": map.putAll(fields)
-  - "extra.*": map.put('your_key', `extra`)
-  - "extra.*.flatten": map.putAll(`extra`)
-- `batch`: support output change in batch
-  - `size`: flush if reach this size (if `size` <= 0, it will be considered as buffer as large as possible)
-  - `delay`: flush if every this time in `MILLISECONDS`
-  - `maxRetry`: max retry if met error
-- `failureLog`: failure log config
-  - `countLimit`: failure
-  - `timeLimit`: failure log item in this time range
-- `requestMapping`, `rowMapping`: how to convert `SyncData` to suitable format
-and send to where
+
 - `elasticsearch`
   - When using this channel, you may prefer to not include `id` like field in interested column config (`fields`),
   because it is always no need to include it in data field for ES and we will auto detect it and set it for you.
   - e.g.
   ```yml
-    elasticsearch:
-      connection:
-        clusterName: test-${ACTIVE_PROFILE}
-        clusterNodes: ["${HOST_ADDRESS}:9300"]
-      requestMapping: # mapping from input data to es request
-        enableExtraQuery: true
-        retryOnUpdateConflict: 3
-        upsert: false
-        index: "entity + #suffix" # default: repo
-        type: "#docType" # default: entity
-        documentId: "id" # default: id
-        fieldsMapping: # default: fields.*.flatten
-          "fields": "fields.*.flatten"
-      batch:
-        size: 100
-        delay: 1000
-        maxRetry: 5
-      refreshInMillis: 1000
-      failureLog:
-        countLimit: 1000
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
 
   ```
 - `mysql`
-  - Use
   - e.g.:
   ```yml
-    mysql:
-      connection:
-        address: ${HOST_ADDRESS}
-        port: 3306
-        user: xxx
-        password: xxx
-      rowMapping:
-        schema: " 'test' "
-        table: " 'someTable' "
-        id: "id"
-        rows:
-          "fields": "fields.*.flatten"
-      batch:
-        size: 100
-        delay: 100
-        maxRetry: 5
-      failureLog:
+  mysql:
+    connection:
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_OUT_PASS}
   ```
+For more config, see [doc/output.md](doc/output.md)
 
 #### In All
+```yaml
+version: 1.3
+
+consumerId: simplest
+
+
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    repos:
+      - name: "test_0"
+        entities:
+          - name: correctness
+          - name: types
+          - name: news
+      - name: "simple_0"
+        entities:
+          - name: simple_type
+
+# tmp solution for unsigned byte conversion, no need if no unsigned byte
+filter:
+  - method: '
+  public void filter(List<SyncData> list) {
+     SyncData sync = list.get(0);
+     SyncUtil.unsignedByte(sync, "tinyint");
+     SyncUtil.unsignedByte(sync, "type");
+  }
+'
+# tmp solution
+
+output:
+  mysql:
+    connection:
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_OUT_PASS}
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+```
 Full and usable samples can be found under [`test/config/`](test/config/)
 
 ### Syncer Config
 
-```yml
-port: 12345
-ack:
-  flushPeriod: 100
-input:
-  input-meta:
-    last-run-metadata-dir: /data/syncer/input/last_position/
+Usually no need to care, because it is used for meta info of Syncer. Samples can be found in [resources](syncer-core/src/main/resources)
 
-filter:
-  worker: 3
-  filter-meta:
-    src: /data/syncer/filter/src
-    
-output:
-  worker: 2
-  batch:
-    worker: 2
-  output-meta:
-    failure-log-dir: /data/syncer/output/failure/
-
-```
 ### Run
 ```
 git clone https://github.com/zzt93/syncer
@@ -578,34 +496,7 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 ---
 
 ## Implementation
-
-- [Elasticsearch & MySQL Sync Challenge(1)](https://tonyz93.blogspot.com/2017/11/elasticsearch-mysql-sync-challenge-1.html)
-- [Elasticsearch & MySQL Sync Challenge(2): Event Driven](https://tonyz93.blogspot.com/2017/12/elasticsearch-mysql-sync-challenge-2.html)
-- [Elasticsearch & MySQL Sync Challenge(3): Implementation](https://tonyz93.blogspot.com/2017/12/elasticsearch-mysql-sync-challenge-3.html)
-- [Elasticsearch & MySQL Sync Challenge(4): Quality Attributes](https://tonyz93.blogspot.com/2018/01/elasticsearch-mysql-sync-challenge-4.html)
-- [Elasticsearch & MySQL Sync Challenge(5): Redesign](https://tonyz93.blogspot.com/2018/02/elasticsearch-mysql-sync-challenge-5.html)
-
-### Input Module
-
-- Load yml file into environment property source
-- Bind property source into config model class
-
-#### Problem & Notice
-
-- For collection field: getter and setter will all be invoked -- this behavior depends on Spring Boot
-  - If only invoke getter?
-  - For list and map field, has different behavior:
-    - list: `list = getList(); list.clear(); list.add(xxx); setList(list);`
-    - map: `map = getMap(); map.add(xxx); setMap(map);`
-
-### Output Module
-
-#### Json Mapper
-- For now, mapping document value using `toString()`: {@link XContentBuilder#unknownValue}
-  - java.sql.Timestamp format: 'yyyy-MM-dd HH:mm:ss.SSS'. For now, if you need other format, you have to format it to string by yourself
-  - Maybe change to jackson
-
----
+Implementation detail can be found in [doc/impl.md](doc/impl.md)
 
 ## Config File Upgrade Guide
 
