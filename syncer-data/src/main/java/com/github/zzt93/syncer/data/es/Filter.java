@@ -33,7 +33,7 @@ public class Filter {
     return new Filter(null, fieldKeyName);
   }
 
-  public static Filter fieldId(ESDocKey docKeyName) {
+  public static Filter syncId(ESDocKey docKeyName) {
     return new Filter(docKeyName, null);
   }
 
@@ -50,10 +50,17 @@ public class Filter {
   }
 
   public String getDocKeyNameOrDefault(String defaultName) {
-    return esUseId() ? defaultName : docKeyName.getName();
+    return esUseId() ? defaultName : getDocKeyName();
   }
 
   public Object getFieldValue(SyncData data) {
-    return syncDataUseId() ? data.getId() : data.getField(fieldKeyName.getName());
+    return syncDataUseId() ? data.getId() : data.getField(getFieldKeyName());
+  }
+
+  @Override
+  public String toString() {
+    String es = getDocKeyNameOrDefault("es._id");
+    String sync = syncDataUseId() ? "sync.id" : "sync.field[" + getFieldKeyName() + "]";
+    return "Filter(" + es + " = " + sync + ")";
   }
 }

@@ -339,7 +339,7 @@ public class ESRequestMapperTest {
 
     data = SyncDataTestUtil.update("role", "role").setId(1234L);
     data.setRepo("nested1").setEntity("nested1").addField("title", "b").addField("user_id", 2L);
-    data.esScriptUpdate(Filter.fieldId(ESDocKey.of("roles.id"))).mergeToNestedById("roles", "title", "user_id");
+    data.esScriptUpdate(Filter.syncId(ESDocKey.of("roles.id"))).mergeToNestedById("roles", "title", "user_id");
 
     builder = mapper.map(data);
     assertEquals("", "{\n" +
@@ -386,7 +386,7 @@ public class ESRequestMapperTest {
 
     data = SyncDataTestUtil.delete("role", "role");
     data.setRepo("nested1").setEntity("nested1");
-    data.esScriptUpdate(Filter.fieldId(ESDocKey.of("roles.id"))).mergeToNestedById("roles", "role");
+    data.esScriptUpdate(Filter.syncId(ESDocKey.of("roles.id"))).mergeToNestedById("roles", "role");
 
     builder = mapper.map(data);
     assertEquals("", "{\n" +
@@ -488,7 +488,7 @@ public class ESRequestMapperTest {
 
     data = SyncDataTestUtil.update("user", "user").setId(1);
     data.setRepo("nested2").setEntity("nested2").addField("username", "b");
-    data.esScriptUpdate(Filter.fieldId(ESDocKey.of("roles.user_id"))).mergeToNestedByQuery("roles", Filter.fieldId(ESDocKey.of("user_id")), "username");
+    data.esScriptUpdate(Filter.syncId(ESDocKey.of("roles.user_id"))).mergeToNestedByQuery("roles", Filter.syncId(ESDocKey.of("user_id")), "username");
 
     builder = mapper.map(data);
     assertEquals("", "{\n" +
@@ -566,7 +566,7 @@ public class ESRequestMapperTest {
     SyncData data = SyncDataTestUtil.update("role", "role").setId(1234L);
     data.setRepo("nested3").setEntity("nested3").addField("title", "b").addField("user_id", 2L);
     data.extraQuery("user", "user").filter("_id", -1L).select("username").addField("username");
-    data.esScriptUpdate(Filter.fieldId(ESDocKey.of("roles.id"))).mergeToNestedById("roles", "title", "user_id", "username");
+    data.esScriptUpdate(Filter.syncId(ESDocKey.of("roles.id"))).mergeToNestedById("roles", "title", "user_id", "username");
 
     Object builder = mapper.map(data);
     assertEquals("", "{\n" +

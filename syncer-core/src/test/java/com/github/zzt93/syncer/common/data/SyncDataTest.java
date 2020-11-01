@@ -3,8 +3,9 @@ package com.github.zzt93.syncer.common.data;
 import com.github.shyiko.mysql.binlog.event.deserialization.AbstractRowsEventDataDeserializer;
 import com.github.shyiko.mysql.binlog.event.deserialization.ColumnType;
 import com.github.shyiko.mysql.binlog.io.ByteArrayInputStream;
-import com.github.zzt93.syncer.data.Filter;
 import com.github.zzt93.syncer.data.SimpleEventType;
+import com.github.zzt93.syncer.data.es.Filter;
+import com.github.zzt93.syncer.data.es.SyncDataKey;
 import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
 import com.google.common.collect.Maps;
 import com.google.gson.Gson;
@@ -68,8 +69,8 @@ public class SyncDataTest {
     assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, esScriptUpdate=null, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={ann_id=1, publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}, extras=null, before=null)), updated=null, partitionField=null, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}]))",
         write.toString());
 
-    write.esScriptUpdate(Filter.id("ann_id")).mergeToNestedById("roles", "role_id", "type");
-    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, esScriptUpdate=ESScriptUpdate(mergeToList={}, mergeToListById={}, nested={roles={=Filter(docKeyName=null, fieldKeyName=null, next=null), role_id=null, id=1234, type=null}}, oldType=WRITE, parentFilter=Filter(docKeyName=null, fieldKeyName=ann_id, next=null), script=null, params=null), result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=UPDATE, repo=test, entity=test, id=1, primaryKeyName=id), fields={publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}, extras=null, before=null)), updated=null, partitionField=null, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}]))",
+    write.esScriptUpdate(Filter.esId(SyncDataKey.of("ann_id"))).mergeToNestedById("roles", "role_id", "type");
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, context=true, connectionIdentifier='null'}, syncByQuery=null, esScriptUpdate=ESScriptUpdate(mergeToList={}, mergeToListById={}, nested={roles={=Filter(es._id = sync.id), role_id=null, id=1234, type=null}}, oldType=WRITE, parentFilter=Filter(es._id = sync.field[ann_id]), script=null, params=null), result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=UPDATE, repo=test, entity=test, id=1, primaryKeyName=id), fields={publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}, extras=null, before=null)), updated=null, partitionField=null, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}]))",
         write.toString());
   }
 
