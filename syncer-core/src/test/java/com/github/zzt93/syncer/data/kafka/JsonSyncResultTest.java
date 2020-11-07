@@ -107,6 +107,10 @@ public class JsonSyncResultTest {
     assertEquals(5, field.getUpdated().size());
 		assertFalse(field.getUpdated().contains(Temp.NAME));
 		assertFalse(field.getUpdated().contains(Temp.I));
+    assertNotNull(field.getBefore());
+    assertEquals(Temp.NAME, field.getBefore().getName());
+    assertEquals(1, field.getBefore().getI());
+
     assertEquals(SimpleEventType.UPDATE, deserialize.getEventType());
   }
 
@@ -136,6 +140,9 @@ public class JsonSyncResultTest {
     assertEquals(4, field.getUpdated().size());
     assertFalse(field.getUpdated().contains(Temp.NAME));
     assertFalse(field.getUpdated().contains(Temp.I));
+    assertNotNull(field.getBefore());
+    assertEquals(Temp.NAME, field.getBefore().getName());
+    assertEquals(1, field.getBefore().getI());
 
     Temp extras = deserialize.getExtras(Temp.class);
     assertEquals(Temp.NAME, extras.getFirstName());

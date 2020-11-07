@@ -35,9 +35,9 @@ public class JsonSyncResult extends SyncMeta {
       })
       .registerTypeHierarchyAdapter(SimpleEventType.class, SimpleEventType.defaultDeserializer)
       .create();
-  private JsonObject fields;
-  private JsonObject extras;
-  private JsonObject before;
+  private final JsonObject fields;
+  private final JsonObject extras;
+  private final JsonObject before;
 
   public JsonSyncResult(JsonObject fields, JsonObject extras, JsonObject before, SimpleEventType eventType, String repo, String entity, Object id, String primaryKeyName) {
     this.fields = fields;
