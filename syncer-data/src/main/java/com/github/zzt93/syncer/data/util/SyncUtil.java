@@ -67,7 +67,7 @@ public class SyncUtil {
     fields.putAll(tmp);
   }
 
-  private static String underscoreToCamel(String from) {
+  public static String underscoreToCamel(String from) {
     char[] cs = from.toCharArray();
     StringBuilder sb = new StringBuilder(cs.length);
     boolean lastIsUnderscore = false;
@@ -90,6 +90,7 @@ public class SyncUtil {
 
   /**
    * @param key name for field which is byte[] in Java, which may come from blob type in db
+   * @param sync SyncData
    */
   @Deprecated
   public static void toStr(SyncData sync, String key) {
