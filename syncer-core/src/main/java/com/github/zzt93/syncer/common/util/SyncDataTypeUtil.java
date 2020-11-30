@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.common.util;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
+import com.github.zzt93.syncer.common.data.ExtraQueryField;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import org.springframework.expression.Expression;
@@ -59,6 +60,8 @@ public class SyncDataTypeUtil {
 				}
 			} else if (value instanceof ExtraQuery) {
 				res.put(key,  ((ExtraQuery) value).getQueryResult(key));
+			} else if (value instanceof ExtraQueryField) {
+				res.put(key, ((ExtraQueryField) value).getQueryResult(key));
 			} else {
 				res.put(key, value);
 			}
@@ -89,6 +92,8 @@ public class SyncDataTypeUtil {
 			return value;
 		} else if (value instanceof ExtraQuery) {
 			return ((ExtraQuery) value).getQueryResult(key);
+		} else if (value instanceof ExtraQueryField) {
+			return ((ExtraQueryField) value).getQueryResult(key);
 		}
 		return value;
 	}

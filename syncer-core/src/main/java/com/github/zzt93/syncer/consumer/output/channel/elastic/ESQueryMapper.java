@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
+import com.github.zzt93.syncer.common.data.ExtraQueryField;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.ExtraQueryMapper;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
@@ -72,7 +73,7 @@ public class ESQueryMapper implements ExtraQueryMapper {
     for (Entry<String, Object> e : extraQuery.getQueryBy().entrySet()) {
       Object value = e.getValue();
       String key = e.getKey();
-      Optional<Object> queryResult = getPlaceholderQueryResult(extraQuery, value);
+      Optional<Object> queryResult = getQueryResult(value);
       if (queryResult.isPresent()) {
         extraQuery.filter(key, queryResult.get());
         bool.filter(QueryBuilders.termQuery(key, queryResult.get()));
@@ -83,20 +84,14 @@ public class ESQueryMapper implements ExtraQueryMapper {
     return bool;
   }
 
-  private Optional<Object> getPlaceholderQueryResult(ExtraQuery extraQuery, Object value) {
-    if (value instanceof String) {
-      String str = ((String) value);
-      Optional<String> placeholderValue = getPlaceholderValue(str);
-      if (placeholderValue.isPresent()) {
-        String key = placeholderValue.get();
-        Object record = extraQuery.getField(key);
-        if (!(record instanceof ExtraQuery) || ((ExtraQuery) record).getQueryResult(key) == null) {
-          logger.error("Dependent extra query {} has no result of {} from {}", record, key, value);
-          return Optional.empty();
-        } else {
-          return Optional.of(((ExtraQuery) record).getQueryResult(key));
-        }
+  private Optional<Object> getQueryResult(Object value) {
+    if (value instanceof ExtraQueryField) {
+      ExtraQueryField extraQueryField = ((ExtraQueryField) value);
+      if (extraQueryField.getQueryResult() == null) {
+        logger.error("Dependent extra query has no result {}", value);
+        return Optional.empty();
       }
+      return Optional.of(extraQueryField.getQueryResult());
     }
     return Optional.empty();
   }

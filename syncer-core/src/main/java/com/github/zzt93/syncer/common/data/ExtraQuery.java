@@ -44,6 +44,9 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
 
   public ExtraQuery select(String... field) {
     select = field;
+    for (String col : field) {
+      data.getFields().put(col, new ExtraQueryField(this, col));
+    }
     return this;
   }
 
@@ -53,7 +56,7 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
     }
     this.as = cols;
     for (String col : cols) {
-      data.getFields().put(col, this);
+      data.getFields().put(col, new ExtraQueryField(this, col));
     }
     return this;
   }
