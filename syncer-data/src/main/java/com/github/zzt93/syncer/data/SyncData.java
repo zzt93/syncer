@@ -1,12 +1,13 @@
 package com.github.zzt93.syncer.data;
 
-import java.sql.Timestamp;
-import java.util.Date;
 import com.github.zzt93.syncer.data.es.Filter;
 
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Config operation interface
@@ -36,10 +37,12 @@ public interface SyncData {
 
   SyncData toDelete();
 
+  @Deprecated
   SyncData setEntity(String entity);
 
   String getRepo();
 
+  @Deprecated
   SyncData setRepo(String repo);
 
   SimpleEventType getType();
@@ -138,6 +141,18 @@ public interface SyncData {
 
   @Override
   String toString();
+
+  SyncData es(String index, String type);
+
+  SyncData es(Supplier<String> index, Supplier<String> type);
+
+  SyncData mysql(String db, String table);
+
+  SyncData mysql(Supplier<String> db, Supplier<String> table);
+
+  SyncData kafka(String topic);
+
+  SyncData kafka(Supplier<String> topic);
 
   /**
    * @param key name for field which is byte[] in Java, which may come from blob type in db

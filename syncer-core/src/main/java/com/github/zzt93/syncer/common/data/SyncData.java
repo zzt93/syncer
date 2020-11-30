@@ -14,6 +14,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.Supplier;
 
 /**
  * Output channel parse order (MySQL & ES):
@@ -180,6 +181,36 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   @Override
   public HashMap<String, Object> getBefore() {
     return result.getBefore();
+  }
+
+  @Override
+  public SyncData es(String index, String type) {
+    return this;
+  }
+
+  @Override
+  public SyncData es(Supplier<String> index, Supplier<String> type) {
+    return this;
+  }
+
+  @Override
+  public SyncData mysql(String db, String table) {
+    return this;
+  }
+
+  @Override
+  public SyncData mysql(Supplier<String> db, Supplier<String> table) {
+    return this;
+  }
+
+  @Override
+  public SyncData kafka(String topic) {
+    return this;
+  }
+
+  @Override
+  public SyncData kafka(Supplier<String> topic) {
+    return this;
   }
 
   @Override
