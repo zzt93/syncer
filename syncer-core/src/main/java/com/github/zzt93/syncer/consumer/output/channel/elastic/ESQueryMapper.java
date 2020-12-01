@@ -34,13 +34,17 @@ public class ESQueryMapper implements ExtraQueryMapper {
   @Override
   public Map<String, Object> map(ExtraQuery extraQuery) {
     String[] select = extraQuery.getSelect();
+    Optional<QueryBuilder> filter = getFilter(extraQuery);
+    if (!filter.isPresent()) {
+      return Collections.emptyMap();
+    }
     SearchResponse response;
     try {
       response = client.prepareSearch(extraQuery.getIndexName())
           .setTypes(extraQuery.getTypeName())
           .setSearchType(SearchType.DEFAULT)
           .setFetchSource(select, null)
-          .setQuery(getFilter(extraQuery))
+          .setQuery(filter.get())
           .execute()
           .actionGet();
     } catch (Exception e) {
@@ -68,23 +72,23 @@ public class ESQueryMapper implements ExtraQueryMapper {
     return res;
   }
 
-  private QueryBuilder getFilter(ExtraQuery extraQuery) {
+  private Optional<QueryBuilder> getFilter(ExtraQuery extraQuery) {
     BoolQueryBuilder bool = new BoolQueryBuilder();
+    boolean hasCondition = false;
     for (Entry<String, Object> e : extraQuery.getQueryBy().entrySet()) {
       Object value = e.getValue();
       String key = e.getKey();
-      Optional<Object> queryResult = getQueryResult(value);
-      if (queryResult.isPresent()) {
-        extraQuery.filter(key, queryResult.get());
-        bool.filter(QueryBuilders.termQuery(key, queryResult.get()));
-      } else {
-        bool.filter(QueryBuilders.termQuery(key, value));
+      Optional<Object> realValue = getRealValue(value);
+      if (realValue.isPresent()) {
+        extraQuery.filter(key, realValue.get());
+        bool.filter(QueryBuilders.termQuery(key, realValue.get()));
+        hasCondition = true;
       }
     }
-    return bool;
+    return hasCondition ? Optional.of(bool) : Optional.empty();
   }
 
-  private Optional<Object> getQueryResult(Object value) {
+  private Optional<Object> getRealValue(Object value) {
     if (value instanceof ExtraQueryField) {
       ExtraQueryField extraQueryField = ((ExtraQueryField) value);
       if (extraQueryField.getQueryResult() == null) {
@@ -93,7 +97,7 @@ public class ESQueryMapper implements ExtraQueryMapper {
       }
       return Optional.of(extraQueryField.getQueryResult());
     }
-    return Optional.empty();
+    return Optional.of(value);
   }
 
   /**
