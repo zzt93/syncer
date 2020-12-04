@@ -149,9 +149,10 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return result.getExtra(key);
   }
 
+  private byte index;
   @Override
-  public com.github.zzt93.syncer.data.SyncData copyMeta(int index) {
-    return new SyncData(this, index);
+  public com.github.zzt93.syncer.data.SyncData copyMeta() {
+    return new SyncData(this, index++);
   }
 
   /**

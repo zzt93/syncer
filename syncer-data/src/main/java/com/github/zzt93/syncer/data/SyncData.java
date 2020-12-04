@@ -111,10 +111,10 @@ public interface SyncData {
 
   /**
    * create a new instance with meta info copied
-   * @param index ith copy of original data, should be different across invocation because it is used for logging
-   * @return a new instance of {@link SyncData}
+   * @return a new instance of {@link SyncData} with
+   * a extra index marking ith copy of original data (should be different across invocation because it is used for logging)
    */
-  SyncData copyMeta(int index);
+  SyncData copyMeta();
 
   /**
    * Determine whether updated according to {@link java.util.Objects#deepEquals(Object, Object)}

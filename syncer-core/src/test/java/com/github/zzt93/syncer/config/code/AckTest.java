@@ -37,7 +37,7 @@ public class AckTest implements MethodFilter {
     if (entity.equals("toDiscard")) { /* clear test */
       list.clear();
     } else if (entity.equals("toCopy")) { /* copy test */
-      SyncData copy = sync.copyMeta(0).setRepo(sync.getRepo()).setEntity(sync.getEntity())
+      SyncData copy = sync.copyMeta().setRepo(sync.getRepo()).setEntity(sync.getEntity())
           .setId(((Number) sync.getId()).longValue() + Integer.MAX_VALUE);
       copy.getFields().putAll(sync.getFields());
       copy.addExtra("suffix", "");
