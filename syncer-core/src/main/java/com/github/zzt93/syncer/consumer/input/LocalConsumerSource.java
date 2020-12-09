@@ -6,6 +6,7 @@ import com.github.zzt93.syncer.config.common.Connection;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 import com.github.zzt93.syncer.consumer.ack.Ack;
+import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -63,6 +64,7 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     return clientId;
   }
 
+  @SneakyThrows
   @Override
   public boolean input(SyncData data) {
     if (sent(data)) {
@@ -71,12 +73,13 @@ public abstract class LocalConsumerSource implements ConsumerSource {
     }
     logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data, data.hashCode());
     ack.append(connectionIdentifier, data.getDataId());
-    return toFilter.add(data.setSourceIdentifier(connectionIdentifier));
+    toFilter.put(data.setSourceIdentifier(connectionIdentifier));
+    return true;
   }
 
+  @SneakyThrows
   @Override
   public boolean input(SyncData[] data) {
-    boolean res = true;
     for (SyncData datum : data) {
       if (datum == null) {
         continue;
@@ -85,13 +88,13 @@ public abstract class LocalConsumerSource implements ConsumerSource {
         ack.append(connectionIdentifier, datum.getDataId());
         logger.debug("Consumer({}, {}) receive: {}", getSyncInitMeta(), clientId, datum);
         // `toFilter.add` should be last call to avoid sharing SyncData in diff threads
-        res = toFilter.add(datum.setSourceIdentifier(connectionIdentifier)) && res;
+        toFilter.put(datum.setSourceIdentifier(connectionIdentifier));
       } else {
         logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, datum,
             connectionIdentifier);
       }
     }
-    return res;
+    return true;
   }
 
   /**

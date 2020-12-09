@@ -49,5 +49,7 @@ public class SQLHelperTest {
     assertNull(test);
     test = SQLHelper.alterMeta("", "alter table test.xx add yy int null");
     assertNull(test);
+    test = SQLHelper.alterMeta("test", "/* comment */ alter table xx alter column credit_total drop default'");
+    assertNull(test);
   }
 }
