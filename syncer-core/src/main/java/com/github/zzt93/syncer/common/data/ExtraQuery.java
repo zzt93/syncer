@@ -1,23 +1,27 @@
 package com.github.zzt93.syncer.common.data;
 
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
+import org.elasticsearch.index.query.BoolQueryBuilder;
+import org.elasticsearch.index.query.QueryBuilder;
+import org.elasticsearch.index.query.QueryBuilders;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Optional;
 
 /**
- * ----------- index/insert by query ------------
+ * Write/Update/Delete by query <em>Elasticsearch output channel</em>
  * @see SyncByQuery
  */
 public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
 
   private static final Logger logger = LoggerFactory.getLogger(ExtraQuery.class);
+  private static final String ES_ID = "_id";
   private final HashMap<String, Object> queryBy = new HashMap<>();
   private final transient SyncData data;
-  private String queryId;
   private String indexName;
   private String typeName;
   private String[] select;
@@ -37,9 +41,19 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
     return this;
   }
 
-  public ExtraQuery filter(String field, Object value) {
-    queryBy.put(field, value);
+  public ExtraQuery filter(String name, Object value) {
+    queryBy.put(name, value);
     return this;
+  }
+
+  @Override
+  public ExtraQuery eq(String name, Object value) {
+    return filter(name, value);
+  }
+
+  @Override
+  public com.github.zzt93.syncer.data.ExtraQuery id(Object value) {
+    return eq(ES_ID, value);
   }
 
   public ExtraQuery select(String... field) {
@@ -70,7 +84,7 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
     return this;
   }
 
-  public HashMap<String, Object> getQueryBy() {
+  private HashMap<String, Object> getQueryBy() {
     return queryBy;
   }
 
@@ -94,13 +108,37 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
     return o;
   }
 
-  public Object getField(String s) {
-    return data.getField(s);
-  }
-
   @Override
   public String toString() {
     return "ExtraQuery{select " + Arrays.toString(select) + " as " + Arrays.toString(as)
         + " from " + indexName + "." + typeName + " where " + queryBy +"}" + (!queryResult.isEmpty() ? queryResult : "");
+  }
+
+  public Optional<QueryBuilder> getEsFilter() {
+    BoolQueryBuilder bool = new BoolQueryBuilder();
+    boolean hasCondition = false;
+    for (Map.Entry<String, Object> e : getQueryBy().entrySet()) {
+      Object value = e.getValue();
+      String key = e.getKey();
+      Optional<Object> realValue = getRealValue(value);
+      if (realValue.isPresent()) {
+        filter(key, realValue.get());
+        bool.filter(QueryBuilders.termQuery(key, realValue.get()));
+        hasCondition = true;
+      }
+    }
+    return hasCondition ? Optional.of(bool) : Optional.empty();
+  }
+
+  private Optional<Object> getRealValue(Object value) {
+    if (value instanceof ExtraQueryField) {
+      ExtraQueryField extraQueryField = ((ExtraQueryField) value);
+      if (extraQueryField.getQueryResult() == null) {
+        logger.error("Dependent extra query has no result {}", value);
+        return Optional.empty();
+      }
+      return Optional.of(extraQueryField.getQueryResult());
+    }
+    return Optional.of(value);
   }
 }

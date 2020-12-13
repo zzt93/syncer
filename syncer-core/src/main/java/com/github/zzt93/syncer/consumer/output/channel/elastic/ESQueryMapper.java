@@ -1,14 +1,11 @@
 package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
-import com.github.zzt93.syncer.common.data.ExtraQueryField;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.ExtraQueryMapper;
 import org.elasticsearch.action.search.SearchResponse;
 import org.elasticsearch.action.search.SearchType;
 import org.elasticsearch.client.support.AbstractClient;
-import org.elasticsearch.index.query.BoolQueryBuilder;
 import org.elasticsearch.index.query.QueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
 import org.elasticsearch.search.SearchHits;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -16,7 +13,6 @@ import org.slf4j.LoggerFactory;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Optional;
 
 /**
@@ -34,7 +30,7 @@ public class ESQueryMapper implements ExtraQueryMapper {
   @Override
   public Map<String, Object> map(ExtraQuery extraQuery) {
     String[] select = extraQuery.getSelect();
-    Optional<QueryBuilder> filter = getFilter(extraQuery);
+    Optional<QueryBuilder> filter = extraQuery.getEsFilter();
     if (!filter.isPresent()) {
       return Collections.emptyMap();
     }
@@ -72,33 +68,6 @@ public class ESQueryMapper implements ExtraQueryMapper {
     return res;
   }
 
-  private Optional<QueryBuilder> getFilter(ExtraQuery extraQuery) {
-    BoolQueryBuilder bool = new BoolQueryBuilder();
-    boolean hasCondition = false;
-    for (Entry<String, Object> e : extraQuery.getQueryBy().entrySet()) {
-      Object value = e.getValue();
-      String key = e.getKey();
-      Optional<Object> realValue = getRealValue(value);
-      if (realValue.isPresent()) {
-        extraQuery.filter(key, realValue.get());
-        bool.filter(QueryBuilders.termQuery(key, realValue.get()));
-        hasCondition = true;
-      }
-    }
-    return hasCondition ? Optional.of(bool) : Optional.empty();
-  }
-
-  private Optional<Object> getRealValue(Object value) {
-    if (value instanceof ExtraQueryField) {
-      ExtraQueryField extraQueryField = ((ExtraQueryField) value);
-      if (extraQueryField.getQueryResult() == null) {
-        logger.error("Dependent extra query has no result {}", value);
-        return Optional.empty();
-      }
-      return Optional.of(extraQueryField.getQueryResult());
-    }
-    return Optional.of(value);
-  }
 
   /**
    * @param str special placeholder: $userId$

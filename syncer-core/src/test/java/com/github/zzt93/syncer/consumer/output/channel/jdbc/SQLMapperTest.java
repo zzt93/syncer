@@ -40,9 +40,12 @@ public class SQLMapperTest {
     map.put("5", -1);
     String key = map.keySet().toString();
     String value = map.values().toString();
-    String expected = ParameterReplace.orderedParam("(?0), (?1)",
+    String res = ParameterReplace.orderedParam("(?0), (?1)",
         key.substring(1, key.length() - 1), value.substring(1, value.length() - 1));
-    Assert.assertEquals(expected, "(1, ?0, 2, 4, 5), (1, 3, 1, 4, -1)");
+    Assert.assertEquals("(1, ?0, 2, 4, 5), (1, 3, 1, 4, -1)", res);
+    res = ParameterReplace.orderedParam("(?1), (?0)",
+        key.substring(1, key.length() - 1), value.substring(1, value.length() - 1));
+    Assert.assertEquals("(1, 3, 1, 4, -1), (1, ?0, 2, 4, 5)", res);
   }
 
   @Test

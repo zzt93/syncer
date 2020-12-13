@@ -400,7 +400,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   private ExtraQueryContext extraQueryContext;
 
-  public boolean hasExtra() {
+  public boolean hasExtraQuery() {
     return extraQueryContext != null;
   }
 

@@ -37,7 +37,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
   private final Expression id;
   private final String idName;
 
-  public SQLMapper(RowMapping rowMapping) {
+  SQLMapper(RowMapping rowMapping) {
     SpelExpressionParser parser = new SpelExpressionParser();
 
     schema = parser.parseExpression(rowMapping.getSchema());
@@ -50,6 +50,9 @@ public class SQLMapper implements Mapper<SyncData, String> {
 
   @Override
   public String map(SyncData data) {
+    if (data.hasExtraQuery()) {
+      logger.error("MySQLChannel doesn't support extraQuery, ignored: {}", data);
+    }
     StandardEvaluationContext context = data.getContext();
     String schema = evalString(this.schema, context);
     String table = evalString(this.table, context);
