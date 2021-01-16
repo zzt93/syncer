@@ -3,7 +3,12 @@ package com.github.zzt93.syncer.config.consumer.filter;
 import com.github.zzt93.syncer.config.ConsumerConfig;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
-import com.github.zzt93.syncer.consumer.filter.impl.*;
+import com.github.zzt93.syncer.consumer.filter.impl.Drop;
+import com.github.zzt93.syncer.consumer.filter.impl.ForeachFilter;
+import com.github.zzt93.syncer.consumer.filter.impl.If;
+import com.github.zzt93.syncer.consumer.filter.impl.JavaMethod;
+import com.github.zzt93.syncer.consumer.filter.impl.Statement;
+import com.github.zzt93.syncer.consumer.filter.impl.Switch;
 import com.github.zzt93.syncer.data.util.SyncFilter;
 import com.google.common.base.Preconditions;
 import com.google.gson.annotations.SerializedName;
@@ -26,20 +31,11 @@ public class FilterConfig {
   @SerializedName(value = "if", alternate = {"If", "IF"})
   private IfConfig If;
   private Map drop;
-  private CreateConfig create;
   private String method;
 
   /*---the following field is not configured---*/
   private SyncerFilterMeta filterMeta;
   private String consumerId;
-
-  public CreateConfig getCreate() {
-    return create;
-  }
-
-  public void setCreate(CreateConfig create) {
-    this.create = create;
-  }
 
   public Switcher getSwitcher() {
     return switcher;
@@ -59,9 +55,6 @@ public class FilterConfig {
 
   public FilterType getType() {
     if (type == null) {
-      if (create != null) {
-        type = FilterType.CREATE;
-      }
       if (switcher != null) {
         type = FilterType.SWITCH;
       }
@@ -132,12 +125,6 @@ public class FilterConfig {
         return new If(parser, getIf());
       case DROP:
         return new Drop();
-      case CREATE:
-        try {
-          return getCreate().toAction(parser);
-        } catch (NoSuchFieldException e) {
-          throw new InvalidConfigException("Unknown field of `SyncData` to copy", e);
-        }
       case METHOD:
         Preconditions.checkState(filterMeta != null, "Not set filterMeta for method");
         return JavaMethod.build(consumerId, filterMeta, getMethod());
@@ -154,6 +141,6 @@ public class FilterConfig {
 
 
   public enum FilterType {
-    SWITCH, STATEMENT, FOREACH, IF, DROP, CREATE, METHOD;
+    SWITCH, STATEMENT, FOREACH, IF, DROP, METHOD;
   }
 }

@@ -6,7 +6,6 @@ import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
-import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 import org.apache.lucene.search.join.ScoreMode;
 import org.elasticsearch.action.update.UpdateRequestBuilder;
 import org.elasticsearch.client.support.AbstractClient;
@@ -19,9 +18,6 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.expression.Expression;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -42,37 +38,27 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private final ESRequestMapping esRequestMapping;
   // TODO use es7 branch to delete this dependency
   private final AbstractClient client;
-  private final KVMapper requestBodyMapper;
-  private final Expression indexExpr;
-  private final Expression typeExpr;
   private final ESQueryMapper esQueryMapper;
 
   ESRequestMapper(AbstractClient client, ESRequestMapping esRequestMapping) {
     this.esRequestMapping = esRequestMapping;
     this.client = client;
-    SpelExpressionParser parser = new SpelExpressionParser();
-    indexExpr = parser.parseExpression(esRequestMapping.getIndex());
-    typeExpr = parser.parseExpression(esRequestMapping.getType());
 
     esQueryMapper = new ESQueryMapper(client);
-    requestBodyMapper = new KVMapper(esRequestMapping.getFieldsMapping());
   }
 
-  @ThreadSafe(safe = {SpelExpressionParser.class, ESRequestMapping.class, TransportClient.class})
+  @ThreadSafe(safe = {ESRequestMapping.class, TransportClient.class})
   @Override
   public Object map(SyncData data) {
     esQueryMapper.parseExtraQueryContext(data.getExtraQueryContext());
 
-    StandardEvaluationContext context = data.getContext();
-    String index = eval(indexExpr, context);
-    String type = eval(typeExpr, context);
-    String id = data.getId() == null ? null : data.getId().toString();
+    String index = data.getEsIndex();
+    String type = data.getEsType();
+    String id = data.getEsId();
+    HashMap<String, Object> source = data.getFields();
     switch (data.getType()) {
       case WRITE:
-        if (esRequestMapping.getNoUseIdForIndex()) {
-          return client.prepareIndex(index, type).setSource(requestBodyMapper.map(data));
-        }
-        return client.prepareIndex(index, type, id).setSource(requestBodyMapper.map(data));
+        return client.prepareIndex(index, type, id).setSource(source);
       case DELETE:
         logger.info("Deleting doc from Elasticsearch, may affect performance");
         if (id != null) {
@@ -86,16 +72,15 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
         // Ref: https://www.elastic.co/guide/en/elasticsearch/reference/current/docs-update.html
         if (id != null) { // update doc with `id`
           if (needScript(data)) { // scripted updates: update using script
-            HashMap<String, Object> map = requestBodyMapper.map(data);
             UpdateRequestBuilder builder = client.prepareUpdate(index, type, id)
-                .setScript(getScript(data, map))
+                .setScript(getScript(data, source))
                 .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
             if (esRequestMapping.isUpsert()) { // scripted_upsert
               builder.setUpsert(getUpsert(data)).setScriptedUpsert(true);
             }
             return builder;
           } else { // update with partial doc
-            return client.prepareUpdate(index, type, id).setDoc(requestBodyMapper.map(data))
+            return client.prepareUpdate(index, type, id).setDoc(source)
                 .setDocAsUpsert(esRequestMapping.isUpsert()) // doc_as_upsert
                 .setRetryOnConflict(esRequestMapping.getRetryOnUpdateConflict());
           }
@@ -115,10 +100,6 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private static boolean needScript(SyncData data) {
     ESScriptUpdate esScriptUpdate = data.getEsScriptUpdate();
     return esScriptUpdate != null && esScriptUpdate.needScript();
-  }
-
-  private String eval(Expression expr, StandardEvaluationContext context) {
-    return expr.getValue(context, String.class);
   }
 
   /**

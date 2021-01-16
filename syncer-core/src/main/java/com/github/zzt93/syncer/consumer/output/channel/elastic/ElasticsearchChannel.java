@@ -147,7 +147,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       logger.info("Include primary key in `_source` is usually not necessary, remove it");
     }
 
-    return queues[(int) (event.getPartitionId()%worker)].add(event);
+    return queues[(int) (event.getPartitionKey()%worker)].add(event);
   }
 
   public static class EsOutputJob implements EventLoop {

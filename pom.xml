@@ -10,6 +10,7 @@
     <modules>
         <module>syncer-data</module>
         <module>syncer-core</module>
+        <module>instrumentation</module>
     </modules>
     <packaging>pom</packaging>
 

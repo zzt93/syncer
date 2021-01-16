@@ -7,7 +7,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
-import java.util.function.Supplier;
 
 /**
  * Config operation interface
@@ -50,9 +49,10 @@ public interface SyncData {
   /**
    * Default use id as partitionKey, override with this method.
    *
-   * @param fieldName name of field which is either int/long or String
-   */
-  void setPartitionField(String fieldName);
+	 * @param fieldName name of field which is either int/long or String
+	 * @return
+	 */
+  SyncData setPartitionField(String fieldName);
 
   SyncData addExtra(String key, Object value);
 
@@ -144,15 +144,15 @@ public interface SyncData {
 
   SyncData es(String index, String type);
 
-  SyncData es(Supplier<String> index, Supplier<String> type);
+  SyncData es(String index, String type, String id);
 
   SyncData mysql(String db, String table);
 
-  SyncData mysql(Supplier<String> db, Supplier<String> table);
+  SyncData mysql(String db, String table, Object id);
 
   SyncData kafka(String topic);
 
-  SyncData kafka(Supplier<String> topic);
+  SyncData kafka(String topic, String partitionKey);
 
   /**
    * @param key name for field which is byte[] in Java, which may come from blob type in db

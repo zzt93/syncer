@@ -30,15 +30,11 @@ import java.util.function.Supplier;
 public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializable {
 
   private static final transient Logger logger = LoggerFactory.getLogger(SyncData.class);
-  private final Meta inner;
-  private SyncByQuery syncByQuery;
-  private ESScriptUpdate esScriptUpdate;
+  private final SyncInfo inner;
   /**
    * sync result data fields
    */
   private SyncResult result;
-  private Set<String> updated;
-  private String partitionField;
 
   public SyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName,
                   Object id, NamedChange row) {
@@ -50,20 +46,19 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     inner = innerSyncData(dataId, type, database, entity, primaryKeyName, id, full, beforeFull, updated);
   }
 
-  private Meta innerSyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
-                             HashMap<String, Object> full, HashMap<String, Object> beforeFull, Set<String> updated) {
+  private SyncInfo innerSyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
+																 HashMap<String, Object> full, HashMap<String, Object> beforeFull, Set<String> updated) {
     result = new SyncResult(type, database, entity, primaryKeyName, id, full);
 
     if (isUpdate()) {
       result.setBefore(beforeFull);
-      this.updated = updated;
     }
 
-    return new Meta(dataId, null);
+    return new SyncInfo(dataId, null, updated);
   }
 
-  public SyncData(SyncData syncData, int offset) {
-    inner = new Meta(((BinlogDataId) syncData.inner.dataId).copyAndSetOffset(offset), syncData.getSourceIdentifier());
+  private SyncData(SyncData syncData, int offset) {
+    inner = new SyncInfo(((BinlogDataId) syncData.inner.dataId).copyAndSetOffset(offset), syncData.getSourceIdentifier(), null);
     inner.context = EvaluationFactory.context();
     inner.context.setRootObject(this);
     result = new SyncResult();
@@ -149,10 +144,9 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return result.getExtra(key);
   }
 
-  private byte index;
   @Override
   public com.github.zzt93.syncer.data.SyncData copyMeta() {
-    return new SyncData(this, index++);
+    return new SyncData(this, inner.copy++);
   }
 
   /**
@@ -161,17 +155,17 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
    */
   @Override
   public boolean updated() {
-    return updated != null;
+    return getUpdated() != null;
   }
 
   @Override
   public boolean updated(String key) {
-    return updated() && updated.contains(key);
+    return updated() && getUpdated().contains(key);
   }
 
   @Override
   public Set<String> getUpdated() {
-    return updated;
+    return inner.updated;
   }
 
   @Override
@@ -186,30 +180,50 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public SyncData es(String index, String type) {
+  	inner.output.es(index, type);
     return this;
   }
 
   @Override
+  public SyncData es(String index, String type, String id) {
+    inner.output.es(index, type);
+    return setId(id);
+  }
+
   public SyncData es(Supplier<String> index, Supplier<String> type) {
     return this;
   }
 
   @Override
   public SyncData mysql(String db, String table) {
+  	inner.output.db(db, table);
     return this;
   }
 
   @Override
+  public SyncData mysql(String db, String table, Object id) {
+    inner.output.db(db, table);
+    return setId(id);
+  }
+
   public SyncData mysql(Supplier<String> db, Supplier<String> table) {
     return this;
   }
 
   @Override
   public SyncData kafka(String topic) {
+  	inner.output.kafka(topic);
     return this;
   }
 
   @Override
+  public SyncData kafka(String topic, String partitionKey) {
+    inner.output.kafka(topic);
+    // todo
+    throw new UnsupportedOperationException();
+//    return setPartitionField(null);
+  }
+
   public SyncData kafka(Supplier<String> topic) {
     return this;
   }
@@ -285,11 +299,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     context.setRootObject(this);
   }
 
-  public void recycleParseContext(ThreadLocal<StandardEvaluationContext> contexts) {
-    inner.context = null;
-//    contexts.remove();
-  }
-
   @Override
   public HashMap<String, Object> getFields() {
     return result.getFields();
@@ -344,72 +353,67 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public HashMap<String, Object> getSyncBy() {
-    if (syncByQuery == null) {
+    if (getSyncByQuery() == null) {
       return null;
     }
-    return syncByQuery.getSyncBy();
+    return getSyncByQuery().getSyncBy();
   }
 
   /**
    * update/delete by query
    */
   public SyncByQuery syncByQuery() {
-    if (syncByQuery == null) {
-      syncByQuery = new SyncByQuery(this);
+    if (getSyncByQuery() == null) {
+      setSyncByQuery(new SyncByQuery(this));
     }
-    return syncByQuery;
+    return getSyncByQuery();
   }
 
   public ESScriptUpdate esScriptUpdate() {
-    if (esScriptUpdate == null) {
-      esScriptUpdate = new ESScriptUpdate(this);
+    if (getEsScriptUpdate() == null) {
+      setEsScriptUpdate(new ESScriptUpdate(this));
     }
-    return esScriptUpdate;
+    return getEsScriptUpdate();
   }
 
   @Override
   public ESScriptUpdate esScriptUpdate(String script, Map<String, Object> params) {
-    if (esScriptUpdate == null) {
-      esScriptUpdate = new ESScriptUpdate(this, script, params);
+    if (getEsScriptUpdate() == null) {
+      setEsScriptUpdate(new ESScriptUpdate(this, script, params));
     }
-    return esScriptUpdate;
+    return getEsScriptUpdate();
   }
 
   @Override
   public ESScriptUpdate esScriptUpdate(Filter docFilter) {
-    if (esScriptUpdate == null) {
-      esScriptUpdate = new ESScriptUpdate(this, docFilter);
+    if (getEsScriptUpdate() == null) {
+      setEsScriptUpdate(new ESScriptUpdate(this, docFilter));
     }
-    return esScriptUpdate;
+    return getEsScriptUpdate();
   }
 
   public ESScriptUpdate getEsScriptUpdate() {
-    return esScriptUpdate;
+    return inner.esScriptUpdate;
   }
 
   public ExtraQuery extraQuery(String indexName, String typeName) {
-    if (extraQueryContext == null) {
-      extraQueryContext = new ExtraQueryContext();
+    if (getExtraQueryContext() == null) {
+      setExtraQueryContext(new ExtraQueryContext());
     }
-    return extraQueryContext.add(new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName));
+    return getExtraQueryContext().add(new ExtraQuery(this).setIndexName(indexName).setTypeName(typeName));
   }
 
   public ExtraQueryContext getExtraQueryContext() {
-    return extraQueryContext;
+    return inner.extraQueryContext;
   }
 
-  private ExtraQueryContext extraQueryContext;
 
   public boolean hasExtraQuery() {
-    return extraQueryContext != null;
+    return getExtraQueryContext() != null;
   }
 
-  private String getPrimaryKeyName() {
+  public String getPrimaryKeyName() {
     return result.getPrimaryKeyName();
-  }
-
-  private void setPrimaryKeyName(String primaryKeyName) {
-    result.setPrimaryKeyName(primaryKeyName);
   }
 
   public SimpleEventType getType() {
@@ -430,8 +434,8 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return new SyncData(getDataId(), getType(), getRepo(), getEntity(), getPrimaryKeyName(), getId(), new HashMap<>(getFields()), before, updated);
   }
 
-  public Long getPartitionId() {
-    Object o = partitionField == null || getField(partitionField) == null ? getId() : getField(partitionField);
+  public Long getPartitionKey() {
+    Object o = getPartitionField() == null || getField(getPartitionField()) == null ? getId() : getField(getPartitionField());
     if (o != null) {
       return Math.abs(o instanceof Long ? ((Long) o) : o.hashCode());
     }
@@ -439,18 +443,80 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return 0L;
   }
 
-  public void setPartitionField(String fieldName) {
-    this.partitionField = fieldName;
+  public SyncData setPartitionField(String fieldName) {
+    this.inner.partitionField = fieldName;
+    return this;
   }
 
-	private static class Meta {
+  private String getPartitionField() {
+    return inner.partitionField;
+  }
+
+	private SyncByQuery getSyncByQuery() {
+		return inner.syncByQuery;
+	}
+
+	private void setSyncByQuery(SyncByQuery syncByQuery) {
+		this.inner.syncByQuery = syncByQuery;
+	}
+
+	private void setEsScriptUpdate(ESScriptUpdate esScriptUpdate) {
+		this.inner.esScriptUpdate = esScriptUpdate;
+	}
+
+	private void setExtraQueryContext(ExtraQueryContext extraQueryContext) {
+		this.inner.extraQueryContext = extraQueryContext;
+	}
+
+  public String getEsId() {
+    return getId() == null ? null : getId().toString();
+  }
+
+  public String getEsIndex() {
+    return inner.output.getEsIndex(getRepo());
+  }
+
+  public String getEsType() {
+    return inner.output.getEsType(getEntity());
+  }
+
+  public String getDb() {
+    return inner.output.getDb(getRepo());
+  }
+
+  public String getTable() {
+    return inner.output.getTable(getEntity());
+  }
+
+  public String getDbId() {
+    return getId() == null ? null : getId().toString();
+  }
+
+  public String getKafkaTopic() {
+    return inner.output.getKafkaTopic(getRepo() + getEntity());
+  }
+
+  /**
+   * used in sync process, not exposed by default
+   */
+	private static class SyncInfo {
     private final DataId dataId;
     private transient StandardEvaluationContext context;
     private String connectionIdentifier;
 
-    Meta(DataId dataId, String connectionIdentifier) {
+		private ExtraQueryContext extraQueryContext;
+		private SyncByQuery syncByQuery;
+		private ESScriptUpdate esScriptUpdate;
+		private Set<String> updated;
+		private byte copy;
+
+		private String partitionField;
+		private OutputInfo output = new OutputInfo();
+
+		SyncInfo(DataId dataId, String connectionIdentifier, Set<String> updated) {
       this.dataId = dataId;
       this.connectionIdentifier = connectionIdentifier;
+      this.updated = updated;
     }
 
     @Override
@@ -460,7 +526,56 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
           "dataId=" + dataId +
           ", context=" + (rootObject.getValue() != null ? ((SyncData) rootObject.getValue()).inner == this : null) +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
+					", syncByQuery=" + syncByQuery +
+					", esScriptUpdate=" + esScriptUpdate +
+					", updated=" + updated +
+					", partitionField=" + partitionField +
+					", copy=" + copy +
+					", extraQueryContext=" + extraQueryContext +
           '}';
+    }
+
+	}
+
+  private static class OutputInfo {
+	  private String esIndex;
+	  private String esType;
+	  private String db;
+	  private String table;
+	  private String kafkaTopic;
+
+		public void es(String index, String type) {
+			esIndex = index;
+			esType = type;
+		}
+
+		public void db(String db, String table) {
+			this.db = db;
+			this.table = table;
+		}
+
+		public void kafka(String topic) {
+			this.kafkaTopic = topic;
+		}
+
+    String getEsIndex(String repo) {
+      return esIndex == null ? repo : esIndex;
+    }
+
+    String getEsType(String entity) {
+      return esType == null ? entity : esType;
+    }
+
+    String getDb(String repo) {
+      return db == null ? repo : db;
+    }
+
+    String getTable(String entity) {
+      return table == null ? entity : table;
+    }
+
+    String getKafkaTopic(String topic) {
+      return kafkaTopic == null ? topic : kafkaTopic;
     }
   }
 }

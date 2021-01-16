@@ -14,7 +14,6 @@ import com.github.zzt93.syncer.consumer.output.channel.jdbc.MysqlChannel;
 public class Mysql extends BufferedOutputChannelConfig {
 
   private MysqlConnection connection;
-  private RowMapping rowMapping = new RowMapping();
 
   public MysqlConnection getConnection() {
     return connection;
@@ -23,14 +22,6 @@ public class Mysql extends BufferedOutputChannelConfig {
   public void setConnection(
       MysqlConnection connection) {
     this.connection = connection;
-  }
-
-  public RowMapping getRowMapping() {
-    return rowMapping;
-  }
-
-  public void setRowMapping(RowMapping rowMapping) {
-    this.rowMapping = rowMapping;
   }
 
   private String consumerId;

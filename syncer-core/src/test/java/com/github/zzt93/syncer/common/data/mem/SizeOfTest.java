@@ -1,32 +1,33 @@
 package com.github.zzt93.syncer.common.data.mem;
 
-import java.lang.instrument.Instrumentation;
+import com.github.zzt93.syncer.InstrumentationAgent;
+import com.github.zzt93.syncer.common.data.SyncDataTestUtil;
+
 import java.util.ArrayList;
 import java.util.List;
 
+import static jdk.nashorn.internal.ir.debug.ObjectSizeCalculator.*;
+
 /**
+ * cd instrumentation
+ * mvn package
+ * vmOption: -javaagent:"./instrumentation/target/instrumentation-1.0-SNAPSHOT.jar"
  * @author zzt
  */
-public class InstrumentationAgent {
-  private static volatile Instrumentation globalInstrumentation;
+public class SizeOfTest {
 
-  public static void premain(final String agentArgs, final Instrumentation inst) {
-    globalInstrumentation = inst;
-  }
 
-  public static long getObjectSize(final Object object) {
-    if (globalInstrumentation == null) {
-      throw new IllegalStateException("Agent not initialized.");
-    }
-    return globalInstrumentation.getObjectSize(object);
-  }
-
-  public static void printObjectSize(Object object) {
+  private static void printObjectSize(Object object) {
+    System.out.println("Object type: " + object.getClass() +
+        ", size: " + getObjectSize(object) + " bytes");
     System.out.println("Object type: " + object.getClass() +
         ", size: " + InstrumentationAgent.getObjectSize(object) + " bytes");
   }
 
+
   public static void main(String[] arguments) {
+    printObjectSize(SyncDataTestUtil.write("test_0", "user"));
+
     String emptyString = "";
     String string = "Estimating Object Size Using Instrumentation";
     String[] stringArray = { emptyString, string, "com.baeldung" };

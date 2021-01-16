@@ -40,7 +40,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
   private final Ack ack;
   private final FailureLog<SyncWrapper<String>> request;
   private final String consumerId;
-  private final MsgMapper msgMapper;
+  private final MsgProcessor msgProcessor;
   private final String identifier;
 
   public KafkaChannel(Kafka kafka, SyncerOutputMeta outputMeta, Ack ack) {
@@ -49,7 +49,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
     this.kafkaTemplate = new KafkaTemplate<>(factory);
     this.ack = ack;
     this.consumerId = kafka.getConsumerId();
-    this.msgMapper = new MsgMapper(kafka.getMsgMapping());
+    this.msgProcessor = new MsgProcessor(kafka.getMsgMapping());
     ClusterConnection connection = kafka.getConnection();
     FailureLogConfig failureLog = kafka.getFailureLog();
     identifier = connection.connectionIdentifier();
@@ -98,7 +98,8 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
 
   @Override
   public boolean output(SyncData event) throws InterruptedException {
-    String topic = msgMapper.map(event);
+    msgProcessor.process(event);
+    String topic = event.getKafkaTopic();
     SyncWrapper<String> wrapper = new SyncWrapper<>(event, topic);
     doSend(topic, wrapper);
     return true;
@@ -109,7 +110,7 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
     // require that messages with the same key (for instance, a unique id) are always seen in the correct order,
     // attaching a key to messages will ensure messages with the same key always go to the same partition in a topic
     ListenableFuture<SendResult<String, Object>> future;
-    Long partitionId = event.getPartitionId();
+    Long partitionId = event.getPartitionKey();
     if (partitionId != null) {
       future = kafkaTemplate.send(topic, partitionId.toString(), event.getResult());
     } else {

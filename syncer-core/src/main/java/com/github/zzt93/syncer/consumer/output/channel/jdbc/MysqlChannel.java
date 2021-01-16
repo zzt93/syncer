@@ -58,7 +58,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     MysqlConnection connection = mysql.getConnection();
     jdbcTemplate = new JdbcTemplate(connection.dataSource());
     batchBuffer = new BatchBuffer<>(mysql.getBatch());
-    sqlMapper = new SQLMapper(mysql.getRowMapping());
+    sqlMapper = new SQLMapper();
     this.batch = mysql.getBatch();
     this.ack = ack;
     FailureLogConfig failureLog = mysql.getFailureLog();
