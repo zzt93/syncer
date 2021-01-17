@@ -6,7 +6,7 @@ import com.github.zzt93.syncer.config.common.HttpConnection;
 import com.github.zzt93.syncer.config.consumer.output.OutputChannelConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerOutputMeta;
 import com.github.zzt93.syncer.consumer.ack.Ack;
-import com.github.zzt93.syncer.consumer.output.channel.http.HttpChannel;
+import com.github.zzt93.syncer.consumer.output.channel.http.ConsoleChannel;
 import com.github.zzt93.syncer.consumer.output.channel.mapper.KVMapper;
 
 import java.util.Collections;
@@ -15,13 +15,13 @@ import java.util.LinkedHashMap;
 /**
  * @author zzt
  */
-public class Http implements OutputChannelConfig {
+public class Console implements OutputChannelConfig {
 
   private HttpConnection connection;
   private LinkedHashMap<String, Object> jsonMapping = new LinkedHashMap<>();
   private String path;
 
-  public Http() {
+  public Console() {
     // default value of json mapper
     jsonMapping.put(KVMapper.FAKE_KEY, SyncDataTypeUtil.ROW_FLATTEN);
   }
@@ -61,11 +61,11 @@ public class Http implements OutputChannelConfig {
   }
 
   @Override
-  public HttpChannel toChannel(String consumerId, Ack ack,
-      SyncerOutputMeta outputMeta) {
+  public ConsoleChannel toChannel(String consumerId, Ack ack,
+                                  SyncerOutputMeta outputMeta) {
     this.consumerId = consumerId;
     if (connection.valid()) {
-      return new HttpChannel(this, Collections.unmodifiableMap(getJsonMapping()), ack);
+      return new ConsoleChannel(this, Collections.unmodifiableMap(getJsonMapping()), ack);
     }
     throw new IllegalArgumentException();
   }

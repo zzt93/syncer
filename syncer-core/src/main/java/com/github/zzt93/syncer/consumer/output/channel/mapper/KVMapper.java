@@ -28,12 +28,6 @@ public class KVMapper implements Mapper<SyncData, HashMap<String, Object>> {
     this.mapping = Collections.unmodifiableMap(tmp);
   }
 
-  public KVMapper(HashMap<String, Object> mapping) {
-    HashMap<String, Object> tmp = new HashMap<>();
-    initMapping(mapping, tmp, new SpelExpressionParser());
-    this.mapping = Collections.unmodifiableMap(tmp);
-  }
-
   public HashMap<String, Object> map(SyncData data) {
     HashMap<String, Object> res = new HashMap<>();
     SyncDataTypeUtil.mapToJson(data, mapping, res, true);

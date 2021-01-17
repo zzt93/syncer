@@ -36,7 +36,7 @@ public class SyncDataTypeUtil {
 		for (String key : mapping.keySet()) {
 			Object value = mapping.get(key);
 			if (value instanceof Expression) {
-				res.put(key, ((Expression) value).getValue(context.getContext()));
+				throw new UnsupportedOperationException();
 			} else if (value instanceof Map) {
 				Map map = (Map) value;
 				mapObj(context, res, key, map, interpretSpecialString);
@@ -77,7 +77,7 @@ public class SyncDataTypeUtil {
 
 	private static Object convert(SyncData context, Object value, String key) {
 		if (value instanceof Expression) {
-			return ((Expression) value).getValue(context.getContext());
+			throw new UnsupportedOperationException();
 		} else if (value instanceof Map) {
 			Map<String, Object> map = (Map<String, Object>) value;
 			for (Map.Entry<String, Object> e : map.entrySet()) {

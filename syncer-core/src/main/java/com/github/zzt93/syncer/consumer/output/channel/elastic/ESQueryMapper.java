@@ -42,7 +42,7 @@ public class ESQueryMapper implements ExtraQueryMapper {
           .setFetchSource(select, null)
           .setQuery(filter.get())
           .execute()
-          .actionGet();
+          .actionGet(5 * 1000);
     } catch (Exception e) {
       logger.error("Fail to do the extra query {}", extraQuery, e);
       return Collections.emptyMap();

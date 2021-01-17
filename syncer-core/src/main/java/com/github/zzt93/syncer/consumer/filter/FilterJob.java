@@ -3,7 +3,6 @@ package com.github.zzt93.syncer.consumer.filter;
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.common.LogbackLoggingField;
 import com.github.zzt93.syncer.common.data.DataId;
-import com.github.zzt93.syncer.common.data.EvaluationFactory;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.thread.EventLoop;
@@ -117,8 +116,6 @@ public class FilterJob implements EventLoop {
   private void output(LinkedList<SyncData> list) {
     for (SyncData syncData : list) {
       logger.debug("Output SyncData {}", syncData);
-      // TODO 2020/6/11 remove Spring EL
-      syncData.setContext(EvaluationFactory.context());
       for (OutputChannel outputChannel : this.outputChannels) {
         try {
           outputChannel.output(syncData);

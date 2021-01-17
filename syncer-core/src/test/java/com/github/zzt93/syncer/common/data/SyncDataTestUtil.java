@@ -12,9 +12,7 @@ public class SyncDataTestUtil {
   public static final long ID = 1234L;
 
   public static SyncData update() {
-    SyncData syncData = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", ID, new NamedFullRow(Maps.newHashMap()).setBeforeFull(Maps.newHashMap()));
-    syncData.setContext(EvaluationFactory.context());
-    return syncData;
+    return new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.UPDATE, "test", "test", "id", ID, new NamedFullRow(Maps.newHashMap()).setBeforeFull(Maps.newHashMap()));
   }
 
   public static SyncData update(String repo, String entity) {
@@ -24,9 +22,7 @@ public class SyncDataTestUtil {
   }
 
   public static SyncData write() {
-    SyncData syncData = new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.WRITE, "test", "test", "id", ID, new NamedFullRow(Maps.newHashMap()));
-    syncData.setContext(EvaluationFactory.context());
-    return syncData;
+    return new SyncData(new BinlogDataId("mysql-bin.00001", 4, 10), SimpleEventType.WRITE, "test", "test", "id", ID, new NamedFullRow(Maps.newHashMap()));
   }
 
   public static SyncData write(String repo, String entity) {

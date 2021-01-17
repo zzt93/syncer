@@ -10,7 +10,6 @@ import org.springframework.data.redis.core.RedisCallback;
 import org.springframework.expression.Expression;
 import org.springframework.expression.ParseException;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.nio.charset.StandardCharsets;
 
@@ -37,9 +36,11 @@ public class OperationMapper implements Mapper<SyncData, RedisCallback> {
 
   @Override
   public RedisCallback map(SyncData data) {
-    StandardEvaluationContext context = data.getContext();
-    String key = keyExpr.getValue(context, String.class);
-    Object value = valueExpr.getValue(context);
+    if (true) {
+      throw new UnsupportedOperationException();
+    }
+    String key = data.getRepo();
+    Object value = data.getEntity();
     final byte[] rawKey = rawKey(key);
     final byte[] rawValue = rawValue(value);
 

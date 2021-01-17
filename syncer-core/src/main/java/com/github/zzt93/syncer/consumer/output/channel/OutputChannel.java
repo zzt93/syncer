@@ -3,7 +3,7 @@ package com.github.zzt93.syncer.consumer.output.channel;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.consumer.output.channel.elastic.ElasticsearchChannel;
-import com.github.zzt93.syncer.consumer.output.channel.http.HttpChannel;
+import com.github.zzt93.syncer.consumer.output.channel.http.ConsoleChannel;
 import com.github.zzt93.syncer.consumer.output.channel.jdbc.MysqlChannel;
 import com.github.zzt93.syncer.consumer.output.channel.kafka.KafkaChannel;
 import com.github.zzt93.syncer.consumer.output.channel.redis.RedisChannel;
@@ -21,7 +21,7 @@ public interface OutputChannel {
    *
    * @param event the data from filter module
    * @return whether output is success
-   * @see HttpChannel is async, so depracated
+   * @see ConsoleChannel is for debug
    * @see ElasticsearchChannel is sync
    * @see MysqlChannel is sync
    * @see KafkaChannel is async, but the order is ensured by kafka client

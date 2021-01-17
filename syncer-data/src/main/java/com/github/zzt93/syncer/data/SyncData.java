@@ -152,7 +152,7 @@ public interface SyncData {
 
   SyncData kafka(String topic);
 
-  SyncData kafka(String topic, String partitionKey);
+  SyncData kafka(String topic, Object partitionKey);
 
   /**
    * @param key name for field which is byte[] in Java, which may come from blob type in db

@@ -222,14 +222,14 @@ public class ESRequestMapperTest {
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
     SyncData data = SyncDataTestUtil.write();
-    data.addField("list", Lists.newArrayList(1)).addField("int", 1).addField("str", "1");
+    data.addField("str", "1").addField("list", Lists.newArrayList(1)).addField("int", 1);
     Object builder = mapper.map(data);
     assertEquals("", "index {[test][test][1234], source[{\"str\":\"1\",\"list\":[1],\"int\":1}]}",
         ((IndexRequestBuilder) builder).request().toString());
     res.add(builder);
 
     data = SyncDataTestUtil.update();
-    data.setFieldNull("int").setFieldNull("str").setFieldNull("list");
+    data.setFieldNull("str").setFieldNull("list").setFieldNull("int");
 
     builder = mapper.map(data);
     assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":null,\"list\":null,\"int\":null}]}], detect_noop[true]}",
@@ -237,7 +237,7 @@ public class ESRequestMapperTest {
     res.add(builder);
 
     data = SyncDataTestUtil.update();
-    data.addField("int", 1381034L).addField("str", "1234").addField("list", Lists.newArrayList(2));
+    data.addField("str", "1234").addField("list", Lists.newArrayList(2)).addField("int", 1381034L);
 
     builder = mapper.map(data);
     assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":\"1234\",\"list\":[2],\"int\":1381034}]}], detect_noop[true]}",
@@ -246,7 +246,7 @@ public class ESRequestMapperTest {
 
 
     data = SyncDataTestUtil.update();
-    data.setFieldNull("int").setFieldNull("str").setFieldNull("list");
+    data.setFieldNull("str").setFieldNull("list").setFieldNull("int");
 
     builder = mapper.map(data);
     assertEquals("", "update {[test][test][1234], doc[index {[null][null][null], source[{\"str\":null,\"list\":null,\"int\":null}]}], detect_noop[true]}",

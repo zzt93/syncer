@@ -6,8 +6,6 @@ import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.expression.TypedValue;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -59,8 +57,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   private SyncData(SyncData syncData, int offset) {
     inner = new SyncInfo(((BinlogDataId) syncData.inner.dataId).copyAndSetOffset(offset), syncData.getSourceIdentifier(), null);
-    inner.context = EvaluationFactory.context();
-    inner.context.setRootObject(this);
     result = new SyncResult();
     result.setEventType(syncData.getType());
   }
@@ -217,11 +213,9 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   @Override
-  public SyncData kafka(String topic, String partitionKey) {
+  public SyncData kafka(String topic, Object partitionKey) {
     inner.output.kafka(topic);
-    // todo
-    throw new UnsupportedOperationException();
-//    return setPartitionField(null);
+    return setPartitionKey(partitionKey);
   }
 
   public SyncData kafka(Supplier<String> topic) {
@@ -288,15 +282,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
       logger.warn("No such field name (check your config): {} in {}.{}", key, getRepo(), getEntity());
     }
     return this;
-  }
-
-  public StandardEvaluationContext getContext() {
-    return inner.context;
-  }
-
-  public void setContext(StandardEvaluationContext context) {
-    inner.context = context;
-    context.setRootObject(this);
   }
 
   @Override
@@ -435,7 +420,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public Long getPartitionKey() {
-    Object o = getPartitionField() == null || getField(getPartitionField()) == null ? getId() : getField(getPartitionField());
+    Object o;
+    if (inner.partitionKey == null) {
+      o = getPartitionField() == null || getField(getPartitionField()) == null ? getId() : getField(getPartitionField());
+    } else {
+      o = inner.partitionKey;
+    }
     if (o != null) {
       return Math.abs(o instanceof Long ? ((Long) o) : o.hashCode());
     }
@@ -445,6 +435,11 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   public SyncData setPartitionField(String fieldName) {
     this.inner.partitionField = fieldName;
+    return this;
+  }
+
+  private SyncData setPartitionKey(Object partitionKey) {
+    this.inner.partitionKey = partitionKey;
     return this;
   }
 
@@ -501,7 +496,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
    */
 	private static class SyncInfo {
     private final DataId dataId;
-    private transient StandardEvaluationContext context;
     private String connectionIdentifier;
 
 		private ExtraQueryContext extraQueryContext;
@@ -511,6 +505,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 		private byte copy;
 
 		private String partitionField;
+		private Object partitionKey;
 		private OutputInfo output = new OutputInfo();
 
 		SyncInfo(DataId dataId, String connectionIdentifier, Set<String> updated) {
@@ -521,10 +516,8 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
     @Override
     public String toString() {
-      TypedValue rootObject = context != null ? context.getRootObject() : TypedValue.NULL;
       return "Meta{" +
           "dataId=" + dataId +
-          ", context=" + (rootObject.getValue() != null ? ((SyncData) rootObject.getValue()).inner == this : null) +
           ", connectionIdentifier='" + connectionIdentifier + '\'' +
 					", syncByQuery=" + syncByQuery +
 					", esScriptUpdate=" + esScriptUpdate +

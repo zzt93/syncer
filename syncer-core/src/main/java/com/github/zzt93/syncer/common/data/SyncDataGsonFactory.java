@@ -1,7 +1,11 @@
 package com.github.zzt93.syncer.common.data;
 
-import com.google.gson.*;
-import org.springframework.expression.spel.support.StandardEvaluationContext;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import com.google.gson.InstanceCreator;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializer;
 
 /**
  * @author zzt
@@ -18,9 +22,4 @@ public class SyncDataGsonFactory {
 
   }
 
-  public static void afterRecover(SyncData data) {
-    StandardEvaluationContext context = data.getContext();
-    context.setTypeLocator(new CommonTypeLocator());
-    context.setRootObject(data);
-  }
 }
