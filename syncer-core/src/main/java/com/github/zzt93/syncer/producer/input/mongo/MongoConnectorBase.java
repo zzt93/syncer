@@ -8,12 +8,7 @@ import com.github.zzt93.syncer.config.consumer.input.Entity;
 import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
-import com.mongodb.Function;
-import com.mongodb.MongoClient;
-import com.mongodb.MongoClientURI;
-import com.mongodb.MongoInterruptedException;
-import com.mongodb.MongoSocketException;
-import com.mongodb.MongoTimeoutException;
+import com.mongodb.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -112,6 +107,9 @@ public abstract class MongoConnectorBase implements MasterConnector {
       } catch (MongoInterruptedException e) {
         logger.warn("Mongo master interrupted");
         throw new ShutDownException(e);
+      } catch (MongoCommandException e) {
+        logger.error("Syncer closed too long and resume position lost. Reconnect to earliest.", e);
+        connectToEarliest(sleepInSecond);
       }
     }
   }
@@ -119,6 +117,8 @@ public abstract class MongoConnectorBase implements MasterConnector {
   public abstract void closeCursor();
 
   public abstract void configCursor();
+
+  public abstract void connectToEarliest(long offset);
 
   public abstract void eventLoop();
 }

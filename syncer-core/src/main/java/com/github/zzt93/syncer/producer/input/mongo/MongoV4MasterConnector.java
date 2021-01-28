@@ -23,11 +23,7 @@ import com.mongodb.client.model.Filters;
 import com.mongodb.client.model.changestream.ChangeStreamDocument;
 import com.mongodb.client.model.changestream.FullDocument;
 import com.mongodb.client.model.changestream.UpdateDescription;
-import org.bson.BsonDocument;
-import org.bson.BsonString;
-import org.bson.BsonTimestamp;
-import org.bson.BsonValue;
-import org.bson.Document;
+import org.bson.*;
 import org.bson.conversions.Bson;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,9 +34,9 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import static com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector.*;
-import static java.util.Arrays.*;
-import static java.util.Collections.*;
+import static com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnector.ID;
+import static java.util.Arrays.asList;
+import static java.util.Collections.singletonList;
 
 /**
  * @author zzt
@@ -79,15 +75,7 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
 
     DocTimestamp docTimestamp = registry.votedMongoId(connection);
     if (DocTimestamp.earliest == docTimestamp) {
-      MongoCursor<Document> firstLog = client.getDatabase(LOCAL).getCollection(OPLOG_RS).find(new Document()).limit(1).iterator();
-      if (firstLog.hasNext()) {
-        Document next = firstLog.next();
-        logger.info("Connect to earliest oplog time: {}", next.get(TS));
-        changeStreamDocuments.startAtOperationTime(((BsonTimestamp) next.get(TS)));
-      } else {
-        logger.info("Document not found in local.oplog.rs -- is this a new and empty db instance?");
-        changeStreamDocuments.startAtOperationTime(docTimestamp.getTimestamp());
-      }
+      connectToEarliest(0);
     } else {
       /*
       Optional. The starting point for the change stream.
@@ -99,6 +87,19 @@ public class MongoV4MasterConnector extends MongoConnectorBase {
     // UPDATE_LOOKUP: return the most current majority-committed version of the updated document.
     // i.e. run at different time, will have different fullDocument
     changeStreamDocuments.fullDocument(updateLookUp ? FullDocument.UPDATE_LOOKUP : FullDocument.DEFAULT);
+  }
+
+  public void connectToEarliest(long offset) {
+    MongoCursor<Document> firstLog = client.getDatabase(LOCAL).getCollection(OPLOG_RS).find(new Document()).limit(1).iterator();
+    if (firstLog.hasNext()) {
+      Document next = firstLog.next();
+      logger.info("Connect to earliest oplog time: {}", next.get(TS));
+      BsonTimestamp startTime = (BsonTimestamp) next.get(TS);
+      changeStreamDocuments.startAtOperationTime(new BsonTimestamp(startTime.getTime() + (int)offset, startTime.getInc()));
+    } else {
+      logger.info("Document not found in local.oplog.rs -- is this a new and empty db instance?");
+      changeStreamDocuments.startAtOperationTime(DocTimestamp.earliest.getTimestamp());
+    }
   }
 
 
