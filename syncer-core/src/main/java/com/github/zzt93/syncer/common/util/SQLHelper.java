@@ -56,6 +56,10 @@ public class SQLHelper {
     int tableIndex = lower.indexOf(words[1], alterIndex + words[0].length());
     if (alterIndex != -1 && tableIndex != -1) {
       int afterTable = tableIndex + words[1].length();
+      int alter = isAlter(lower, afterTable);
+      if (alter != -1) {
+        return null;
+      }
       int addIndex = isAddAfter(lower, afterTable);
       if (addIndex != -1) {
         return sql.substring(afterTable, addIndex);
@@ -95,6 +99,14 @@ public class SQLHelper {
     return -1;
   }
 
+  private static int isAlter(String sql, int afterTable) {
+    // alter table xx alter column credit_total drop default
+    return sql.indexOf(" alter ", afterTable);
+  }
+
+  /**
+   * https://dev.mysql.com/doc/refman/5.7/en/alter-table.html
+   */
   public static AlterMeta alterMeta(String database, String sql) {
     String alterTarget = isAlter(sql);
     if (alterTarget != null) {

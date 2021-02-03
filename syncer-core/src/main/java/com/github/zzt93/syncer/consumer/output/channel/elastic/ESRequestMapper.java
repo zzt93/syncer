@@ -18,6 +18,7 @@ import org.elasticsearch.script.Script;
 import org.elasticsearch.script.ScriptType;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
 import java.util.HashMap;
@@ -121,8 +122,8 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
   private QueryBuilder getFilter(SyncData data) {
     BoolQueryBuilder builder = boolQuery();
     HashMap<String, Object> syncBy = data.getSyncBy();
-    if (syncBy.isEmpty()) {
-      throw new InvalidConfigException("No data used to do sync(update/delete) filter");
+    if (CollectionUtils.isEmpty(syncBy)) {
+      throw new InvalidConfigException("No data used to do sync(update/delete) filter: " + data);
     }
     for (Entry<String, Object> entry : syncBy.entrySet()) {
       String[] key = entry.getKey().split("\\.");

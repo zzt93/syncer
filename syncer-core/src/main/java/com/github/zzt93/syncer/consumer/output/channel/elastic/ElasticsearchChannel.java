@@ -47,12 +47,7 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.StringJoiner;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.BlockingQueue;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Function;
 
@@ -147,7 +142,8 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
       logger.info("Include primary key in `_source` is usually not necessary, remove it");
     }
 
-    return queues[(int) (event.getPartitionKey()%worker)].add(event);
+    queues[(int) (event.getPartitionKey()%worker)].put(event);
+    return true;
   }
 
   public static class EsOutputJob implements EventLoop {

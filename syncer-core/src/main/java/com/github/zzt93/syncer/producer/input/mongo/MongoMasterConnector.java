@@ -89,6 +89,11 @@ public class MongoMasterConnector extends MongoConnectorBase {
     this.cursor = getReplicaCursor(client, query);
   }
 
+  @Override
+  public void connectToEarliest(long offset) {
+
+  }
+
   private MongoCursor<Document> getReplicaCursor(MongoClient client, Document query) {
     MongoDatabase db = client.getDatabase(LOCAL);
     MongoCollection<Document> coll = db.getCollection(OPLOG_RS);
