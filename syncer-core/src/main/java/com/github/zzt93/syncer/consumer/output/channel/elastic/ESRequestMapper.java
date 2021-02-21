@@ -91,7 +91,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
               .source(index)
 //              .size(): default update all matched doc
               .filter(getFilter(data))
-              .script(getScript(data, data.getFields()));
+              .script(getScript(data, source));
         }
       default:
         throw new IllegalArgumentException("Unsupported row event type: " + data);

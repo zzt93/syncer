@@ -18,7 +18,8 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * @author zzt
@@ -62,9 +63,9 @@ public class SyncDataTest {
   public void testToStringWithQuery() {
     SyncData write = SyncDataTestUtil.write("test", "test").addField("ann_id", 1L);
     write.extraQuery("parent", "parent")
-        .filter("_id", write.getField("ann_id"))
+        .id(write.getField("ann_id"))
         .select("publicType")
-        .addField("publicType");
+        .as("publicType");
     assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}])}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={ann_id=1, publicType=ExtraQueryField{publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}}, extras=null, before=null)))",
         write.toString());
 

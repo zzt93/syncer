@@ -23,7 +23,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.ExecutionException;
 
-import static com.github.zzt93.syncer.common.data.ESScriptUpdate.*;
+import static com.github.zzt93.syncer.common.data.ESScriptUpdate.BY_ID_SUFFIX;
 import static org.junit.Assert.*;
 
 /**
@@ -32,14 +32,14 @@ import static org.junit.Assert.*;
 public class ESRequestMapperTest {
 
   public static void mergeToListRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     remoteCheck(client, innerMergeToList());
   }
 
   private static List<Object> innerMergeToList() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -81,14 +81,14 @@ public class ESRequestMapperTest {
   }
 
   public static void mergeToListByIdRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     remoteCheck(client, innerMergeToListById());
   }
 
   private static List<Object> innerMergeToListById() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -145,7 +145,7 @@ public class ESRequestMapperTest {
    * </pre>
    */
   public static void nestedByParentIdRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     remoteCheck(client, innerNestedByParentId());
   }
 
@@ -157,7 +157,7 @@ public class ESRequestMapperTest {
   private static List<Object> innerNestedByParentId() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -217,7 +217,7 @@ public class ESRequestMapperTest {
   private static List<Object> innerSetFieldNull() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -257,7 +257,7 @@ public class ESRequestMapperTest {
   }
 
   private static void setFieldNullRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     remoteCheck(client, innerSetFieldNull());
   }
 
@@ -302,14 +302,14 @@ public class ESRequestMapperTest {
    * </pre>
    */
   public static void nestedByParentQueryRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     remoteCheck(client, innerNestedByParentQuery());
   }
 
   private static List<Object> innerNestedByParentQuery() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -437,7 +437,7 @@ public class ESRequestMapperTest {
   private static List<Object> innerNestedByQuery() throws Exception {
     List<Object> res = new ArrayList<>();
 
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
@@ -553,19 +553,19 @@ public class ESRequestMapperTest {
   }
 
   public static void nestedByQueryRemote() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     remoteCheck(client, innerNestedByQuery());
   }
 
   @Test
   public void nestedWithExtraQuery() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
     Elasticsearch elasticsearch = new Elasticsearch();
     ESRequestMapper mapper = new ESRequestMapper(client, elasticsearch.getRequestMapping());
 
     SyncData data = SyncDataTestUtil.update("role", "role").setId(1234L);
     data.setRepo("nested3").setEntity("nested3").addField("title", "b").addField("user_id", 2L);
-    data.extraQuery("user", "user").filter("_id", -1L).select("username").addField("username");
+    data.extraQuery("user", "user").id(-1L).select("username").as("username");
     data.esScriptUpdate(Filter.syncId(ESDocKey.of("roles.id"))).mergeToNestedById("roles", "title", "user_id", "username");
 
     Object builder = mapper.map(data);

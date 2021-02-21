@@ -8,6 +8,7 @@ package com.github.zzt93.syncer.data;
 public interface ExtraQuery {
 
   ExtraQuery setTypeName(String typeName);
+  ExtraQuery setIndexName(String indexName);
 
   /**
    * Add condition for extraQuery
@@ -18,9 +19,6 @@ public interface ExtraQuery {
   @Deprecated
   ExtraQuery filter(String name, Object value);
 
-  /**
-   * Same as {@link #filter}
-   */
   ExtraQuery eq(String name, Object value);
 
   /**
@@ -30,9 +28,17 @@ public interface ExtraQuery {
 
   ExtraQuery select(String... field);
 
-  ExtraQuery addField(String... cols);
+  /**
+   * rename {@link #select(String...)} fields as new name
+   * @param cols new name
+   */
+  ExtraQuery as(String... cols);
 
-  ExtraQuery setIndexName(String indexName);
+  /**
+   * @see #as(String...) for replace
+   */
+  @Deprecated
+  ExtraQuery addField(String... cols);
 
   @Override
   String toString();

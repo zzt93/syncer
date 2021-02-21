@@ -48,7 +48,7 @@ public class ElasticsearchJavaAPIScriptTest {
    * https://discuss.elastic.co/t/java-api-plainless-script-indexof-give-wrong-answer/139016/7
    */
   public static void scriptIndexOf() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
 
     HashMap<String, Object> params = new HashMap<>();
     params.put("users", LONG_ID);
@@ -85,7 +85,7 @@ public class ElasticsearchJavaAPIScriptTest {
   }
 
   public static void scriptEqual() throws Exception {
-    AbstractClient client = ElasticTestUtil.getDevClient();
+    AbstractClient client = ElasticTestUtil.cancelRequestClient();
 
     HashMap<String, Object> params = new HashMap<>();
     HashMap<String, Object> user0 = new HashMap<>();

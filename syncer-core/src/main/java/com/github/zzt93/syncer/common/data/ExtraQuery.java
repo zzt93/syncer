@@ -41,14 +41,14 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
     return this;
   }
 
-  public ExtraQuery filter(String name, Object value) {
+  public ExtraQuery eq(String name, Object value) {
     queryBy.put(name, value);
     return this;
   }
 
   @Override
-  public ExtraQuery eq(String name, Object value) {
-    return filter(name, value);
+  public ExtraQuery filter(String name, Object value) {
+    return eq(name, value);
   }
 
   @Override
@@ -64,15 +64,23 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
     return this;
   }
 
-  public ExtraQuery addField(String... cols) {
+  public ExtraQuery as(String... cols) {
     if (cols.length != select.length) {
       throw new InvalidConfigException("Column length is not same as query select result");
     }
+    for (String s : select) {
+      data.removeField(s);
+    }
     this.as = cols;
     for (String col : cols) {
-      data.getFields().put(col, new ExtraQueryField(this, col));
+      data.addField(col, new ExtraQueryField(this, col));
     }
     return this;
+  }
+
+  @Override
+  public com.github.zzt93.syncer.data.ExtraQuery addField(String... cols) {
+    return as(cols);
   }
 
   public String getIndexName() {
@@ -122,7 +130,7 @@ public class ExtraQuery implements com.github.zzt93.syncer.data.ExtraQuery {
       String key = e.getKey();
       Optional<Object> realValue = getRealValue(value);
       if (realValue.isPresent()) {
-        filter(key, realValue.get());
+        eq(key, realValue.get());
         bool.filter(QueryBuilders.termQuery(key, realValue.get()));
         hasCondition = true;
       }
