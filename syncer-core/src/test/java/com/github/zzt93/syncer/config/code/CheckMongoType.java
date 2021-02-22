@@ -46,6 +46,7 @@ public class CheckMongoType implements MethodFilter {
       String name = (String) nestedIn.get("name");
       String unit = (String) nestedIn.get("unit");
     }
+    sync.es(sync.getRepo() + "-multi", sync.getEntity());
   }
 
 }

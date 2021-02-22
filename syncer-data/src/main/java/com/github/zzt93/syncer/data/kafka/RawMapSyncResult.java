@@ -9,10 +9,6 @@ import lombok.ToString;
 @ToString(callSuper = true)
 public class RawMapSyncResult extends SyncResultBase {
 
-  public Object getExtra(String key) {
-    return extras != null ? extras.get(key) : null;
-  }
-
   public Object getBefore(String key) {
     return before != null ? before.get(key) : null;
   }

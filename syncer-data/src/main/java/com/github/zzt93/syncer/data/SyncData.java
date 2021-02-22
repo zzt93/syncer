@@ -54,6 +54,7 @@ public interface SyncData {
 	 */
   SyncData setPartitionField(String fieldName);
 
+  @Deprecated
   SyncData addExtra(String key, Object value);
 
   SyncData addField(String key, Object value);
@@ -72,6 +73,7 @@ public interface SyncData {
 
   HashMap<String, Object> getFields();
 
+  @Deprecated
   HashMap<String, Object> getExtras();
 
   Object getField(String key);
@@ -107,6 +109,7 @@ public interface SyncData {
 
   ExtraQuery extraQuery(String indexName, String typeName);
 
+  @Deprecated
   Object getExtra(String key);
 
   /**

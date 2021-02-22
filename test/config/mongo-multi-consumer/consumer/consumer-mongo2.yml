@@ -49,6 +49,7 @@ filter:
       String name = (String) nestedIn.get("name");
       String unit = (String) nestedIn.get("unit");
     }
+    sync.es(sync.getRepo() + "-multi", sync.getEntity());
   }'
 
 
@@ -65,12 +66,7 @@ output:
       clusterName: ${ES_CLUSTER}
       clusterNodes: ["${ES_ADDR}:9300"]
     requestMapping: # mapping from input data to es request
-
       retryOnUpdateConflict: 3
-      index: "repo + '-multi'" # default: repo
-
-      fieldsMapping: # default: fields.*.flatten
-        "fields": "fields.*.flatten"
     batch:
       size: 100
       delay: 1000

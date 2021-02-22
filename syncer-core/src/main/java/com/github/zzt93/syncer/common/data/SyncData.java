@@ -59,6 +59,8 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     inner = new SyncInfo(((BinlogDataId) syncData.inner.dataId).copyAndSetOffset(offset), syncData.getSourceIdentifier(), null);
     result = new SyncResult();
     result.setEventType(syncData.getType());
+    result.setRepo(syncData.getRepo());
+    result.setEntity(syncData.getEntity());
   }
 
 
@@ -137,7 +139,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public Object getExtra(String key) {
-    return result.getExtra(key);
+    return null;
   }
 
   @Override
@@ -224,7 +226,6 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public SyncData addExtra(String key, Object value) {
-    result.getExtras().put(key, value);
     return this;
   }
 
@@ -291,7 +292,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
   @Override
   public HashMap<String, Object> getExtras() {
-    return result.getExtras();
+    return null;
   }
 
   public Object getField(String key) {

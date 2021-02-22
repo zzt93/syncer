@@ -16,7 +16,7 @@ public class Drds implements MethodFilter {
   @Override
   public void filter(List<SyncData> list) {
     SyncData sync = list.get(0);
-    sync.addExtra("suffix", "");
+    String esSuffix = "";
     switch (sync.getEntity()) {
       case "news":
         SyncUtil.toStr(sync, "thumb_content");
@@ -26,16 +26,17 @@ public class Drds implements MethodFilter {
       case SIMPLE_TYPE:
         SyncUtil.toStr(sync, "text");
         SyncUtil.unsignedByte(sync, "tinyint");
-        sync.addExtra("suffix", "-" + ((long) sync.getId())%2);
+        esSuffix = "-" + ((long) sync.getId())%2;
         break;
       case "correctness":
         SyncUtil.unsignedByte(sync, "type");
         break;
     }
+    sync.es(sync.getRepo(), sync.getEntity() + esSuffix);
     if (!sync.getEntity().equals(SIMPLE_TYPE)) {
-      sync.addExtra("target", "test_0");
+      sync.mysql("test_0", sync.getEntity() + "_bak");
     } else {
-      sync.addExtra("target", sync.getRepo());
+      sync.mysql(sync.getRepo(), sync.getEntity() + "_bak");
     }
   }
 

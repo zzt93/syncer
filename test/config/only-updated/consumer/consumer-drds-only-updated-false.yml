@@ -1,0 +1,92 @@
+version: 1.3
+
+consumerId: drds
+
+
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    repos:
+      - name: "test.*"
+        entities:
+          - name: correctness
+            fields: [time, news_id, currency, total] # default id is not null, other can be null
+          - name: types
+            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+          - name: news
+            fields: [plate_sub_type]
+      - name: "simple.*"
+        entities:
+          - name: simple_type
+            fields: [tinyint, bigint, char, varchar, text, decimal, double, timestamp]
+
+
+
+
+filter:
+  - method: '
+  private static final String SIMPLE_TYPE = "simple_type";
+
+  @Override
+  public void filter(List<SyncData> list) {
+    SyncData sync = list.get(0);
+    String esSuffix = "";
+    switch (sync.getEntity()) {
+      case "news":
+        SyncUtil.toStr(sync, "thumb_content");
+        SyncUtil.toStr(sync, "content");
+        break;
+      case "types":
+      case SIMPLE_TYPE:
+        SyncUtil.toStr(sync, "text");
+        SyncUtil.unsignedByte(sync, "tinyint");
+        esSuffix = "-" + ((long) sync.getId())%2;
+        break;
+      case "correctness":
+        SyncUtil.unsignedByte(sync, "type");
+        break;
+    }
+    sync.es(sync.getRepo(), sync.getEntity() + esSuffix);
+    if (!sync.getEntity().equals(SIMPLE_TYPE)) {
+      sync.mysql("test_0", sync.getEntity() + "_bak");
+    } else {
+      sync.mysql(sync.getRepo(), sync.getEntity() + "_bak");
+    }
+  }'
+
+
+# Special expression
+# "field.*"
+# "field.*.flatten"
+# "extra.*"
+# "extra.*.flatten"
+
+output:
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+    requestMapping: # mapping from input data to es request
+
+      retryOnUpdateConflict: 3
+
+    batch:
+      size: 100
+      delay: 1000
+      maxRetry: 5
+    refreshInMillis: 0
+    failureLog:
+      countLimit: 1000
+  mysql:
+    connection:
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_OUT_PASS}
+
+    batch:
+      size: 100
+      delay: 100
+      maxRetry: 5
+    failureLog:
+      countLimit: 1000

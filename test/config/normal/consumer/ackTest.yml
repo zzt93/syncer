@@ -34,7 +34,7 @@ filter:
   - method: '
   public void filter(List<SyncData> list) {
     SyncData sync = list.get(0);
-    sync.addExtra("suffix", "");
+    String esSuffix = "";
     String entity = sync.getEntity();
     switch (entity) {
       case "news":
@@ -47,20 +47,20 @@ filter:
       case "simple_type":
         SyncUtil.toStr(sync, "text");
         SyncUtil.unsignedByte(sync, "tinyint");
-        sync.addExtra("suffix", "-" + ((long) sync.getId())%2);
+        esSuffix =  "-" + ((long) sync.getId())%2;
         break;
       case "correctness":
         SyncUtil.unsignedByte(sync, "type");
         break;
     }
+    sync.es(sync.getRepo() + esSuffix, sync.getEntity()).mysql(sync.getRepo(), entity + "_bak");
 
     if (entity.equals("toDiscard")) { /* clear test */
       list.clear();
     } else if (entity.equals("toCopy")) { /* copy test */
-      SyncData copy = sync.copyMeta(0).setRepo(sync.getRepo()).setEntity(sync.getEntity())
+      SyncData copy = sync.copyMeta().es(sync.getRepo() + esSuffix, sync.getEntity()).mysql(sync.getRepo(), entity + "_bak")
           .setId(((Number) sync.getId()).longValue() + Integer.MAX_VALUE);
       copy.getFields().putAll(sync.getFields());
-      copy.addExtra("suffix", "");
       list.add(copy);
     }
   }
@@ -73,12 +73,7 @@ output:
       clusterName: ${ES_CLUSTER}
       clusterNodes: ["${ES_ADDR}:9300"]
     requestMapping: # mapping from input data to es request
-
       retryOnUpdateConflict: 3
-      index: "repo + getExtra('suffix')" # default: repo
-
-      fieldsMapping: # default: fields.*.flatten
-        "fields": "fields.*.flatten"
     batch:
       size: 100
       delay: 1000
@@ -92,13 +87,6 @@ output:
       port: 3306
       user: root
       password: ${MYSQL_OUT_PASS}
-    rowMapping:
-      schema: " repo "
-      table: "entity + '_bak'"
-      id: "id"
-      rows:
-        "fields": "fields.*.flatten"
-        "id": "id"
     batch:
       size: 100
       delay: 100

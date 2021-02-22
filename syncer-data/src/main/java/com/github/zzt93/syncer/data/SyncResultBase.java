@@ -17,7 +17,6 @@ import java.util.LinkedHashMap;
 public class SyncResultBase extends SyncMeta {
 
   protected LinkedHashMap<String, Object> fields = new LinkedHashMap<>();
-  protected LinkedHashMap<String, Object> extras;
   protected HashMap<String, Object> before;
 
 }

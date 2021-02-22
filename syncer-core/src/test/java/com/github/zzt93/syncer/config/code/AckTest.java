@@ -14,7 +14,7 @@ public class AckTest implements MethodFilter {
   @Override
   public void filter(List<SyncData> list) {
     SyncData sync = list.get(0);
-    sync.addExtra("suffix", "");
+    String esSuffix = "";
     String entity = sync.getEntity();
     switch (entity) {
       case "news":
@@ -27,20 +27,20 @@ public class AckTest implements MethodFilter {
       case "simple_type":
         SyncUtil.toStr(sync, "text");
         SyncUtil.unsignedByte(sync, "tinyint");
-        sync.addExtra("suffix", "-" + ((long) sync.getId())%2);
+        esSuffix =  "-" + ((long) sync.getId())%2;
         break;
       case "correctness":
         SyncUtil.unsignedByte(sync, "type");
         break;
     }
+    sync.es(sync.getRepo() + esSuffix, sync.getEntity()).mysql(sync.getRepo(), entity + "_bak");
 
     if (entity.equals("toDiscard")) { /* clear test */
       list.clear();
     } else if (entity.equals("toCopy")) { /* copy test */
-      SyncData copy = sync.copyMeta().setRepo(sync.getRepo()).setEntity(sync.getEntity())
+      SyncData copy = sync.copyMeta().es(sync.getRepo() + esSuffix, sync.getEntity()).mysql(sync.getRepo(), entity + "_bak")
           .setId(((Number) sync.getId()).longValue() + Integer.MAX_VALUE);
       copy.getFields().putAll(sync.getFields());
-      copy.addExtra("suffix", "");
       list.add(copy);
     }
   }
