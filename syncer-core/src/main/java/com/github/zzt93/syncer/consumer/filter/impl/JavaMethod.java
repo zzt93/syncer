@@ -27,25 +27,7 @@ public class JavaMethod {
   private static final Logger logger = LoggerFactory.getLogger(JavaMethod.class);
 
   public static SyncFilter build(String consumerId, SyncerFilterMeta filterMeta, String method) {
-    String source =
-        // User write config using com.github.zzt93.syncer.data,
-        // syncer run config using com.github.zzt93.syncer.common.data
-        "import com.github.zzt93.syncer.data.*;\n" +
-            "import com.github.zzt93.syncer.data.es.*;\n" +
-            "import com.github.zzt93.syncer.data.util.*;\n" +
-            "import java.util.*;\n" +
-            "import java.math.BigDecimal;\n" +
-            "import java.sql.Timestamp;\n" +
-            "import org.slf4j.Logger;\n" +
-            "import org.slf4j.LoggerFactory;\n" +
-            "\n" +
-            "public class MethodFilterTemplate implements SyncFilter<SyncData> {\n" +
-            "\n" +
-            "  private final Logger logger = LoggerFactory.getLogger(getClass());\n" +
-            "\n" +
-            addNewline(method) +
-            "\n" +
-            "}\n";
+    String source = getClassSource(method);
 
     String className = "Filter" + consumerId;
     source = source.replaceFirst("MethodFilterTemplate", className);
@@ -69,6 +51,26 @@ public class JavaMethod {
     }
   }
 
+  public static String getClassSource(String method) {
+    return "import com.github.zzt93.syncer.data.*;\n" +
+        "import com.github.zzt93.syncer.data.es.*;\n" +
+        "import com.github.zzt93.syncer.data.util.*;\n" +
+        "import java.util.*;\n" +
+        "import java.util.stream.*;\n" +
+        "import java.math.BigDecimal;\n" +
+        "import java.sql.*;\n" +
+        "import org.slf4j.Logger;\n" +
+        "import org.slf4j.LoggerFactory;\n" +
+        "\n" +
+        "public class MethodFilterTemplate implements SyncFilter<SyncData> {\n" +
+        "\n" +
+        "  private final Logger logger = LoggerFactory.getLogger(getClass());\n" +
+        "\n" +
+        addNewline(method) +
+        "\n" +
+        "}\n";
+  }
+
   private static void compile(String path) {
     JavaCompiler compiler = ToolProvider.getSystemJavaCompiler();
     StandardJavaFileManager fm = compiler.getStandardFileManager(diagnostic -> logger.error("{}, {}", diagnostic.getLineNumber(), diagnostic.getSource().toUri()), null, null);
@@ -86,14 +88,15 @@ public class JavaMethod {
     char[] cs = method.toCharArray();
     StringBuilder sb = new StringBuilder(method.length() + 50);
     boolean inQuote = false;
-    for (char c : cs) {
+    for (int i = 0; i < cs.length; i++) {
+      char c = cs[i];
       sb.append(c);
       switch (c) {
         case '"':
+        case '\'':
           inQuote = !inQuote;
           break;
         case ';':
-        case ':':
         case '{':
         case '}':
           if (!inQuote) sb.append('\n');
