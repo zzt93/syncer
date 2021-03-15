@@ -36,12 +36,10 @@ public class JsonSyncResult extends SyncMeta {
       .registerTypeHierarchyAdapter(SimpleEventType.class, SimpleEventType.defaultDeserializer)
       .create();
   private final JsonObject fields;
-  private final JsonObject extras;
   private final JsonObject before;
 
-  public JsonSyncResult(JsonObject fields, JsonObject extras, JsonObject before, SimpleEventType eventType, String repo, String entity, Object id, String primaryKeyName) {
+  public JsonSyncResult(JsonObject fields, JsonObject before, SimpleEventType eventType, String repo, String entity, Object id, String primaryKeyName) {
     this.fields = fields;
-    this.extras = extras;
     this.before = before;
     this.eventType = eventType;
     this.repo = repo;
@@ -84,14 +82,6 @@ public class JsonSyncResult extends SyncMeta {
     JsonObject tmp = copyAndConvert(fields);
     tmp.add(SyncUtil.underscoreToCamel(primaryKeyName), getValue());
     return gson.fromJson(tmp, typeOfT);
-  }
-
-  public <T> T getExtras(Type typeOfT) throws JsonSyntaxException {
-    return gson.fromJson(copyAndConvert(extras), typeOfT);
-  }
-
-  public <T> T getExtras(Class<T> tClass) {
-    return gson.fromJson(copyAndConvert(extras), tClass);
   }
 
   public <T> T getBefore(Type typeOfT) throws JsonSyntaxException {

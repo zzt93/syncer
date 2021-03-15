@@ -53,9 +53,9 @@ public class SyncDataTest {
   @Test
   public void testToStringDefault() {
     SyncData write = SyncDataTestUtil.write("test", "test");
-    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=null}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null)))",
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=null}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, before=null)))",
         write.toString());
-    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=null}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, extras=null, before=null)))",
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=null}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, before=null)))",
         write.toString());
   }
 
@@ -66,11 +66,11 @@ public class SyncDataTest {
         .id(write.getField("ann_id"))
         .select("publicType")
         .as("publicType");
-    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}])}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={ann_id=1, publicType=ExtraQueryField{publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}}, extras=null, before=null)))",
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}])}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={ann_id=1, publicType=ExtraQueryField{publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}}, before=null)))",
         write.toString());
 
     write.esScriptUpdate(Filter.esId(SyncDataKey.of("ann_id"))).mergeToNestedById("roles", "role_id", "type");
-    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=ESScriptUpdate(mergeToList={}, mergeToListById={}, nested={roles={=Filter(es._id = sync.id), role_id=null, id=1234, type=null}}, oldType=WRITE, parentFilter=Filter(es._id = sync.field[ann_id]), script=null, params=null), updated=null, partitionField=null, copy=0, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}])}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=UPDATE, repo=test, entity=test, id=1, primaryKeyName=id), fields={publicType=ExtraQueryField{publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}}, extras=null, before=null)))",
+    assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=ESScriptUpdate(mergeToList={}, mergeToListById={}, nested={roles={=Filter(es._id = sync.id), role_id=null, id=1234, type=null}}, oldType=WRITE, parentFilter=Filter(es._id = sync.field[ann_id]), script=null, params=null), updated=null, partitionField=null, copy=0, extraQueryContext=ExtraQueryContext(queries=[ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}])}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=UPDATE, repo=test, entity=test, id=1, primaryKeyName=id), fields={publicType=ExtraQueryField{publicType=ExtraQuery{select [publicType] as [publicType] from parent.parent where {_id=1}}}}, before=null)))",
         write.toString());
   }
 

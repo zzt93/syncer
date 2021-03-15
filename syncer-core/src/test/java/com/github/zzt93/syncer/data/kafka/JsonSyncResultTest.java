@@ -61,11 +61,8 @@ public class JsonSyncResultTest {
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
     Temp field = deserialize.getFields(Temp.class);
     Temp before = deserialize.getBefore(Temp.class);
-    Temp extras = deserialize.getExtras(Temp.class);
     assertEquals(value, field.getKey());
     assertEquals(name, field.getName());
-    assertEquals(value, extras.getKey());
-    assertEquals(name, extras.getName());
     assertEquals(SyncDataTestUtil.ID, field.getId());
     assertEquals(SyncDataTestUtil.ID, before.getId());
     assertEquals(SyncDataTestUtil.ID, deserialize.getIdAsLong().longValue());
@@ -93,15 +90,12 @@ public class JsonSyncResultTest {
     JsonSyncResult deserialize = jsonKafkaDeserializer.deserialize("", serialize);
     Temp field = deserialize.getFields(Temp.class);
     Temp before = deserialize.getBefore(Temp.class);
-    Temp extras = deserialize.getExtras(Temp.class);
     assertEquals(value, field.getKey());
     assertEquals(Temp.NAME, field.getName());
     assertEquals(timestamp, field.getCreateTime());
     assertEquals(timestamp, field.getModifyTime());
     assertEquals(Temp.NAME, field.getFirstName());
     assertEquals(id, field.getId());
-    assertEquals(value, extras.getKey());
-    assertEquals(Temp.NAME, extras.getName());
     assertEquals(id, before.getId());
     assertEquals(id, deserialize.getIdAsLong().longValue());
     assertEquals(5, field.getUpdated().size());
@@ -144,8 +138,6 @@ public class JsonSyncResultTest {
     assertEquals(Temp.NAME, field.getBefore().getName());
     assertEquals(1, field.getBefore().getI());
 
-    Temp extras = deserialize.getExtras(Temp.class);
-    assertEquals(Temp.NAME, extras.getFirstName());
   }
 
   @Getter
