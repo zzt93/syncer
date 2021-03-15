@@ -26,6 +26,14 @@ public class JavaMethodTest {
   }
 
   @Test
+  public void dateTest() {
+    SyncFilter searcher = JavaMethod.build("searcher", new SyncerFilterMeta(), "    public void filter(List<SyncData> list) {" +
+        "    Date d = new Date(0);  " +
+        "    }");
+    searcher.filter(Lists.newArrayList(data));
+  }
+
+  @Test
   public void getClassSource() {
     String classSource = JavaMethod.getClassSource("  public void filter(List<SyncData> list) {" +
         "    Function<Object, String> function = Object::toString;" +
