@@ -61,7 +61,8 @@ public class JavaMethodTest {
         "import java.util.*;\n" +
         "import java.util.stream.*;\n" +
         "import java.math.BigDecimal;\n" +
-        "import java.sql.*;\n" +
+        "import java.sql.Timestamp;\n" +
+        "import java.sql.Date;\n" +
         "import org.slf4j.Logger;\n" +
         "import org.slf4j.LoggerFactory;\n" +
         "\n" +
