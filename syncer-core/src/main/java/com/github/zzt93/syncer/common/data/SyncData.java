@@ -61,6 +61,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     result.setEventType(syncData.getType());
     result.setRepo(syncData.getRepo());
     result.setEntity(syncData.getEntity());
+    result.setPrimaryKeyName(syncData.getPrimaryKeyName());
   }
 
 
