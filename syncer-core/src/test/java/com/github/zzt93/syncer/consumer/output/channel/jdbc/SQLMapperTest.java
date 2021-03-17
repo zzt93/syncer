@@ -1,16 +1,24 @@
 package com.github.zzt93.syncer.consumer.output.channel.jdbc;
 
+import com.github.zzt93.syncer.common.data.SyncData;
+import com.github.zzt93.syncer.common.data.SyncDataTestUtil;
 import com.github.zzt93.syncer.common.expr.ParameterReplace;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.Assert;
 import org.junit.Test;
 
 import java.util.HashMap;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.atomic.AtomicBoolean;
 
 import static com.github.zzt93.syncer.consumer.output.channel.jdbc.SQLMapper.*;
 
 /**
  * @author zzt
  */
+@Slf4j
 public class SQLMapperTest {
 
   @Test
@@ -72,4 +80,37 @@ public class SQLMapperTest {
     Assert.assertEquals("delete from `test`.`table` where id = 1", expected);
   }
 
+  private static final ExecutorService ex = Executors.newFixedThreadPool(1);
+
+  @Test
+  public void concurrentMap() throws InterruptedException {
+    SyncData s = SyncDataTestUtil.write("test", "test");
+    for (int i = 0; i < 100; i++) {
+      s.addField("" + i, i);
+    }
+
+    CountDownLatch latch = new CountDownLatch(1);
+    CountDownLatch end = new CountDownLatch(1);
+    AtomicBoolean hasError = new AtomicBoolean(false);
+    ex.submit(() -> {
+      latch.countDown();
+      for (int i = 0; i < 10000; i++) {
+        try {
+          System.out.println(s);
+        } catch (Exception e) {
+          hasError.set(true);
+        }
+      }
+      end.countDown();
+    });
+    SQLMapper sqlMapper = new SQLMapper();
+    latch.await();
+    for (int i = 0; i < 10000; i++) {
+      String map = sqlMapper.map(s);
+      System.out.println(map);
+    }
+    end.await();
+
+    Assert.assertFalse(hasError.get());
+  }
 }

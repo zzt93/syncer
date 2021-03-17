@@ -13,7 +13,8 @@ import java.util.HashMap;
 import java.util.Map.Entry;
 import java.util.StringJoiner;
 
-import static com.github.zzt93.syncer.data.SimpleEventType.*;
+import static com.github.zzt93.syncer.data.SimpleEventType.UPDATE;
+import static com.github.zzt93.syncer.data.SimpleEventType.WRITE;
 
 /**
  * @author zzt
@@ -43,8 +44,9 @@ public class SQLMapper implements Mapper<SyncData, String> {
     switch (data.getType()) {
       case WRITE:
         // add id for MySQL output, make it idempotent.
-        map.put(idName, id);
-        String[] entry = join(map, WRITE);
+        HashMap<String, Object> copy = new HashMap<>(map);
+        copy.put(idName, id);
+        String[] entry = join(copy, WRITE);
         return ParameterReplace
             .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1], idName, idName);
       case DELETE:
@@ -66,7 +68,7 @@ public class SQLMapper implements Mapper<SyncData, String> {
     }
   }
 
-  private String[] join(HashMap<String, Object> map, SimpleEventType type) {
+  private String[] join(final HashMap<String, Object> map, SimpleEventType type) {
     switch (type) {
       case WRITE:
         StringJoiner keys = new StringJoiner(",");
