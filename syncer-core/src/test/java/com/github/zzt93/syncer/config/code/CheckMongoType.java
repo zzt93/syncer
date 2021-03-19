@@ -5,7 +5,6 @@ import com.github.zzt93.syncer.data.util.MethodFilter;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -35,7 +34,7 @@ public class CheckMongoType implements MethodFilter {
     if (sync.containField("nestedIn")) {
       Map nestedIn = (Map) sync.getField("nestedIn");
       Long id = (Long) nestedIn.get("id");
-      Date time = (Date) nestedIn.get("time");
+      java.util.Date time = (java.util.Date) nestedIn.get("time");
       if (time != null) {
         nestedIn.put("time", new Timestamp(time.getTime()));
       }

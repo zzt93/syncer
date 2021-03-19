@@ -38,7 +38,7 @@ filter:
     if (sync.containField("nestedIn")) {
       Map nestedIn = (Map) sync.getField("nestedIn");
       Long id = (Long) nestedIn.get("id");
-      Date time = (Date) nestedIn.get("time");
+      java.util.Date time = (java.util.Date) nestedIn.get("time");
       if (time != null) {
         nestedIn.put("time", new Timestamp(time.getTime()));
       }
