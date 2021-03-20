@@ -46,9 +46,9 @@ public class MysqlMasterConnector implements MasterConnector {
   private final String connectorIdentifier;
   private final SyncListener listener;
   private final String file;
-  private Logger logger = LoggerFactory.getLogger(MysqlMasterConnector.class);
+  private final Logger logger = LoggerFactory.getLogger(MysqlMasterConnector.class);
+  private final AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
   private BinaryLogClient client;
-  private AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
 
   public MysqlMasterConnector(MysqlConnection connection,
                               String file, ConsumerRegistry registry, boolean onlyUpdated)

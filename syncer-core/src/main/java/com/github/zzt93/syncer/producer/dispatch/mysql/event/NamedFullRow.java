@@ -10,11 +10,11 @@ import java.util.*;
  */
 public class NamedFullRow implements NamedChange {
 
-  private final HashMap<String, Object> full;
+  private final Map<String, Object> full;
   private HashMap<String, Object> beforeFull;
   private HashSet<String> updated;
 
-  public NamedFullRow(HashMap<String, Object> full) {
+  public NamedFullRow(Map<String, Object> full) {
     this.full = full;
   }
 
@@ -35,7 +35,7 @@ public class NamedFullRow implements NamedChange {
   }
 
   @Override
-  public HashMap<String, Object> getFull() {
+  public Map<String, Object> getFull() {
     return full;
   }
 

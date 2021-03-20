@@ -45,7 +45,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   private SyncInfo innerSyncData(DataId dataId, SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
-																 HashMap<String, Object> full, HashMap<String, Object> beforeFull, Set<String> updated) {
+																 Map<String, Object> full, HashMap<String, Object> beforeFull, Set<String> updated) {
     result = new SyncResult(type, database, entity, primaryKeyName, id, full);
 
     if (isUpdate()) {

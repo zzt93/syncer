@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.config.common.InvalidConfigException;
 
 import java.util.HashSet;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class Fields {
 
@@ -29,5 +30,9 @@ public class Fields {
     return "Fields{" +
         "names=" + (names == null ? _all : names) +
         '}';
+  }
+
+  public String toSql() {
+    return names.stream().map(n -> '`' + n + '`').collect(Collectors.joining(","));
   }
 }

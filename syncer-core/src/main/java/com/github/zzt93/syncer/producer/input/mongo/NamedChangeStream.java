@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.producer.input.mongo;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -24,7 +25,7 @@ public class NamedChangeStream implements NamedChange {
   }
 
   @Override
-  public HashMap<String, Object> getFull() {
+  public Map<String, Object> getFull() {
     return full;
   }
 

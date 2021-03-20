@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.config.consumer.input.MasterSourceType;
 import com.github.zzt93.syncer.data.SimpleEventType;
 
 import java.util.HashMap;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -11,7 +12,7 @@ import java.util.Set;
  */
 public interface NamedChange {
 
-  default HashMap<String, Object> getFull() {
+  default Map<String, Object> getFull() {
     throw new UnsupportedOperationException();
   }
 

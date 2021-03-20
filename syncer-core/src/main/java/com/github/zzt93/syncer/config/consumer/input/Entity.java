@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.config.consumer.input;
 
 import com.github.zzt93.syncer.config.ConsumerConfig;
+import com.github.zzt93.syncer.config.common.ColdStartConfig;
 import lombok.Data;
 
 import java.util.List;
@@ -12,8 +13,12 @@ import java.util.List;
 @ConsumerConfig("input.masters[].repos[].entities[]")
 public class Entity {
 
+  @ConsumerConfig
   private String name;
+  @ConsumerConfig
   private List<String> fields;
+  @ConsumerConfig
+  private ColdStartConfig cold;
 
   public Entity() {
   }
@@ -45,4 +50,7 @@ public class Entity {
     return name.hashCode();
   }
 
+  public boolean isCodeStart() {
+    return cold != null;
+  }
 }

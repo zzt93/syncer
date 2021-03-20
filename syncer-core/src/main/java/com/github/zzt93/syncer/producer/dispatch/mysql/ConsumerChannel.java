@@ -27,7 +27,7 @@ public class ConsumerChannel {
   private final Logger logger = LoggerFactory.getLogger(ConsumerChannel.class);
   private final ProducerSink producerSink;
   private final ConsumerSchemaMeta consumerSchemaMeta;
-  private boolean onlyUpdated;
+  private final boolean onlyUpdated;
 
   ConsumerChannel(ConsumerSchemaMeta consumerSchemaMeta, ProducerSink producerSink, boolean onlyUpdated) {
     this.consumerSchemaMeta = consumerSchemaMeta;
@@ -44,8 +44,21 @@ public class ConsumerChannel {
       return FilterRes.DENY;
     }
 
+    if (hold(aim)) {
+      return FilterRes.ACCEPT;
+    }
+
     boolean output = producerSink.output(aim);
     return output ? FilterRes.ACCEPT : FilterRes.DENY;
+  }
+
+  private boolean hold(SyncData[] aim) {
+    // TODO: 2021/3/21
+    return false;
+  }
+
+  public boolean output(SyncData[] data) {
+    return producerSink.output(data);
   }
 
   private SyncData[] toSyncData(SimpleEventType type, BinlogDataId dataId, Event... e) {

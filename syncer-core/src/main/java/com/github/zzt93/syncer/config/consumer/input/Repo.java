@@ -10,21 +10,25 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * @author zzt
  */
-@ConsumerConfig("input.masters[].repos[]")
+@ConsumerConfig("input[].repos[]")
 public class Repo implements Hashable {
 
   private final Logger logger = LoggerFactory.getLogger(Repo.class);
 
+  @ConsumerConfig
   private String name;
+  @ConsumerConfig
   private List<Entity> entities;
 
   private Pattern namePattern;
-  private HashMap<String, Fields> nameToRows = new HashMap<>();
+  private final HashMap<String, Fields> nameToRows = new HashMap<>();
 
   public Repo() {
   }
@@ -138,5 +142,9 @@ public class Repo implements Hashable {
   @Override
   public int hashCode() {
     return name != null ? name.hashCode() : 0;
+  }
+
+  public Set<Entity> coldStart() {
+    return getEntities().stream().filter(Entity::isCodeStart).collect(Collectors.toSet());
   }
 }

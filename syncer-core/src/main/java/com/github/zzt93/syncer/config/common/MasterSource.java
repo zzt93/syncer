@@ -15,6 +15,9 @@ import com.github.zzt93.syncer.consumer.input.MysqlLocalConsumerSource;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
 import com.google.common.base.Preconditions;
+import lombok.Getter;
+import lombok.Setter;
+import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -30,24 +33,22 @@ import java.util.concurrent.BlockingQueue;
  * @author zzt
  */
 @ConsumerConfig("input[]")
+@Getter
+@Setter
+@ToString(exclude = "repoSet")
 public class MasterSource {
 
-  private final Logger logger = LoggerFactory.getLogger(MasterSource.class);
+  private static final Logger logger = LoggerFactory.getLogger(MasterSource.class);
   private final Set<Repo> repoSet = new HashSet<>();
+  @ConsumerConfig
   private MasterSourceType type = MasterSourceType.MySQL;
+  @ConsumerConfig
   private MayClusterConnection connection;
+  @ConsumerConfig
   private List<Repo> repos = new ArrayList<>();
 
   private Connection getRealConnection() {
     return connection.getRealConnection();
-  }
-
-  public MayClusterConnection getConnection() {
-    return connection;
-  }
-
-  public void setConnection(MayClusterConnection connection) {
-    this.connection = connection;
   }
 
   public List<Repo> getRepos() {
@@ -61,18 +62,6 @@ public class MasterSource {
       logger.error("Duplicate repos: {}", repos);
       throw new InvalidConfigException("Duplicate repos");
     }
-  }
-
-  public Set<Repo> getRepoSet() {
-    return repoSet;
-  }
-
-  public MasterSourceType getType() {
-    return type;
-  }
-
-  public void setType(MasterSourceType type) {
-    this.type = type;
   }
 
   @Override
@@ -94,14 +83,6 @@ public class MasterSource {
     return getRealConnection().hashCode();
   }
 
-  @Override
-  public String toString() {
-    return "MasterSource{" +
-        "connection=" + connection +
-        ", repos=" + repos +
-        ", type=" + type +
-        '}';
-  }
 
   public Set<String> remoteIds() {
     return getRealConnection().remoteIds();

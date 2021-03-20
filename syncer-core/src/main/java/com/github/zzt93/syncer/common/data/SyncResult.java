@@ -6,6 +6,7 @@ import lombok.ToString;
 
 import java.util.HashMap;
 import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * @author zzt
@@ -18,7 +19,7 @@ public class SyncResult extends SyncResultBase {
   }
 
   SyncResult(SimpleEventType type, String database, String entity, String primaryKeyName, Object id,
-             HashMap<String, Object> full) {
+             Map<String, Object> full) {
     fields = new LinkedHashMap<>(full);
     setPrimaryKeyName(primaryKeyName);
     setId(id);
