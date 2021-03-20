@@ -1,12 +1,12 @@
 package com.github.zzt93.syncer.common.data.mem;
 
-import com.github.zzt93.syncer.InstrumentationAgent;
 import com.github.zzt93.syncer.common.data.SyncDataTestUtil;
+import com.github.zzt93.syncer.instrument.InstrumentationAgent;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import static jdk.nashorn.internal.ir.debug.ObjectSizeCalculator.*;
+import static jdk.nashorn.internal.ir.debug.ObjectSizeCalculator.getObjectSize;
 
 /**
  * cd instrumentation

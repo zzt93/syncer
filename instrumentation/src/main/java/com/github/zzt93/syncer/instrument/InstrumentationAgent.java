@@ -1,8 +1,8 @@
-package com.github.zzt93.syncer;
+package com.github.zzt93.syncer.instrument;
 
 import java.lang.instrument.Instrumentation;
 
-import static java.lang.System.*;
+import static java.lang.System.out;
 
 
 /**
