@@ -44,7 +44,7 @@ public class ConsumerChannel {
       return FilterRes.DENY;
     }
 
-    if (hold(aim)) {
+    if (hold(events[0])) {
       return FilterRes.ACCEPT;
     }
 
@@ -52,7 +52,12 @@ public class ConsumerChannel {
     return output ? FilterRes.ACCEPT : FilterRes.DENY;
   }
 
-  private boolean hold(SyncData[] aim) {
+  private boolean hold(Event tableMapEvent) {
+    TableMapEventData tableMap = tableMapEvent.getData();
+    TableMeta table = consumerSchemaMeta.findTable(tableMap.getDatabase(), tableMap.getTable());
+    if (table.isColdStarting()) {
+      
+    }
     // TODO: 2021/3/21
     return false;
   }

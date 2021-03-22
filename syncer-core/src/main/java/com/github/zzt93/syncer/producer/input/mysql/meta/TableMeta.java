@@ -76,4 +76,8 @@ public class TableMeta {
   public boolean isAll() {
     return false;
   }
+
+  public boolean isColdStarting() {
+    return false;
+  }
 }
