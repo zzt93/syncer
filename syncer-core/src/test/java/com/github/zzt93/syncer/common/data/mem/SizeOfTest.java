@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.common.data.mem;
 
+import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.data.SyncDataTestUtil;
 import com.github.zzt93.syncer.instrument.InstrumentationAgent;
 
@@ -27,6 +28,7 @@ public class SizeOfTest {
 
   public static void main(String[] arguments) {
     printObjectSize(SyncDataTestUtil.write("test_0", "user"));
+    printObjectSize(SyncData.class);
 
     String emptyString = "";
     String string = "Estimating Object Size Using Instrumentation";

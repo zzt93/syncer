@@ -7,7 +7,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.TYPE, ElementType.FIELD})
 @Retention(RetentionPolicy.SOURCE)
-public @interface ConsumerConfig {
+public @interface ConsumerOutputConfig {
 
   String value() default "";
 

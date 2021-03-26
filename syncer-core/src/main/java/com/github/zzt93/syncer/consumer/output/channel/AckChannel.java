@@ -1,5 +1,7 @@
 package com.github.zzt93.syncer.consumer.output.channel;
 
+import com.github.zzt93.syncer.consumer.ack.Ack;
+
 import java.util.List;
 
 /**
@@ -7,7 +9,13 @@ import java.util.List;
  */
 public interface AckChannel<T> {
 
-  void ackSuccess(List<SyncWrapper<T>> aim);
+  default void ackSuccess(List<SyncWrapper<T>> aim) {
+    for (SyncWrapper<T> wrapper : aim) {
+      getAck().remove(wrapper.getSourceId(), wrapper.getSyncDataId());
+    }
+  }
+
+  Ack getAck();
 
   void retryFailed(List<SyncWrapper<T>> aim, Throwable e);
 
@@ -18,7 +26,9 @@ public interface AckChannel<T> {
     return ErrorLevel.RETRIABLE_ERROR;
   }
 
-  boolean checkpoint();
+  default boolean checkpoint() {
+    return getAck().flush();
+  }
 
   enum ErrorLevel {
     MAX_TRY_EXCEED,

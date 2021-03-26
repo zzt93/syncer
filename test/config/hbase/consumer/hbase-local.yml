@@ -1,0 +1,29 @@
+version: 1.3
+
+consumerId: hbase
+
+
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    repos:
+      - name: "simu_order_${ACTIVE_PROFILE}"
+        entities:
+          - name: deal
+          - name: fund_order
+          - name: order_view
+
+filter:
+  - method: '
+  public void filter(List<SyncData> list) {
+    SyncData sync = list.get(0);
+    if (sync.getEntity().equals("order_view")) {
+      sync.columnFamily("tags");
+    }
+  }
+'
+
+output:
+  hbase:
+    connection:
+      zkQuorum: 192.168.1.200

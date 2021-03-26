@@ -20,6 +20,7 @@ import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
+import lombok.Getter;
 import org.elasticsearch.action.ActionListener;
 import org.elasticsearch.action.ListenableActionFuture;
 import org.elasticsearch.action.bulk.BulkItemResponse;
@@ -32,7 +33,6 @@ import org.elasticsearch.action.support.WriteRequestBuilder;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.support.AbstractClient;
 import org.elasticsearch.client.transport.NoNodeAvailableException;
-import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.index.IndexNotFoundException;
 import org.elasticsearch.index.engine.DocumentMissingException;
 import org.elasticsearch.index.reindex.AbstractBulkByScrollRequestBuilder;
@@ -54,6 +54,7 @@ import java.util.function.Function;
 /**
  * @author zzt
  */
+@Getter
 public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
 
   private final BatchBuffer<SyncWrapper<WriteRequest>> batchBuffer;
@@ -253,13 +254,6 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   }
 
   @Override
-  public String des() {
-    return "ElasticsearchChannel{" +
-        "esTemplate=" + client +
-        '}';
-  }
-
-  @Override
   public void close() {
     if (!closed.compareAndSet(false, true)) {
       return;
@@ -274,31 +268,6 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   @Override
   public String id() {
     return id;
-  }
-
-  @Override
-  public long getDelay() {
-    return batchConfig.getDelay();
-  }
-
-  @Override
-  public TimeUnit getDelayUnit() {
-    return batchConfig.getDelayTimeUnit();
-  }
-
-  @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
-  @Override
-  public boolean flush() throws InterruptedException {
-    List<SyncWrapper<WriteRequest>> aim = batchBuffer.flush();
-    buildSendProcess(aim);
-    return aim != null;
-  }
-
-  @Override
-  public void ackSuccess(List<SyncWrapper<WriteRequest>> aim) {
-    for (SyncWrapper wrapper : aim) {
-      ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
-    }
   }
 
   @Override
@@ -365,24 +334,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
   }
 
   @Override
-  public boolean checkpoint() {
-    return ack.flush();
-  }
-
-  @ThreadSafe(safe = {TransportClient.class, BatchBuffer.class})
-  @Override
-  public boolean flushIfReachSizeLimit() throws InterruptedException {
-    List<SyncWrapper<WriteRequest>> aim = batchBuffer.flushIfReachSizeLimit();
-    buildSendProcess(aim);
-    return aim != null;
-  }
-
-  @Override
-  public void setFlushDone() {
-    batchBuffer.flushDone();
-  }
-
-  private void buildSendProcess(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {
+  public void batchAndRetry(List<SyncWrapper<WriteRequest>> aim) throws InterruptedException {
     if (aim != null) {
       logger.info("Flush batch({})", aim.size());
       BulkResponse bulkResponse = buildAndSend(aim);

@@ -7,6 +7,8 @@ import com.github.zzt93.syncer.consumer.output.channel.http.ConsoleChannel;
 import com.github.zzt93.syncer.consumer.output.channel.jdbc.MysqlChannel;
 import com.github.zzt93.syncer.consumer.output.channel.kafka.KafkaChannel;
 import com.github.zzt93.syncer.consumer.output.channel.redis.RedisChannel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * @author zzt
@@ -30,9 +32,13 @@ public interface OutputChannel {
   @ThreadSafe
   boolean output(SyncData event) throws InterruptedException;
 
-  String des();
-
   void close();
 
   String id();
+
+  @Getter
+  @AllArgsConstructor
+  class OutputChannelInfo {
+    private final String id;
+  }
 }

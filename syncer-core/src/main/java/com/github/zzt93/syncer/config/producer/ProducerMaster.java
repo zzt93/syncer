@@ -11,7 +11,7 @@ import lombok.Data;
  * @author zzt
  */
 @Data
-@ProducerConfig("input.masters[]")
+@ProducerConfig("input[]")
 public class ProducerMaster {
 
   private MasterSourceType type = MasterSourceType.MySQL;

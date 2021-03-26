@@ -15,8 +15,8 @@ import java.util.List;
  * @author zzt
  */
 @Data
-@ProducerConfig("input.masters[].connection")
-@ConsumerConfig("input.masters[].connection")
+@ProducerConfig("input[].connection")
+@ConsumerConfig("input[].connection")
 public class MayClusterConnection {
 
   /**

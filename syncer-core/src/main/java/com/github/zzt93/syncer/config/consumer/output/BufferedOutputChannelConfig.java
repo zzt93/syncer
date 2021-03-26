@@ -1,27 +1,19 @@
 package com.github.zzt93.syncer.config.consumer.output;
 
+import com.github.zzt93.syncer.config.ConsumerConfig;
+import lombok.Getter;
+import lombok.Setter;
+
 /**
  * @author zzt
  */
+@Getter
+@Setter
 public abstract class BufferedOutputChannelConfig implements OutputChannelConfig {
 
+  @ConsumerConfig
   private PipelineBatchConfig batch = new PipelineBatchConfig();
+  @ConsumerConfig
   private FailureLogConfig failureLog = new FailureLogConfig();
-
-  public FailureLogConfig getFailureLog() {
-    return failureLog;
-  }
-
-  public void setFailureLog(FailureLogConfig failureLog) {
-    this.failureLog = failureLog;
-  }
-
-  public PipelineBatchConfig getBatch() {
-    return batch;
-  }
-
-  public void setBatch(PipelineBatchConfig batch) {
-    this.batch = batch;
-  }
 
 }

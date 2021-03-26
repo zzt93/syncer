@@ -39,11 +39,6 @@ public class ConsoleChannel implements OutputChannel {
   }
 
   @Override
-  public String des() {
-    return "ConsoleChannel";
-  }
-
-  @Override
   public void close() {
   }
 
