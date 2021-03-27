@@ -1,0 +1,30 @@
+version: 1.3
+
+consumerId: hbase
+
+
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    repos:
+      - name: "test_.*"
+        entities:
+          - name: correctness
+          - name: types
+          - name: news
+      - name: "simple.*"
+        entities:
+          - name: simple_type
+      - name: "discard.*"
+        entities:
+          - name: toDiscard
+      - name: "copy.*"
+        entities:
+          - name: toCopy
+
+
+
+output:
+  hbase:
+    connection:
+      zkQuorum: 192.168.1.200

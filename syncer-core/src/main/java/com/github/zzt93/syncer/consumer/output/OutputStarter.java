@@ -1,6 +1,7 @@
 package com.github.zzt93.syncer.consumer.output;
 
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
+import com.github.zzt93.syncer.config.consumer.output.PipelineBatchConfig;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
 import com.github.zzt93.syncer.config.syncer.SyncerOutput;
 import com.github.zzt93.syncer.consumer.ack.Ack;
@@ -38,9 +39,10 @@ public class OutputStarter {
     for (OutputChannel outputChannel : outputChannels) {
       if (outputChannel instanceof BufferedChannel) {
         BufferedChannel bufferedChannel = (BufferedChannel) outputChannel;
-        long delay = bufferedChannel.getDelay();
+        PipelineBatchConfig batchConfig = bufferedChannel.getBatchConfig();
+        long delay = batchConfig.getDelay();
         batchService.scheduleWithFixedDelay(new BatchJob(consumerId, bufferedChannel), delay, delay,
-            bufferedChannel.getDelayUnit());
+            batchConfig.getDelayTimeUnit());
         if (outputChannel instanceof ElasticsearchChannel) {
           ((ElasticsearchChannel) outputChannel).start();
         }

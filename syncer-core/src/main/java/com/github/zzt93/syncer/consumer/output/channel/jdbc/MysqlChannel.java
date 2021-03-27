@@ -17,6 +17,7 @@ import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.gson.reflect.TypeToken;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.dao.DataAccessException;
@@ -40,11 +41,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
 /**
  * @author zzt
  */
+@Getter
 public class MysqlChannel implements BufferedChannel<String> {
 
   private final Logger logger = LoggerFactory.getLogger(MysqlChannel.class);
   private final BatchBuffer<SyncWrapper<String>> batchBuffer;
-  private final PipelineBatchConfig batch;
+  private final PipelineBatchConfig batchConfig;
   private final JdbcTemplate jdbcTemplate;
   private final SQLMapper sqlMapper;
   private final Ack ack;
@@ -59,7 +61,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     jdbcTemplate = new JdbcTemplate(connection.dataSource());
     batchBuffer = new BatchBuffer<>(mysql.getBatch());
     sqlMapper = new SQLMapper();
-    this.batch = mysql.getBatch();
+    this.batchConfig = mysql.getBatch();
     this.ack = ack;
     FailureLogConfig failureLog = mysql.getFailureLog();
     sqlFailureLog = FailureLog.getLogger(Paths.get(outputMeta.getFailureLogDir(), connection.connectionIdentifier()),
@@ -70,6 +72,7 @@ public class MysqlChannel implements BufferedChannel<String> {
     mysqlService = new ThreadPoolExecutor(1, 1, 0L, TimeUnit.MILLISECONDS,
         new ArrayBlockingQueue<>(10),
         new NamedThreadFactory("syncer-" + connection.connectionIdentifier() + "-output-mysql"),
+        // discard flush job if too much
         new ThreadPoolExecutor.DiscardPolicy());
   }
 
@@ -95,13 +98,6 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   @Override
-  public String des() {
-    return "MysqlChannel{" +
-        "jdbcTemplate=" + jdbcTemplate +
-        '}';
-  }
-
-  @Override
   public void close() {
     if (!closed.compareAndSet(false, true)) {
       return;
@@ -116,23 +112,7 @@ public class MysqlChannel implements BufferedChannel<String> {
   }
 
   @Override
-  public long getDelay() {
-    return batch.getDelay();
-  }
-
-  @Override
-  public TimeUnit getDelayUnit() {
-    return batch.getDelayTimeUnit();
-  }
-
-  @Override
-  public boolean flush() throws InterruptedException {
-    List<SyncWrapper<String>> sqls = batchBuffer.flush();
-    batchAndRetry(sqls);
-    return sqls != null;
-  }
-
-  private void batchAndRetry(List<SyncWrapper<String>> sqls) throws InterruptedException {
+  public void batchAndRetry(List<SyncWrapper<String>> sqls) throws InterruptedException {
     if (sqls == null) {
       return;
     }
@@ -156,25 +136,6 @@ public class MysqlChannel implements BufferedChannel<String> {
         retryFailed(sqls, e);
         return;
       }
-    }
-  }
-
-  @Override
-  public boolean flushIfReachSizeLimit() throws InterruptedException {
-    List<SyncWrapper<String>> sqls = batchBuffer.flushIfReachSizeLimit();
-    batchAndRetry(sqls);
-    return sqls != null;
-  }
-
-  @Override
-  public void setFlushDone() {
-    batchBuffer.flushDone();
-  }
-
-  @Override
-  public void ackSuccess(List<SyncWrapper<String>> aim) {
-    for (SyncWrapper wrapper : aim) {
-      ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
     }
   }
 
@@ -207,7 +168,7 @@ public class MysqlChannel implements BufferedChannel<String> {
         continue;
       }
       // TODO 2019-10-28 maybe diff error reason!!!
-      ErrorLevel level = level(e, stringSyncWrapper, batch.getMaxRetry());
+      ErrorLevel level = level(e, stringSyncWrapper, batchConfig.getMaxRetry());
       if (level.retriable()) {
         tmp.add(stringSyncWrapper);
         continue;
@@ -250,8 +211,4 @@ public class MysqlChannel implements BufferedChannel<String> {
     return BufferedChannel.super.level(e, wrapper, maxTry);
   }
 
-  @Override
-  public boolean checkpoint() {
-    return ack.flush();
-  }
 }

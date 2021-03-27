@@ -2,6 +2,7 @@ package com.github.zzt93.syncer.config.consumer.output;
 
 import com.github.zzt93.syncer.config.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.output.elastic.Elasticsearch;
+import com.github.zzt93.syncer.config.consumer.output.habse.HBase;
 import com.github.zzt93.syncer.config.consumer.output.kafka.Kafka;
 import com.github.zzt93.syncer.config.consumer.output.mysql.Mysql;
 import com.github.zzt93.syncer.config.consumer.output.redis.Redis;
@@ -26,6 +27,7 @@ public class PipelineOutput {
   private Mysql mysql;
   private Kafka kafka;
   private Redis redis;
+  private HBase hbase;
 
   public List<OutputChannel> toOutputChannels(String consumerId, Ack ack,
                                               SyncerOutputMeta outputMeta)
@@ -43,6 +45,9 @@ public class PipelineOutput {
     if (kafka != null) {
       res.add(kafka.toChannel(consumerId, ack, outputMeta));
     }
+    if (hbase != null) {
+      res.add(hbase.toChannel(consumerId, ack, outputMeta));
+    }
     return res;
   }
 
@@ -52,6 +57,7 @@ public class PipelineOutput {
     if (mysql != null) count++;
     if (redis != null) count++;
     if (kafka != null) count++;
+    if (hbase != null) count++;
     return count;
   }
 }

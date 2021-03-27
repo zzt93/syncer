@@ -1,11 +1,13 @@
 package com.github.zzt93.syncer.common.data;
 
+import com.github.zzt93.syncer.consumer.output.channel.hbase.HBaseMapper;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.data.es.Filter;
 import com.github.zzt93.syncer.producer.dispatch.NamedChange;
 import lombok.ToString;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.util.CollectionUtils;
 
 import java.io.Serializable;
 import java.util.HashMap;
@@ -219,6 +221,24 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   public SyncData kafka(String topic, Object partitionKey) {
     inner.output.kafka(topic);
     return setPartitionKey(partitionKey);
+  }
+
+  @Override
+  public SyncData hBaseTable(String hBaseTable) {
+    inner.output.hbase(hBaseTable, null, null);
+    return this;
+  }
+
+  @Override
+  public SyncData columnFamily(String columnFamily) {
+    inner.output.hbase(null, columnFamily, null);
+    return this;
+  }
+
+  @Override
+  public SyncData columnFamily(Map<String, String> filedNameToColumnFamily) {
+    inner.output.hbase(null, null, filedNameToColumnFamily);
+    return this;
   }
 
   public SyncData kafka(Supplier<String> topic) {
@@ -490,7 +510,18 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
   }
 
   public String getKafkaTopic() {
-    return inner.output.getKafkaTopic(getRepo() + getEntity());
+    return inner.output.getKafkaTopic(getRepo(), getEntity());
+  }
+
+  public String getHBaseTable() {
+    return inner.output.getHBaseTable(getEntity());
+  }
+
+  public String getColumnFamily(String field) {
+    if (CollectionUtils.isEmpty(inner.output.filedNameToColumnFamily)) {
+      return inner.output.getColumnFamily();
+    }
+    return inner.output.filedNameToColumnFamily.getOrDefault(field, inner.output.getColumnFamily());
   }
 
   /**
@@ -503,12 +534,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 		private ExtraQueryContext extraQueryContext;
 		private SyncByQuery syncByQuery;
 		private ESScriptUpdate esScriptUpdate;
-		private Set<String> updated;
+		private final Set<String> updated;
 		private byte copy;
 
 		private String partitionField;
 		private Object partitionKey;
-		private OutputInfo output = new OutputInfo();
+		private final OutputInfo output = new OutputInfo();
 
 		SyncInfo(DataId dataId, String connectionIdentifier, Set<String> updated) {
       this.dataId = dataId;
@@ -538,6 +569,9 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 	  private String db;
 	  private String table;
 	  private String kafkaTopic;
+	  private String hBaseTable;
+	  private String columnFamily;
+	  private Map<String, String> filedNameToColumnFamily;
 
 		public void es(String index, String type) {
 			esIndex = index;
@@ -552,6 +586,14 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 		public void kafka(String topic) {
 			this.kafkaTopic = topic;
 		}
+
+		public void hbase(String hBaseTable, String columnFamily, Map<String, String> filedNameToColumnFamily) {
+		  this.hBaseTable = hBaseTable;
+		  this.columnFamily = columnFamily;
+      if (!CollectionUtils.isEmpty(filedNameToColumnFamily)) {
+        this.filedNameToColumnFamily = filedNameToColumnFamily;
+      }
+    }
 
     String getEsIndex(String repo) {
       return esIndex == null ? repo : esIndex;
@@ -569,8 +611,16 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
       return table == null ? entity : table;
     }
 
-    String getKafkaTopic(String topic) {
-      return kafkaTopic == null ? topic : kafkaTopic;
+    String getHBaseTable(String defaultTable) {
+		  return hBaseTable == null ? defaultTable : hBaseTable;
+    }
+
+    String getKafkaTopic(String repo, String entity) {
+      return kafkaTopic == null ? repo + entity : kafkaTopic;
+    }
+
+    public String getColumnFamily() {
+      return columnFamily == null ? HBaseMapper.CF : columnFamily;
     }
   }
 }

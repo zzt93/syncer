@@ -1,15 +1,13 @@
 package com.github.zzt93.syncer.config.common;
 
+import com.github.zzt93.syncer.config.ConsumerConfig;
+import com.github.zzt93.syncer.config.ConsumerInputConfig;
 import com.github.zzt93.syncer.config.consumer.input.SyncMeta;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Created by zzt on 9/11/17. <p> <h3></h3>
@@ -18,9 +16,12 @@ public class ClusterConnection extends Connection {
 
   static final String COLON = ":";
   private static final Logger logger = LoggerFactory.getLogger(ClusterConnection.class);
+  @ConsumerConfig
   private String clusterName;
+  @ConsumerConfig
   private List<String> clusterNodes;
   private HashSet<String> clusterIds;
+  @ConsumerInputConfig
   private SyncMeta[] syncMetas;
 
   ClusterConnection() {
@@ -47,10 +48,6 @@ public class ClusterConnection extends Connection {
       }
     }
     return clusterIds;
-  }
-
-  public void setClusterIds(HashSet<String> clusterIds) {
-    this.clusterIds = clusterIds;
   }
 
   public SyncMeta[] getSyncMetas() {

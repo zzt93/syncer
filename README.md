@@ -1,3 +1,4 @@
+
 # Syncer: sync & manipulate data from MySQL/MongoDB to Elasticsearch/MySQL/Http/Kafka Endpoint
 
 ## Features
@@ -128,9 +129,6 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
     - Fix some un-expected config/sync error
   - No need code for search data preparation except config
 
-- Http Endpoint (Deprecated, only for debug or test)
-  - Invoke `restful` interface according to event type: insert=`PUT`, update=`POST`, delete=`DELETE` 
-  - Will connect to a remote repeatedly, may change to websocket or rpc 
 - MySQL
   - [Version](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-versions.html): 5.5, 5.6, 5.7, 8.0
   - Bulk operation
@@ -146,6 +144,8 @@ Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeli
   - **Notice**: Kafka msg consumer has to handle event idempotent;
   - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
   - Easy to re-consume, rebuild without affect biz db;
+- HBase
+  - [Version](https://hadoop.apache.org/docs/current/hadoop-project-dist/hadoop-common/Compatibility.html#Wire_Protocols)
   
 <a name="join_in_es">[1]</a>: Be careful about this feature, it may affect your performance
 

@@ -15,6 +15,7 @@ import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.google.common.collect.Lists;
 import com.google.gson.reflect.TypeToken;
+import lombok.Getter;
 import org.apache.kafka.common.errors.NotLeaderForPartitionException;
 import org.apache.kafka.common.errors.TimeoutException;
 import org.slf4j.Logger;
@@ -33,6 +34,7 @@ import java.util.List;
 /**
  * @author zzt
  */
+@Getter
 public class KafkaChannel implements OutputChannel, AckChannel<String> {
 
   private final Logger logger = LoggerFactory.getLogger(KafkaChannel.class);
@@ -59,13 +61,6 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
   }
 
   @Override
-  public void ackSuccess(List<SyncWrapper<String>> aim) {
-    for (SyncWrapper<String> wrapper : aim) {
-      ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
-    }
-  }
-
-  @Override
   public void retryFailed(List<SyncWrapper<String>> aim, Throwable e) {
     SyncWrapper<String> wrapper = aim.get(0);
     ErrorLevel level = level(e, wrapper, wrapper.retryCount());
@@ -89,11 +84,6 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
       return ErrorLevel.RETRIABLE_ERROR;
     }
     return ErrorLevel.MAX_TRY_EXCEED;
-  }
-
-  @Override
-  public boolean checkpoint() {
-    return ack.flush();
   }
 
   @Override
@@ -134,15 +124,6 @@ public class KafkaChannel implements OutputChannel, AckChannel<String> {
     };
     future.addCallback(callback);
     // no need to wait future, the order between batch is ensured by kafka client
-  }
-
-  @Override
-  public String des() {
-    return "KafkaChannel{" +
-        "kafkaTemplate=" + kafkaTemplate +
-        ", ack=" + ack +
-        ", request=" + request +
-        '}';
   }
 
   @Override

@@ -1,0 +1,11 @@
+version: 1.3
+
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+      user: root
+      password: ${MYSQL_IN_PASS}
+#    onlyUpdated: true # default value
+
+
+

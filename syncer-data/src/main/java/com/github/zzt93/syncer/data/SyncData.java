@@ -158,6 +158,28 @@ public interface SyncData {
   SyncData kafka(String topic, Object partitionKey);
 
   /**
+   * columnFamily default 'cf', when is null or not set
+   * @param hBaseTable name of target HBase table, default {@link #getEntity()}
+   * @return this
+   * @see #columnFamily(String)
+   * @see #columnFamily(Map)
+   */
+  SyncData hBaseTable(String hBaseTable);
+
+  /**
+   * @param columnFamily default 'cf', when is null or not set
+   * @return this
+   */
+  SyncData columnFamily(String columnFamily);
+
+  /**
+   * @param filedNameToColumnFamily Map[fieldName, columnFamily]. If a field has no mapping,
+   *                                use default columnFamily 'cf' if columnFamily is null or not set
+   * @return this
+   */
+  SyncData columnFamily(Map<String, String> filedNameToColumnFamily);
+
+  /**
    * @param key name for field which is byte[] in Java, which may come from blob type in db
    * @return this instance
    */

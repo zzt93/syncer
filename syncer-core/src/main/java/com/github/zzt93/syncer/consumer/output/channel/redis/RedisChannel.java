@@ -13,6 +13,7 @@ import com.github.zzt93.syncer.consumer.output.channel.SyncWrapper;
 import com.github.zzt93.syncer.consumer.output.failure.FailureEntry;
 import com.github.zzt93.syncer.consumer.output.failure.FailureLog;
 import com.google.gson.reflect.TypeToken;
+import lombok.Getter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.redis.connection.lettuce.LettuceConnectionFactory;
@@ -26,16 +27,16 @@ import org.springframework.util.StringUtils;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * @author zzt
  */
+@Getter
 public class RedisChannel implements BufferedChannel<RedisCallback> {
 
   private final Logger logger = LoggerFactory.getLogger(RedisChannel.class);
   private final BatchBuffer<SyncWrapper<RedisCallback>> batchBuffer;
-  private final PipelineBatchConfig batch;
+  private final PipelineBatchConfig batchConfig;
   private final Ack ack;
   private final FailureLog<SyncData> request;
   private final RedisTemplate<String, Object> template;
@@ -45,9 +46,9 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
 
 
   public RedisChannel(Redis redis, SyncerOutputMeta outputMeta, Ack ack) {
-    this.batch = redis.getBatch();
+    this.batchConfig = redis.getBatch();
     id = redis.connectionIdentifier();
-    this.batchBuffer = new BatchBuffer<>(batch);
+    this.batchBuffer = new BatchBuffer<>(batchConfig);
     this.ack = ack;
     FailureLogConfig failureLog = redis.getFailureLog();
     Path path = Paths.get(outputMeta.getFailureLogDir(), id);
@@ -70,25 +71,8 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
     }
   }
 
-
   @Override
-  public long getDelay() {
-    return batch.getDelay();
-  }
-
-  @Override
-  public TimeUnit getDelayUnit() {
-    return batch.getDelayTimeUnit();
-  }
-
-  @Override
-  public boolean flush() {
-    List<SyncWrapper<RedisCallback>> aim = batchBuffer.flush();
-    send(aim);
-    return aim != null;
-  }
-
-  private void send(List<SyncWrapper<RedisCallback>> aim) {
+  public void batchAndRetry(List<SyncWrapper<RedisCallback>> aim) throws InterruptedException {
     if (aim != null) {
       try {
         template.executePipelined((RedisCallback<Void>) connection -> {
@@ -104,40 +88,16 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
     }
   }
 
-  @Override
-  public boolean flushIfReachSizeLimit() {
-    List<SyncWrapper<RedisCallback>> wrappers = batchBuffer.flushIfReachSizeLimit();
-    send(wrappers);
-    return wrappers != null;
-  }
-
-  @Override
-  public void setFlushDone() {
-    batchBuffer.flushDone();
-  }
-
-  @Override
-  public void ackSuccess(List<SyncWrapper<RedisCallback>> aim) {
-    for (SyncWrapper wrapper : aim) {
-      ack.remove(wrapper.getSourceId(), wrapper.getSyncDataId());
-    }
-  }
 
   @Override
   public void retryFailed(List<SyncWrapper<RedisCallback>> aim, Throwable e) {
     for (SyncWrapper wrapper : aim) {
       wrapper.inc();
-      if (wrapper.retryCount() > batch.getMaxRetry()) {
+      if (wrapper.retryCount() > batchConfig.getMaxRetry()) {
         request.log(wrapper.getEvent(), e.getMessage());
       }
     }
     logger.error("{}", aim, e);
-  }
-
-
-  @Override
-  public boolean checkpoint() {
-    return ack.flush();
   }
 
   @Override
@@ -154,13 +114,6 @@ public class RedisChannel implements BufferedChannel<RedisCallback> {
 //    }
 //    return batchBuffer.add(new SyncWrapper<>(event, operationMapper.map(event)));
 //    BufferedChannel.super.flushAndSetFlushDone(true);
-  }
-
-  @Override
-  public String des() {
-    return "RedisChannel{" +
-        "template=" + template +
-        '}';
   }
 
   @Override
