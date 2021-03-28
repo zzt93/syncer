@@ -3,12 +3,14 @@ package com.github.zzt93.syncer.producer.output;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 
+import java.util.Collection;
+
 /**
  * @author zzt
  */
 public class LocalProducerSink implements ProducerSink {
 
-  private ConsumerSource consumerSource;
+  private final ConsumerSource consumerSource;
 
   public LocalProducerSink(ConsumerSource consumerSource) {
     this.consumerSource = consumerSource;
@@ -21,6 +23,11 @@ public class LocalProducerSink implements ProducerSink {
 
   @Override
   public boolean output(SyncData[] data) {
+    return consumerSource.input(data);
+  }
+
+  @Override
+  public boolean output(Collection<SyncData> data) {
     return consumerSource.input(data);
   }
 

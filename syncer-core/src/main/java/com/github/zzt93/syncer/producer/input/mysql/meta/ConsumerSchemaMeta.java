@@ -18,20 +18,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
-import java.sql.SQLException;
-import java.sql.Statement;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.IdentityHashMap;
-import java.util.List;
-import java.util.Map;
+import java.sql.*;
+import java.util.*;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Properties;
-import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -245,8 +234,9 @@ public class ConsumerSchemaMeta {
               return tmp;
             });
             // remove for drds situation: same table name re-enter
-            Fields tableRow = aim.removeTableRow(tableSchema, tableName);
-            TableMeta tableMeta = new TableMeta();
+            Entity table = aim.removeTable(tableSchema, tableName);
+            Fields tableRow = table.getField();
+            TableMeta tableMeta = new TableMeta(table.isCodeStart());
             // TODO 18/1/18 may opt to get all columns then use
             String primaryKeyName = getPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
             setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta, primaryKeyName);

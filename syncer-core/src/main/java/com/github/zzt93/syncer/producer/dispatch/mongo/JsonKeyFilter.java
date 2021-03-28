@@ -1,7 +1,7 @@
 package com.github.zzt93.syncer.producer.dispatch.mongo;
 
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.consumer.input.Fields;
+import com.github.zzt93.syncer.config.consumer.input.Entity;
 import com.github.zzt93.syncer.config.consumer.input.Repo;
 import com.github.zzt93.syncer.data.SimpleEventType;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
@@ -12,7 +12,6 @@ import java.util.HashMap;
 import java.util.Iterator;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Set;
 
 /**
  * @author zzt
@@ -29,15 +28,15 @@ public class JsonKeyFilter {
   }
 
   public boolean output(SyncData from) {
-    Fields tableRow = repo.getTableRow(from.getRepo(), from.getEntity());
-    if (tableRow == null) {
+    Entity collection = repo.getTable(from.getRepo(), from.getEntity());
+    if (collection == null) {
       return false;
     }
     SyncData data = from.copy();
     HashMap<String, Object> fields = data.getFields();
     for(Iterator<Entry<String, Object>> it = fields.entrySet().iterator(); it.hasNext(); ) {
       Map.Entry<String, Object> entry = it.next();
-      if (!tableRow.contains(entry.getKey()) && !tableRow.contains(entry.getKey().split("\\.")[0])) {
+      if (!collection.containField(entry.getKey()) && !collection.containField(entry.getKey().split("\\.")[0])) {
         it.remove();
         if (data.getUpdated() != null) {
           data.getUpdated().remove(entry.getKey());

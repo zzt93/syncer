@@ -20,6 +20,8 @@ public class Entity {
   @ConsumerConfig
   private ColdStartConfig cold;
 
+  private Fields field;
+
   public Entity() {
   }
 
@@ -27,8 +29,9 @@ public class Entity {
     this.name = tableName;
   }
 
-  public Fields getField() {
-    return new Fields(fields);
+  public void setFields(List<String> fields) {
+    this.fields = fields;
+    field = new Fields(fields);
   }
 
   @Override
@@ -52,5 +55,9 @@ public class Entity {
 
   public boolean isCodeStart() {
     return cold != null;
+  }
+
+  public boolean containField(String key) {
+    return field.contains(key);
   }
 }

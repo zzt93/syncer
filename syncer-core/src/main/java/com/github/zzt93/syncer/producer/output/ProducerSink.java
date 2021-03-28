@@ -3,6 +3,8 @@ package com.github.zzt93.syncer.producer.output;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 
+import java.util.Collection;
+
 /**
  * @author zzt
  */
@@ -22,6 +24,8 @@ public interface ProducerSink {
    * @return whether the data reach the consumer
    */
   boolean output(SyncData[] data);
+
+  boolean output(Collection<SyncData> data);
 
   ConsumerSource remote();
 

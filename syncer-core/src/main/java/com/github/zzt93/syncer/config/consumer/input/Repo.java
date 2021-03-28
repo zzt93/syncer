@@ -28,7 +28,7 @@ public class Repo implements Hashable {
   private List<Entity> entities;
 
   private Pattern namePattern;
-  private final HashMap<String, Fields> nameToRows = new HashMap<>();
+  private final HashMap<String, Entity> nameToRows = new HashMap<>();
 
   public Repo() {
   }
@@ -40,7 +40,7 @@ public class Repo implements Hashable {
 
   /**
    * because this config class is mutable, have to copy for re-use
-   * @see #removeTableRow(String, String)
+   * @see #removeTable(String, String)
    */
   public Repo(Repo repo) {
     name = repo.name;
@@ -64,7 +64,7 @@ public class Repo implements Hashable {
   public void setEntities(List<Entity> entities) {
     this.entities = entities;
     for (Entity entity : entities) {
-      nameToRows.put(entity.getName(), entity.getField());
+      nameToRows.put(entity.getName(), entity);
     }
     if (nameToRows.size() != entities.size()) {
       logger.warn("Duplicate entity name definition: {}", entities);
@@ -101,15 +101,15 @@ public class Repo implements Hashable {
         '}';
   }
 
-  public Fields getTableRow(String tableSchema, String tableName) {
+  public Entity getTable(String tableSchema, String tableName) {
     if (name.equals(tableSchema) ||
         (namePattern != null && namePattern.matcher(tableSchema).find())) {
-      return nameToRows.getOrDefault((tableName), null);
+      return nameToRows.get(tableName);
     }
     return null;
   }
 
-  public Fields removeTableRow(String tableSchema, String tableName) {
+  public Entity removeTable(String tableSchema, String tableName) {
     if (name.equals(tableSchema) ||
         (namePattern != null && namePattern.matcher(tableSchema).find())) {
       return nameToRows.remove(tableName);

@@ -10,6 +10,7 @@ import lombok.SneakyThrows;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.BlockingQueue;
@@ -71,8 +72,8 @@ public abstract class LocalConsumerSource implements ConsumerSource {
       logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, data, connectionIdentifier);
       return false;
     }
-    logger.debug("add single: data id: {}, {}, {}", data.getDataId(), data, data.hashCode());
     ack.append(connectionIdentifier, data.getDataId());
+    logger.debug("Consumer({}, {}) receive: {}", getSyncInitMeta(), clientId, data);
     toFilter.put(data.setSourceIdentifier(connectionIdentifier));
     return true;
   }
@@ -84,15 +85,18 @@ public abstract class LocalConsumerSource implements ConsumerSource {
       if (datum == null) {
         continue;
       }
-      if (!sent(datum)) {
-        ack.append(connectionIdentifier, datum.getDataId());
-        logger.debug("Consumer({}, {}) receive: {}", getSyncInitMeta(), clientId, datum);
-        // `toFilter.add` should be last call to avoid sharing SyncData in diff threads
-        toFilter.put(datum.setSourceIdentifier(connectionIdentifier));
-      } else {
-        logger.info("Consumer({}, {}) skip {} from {}", getSyncInitMeta(), clientId, datum,
-            connectionIdentifier);
+      input(datum);
+    }
+    return true;
+  }
+
+  @Override
+  public boolean input(Collection<SyncData> data) {
+    for (SyncData datum : data) {
+      if (datum == null) {
+        continue;
       }
+      input(datum);
     }
     return true;
   }

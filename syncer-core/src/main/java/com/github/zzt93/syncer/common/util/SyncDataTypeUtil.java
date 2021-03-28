@@ -21,7 +21,6 @@ public class SyncDataTypeUtil {
 	public static final String EXTRA_FLATTEN = "extra.*.flatten";
 
 	/**
-	 * todo remove field mapping, left it for user filter code
 	 *
 	 * @param context parse context
 	 * @param mapping unmodifiable structure of json

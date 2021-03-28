@@ -2,7 +2,6 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 
 import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.common.ColdStartConfig;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.input.Fields;
 import com.github.zzt93.syncer.data.SimpleEventType;
@@ -16,21 +15,21 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.concurrent.ArrayBlockingQueue;
 
 /**
  * @author zzt
  */
 @Slf4j
 public class MysqlColdStartConnector implements MasterConnector {
-  private MysqlMasterConnector mysqlMasterConnector;
   private JdbcTemplate jdbcTemplate;
-  private ArrayBlockingQueue<SyncData> holds = new ArrayBlockingQueue<>(1);
   private List<ColdStart> colds;
-  private ConsumerChannel consumerChannel;
+  private final List<ConsumerChannel> consumerChannels;
+
+  public MysqlColdStartConnector(List<ConsumerChannel> consumerChannels) {
+    this.consumerChannels = consumerChannels;
+  }
 
   @Override
   public void close() {
@@ -44,7 +43,8 @@ public class MysqlColdStartConnector implements MasterConnector {
 
   @Override
   public void loop() {
-    log.debug("Cold start start at {}", System.currentTimeMillis());
+    long start = System.currentTimeMillis();
+    log.info("[Cold start] at {}", start);
     for (ColdStart coldStart : colds) {
       if (!coldStart.isCluster()) {
         String repo = coldStart.getRepoOrRegex();
@@ -55,11 +55,14 @@ public class MysqlColdStartConnector implements MasterConnector {
         }
       }
     }
-    log.debug("Cold start done at {}", System.currentTimeMillis());
+    log.info("[Cold done] take {}", System.currentTimeMillis() - start);
   }
 
   private void coldStart(ColdStart coldStart, String repo) {
     String entity = coldStart.getEntity(), pkName = coldStart.getPkName();
+    for (ConsumerChannel consumerChannel : consumerChannels) {
+      consumerChannel.markColdStart(repo, entity);
+    }
     int pageSize = coldStart.getPageSize();
 
     String sql = String.format("select min(%s) as minId, max(%s) as maxId, count(1) as count from `%s`.`%s`", pkName, pkName, repo, entity);
@@ -68,13 +71,19 @@ public class MysqlColdStartConnector implements MasterConnector {
       throw new InvalidConfigException(coldStart.toString());
     }
 
-    log.info("[Cold start] {}.{} count({}) id [{}, {}] pageSize={}", repo, entity, stat.getCount(), stat.getMinId(), stat.getMaxId(), pageSize);
+    log.info("[Cold start] [{}.{}] count({}) {} [{}, {}] pageSize={}", repo, entity, stat.getCount(), pkName, stat.getMinId(), stat.getMaxId(), pageSize);
     for (long pageNum = 0; pageNum < stat.getCount(); pageNum+= pageSize) {
       List<Map<String, Object>> fields = jdbcTemplate.queryForList(coldStart.select(repo, pageNum, pageSize));
       SyncData[] syncData = coldStart.fromSqlRes(fields, repo);
-      consumerChannel.output(syncData);
+      for (ConsumerChannel consumerChannel : consumerChannels) {
+        consumerChannel.output(syncData);
+      }
     }
-    log.info("[Cold done] {}.{} count({})", repo, entity, stat.getCount());
+    log.info("[Cold done] [{}.{}] count({})", repo, entity, stat.getCount());
+    log.info("[Flush hold]");
+    for (ConsumerChannel consumerChannel : consumerChannels) {
+      consumerChannel.markColdStartDoneAndFlush();
+    }
   }
 
   @Getter

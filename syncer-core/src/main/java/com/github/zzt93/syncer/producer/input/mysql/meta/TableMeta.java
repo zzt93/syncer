@@ -12,6 +12,11 @@ public class TableMeta {
   private final Set<Integer> primaryKeys = new HashSet<>();
   private final Set<String> primaryKeysName = new HashSet<>();
   private boolean interestedPK = true;
+  private volatile boolean coldStart;
+
+  public TableMeta(boolean coldStart) {
+    this.coldStart = coldStart;
+  }
 
   void addInterestedCol(String columnName, int ordinalPosition) {
     interestedAndPkIndex.add(ordinalPosition);
@@ -78,6 +83,6 @@ public class TableMeta {
   }
 
   public boolean isColdStarting() {
-    return false;
+    return coldStart;
   }
 }
