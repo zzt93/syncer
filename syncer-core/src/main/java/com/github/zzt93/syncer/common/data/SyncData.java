@@ -588,8 +588,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 		}
 
 		public void hbase(String hBaseTable, String columnFamily, Map<String, String> filedNameToColumnFamily) {
-		  this.hBaseTable = hBaseTable;
-		  this.columnFamily = columnFamily;
+      if (hBaseTable != null) {
+        this.hBaseTable = hBaseTable;
+      }
+      if (columnFamily != null) {
+        this.columnFamily = columnFamily;
+      }
       if (!CollectionUtils.isEmpty(filedNameToColumnFamily)) {
         this.filedNameToColumnFamily = filedNameToColumnFamily;
       }

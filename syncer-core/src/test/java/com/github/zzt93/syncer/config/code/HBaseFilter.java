@@ -14,7 +14,7 @@ public class HBaseFilter implements MethodFilter {
   public void filter(List<SyncData> list) {
     SyncData sync = list.get(0);
     if (sync.getEntity().equals("order_view")) {
-      sync.columnFamily("tags");
+      sync.hBaseTable("test").columnFamily("tags");
     }
   }
 

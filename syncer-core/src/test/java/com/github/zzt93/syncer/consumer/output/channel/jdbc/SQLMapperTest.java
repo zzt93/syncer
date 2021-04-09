@@ -96,7 +96,7 @@ public class SQLMapperTest {
       latch.countDown();
       for (int i = 0; i < 10000; i++) {
         try {
-          System.out.println(s);
+          consume(s.toString());
         } catch (Exception e) {
           hasError.set(true);
         }
@@ -107,10 +107,16 @@ public class SQLMapperTest {
     latch.await();
     for (int i = 0; i < 10000; i++) {
       String map = sqlMapper.map(s);
-      System.out.println(map);
+      consume(map);
     }
     end.await();
 
     Assert.assertFalse(hasError.get());
+  }
+
+  private void consume(String s) {
+    if (s.length() != 0) {
+      Math.sqrt(s.length());
+    }
   }
 }
