@@ -10,9 +10,7 @@ import org.slf4j.LoggerFactory;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * @author zzt
@@ -144,7 +142,4 @@ public class Repo implements Hashable {
     return name != null ? name.hashCode() : 0;
   }
 
-  public Set<Entity> coldStart() {
-    return getEntities().stream().filter(Entity::isCodeStart).collect(Collectors.toSet());
-  }
 }

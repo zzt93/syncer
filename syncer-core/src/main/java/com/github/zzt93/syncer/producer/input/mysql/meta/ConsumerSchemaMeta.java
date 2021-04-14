@@ -90,6 +90,10 @@ public class ConsumerSchemaMeta {
     }
   }
 
+  public List<SchemaMeta> coldStart() {
+    return schemaMetas.stream().filter(s -> !s.codeStart().isEmpty()).collect(Collectors.toList());
+  }
+
   public static class MetaDataBuilder {
 
     static final int TIMEOUT = 10;
@@ -236,7 +240,7 @@ public class ConsumerSchemaMeta {
             // remove for drds situation: same table name re-enter
             Entity table = aim.removeTable(tableSchema, tableName);
             Fields tableRow = table.getField();
-            TableMeta tableMeta = new TableMeta(table.isCodeStart());
+            TableMeta tableMeta = new TableMeta(table);
             // TODO 18/1/18 may opt to get all columns then use
             String primaryKeyName = getPrimaryKey(metaData, tableSchema, tableName, tableRow, tableMeta);
             setInterestedCol(metaData, tableSchema, tableName, tableRow, tableMeta, primaryKeyName);

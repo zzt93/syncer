@@ -7,6 +7,7 @@ import com.github.zzt93.syncer.config.common.MongoConnection;
 import com.github.zzt93.syncer.config.consumer.input.Entity;
 import com.github.zzt93.syncer.producer.input.Consumer;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
+import com.github.zzt93.syncer.producer.input.mysql.connect.ColdStart;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import com.mongodb.*;
 import org.slf4j.Logger;
@@ -112,6 +113,11 @@ public abstract class MongoConnectorBase implements MasterConnector {
         connectToEarliest(sleepInSecond);
       }
     }
+  }
+
+  @Override
+  public List<ColdStart> coldStart() {
+    return null;
   }
 
   public abstract void closeCursor();

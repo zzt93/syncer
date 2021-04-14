@@ -1,20 +1,24 @@
 package com.github.zzt93.syncer.producer.input.mysql.meta;
 
+import com.github.zzt93.syncer.config.consumer.input.Entity;
+import lombok.ToString;
+
 import java.util.*;
 
 /**
  * @author zzt
  */
+@ToString
 public class TableMeta {
 
   private final List<Integer> interestedAndPkIndex = new ArrayList<>();
   private final HashMap<Integer, String> interestedAndPkIndexToName = new HashMap<>();
-  private final Set<Integer> primaryKeys = new HashSet<>();
-  private final Set<String> primaryKeysName = new HashSet<>();
+  private int primaryKey;
+  private String primaryKeysName;
   private boolean interestedPK = true;
-  private volatile boolean coldStart;
+  private final Entity coldStart;
 
-  public TableMeta(boolean coldStart) {
+  public TableMeta(Entity coldStart) {
     this.coldStart = coldStart;
   }
 
@@ -24,8 +28,8 @@ public class TableMeta {
   }
 
   void addPrimaryKey(String columnName, int position) {
-    primaryKeys.add(position);
-    primaryKeysName.add(columnName);
+    primaryKey = position;
+    primaryKeysName = columnName;
     addInterestedCol(columnName, position);
   }
 
@@ -35,20 +39,6 @@ public class TableMeta {
 
   public Map<Integer, String> getInterestedAndPkIndexToName() {
     return Collections.unmodifiableMap(interestedAndPkIndexToName);
-  }
-
-  public Set<Integer> getPrimaryKeys() {
-    return Collections.unmodifiableSet(primaryKeys);
-  }
-
-  @Override
-  public String toString() {
-    return "TableMeta{" +
-        "interestedAndPkIndex=" + interestedAndPkIndex +
-        ", interestedAndPkIndexToName=" + interestedAndPkIndexToName +
-        ", primaryKeys=" + primaryKeys +
-        ", interestedPK=" + interestedPK +
-        '}';
   }
 
   void noPrimaryKey() {
@@ -72,17 +62,22 @@ public class TableMeta {
     }
     interestedAndPkIndex.clear();
     interestedAndPkIndex.addAll(interestedAndPkIndexToName.keySet());
-    primaryKeys.clear();
-    for (String name : primaryKeysName) {
-      primaryKeys.add(name2index.get(name));
-    }
+    primaryKey = name2index.get(primaryKeysName);
   }
 
   public boolean isAll() {
     return false;
   }
 
-  public boolean isColdStarting() {
+  public Entity coldStart() {
     return coldStart;
+  }
+
+  public boolean isCodeStart() {
+    return coldStart.isCodeStart();
+  }
+
+  public String getPrimaryKeyName() {
+    return primaryKeysName;
   }
 }

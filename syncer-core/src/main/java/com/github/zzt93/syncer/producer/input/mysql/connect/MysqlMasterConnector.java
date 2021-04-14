@@ -28,11 +28,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.sql.SQLException;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Random;
+import java.util.*;
 import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -48,6 +44,7 @@ public class MysqlMasterConnector implements MasterConnector {
   private final String file;
   private final Logger logger = LoggerFactory.getLogger(MysqlMasterConnector.class);
   private final AtomicReference<BinlogInfo> binlogInfo = new AtomicReference<>();
+  private List<ColdStart> coldStarts;
   private BinaryLogClient client;
 
   public MysqlMasterConnector(MysqlConnection connection,
@@ -89,6 +86,7 @@ public class MysqlMasterConnector implements MasterConnector {
     } catch (SQLException e) {
       throw new SchemaUnavailableException(e);
     }
+    coldStarts = filterColdStarts(sinkMap);
     SyncListener eventListener = new SyncListener(new MysqlDispatcher(sinkMap, this.binlogInfo, onlyUpdated), connection);
     // Order of listener: client has the current event position (not next),
     // so first have it, then use it in SyncListener
@@ -96,6 +94,14 @@ public class MysqlMasterConnector implements MasterConnector {
         .set(new BinlogInfo(client.getBinlogFilename(), client.getBinlogPosition())));
     client.registerEventListener(eventListener);
     return eventListener;
+  }
+
+  private List<ColdStart> filterColdStarts(HashMap<ConsumerSchemaMeta, ProducerSink> sinkMap) {
+    List<ColdStart> res = new ArrayList<>();
+    for (Map.Entry<ConsumerSchemaMeta, ProducerSink> e : sinkMap.entrySet()) {
+      res.addAll(ColdStart.from(e.getKey(), e.getValue()));
+    }
+    return res;
   }
 
   private void consumeFile(SyncListener listener, String fileOrDir) {
@@ -184,5 +190,10 @@ public class MysqlMasterConnector implements MasterConnector {
       return;
     }
     MasterConnector.super.close();
+  }
+
+  @Override
+  public List<ColdStart> coldStart() {
+    return coldStarts;
   }
 }

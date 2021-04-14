@@ -3,11 +3,7 @@ package com.github.zzt93.syncer.producer;
 import com.github.zzt93.syncer.ShutDownCenter;
 import com.github.zzt93.syncer.Starter;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
-import com.github.zzt93.syncer.config.common.Connection;
-import com.github.zzt93.syncer.config.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.common.MongoConnection;
-import com.github.zzt93.syncer.config.common.MysqlConnection;
-import com.github.zzt93.syncer.config.common.SchemaUnavailableException;
+import com.github.zzt93.syncer.config.common.*;
 import com.github.zzt93.syncer.config.producer.ProducerInput;
 import com.github.zzt93.syncer.config.producer.ProducerMaster;
 import com.github.zzt93.syncer.config.syncer.SyncerInput;
@@ -15,6 +11,8 @@ import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.input.mongo.MongoMasterConnectorFactory;
+import com.github.zzt93.syncer.producer.input.mysql.connect.ColdStart;
+import com.github.zzt93.syncer.producer.input.mysql.connect.MysqlColdStartConnector;
 import com.github.zzt93.syncer.producer.input.mysql.connect.MysqlMasterConnector;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import org.slf4j.Logger;
@@ -22,6 +20,7 @@ import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
 import java.util.LinkedList;
+import java.util.List;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -85,11 +84,17 @@ public class ProducerStarter implements Starter {
       return;
     }
     try {
-      MasterConnector masterConnector = null;
+      MasterConnector masterConnector;
       switch (masterSource.getType()) {
         case MySQL:
-          masterConnector = new MysqlMasterConnector(new MysqlConnection(connection),
-              masterSource.getFile(), consumerRegistry, masterSource.isOnlyUpdated());
+          MysqlConnection mysqlConnection = new MysqlConnection(connection);
+          masterConnector = new MysqlMasterConnector(mysqlConnection, masterSource.getFile(), consumerRegistry, masterSource.isOnlyUpdated());
+          List<ColdStart> coldStart = masterConnector.coldStart();
+          if (coldStart != null) {
+            MasterConnector cold = new MysqlColdStartConnector(mysqlConnection, coldStart);
+            connectors.add(cold);
+            service.submit(cold);
+          }
           break;
         case Mongo:
           masterConnector = new MongoMasterConnectorFactory(new MongoConnection(connection),

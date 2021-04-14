@@ -37,14 +37,7 @@ public abstract class RowsEvent {
     return res;
   }
 
-  public static String getPrimaryKey(Map<Integer, String> indexToName, Set<Integer> primaryKeys) {
-    Iterator<Integer> iterator = primaryKeys.iterator();
-    Integer key = iterator.next();
-    return indexToName.get(key);
-  }
-
-  public static List<IndexedFullRow> getIndexedRows(SimpleEventType eventType, EventData data,
-                                                    Set<Integer> primaryKeys) {
+  public static List<IndexedFullRow> getIndexedRows(SimpleEventType eventType, EventData data) {
     switch (eventType) {
       case UPDATE:
         return UpdateRowsEvent.getIndexedRows((UpdateRowsEventData) data);

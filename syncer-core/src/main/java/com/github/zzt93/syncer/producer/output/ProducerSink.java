@@ -3,8 +3,6 @@ package com.github.zzt93.syncer.producer.output;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.consumer.ConsumerSource;
 
-import java.util.Collection;
-
 /**
  * @author zzt
  */
@@ -25,9 +23,11 @@ public interface ProducerSink {
    */
   boolean output(SyncData[] data);
 
-  boolean output(Collection<SyncData> data);
-
   ConsumerSource remote();
+
+  void markColdStart(String repo, String entity);
+
+  void markColdStartDoneAndFlush();
 
   String toString();
 }

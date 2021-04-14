@@ -3,32 +3,48 @@ package com.github.zzt93.syncer.producer.input.mysql.connect;
 import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
-import com.github.zzt93.syncer.config.consumer.input.Fields;
-import com.github.zzt93.syncer.data.SimpleEventType;
-import com.github.zzt93.syncer.producer.dispatch.mysql.ConsumerChannel;
-import com.github.zzt93.syncer.producer.dispatch.mysql.event.NamedFullRow;
+import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
+import com.github.zzt93.syncer.producer.output.ProducerSink;
+import com.mysql.cj.jdbc.Driver;
+import com.zaxxer.hikari.util.DriverDataSource;
 import lombok.Getter;
 import lombok.Setter;
+import lombok.SneakyThrows;
 import lombok.ToString;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
+import javax.sql.DataSource;
+import java.sql.Connection;
+import java.sql.DatabaseMetaData;
+import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Properties;
 
 /**
  * @author zzt
  */
 @Slf4j
 public class MysqlColdStartConnector implements MasterConnector {
-  private JdbcTemplate jdbcTemplate;
-  private List<ColdStart> colds;
-  private final List<ConsumerChannel> consumerChannels;
+  private final JdbcTemplate jdbcTemplate;
+  private final List<ColdStart> colds;
+  private final MysqlConnection connection;
+  private DataId nowDataId;
 
-  public MysqlColdStartConnector(List<ConsumerChannel> consumerChannels) {
-    this.consumerChannels = consumerChannels;
+  public MysqlColdStartConnector(MysqlConnection connection, List<ColdStart> colds) {
+    this.connection = connection;
+    jdbcTemplate = new JdbcTemplate(this.connection.dataSource());
+    this.colds = colds;
+    nowDataId = init(jdbcTemplate);
+  }
+
+  private DataId init(JdbcTemplate jdbcTemplate) {
+    List<Map> binaryLogs = jdbcTemplate.query("show binary logs", new BeanPropertyRowMapper<>(Map.class));
+//    BinlogDataId dataId = DataId.fromEvent(events, binlogInfo.get().getBinlogFilename());
+    return null;
   }
 
   @Override
@@ -36,34 +52,38 @@ public class MysqlColdStartConnector implements MasterConnector {
 
   }
 
-  @Override
-  public void run() {
-
-  }
-
+  @SneakyThrows
   @Override
   public void loop() {
     long start = System.currentTimeMillis();
     log.info("[Cold start] at {}", start);
     for (ColdStart coldStart : colds) {
-      if (!coldStart.isCluster()) {
-        String repo = coldStart.getRepoOrRegex();
-        coldStart(coldStart, repo);
+      if (!coldStart.isDrds()) {
+        String repo = coldStart.getRepo();
+        coldStart(coldStart.getProducerSink(), coldStart, repo);
       } else {
-        for (String repo : coldStart.getRepos()) {
-          coldStart(coldStart, repo);
+        String jdbcUrl = connection.toConnectionUrl(null);
+        DataSource dataSource = new DriverDataSource(jdbcUrl, Driver.class.getName(), new Properties(),
+            connection.getUser(), connection.getPassword());
+        try (Connection dataSourceConnection = dataSource.getConnection()) {
+          DatabaseMetaData metaData = dataSourceConnection.getMetaData();
+          try (ResultSet tableResultSet = metaData
+              .getTables(null, coldStart.getRepo(), null, new String[]{"TABLE"})) {
+            while (tableResultSet.next()) {
+              String tableSchema = tableResultSet.getString("TABLE_CAT");
+              coldStart(coldStart.getProducerSink(), coldStart, tableSchema);
+            }
+          }
         }
       }
     }
     log.info("[Cold done] take {}", System.currentTimeMillis() - start);
   }
 
-  private void coldStart(ColdStart coldStart, String repo) {
+  private void coldStart(ProducerSink producerSink, ColdStart coldStart, String repo) {
     String entity = coldStart.getEntity(), pkName = coldStart.getPkName();
-    for (ConsumerChannel consumerChannel : consumerChannels) {
-      consumerChannel.markColdStart(repo, entity);
-    }
     int pageSize = coldStart.getPageSize();
+    producerSink.markColdStart(repo, entity);
 
     String sql = String.format("select min(%s) as minId, max(%s) as maxId, count(1) as count from `%s`.`%s`", pkName, pkName, repo, entity);
     ColdStartStatistic stat = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(ColdStartStatistic.class));
@@ -74,16 +94,12 @@ public class MysqlColdStartConnector implements MasterConnector {
     log.info("[Cold start] [{}.{}] count({}) {} [{}, {}] pageSize={}", repo, entity, stat.getCount(), pkName, stat.getMinId(), stat.getMaxId(), pageSize);
     for (long pageNum = 0; pageNum < stat.getCount(); pageNum+= pageSize) {
       List<Map<String, Object>> fields = jdbcTemplate.queryForList(coldStart.select(repo, pageNum, pageSize));
-      SyncData[] syncData = coldStart.fromSqlRes(fields, repo);
-      for (ConsumerChannel consumerChannel : consumerChannels) {
-        consumerChannel.output(syncData);
-      }
+      SyncData[] syncData = coldStart.fromSqlRes(repo, fields, nowDataId);
+      producerSink.output(syncData);
     }
     log.info("[Cold done] [{}.{}] count({})", repo, entity, stat.getCount());
     log.info("[Flush hold]");
-    for (ConsumerChannel consumerChannel : consumerChannels) {
-      consumerChannel.markColdStartDoneAndFlush();
-    }
+    producerSink.markColdStartDoneAndFlush();
   }
 
   @Getter
@@ -93,43 +109,6 @@ public class MysqlColdStartConnector implements MasterConnector {
     private Object minId;
     private Object maxId;
     private long count;
-  }
-
-  @Getter
-  @Setter
-  @ToString
-  public static class ColdStart {
-    private List<String> repos;
-    private String repoOrRegex;
-    private String entity;
-    private String pkName;
-
-    private Fields fields;
-
-    private DataId now;
-    private int pageSize;
-    private String where;
-
-    public String select(String repo, long page, int pageSize) {
-      String field = fields.toSql();
-      if (where == null) {
-        return String.format("select %s from `%s`.`%s` limit %s,%s", field, repo, entity, page*pageSize, pageSize);
-      }
-      return String.format("select %s from `%s`.`%s` where %s limit %s,%s", field, repo, entity, where, page*pageSize, pageSize);
-    }
-
-    public SyncData[] fromSqlRes(List<Map<String, Object>> fields, String repo) {
-      SyncData[] res = new SyncData[fields.size()];
-      for (int i = 0; i < fields.size(); i++) {
-        Map<String, Object> f = fields.get(i);
-        res[i] = new SyncData(getNow(), SimpleEventType.WRITE, repo, getEntity(), getPkName(), f.get(getPkName()), new NamedFullRow(f));
-      }
-      return res;
-    }
-
-    public boolean isCluster() {
-      return repos != null;
-    }
   }
 
 

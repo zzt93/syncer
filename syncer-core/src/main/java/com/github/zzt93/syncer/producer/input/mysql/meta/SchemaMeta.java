@@ -4,8 +4,10 @@ import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.producer.input.mysql.AlterMeta;
 import lombok.extern.slf4j.Slf4j;
 
+import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 /**
  * Represent metadata for a group of related database/schema
@@ -18,8 +20,6 @@ public class SchemaMeta {
   /**
    * can't use {@link java.util.HashMap}, because it is not immutable
    */
-  @ThreadSafe(des = "effectively immutable & published by 'Thread start rule'. change to HashMap?",
-      sharedBy = "remote mysql connection, main")
   private final ConcurrentHashMap<String, TableMeta> tableMetas = new ConcurrentHashMap<>();
   private final Pattern schemaPattern;
   private final String schema;
@@ -44,7 +44,7 @@ public class SchemaMeta {
     return null;
   }
 
-  String getSchema() {
+  public String getSchema() {
     return schema;
   }
 
@@ -74,4 +74,9 @@ public class SchemaMeta {
     }
     return false;
   }
+
+  public List<TableMeta> codeStart() {
+    return tableMetas.values().stream().filter(TableMeta::isCodeStart).collect(Collectors.toList());
+  }
+
 }
