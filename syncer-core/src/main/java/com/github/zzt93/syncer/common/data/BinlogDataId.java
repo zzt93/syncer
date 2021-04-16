@@ -15,7 +15,7 @@ public class BinlogDataId implements DataId {
   private final long tableMapPos;
   private final long dataPos;
   private int ordinal;
-  private Integer offset;
+  private Integer copy;
 
   public BinlogDataId(String binlogFileName, long tableMapPos, long dataPos) {
     this.binlogFileName = binlogFileName;
@@ -28,8 +28,8 @@ public class BinlogDataId implements DataId {
     return this;
   }
 
-  public BinlogDataId setOffset(Integer offset) {
-    this.offset = offset;
+  public BinlogDataId setCopy(Integer copy) {
+    this.copy = copy;
     return this;
   }
 
@@ -43,8 +43,8 @@ public class BinlogDataId implements DataId {
 
   public String dataId() {
     StringBuilder append = new StringBuilder(COMMON_LEN).append(eventId()).append(SEP).append(ordinal);
-    if (offset != null) {
-      return append.append(SEP).append(offset).toString();
+    if (copy != null) {
+      return append.append(SEP).append(copy).toString();
     } else {
       return append.toString();
     }
@@ -59,12 +59,12 @@ public class BinlogDataId implements DataId {
         dataPos == that.dataPos &&
         ordinal == that.ordinal &&
         binlogFileName.equals(that.binlogFileName) &&
-        Objects.equals(offset, that.offset);
+        Objects.equals(copy, that.copy);
   }
 
   @Override
   public int hashCode() {
-    return Objects.hash(binlogFileName, tableMapPos, dataPos, ordinal, offset);
+    return Objects.hash(binlogFileName, tableMapPos, dataPos, ordinal, copy);
   }
 
   @Override
@@ -92,18 +92,18 @@ public class BinlogDataId implements DataId {
     if (cmp != 0) {
       return cmp;
     }
-    return Objects.equals(offset, o.offset) ? 0 :
-        offset == null ? -1 :
-            o.offset == null ? 1 :
-                Objects.compare(offset, o.offset, Comparator.naturalOrder());
+    return Objects.equals(copy, o.copy) ? 0 :
+        copy == null ? -1 :
+            o.copy == null ? 1 :
+                Objects.compare(copy, o.copy, Comparator.naturalOrder());
   }
 
   public BinlogDataId copyAndSetOrdinal(int ordinal) {
     return new BinlogDataId(binlogFileName, tableMapPos, dataPos).setOrdinal(ordinal);
   }
 
-  public BinlogDataId copyAndSetOffset(int offset) {
-    return new BinlogDataId(binlogFileName, tableMapPos, dataPos).setOrdinal(ordinal).setOffset(offset);
+  public BinlogDataId copyAndCount(int copy) {
+    return new BinlogDataId(binlogFileName, tableMapPos, dataPos).setOrdinal(ordinal).setCopy(copy);
   }
 
   @Override

@@ -22,11 +22,11 @@ public class BinlogDataIdTest {
 
   @Test
   public void compareTo() {
-    BinlogDataId _0 = new BinlogDataId("mysql-bin.000117", 4, 40).setOrdinal(0).setOffset(null);
-    BinlogDataId _00 = new BinlogDataId("mysql-bin.000117", 4, 40).setOrdinal(0).setOffset(0);
-    BinlogDataId _1 = new BinlogDataId("mysql-bin.000117", 4, 40).setOrdinal(1).setOffset(null);
-    BinlogDataId _14 = new BinlogDataId("mysql-bin.000117", 14, 40).setOrdinal(0).setOffset(null);
-    BinlogDataId _118 = new BinlogDataId("mysql-bin.000118", 4, 40).setOrdinal(1).setOffset(null);
+    BinlogDataId _0 = new BinlogDataId("mysql-bin.000117", 4, 40).setOrdinal(0).setCopy(null);
+    BinlogDataId _00 = new BinlogDataId("mysql-bin.000117", 4, 40).setOrdinal(0).setCopy(0);
+    BinlogDataId _1 = new BinlogDataId("mysql-bin.000117", 4, 40).setOrdinal(1).setCopy(null);
+    BinlogDataId _14 = new BinlogDataId("mysql-bin.000117", 14, 40).setOrdinal(0).setCopy(null);
+    BinlogDataId _118 = new BinlogDataId("mysql-bin.000118", 4, 40).setOrdinal(1).setCopy(null);
     Assert.assertEquals(-1, _0.compareTo(_00));
     Assert.assertEquals(1, _00.compareTo(_0));
     Assert.assertEquals(-1, _0.compareTo(_1));

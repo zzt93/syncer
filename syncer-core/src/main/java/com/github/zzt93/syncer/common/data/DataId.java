@@ -22,7 +22,7 @@ public interface DataId extends Comparable<DataId> {
       if (split.length == 4) {
         return binlogDataId;
       }
-      return binlogDataId.setOffset(Integer.parseInt(split[4]));
+      return binlogDataId.setCopy(Integer.parseInt(split[4]));
     }
     if (split.length == 2
         || split.length == 3) { // for backward compatibility
@@ -74,6 +74,8 @@ public interface DataId extends Comparable<DataId> {
   boolean equals(Object o);
 
   SyncInitMeta getSyncInitMeta();
+
+  DataId copyAndCount(int copy);
 
   String toString();
 

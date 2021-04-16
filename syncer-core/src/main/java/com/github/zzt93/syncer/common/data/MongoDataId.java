@@ -3,6 +3,7 @@ package com.github.zzt93.syncer.common.data;
 import com.github.zzt93.syncer.producer.input.mongo.DocTimestamp;
 import org.bson.BsonTimestamp;
 
+import java.util.Comparator;
 import java.util.Objects;
 
 /**
@@ -13,21 +14,35 @@ public class MongoDataId implements DataId {
 
   private final int time;
   private final int inc;
+  private Integer copy;
 
   public MongoDataId(int time, int inc) {
     this.time = time;
     this.inc = inc;
   }
 
+  public MongoDataId setCopy(Integer copy) {
+    this.copy = copy;
+    return this;
+  }
+
   @Override
   public String eventId() {
-    return new StringBuilder(COMMON_LEN).append(time).append(SEP).append(inc).toString();
+    return eventIdBuilder().toString();
+  }
+
+  private StringBuilder eventIdBuilder() {
+    return new StringBuilder(COMMON_LEN).append(time).append(SEP).append(inc);
   }
 
   @Override
   public String dataId() {
-    return eventId();
-
+    StringBuilder append = eventIdBuilder();
+    if (copy != null) {
+      return append.append(SEP).append(copy).toString();
+    } else {
+      return append.toString();
+    }
   }
 
   @Override
@@ -36,7 +51,8 @@ public class MongoDataId implements DataId {
     if (o == null || getClass() != o.getClass()) return false;
     MongoDataId that = (MongoDataId) o;
     return time == that.time &&
-        inc == that.inc;
+        inc == that.inc &&
+        Objects.equals(copy, that.copy);
   }
 
   @Override
@@ -53,7 +69,19 @@ public class MongoDataId implements DataId {
   public int compareTo(DataId o) {
     MongoDataId that = (MongoDataId) o;
 
-    return getSyncInitMeta().compareTo(that.getSyncInitMeta());
+    int cmp = getSyncInitMeta().compareTo(that.getSyncInitMeta());
+    if(cmp != 0){
+      return cmp;
+    }
+    return Objects.equals(copy, that.copy) ? 0 :
+        copy == null ? -1 :
+            that.copy == null ? 1 :
+                Objects.compare(copy, that.copy, Comparator.naturalOrder());
+  }
+
+  @Override
+  public MongoDataId copyAndCount(int copy) {
+    return new MongoDataId(time, inc).setCopy(copy);
   }
 
   @Override
@@ -61,7 +89,4 @@ public class MongoDataId implements DataId {
     return dataId();
   }
 
-  public enum Offset {
-    DUP(), CLONE()
-  }
 }

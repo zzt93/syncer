@@ -57,8 +57,12 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
     return new SyncInfo(dataId, null, updated);
   }
 
-  private SyncData(SyncData syncData, int offset) {
-    inner = new SyncInfo(((BinlogDataId) syncData.inner.dataId).copyAndSetOffset(offset), syncData.getSourceIdentifier(), null);
+  private SyncData(SyncData syncData, int copy) {
+    if(syncData.inner.dataId instanceof BinlogDataId) {
+      inner = new SyncInfo(((BinlogDataId) syncData.inner.dataId).copyAndCount(copy), syncData.getSourceIdentifier(), null);
+    }else{
+      inner = new SyncInfo(((MongoDataId) syncData.inner.dataId).copyAndCount(copy), syncData.getSourceIdentifier(), null);
+    }
     result = new SyncResult();
     result.setEventType(syncData.getType());
     result.setRepo(syncData.getRepo());
