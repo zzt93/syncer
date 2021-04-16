@@ -1,7 +1,6 @@
 package com.github.zzt93.syncer.producer.input.mysql.connect;
 
 import com.github.zzt93.syncer.common.data.BinlogDataId;
-import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
@@ -27,12 +26,10 @@ import static com.github.zzt93.syncer.common.util.RegexUtil.regexToLike;
 public class MysqlColdStartConnector implements MasterConnector {
   private final JdbcTemplate jdbcTemplate;
   private final List<ColdStart> colds;
-  private final MysqlConnection connection;
-  private DataId nowDataId;
+  private BinlogDataId nowDataId;
 
   public MysqlColdStartConnector(MysqlConnection connection, List<ColdStart> colds) {
-    this.connection = connection;
-    jdbcTemplate = new JdbcTemplate(this.connection.dataSource());
+    jdbcTemplate = new JdbcTemplate(connection.dataSource());
     this.colds = colds;
     nowDataId = init(jdbcTemplate);
   }
@@ -44,7 +41,7 @@ public class MysqlColdStartConnector implements MasterConnector {
     private long position;
   }
 
-  private DataId init(JdbcTemplate jdbcTemplate) {
+  private BinlogDataId init(JdbcTemplate jdbcTemplate) {
     MySQLMasterStatus status = jdbcTemplate.queryForObject("show master status", new BeanPropertyRowMapper<>(MySQLMasterStatus.class));
     if (status == null) {
       throw new InvalidConfigException("Fail to fetch binlog info by `show master status`");
@@ -93,8 +90,8 @@ public class MysqlColdStartConnector implements MasterConnector {
     log.info("[Cold start] [{}.{}] count({}) {} [{}, {}] pageSize={}", repo, entity, stat.getCount(), pkName, stat.getMinId(), stat.getMaxId(), pageSize);
     for (long pageNum = 0; pageNum < stat.getCount(); pageNum+= pageSize) {
       List<Map<String, Object>> fields = jdbcTemplate.queryForList(coldStart.select(repo, pageNum, pageSize));
-      SyncData[] syncData = coldStart.fromSqlRes(repo, fields, nowDataId);
-      producerSink.output(syncData);
+      SyncData[] syncData = coldStart.fromSqlRes(repo, fields, i -> nowDataId.copyAndSetOrdinal(i));
+      producerSink.coldOutput(syncData);
     }
     log.info("[Cold done] [{}.{}] count({})", repo, entity, stat.getCount());
     log.info("[Flush hold]");

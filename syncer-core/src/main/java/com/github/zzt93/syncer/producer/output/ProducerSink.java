@@ -27,6 +27,8 @@ public interface ProducerSink {
 
   void markColdStart(String repo, String entity);
 
+  boolean coldOutput(SyncData[] data);
+
   void markColdStartDoneAndFlush();
 
   String toString();

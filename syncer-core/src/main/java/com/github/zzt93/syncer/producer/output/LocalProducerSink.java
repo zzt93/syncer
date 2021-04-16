@@ -56,6 +56,11 @@ public class LocalProducerSink implements ProducerSink {
   }
 
   @Override
+  public boolean coldOutput(SyncData[] data) {
+    return consumerSource.input(data);
+  }
+
+  @Override
   public void markColdStartDoneAndFlush() {
     coldStartingRepo = EMPTY;
     coldStartingEntity = EMPTY;
