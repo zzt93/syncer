@@ -57,7 +57,7 @@ public class MongoDataId implements DataId {
 
   @Override
   public int hashCode() {
-    return Objects.hash(time, inc);
+    return Objects.hash(time, inc, copy);
   }
 
   @Override
