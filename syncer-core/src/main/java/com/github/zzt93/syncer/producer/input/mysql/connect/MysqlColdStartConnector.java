@@ -7,8 +7,6 @@ import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
 import com.github.zzt93.syncer.producer.input.MasterConnector;
 import com.github.zzt93.syncer.producer.output.ProducerSink;
-import com.mysql.cj.jdbc.Driver;
-import com.zaxxer.hikari.util.DriverDataSource;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.SneakyThrows;
@@ -17,13 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.jdbc.core.BeanPropertyRowMapper;
 import org.springframework.jdbc.core.JdbcTemplate;
 
-import javax.sql.DataSource;
-import java.sql.Connection;
-import java.sql.DatabaseMetaData;
-import java.sql.ResultSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Properties;
+
+import static com.github.zzt93.syncer.common.util.RegexUtil.regexToLike;
 
 /**
  * @author zzt
@@ -72,18 +67,9 @@ public class MysqlColdStartConnector implements MasterConnector {
         String repo = coldStart.getRepo();
         coldStart(coldStart.getProducerSink(), coldStart, repo);
       } else {
-        String jdbcUrl = connection.toConnectionUrl(null);
-        DataSource dataSource = new DriverDataSource(jdbcUrl, Driver.class.getName(), new Properties(),
-            connection.getUser(), connection.getPassword());
-        try (Connection dataSourceConnection = dataSource.getConnection()) {
-          DatabaseMetaData metaData = dataSourceConnection.getMetaData();
-          try (ResultSet tableResultSet = metaData
-              .getTables(null, coldStart.getRepo(), null, new String[]{"TABLE"})) {
-            while (tableResultSet.next()) {
-              String tableSchema = tableResultSet.getString("TABLE_CAT");
-              coldStart(coldStart.getProducerSink(), coldStart, tableSchema);
-            }
-          }
+        List<String> dbs = jdbcTemplate.queryForList(String.format("show databases like '%s'", regexToLike(coldStart.getRepo())), String.class);
+        for (String db : dbs) {
+          coldStart(coldStart.getProducerSink(), coldStart, db);
         }
       }
     }
@@ -95,10 +81,13 @@ public class MysqlColdStartConnector implements MasterConnector {
     int pageSize = coldStart.getPageSize();
     producerSink.markColdStart(repo, entity);
 
-    String sql = String.format("select min(%s) as minId, max(%s) as maxId, count(1) as count from `%s`.`%s`", pkName, pkName, repo, entity);
+    String sql = coldStart.statSql(repo);
     ColdStartStatistic stat = jdbcTemplate.queryForObject(sql, new BeanPropertyRowMapper<>(ColdStartStatistic.class));
     if (stat == null) {
       throw new InvalidConfigException(coldStart.toString());
+    } else if (stat.isEmpty()) {
+      log.info("No data for {}. {} done.", repo, coldStart);
+      return;
     }
 
     log.info("[Cold start] [{}.{}] count({}) {} [{}, {}] pageSize={}", repo, entity, stat.getCount(), pkName, stat.getMinId(), stat.getMaxId(), pageSize);
@@ -119,6 +108,10 @@ public class MysqlColdStartConnector implements MasterConnector {
     private Object minId;
     private Object maxId;
     private long count;
+
+    public boolean isEmpty() {
+      return count == 0;
+    }
   }
 
 

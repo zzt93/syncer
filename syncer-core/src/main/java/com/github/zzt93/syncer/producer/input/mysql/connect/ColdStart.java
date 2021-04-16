@@ -58,9 +58,9 @@ public class ColdStart {
   public String select(String repo, long page, int pageSize) {
     String field = fields.toSql();
     if (where == null) {
-      return String.format("select %s from `%s`.`%s` limit %s,%s", field, repo, entity, page * pageSize, pageSize);
+      return String.format("select %s from `%s`.`%s` order by %s limit %s,%s", field, repo, entity, pkName, page * pageSize, pageSize);
     }
-    return String.format("select %s from `%s`.`%s` where %s limit %s,%s", field, repo, entity, where, page * pageSize, pageSize);
+    return String.format("select %s from `%s`.`%s` where %s order by %s limit %s,%s", field, repo, entity, where, pkName, page * pageSize, pageSize);
   }
 
   public SyncData[] fromSqlRes(String repo, List<Map<String, Object>> fields, DataId nowDataId) {
@@ -74,5 +74,12 @@ public class ColdStart {
 
   public boolean isDrds() {
     return repo.contains(".*");
+  }
+
+  public String statSql(String repo) {
+    if (where == null) {
+      return String.format("select min(%s) as minId, max(%s) as maxId, count(1) as count from `%s`.`%s`", pkName, pkName, repo, entity);
+    }
+    return String.format("select min(%s) as minId, max(%s) as maxId, count(1) as count from `%s`.`%s` where %s", pkName, pkName, repo, entity, where);
   }
 }

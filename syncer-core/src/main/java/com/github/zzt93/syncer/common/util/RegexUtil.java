@@ -30,6 +30,12 @@ public class RegexUtil {
   }
 
   public static boolean isClassName(String consumerId) {
-    return className.matcher(consumerId).find();
+    return className.matcher(consumerId).matches();
+  }
+
+  public static String regexToLike(String regex) {
+    regex = regex.replace(".*", "%");
+    regex = regex.replace(".", "?");
+    return regex;
   }
 }

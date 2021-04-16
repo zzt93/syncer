@@ -33,6 +33,9 @@ public class Fields {
   }
 
   public String toSql() {
+    if (names == null) {
+      return " * ";
+    }
     return names.stream().map(n -> '`' + n + '`').collect(Collectors.joining(","));
   }
 }

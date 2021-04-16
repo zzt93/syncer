@@ -257,7 +257,7 @@ public class ConsumerSchemaMeta {
     }
 
     private static void logDiff(Set<Consumer> consumers, Map<Repo, SchemaMeta> metaOfEachConsumer) {
-      Set<Repo> repos = consumers.stream().flatMap(c -> c.getRepos().stream()).collect(Collectors.toSet());
+      List<Repo> repos = consumers.stream().flatMap(c -> c.getRepos().stream()).collect(Collectors.toList());
       if (repos.size() != metaOfEachConsumer.size()) {
         repos.removeAll(metaOfEachConsumer.keySet());
         logger.error("Invalid schema config: want {} but not found", repos);

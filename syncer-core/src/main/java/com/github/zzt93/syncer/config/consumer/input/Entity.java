@@ -20,7 +20,7 @@ public class Entity {
   @ConsumerConfig
   private ColdStartConfig cold;
 
-  private Fields field;
+  private Fields field = new Fields(null);
 
   public Entity() {
   }

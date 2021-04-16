@@ -55,7 +55,7 @@ public class SyncerApplication {
     HashSet<String> consumerIds = new HashSet<>();
     for (ConsumerConfig consumerConfig : consumerConfigs) {
       if (!validPipeline(consumerConfig)) {
-        continue;
+        throw new InvalidConfigException("Invalid consumer config");
       }
       if (consumerIds.contains(consumerConfig.getConsumerId())) {
         throw new InvalidConfigException("Duplicate consumerId: " + consumerConfig.getConsumerId());
@@ -86,7 +86,7 @@ public class SyncerApplication {
       return false;
     }
     if (!RegexUtil.isClassName(consumerId)) {
-      logger.error("`consumerId` not match Java identifier regex: [a-zA-Z_$][a-zA-Z\\d_$]*");
+      logger.error("`consumerId: {}` not match Java identifier format: [a-zA-Z_$][a-zA-Z\\d_$]*", consumerId);
       return false;
     }
     return true;
