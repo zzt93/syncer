@@ -1,19 +1,18 @@
 version: 1.3
 
-consumerId: simplest
+consumerId: not-cold
 
 
 input:
   - connection:
       clusterNodes: [${MYSQL_ADDR}]
-
     repos:
-      - name: "test_0"
+      - name: "test_.*"
         entities:
           - name: correctness
           - name: types
           - name: news
-      - name: "simple_0"
+      - name: "simple_.*"
         entities:
           - name: simple_type
 
@@ -35,7 +34,3 @@ output:
       port: 3306
       user: root
       password: ${MYSQL_OUT_PASS}
-  elasticsearch:
-    connection:
-      clusterName: ${ES_CLUSTER}
-      clusterNodes: ["${ES_ADDR}:9300"]

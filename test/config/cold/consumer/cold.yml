@@ -1,21 +1,22 @@
 version: 1.3
 
-consumerId: simplest
+consumerId: cold
 
 
 input:
   - connection:
       clusterNodes: [${MYSQL_ADDR}]
-
+      autoOffsetReset: latest
     repos:
-      - name: "test_0"
+      - name: "test_.*"
         entities:
           - name: correctness
             cold:
-              - where: id > 0
+              where: id > 0
+              pageSize: 10
           - name: types
           - name: news
-      - name: "simple_0"
+      - name: "simple_.*"
         entities:
           - name: simple_type
 
@@ -31,12 +32,6 @@ filter:
 # tmp solution
 
 output:
-  mysql:
-    connection:
-      address: ${MYSQL_OUT}
-      port: 3306
-      user: root
-      password: ${MYSQL_OUT_PASS}
   elasticsearch:
     connection:
       clusterName: ${ES_CLUSTER}

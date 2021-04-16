@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.producer.input.mysql.connect;
 
+import com.github.zzt93.syncer.common.data.BinlogDataId;
 import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
@@ -41,10 +42,19 @@ public class MysqlColdStartConnector implements MasterConnector {
     nowDataId = init(jdbcTemplate);
   }
 
+  @Getter
+  @Setter
+  private static class MySQLMasterStatus {
+    private String file;
+    private long position;
+  }
+
   private DataId init(JdbcTemplate jdbcTemplate) {
-    List<Map> binaryLogs = jdbcTemplate.query("show binary logs", new BeanPropertyRowMapper<>(Map.class));
-//    BinlogDataId dataId = DataId.fromEvent(events, binlogInfo.get().getBinlogFilename());
-    return null;
+    MySQLMasterStatus status = jdbcTemplate.queryForObject("show master status", new BeanPropertyRowMapper<>(MySQLMasterStatus.class));
+    if (status == null) {
+      throw new InvalidConfigException("Fail to fetch binlog info by `show master status`");
+    }
+    return new BinlogDataId(status.getFile(), status.getPosition(), status.getPosition());
   }
 
   @Override
