@@ -26,3 +26,13 @@
   - java.sql.Timestamp format: 'yyyy-MM-dd HH:mm:ss.SSS'. For now, if you need other format, you have to format it to string by yourself
 
 ---
+
+- Shutdown process
+  - Producer starter shutdown
+    - Connector shutdown
+    - Starter service shutdown
+  - Consumer starter shutdown
+    - Output stater shutdown
+      - Output channel shutdown
+      - Batch service shutdown
+    - Filter-output service shutdown

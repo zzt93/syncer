@@ -1,10 +1,5 @@
 
 
-- Special expression to do output mapping:
-  - "fields.*": map.put('your_key', `fields`)
-  - "fields.*.flatten": map.putAll(fields)
-  - "extra.*": map.put('your_key', `extra`)
-  - "extra.*.flatten": map.putAll(`extra`)
 - `batch`: support output change in batch
   - `size`: flush if reach this size (if `size` <= 0, it will be considered as buffer as large as possible)
   - `delay`: flush if every this time in `MILLISECONDS`

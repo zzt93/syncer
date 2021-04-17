@@ -1,0 +1,181 @@
+
+Full and usable samples can be found under [`test/config/`](test/config/)
+
+### producer.yml
+- `input[]`
+ - `type`: MySQL, Mongo
+ - <a name="connection"></a>`connection`: `ip`, `address`, `port`, `user`, `password`, `passwordFile`
+ - `file`: absolute path to binlog file
+
+```yml
+
+input:
+- connection:
+    address: ${HOST_ADDRESS}
+    port: 3306
+    user: xxx
+    password: yyy
+
+- connection:
+    address: ${HOST_ADDRESS}
+    port: 27018
+  type: mongo
+```
+### <a name="consumer_config"></a>consumer.yml
+
+```yaml
+version: 1.3
+
+consumerId: simplest
+
+
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    repos:
+      - name: "test_0"
+        entities:
+          - name: correctness
+          - name: types
+          - name: news
+      - name: "simple_0"
+        entities:
+          - name: simple_type
+
+# tmp solution for unsigned byte conversion, no need if no unsigned byte
+filter:
+  - method: '
+  public void filter(List<SyncData> list) {
+     SyncData sync = list.get(0);
+     SyncUtil.unsignedByte(sync, "tinyint");
+     SyncUtil.unsignedByte(sync, "type");
+  }
+'
+# tmp solution
+
+output:
+  mysql:
+    connection:
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_OUT_PASS}
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+```
+
+#### Input
+- `input[]`:
+  - `type`: same as producer
+  - `connection`: [same as producer](#connection)
+  - `syncMeta`:
+    - `binlogFilename`: string name of remote master's binlog file name
+    - `binlogPosition`: position you want to start listening
+  - `repos[x]`:
+    - `name`: repo name, allow regex
+    - `entities[x]`:
+      - `name`: entity name
+      - `fields`: entity fields list, can omit it which represents all fields
+  - `scheduler`:
+    - `mod`: `mod` integral primary key to make same row change always handled in order;
+    - `hash`: hash primary key of data row, then `mod` hash value to schedule -- default value now;
+    - `direct`: 
+      - If your data source has only insert operation, you can choose this scheduler, which is faster;
+      - *No order promise* for data source with insert/update/delete, higher output rate if you can endure some inconsistency;
+  - `onlyUpdated`: whether sync not `updated` event (only for `MySQL`)
+    - `updated` definition: `Objects.deepEquals` == true 
+
+```yml
+input:
+  - connection:
+      clusterNodes: [${MYSQL_ADDR}]
+    repos:
+      - name: "test_0"
+        entities:
+          - name: correctness
+          - name: types
+          - name: news
+      - name: "simple_0"
+        entities:
+          - name: simple_type
+```
+#### Filter
+
+
+- `method` (**preferred: more powerful and easier to write**) : write a java class implements `MethodFilter`  to handle `SyncData`
+  - Import dependency:
+  ```xml
+        <dependency>
+            <groupId>com.github.zzt93</groupId>
+            <artifactId>syncer-data</artifactId>
+            <version>1.0.1-SNAPSHOT</version>
+        </dependency>
+
+  ```
+  - Write a class implement `MethodFilter`
+  ```java
+    public class MenkorFilterImpl implements MethodFilter {
+      @Override
+      public void filter(List<SyncData> list) {
+        SyncData data = list.get(0);
+        if (data.getField("location") != null) {
+          Map location = SyncUtil.fromJson((String) data.getField("location"));
+          if (!location.isEmpty()) {
+            data.addField("geom", SQLFunction.geomfromtext("point(" + location.get("longitude") + "," + location.get("latitude") + ")"));
+          }
+        }
+      }
+    }
+
+  ```
+  - Copy method filter to config file:
+  ```$xslt
+  filter:
+    - method: '      public void filter(List<SyncData> list) {
+                       SyncData data = list.get(0);
+                       if (data.getField("location") != null) {
+                         Map location = SyncUtil.fromJson((String) data.getField("location"));
+                         if (!location.isEmpty()) {
+                           data.addField("geom", SQLFunction.geomfromtext("point(" + location.get("longitude") + "," + location.get("latitude") + ")"));
+                         }
+                       }
+                     }'
+                     
+  ```
+  - Limitation: 
+    - Not support Single Line Comments or Slash-slash Comments
+
+
+
+
+#### Output
+
+- `elasticsearch`
+  - When using this channel, you may prefer to not include `id` like field in interested column config (`fields`),
+  because it is always no need to include it in data field for ES and we will auto detect it and set it for you.
+  - e.g.
+  ```yml
+  elasticsearch:
+    connection:
+      clusterName: ${ES_CLUSTER}
+      clusterNodes: ["${ES_ADDR}:9300"]
+
+  ```
+- `mysql`
+  - e.g.:
+  ```yml
+  mysql:
+    connection:
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_OUT_PASS}
+  ```
+For more config, see [doc/output.md](doc/output.md)
+
+### Syncer Config
+
+Usually no need to care, because it is used for meta info of Syncer. Samples can be found in [resources](syncer-core/src/main/resources)
+
