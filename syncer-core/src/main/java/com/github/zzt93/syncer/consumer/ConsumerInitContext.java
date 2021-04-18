@@ -5,15 +5,9 @@ import com.github.zzt93.syncer.config.consumer.ConsumerConfig;
 import com.github.zzt93.syncer.config.consumer.filter.FilterConfig;
 import com.github.zzt93.syncer.config.consumer.input.PipelineInput;
 import com.github.zzt93.syncer.config.consumer.output.PipelineOutput;
-import com.github.zzt93.syncer.config.syncer.SyncerAck;
-import com.github.zzt93.syncer.config.syncer.SyncerConfig;
-import com.github.zzt93.syncer.config.syncer.SyncerFilter;
-import com.github.zzt93.syncer.config.syncer.SyncerInput;
-import com.github.zzt93.syncer.config.syncer.SyncerOutput;
+import com.github.zzt93.syncer.config.syncer.*;
 import com.github.zzt93.syncer.stat.SyncerInfo;
 import lombok.AllArgsConstructor;
-
-import java.util.List;
 
 @AllArgsConstructor
 public class ConsumerInitContext {
@@ -47,7 +41,7 @@ public class ConsumerInitContext {
 		return consumerConfig.getOutput();
 	}
 
-	public List<FilterConfig> getFilter() {
+	public FilterConfig getFilter() {
 		return consumerConfig.getFilter();
 	}
 

@@ -6,50 +6,46 @@ import com.github.zzt93.syncer.config.syncer.SyncerFilterMeta;
 import com.github.zzt93.syncer.consumer.filter.impl.JavaMethod;
 import com.github.zzt93.syncer.data.util.SyncFilter;
 import com.google.common.base.Preconditions;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
+import lombok.Getter;
+import lombok.Setter;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 /**
  * @author zzt
  */
+@Setter
+@Getter
 @ConsumerConfig("filter")
 public class FilterConfig {
 
-  private FilterType type;
-
-  private String method;
+  @ConsumerConfig("filter.sourcePath")
+  private String sourcePath;
 
   /*---the following field is not configured---*/
   private SyncerFilterMeta filterMeta;
   private String consumerId;
 
 
-  public FilterType getType() {
-    if (type == null) {
-      if (method != null) {
-        type = FilterType.METHOD;
-      }
+  public SyncFilter toFilter() {
+    if (sourcePath == null) {
+      return null;
     }
-    return type;
+    validate();
+    Preconditions.checkState(filterMeta != null, "Not set filterMeta for method");
+    return JavaMethod.build(getSourcePath());
   }
 
-  public void setType(FilterType type) {
-    this.type = type;
-  }
-
-  public String getMethod() {
-    return method;
-  }
-
-  public void setMethod(String method) {
-    this.method = method;
-  }
-
-  public SyncFilter toFilter(SpelExpressionParser parser) {
-    if (getType() == FilterType.METHOD) {
-      Preconditions.checkState(filterMeta != null, "Not set filterMeta for method");
-      return JavaMethod.build(consumerId, filterMeta, getMethod());
+  private void validate() {
+    Path path = Paths.get(sourcePath);
+    if (!Files.exists(path)) {
+      throw new InvalidConfigException("Fail to find " + sourcePath + ": Absolute path is better");
     }
-    throw new InvalidConfigException("Unknown filter type");
+    if (!sourcePath.endsWith(".java")) {
+      throw new InvalidConfigException("Only support java source now: " + sourcePath);
+    }
   }
 
   public FilterConfig addMeta(String consumerId, SyncerFilterMeta filterMeta) {
@@ -58,8 +54,4 @@ public class FilterConfig {
     return this;
   }
 
-
-  public enum FilterType {
-    SWITCH, STATEMENT, FOREACH, IF, DROP, METHOD;
-  }
 }

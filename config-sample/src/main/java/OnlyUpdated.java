@@ -1,5 +1,3 @@
-package com.github.zzt93.syncer.config.code;
-
 import com.github.zzt93.syncer.data.SyncData;
 import com.github.zzt93.syncer.data.util.MethodFilter;
 import com.github.zzt93.syncer.data.util.SyncUtil;
@@ -9,7 +7,7 @@ import java.util.List;
 /**
  * @author zzt
  */
-public class Drds implements MethodFilter {
+public class OnlyUpdated implements MethodFilter {
 
   private static final String SIMPLE_TYPE = "simple_type";
 

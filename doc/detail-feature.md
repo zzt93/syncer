@@ -54,17 +54,10 @@ to multiple `SyncData`s.
 
 ### Filter -- Operation
 
-Manipulate `SyncData` via (for more details, see input part of *[Consumer Pipeline Config](#consumer_config)*):
+Manipulate `SyncData` via :
 
-- `method`: write a java method to handle `SyncData`
-  - Global variable:
-    - `logger` to do logging
-  - Already imported (**May add more in future**):
-    - `java.util.*`
-    - `org.slf4j.Logger`
-    - `com.github.zzt93.syncer.data.*`
-    - `com.github.zzt93.syncer.data.util.*`
-    - Use full class name if you need other class, like `java.util.function.Function`
+- `sourcePath`: write a java class to handle `SyncData` (for more details, see filter part of *[Consumer Pipeline Config](conf.md)*)
+- or skip it if no action needed
 
 
 ### Output -- DataSink

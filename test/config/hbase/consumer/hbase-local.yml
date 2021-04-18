@@ -14,14 +14,8 @@ input:
           - name: order_view
 
 filter:
-  - method: '
-  public void filter(List<SyncData> list) {
-    SyncData sync = list.get(0);
-    if (sync.getEntity().equals("order_view")) {
-      sync.columnFamily("tags");
-    }
-  }
-'
+  sourcePath: /data/config/consumer/HBaseFilter.java
+
 
 output:
   hbase:

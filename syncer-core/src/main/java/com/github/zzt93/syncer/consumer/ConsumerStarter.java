@@ -22,18 +22,12 @@ import com.github.zzt93.syncer.health.SyncerHealth;
 import com.github.zzt93.syncer.producer.register.ConsumerRegistry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.expression.spel.standard.SpelExpressionParser;
 
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.concurrent.ArrayBlockingQueue;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.ScheduledExecutorService;
-import java.util.concurrent.TimeUnit;
+import java.util.concurrent.*;
 
 /**
  * Abstraction of a consumer which is initiated by a pipeline config file
@@ -102,12 +96,12 @@ public class ConsumerStarter implements Starter {
     }
   }
 
-  private List<SyncFilter> fromPipelineConfig(List<FilterConfig> filters, SyncerFilter syncerFilter) {
+  private List<SyncFilter> fromPipelineConfig(FilterConfig filter, SyncerFilter syncerFilter) {
     SyncerFilterMeta filterMeta = syncerFilter.getFilterMeta();
-    SpelExpressionParser parser = new SpelExpressionParser();
     List<SyncFilter> res = new ArrayList<>();
-    for (FilterConfig filter : filters) {
-      res.add(filter.addMeta(id, filterMeta).toFilter(parser));
+    SyncFilter e = filter.addMeta(id, filterMeta).toFilter();
+    if (e != null) {
+      res.add(e);
     }
     return res;
   }

@@ -25,6 +25,7 @@ function setupSyncerConfig() {
 
     cp ${CONFIG_DIR}/${syncerDir}/producer.yml ${TEST_DATA_DIR}/config/producer.yml
     cp ${CONFIG_DIR}/${syncerDir}/consumer/* ${TEST_DATA_DIR}/config/consumer/
+    cp ${TEST_DIR}/../config-sample/src/main/java/* ${TEST_DATA_DIR}/config/consumer/
 }
 
 

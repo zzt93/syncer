@@ -7,7 +7,7 @@ Full and usable samples can be found under [`test/config/`](test/config/)
  - <a name="connection"></a>`connection`: `ip`, `address`, `port`, `user`, `password`, `passwordFile`
  - `file`: absolute path to binlog file
 
-```yml
+```yaml
 
 input:
 - connection:
@@ -42,16 +42,8 @@ input:
         entities:
           - name: simple_type
 
-# tmp solution for unsigned byte conversion, no need if no unsigned byte
 filter:
-  - method: '
-  public void filter(List<SyncData> list) {
-     SyncData sync = list.get(0);
-     SyncUtil.unsignedByte(sync, "tinyint");
-     SyncUtil.unsignedByte(sync, "type");
-  }
-'
-# tmp solution
+  sourcePath: /absolute/path/to/FilterXX.java
 
 output:
   mysql:
@@ -104,17 +96,17 @@ input:
 #### Filter
 
 
-- `method` (**preferred: more powerful and easier to write**) : write a java class implements `MethodFilter`  to handle `SyncData`
-  - Import dependency:
+- `sourcePath` (**preferred: more powerful and easier to write**) : write a java class implements `MethodFilter`  to handle `SyncData`
+  - Import latest dependency:
   ```xml
         <dependency>
             <groupId>com.github.zzt93</groupId>
             <artifactId>syncer-data</artifactId>
-            <version>1.0.1-SNAPSHOT</version>
+            <version>1.0.2-SNAPSHOT</version>
         </dependency>
 
   ```
-  - Write a class implement `MethodFilter`
+  - Write a class implement `MethodFilter` **without package name**: use all api provided by `SyncData` to do any change you like
   ```java
     public class MenkorFilterImpl implements MethodFilter {
       @Override
@@ -130,23 +122,11 @@ input:
     }
 
   ```
-  - Copy method filter to config file:
-  ```$xslt
+  - config it:
+  ```yaml
   filter:
-    - method: '      public void filter(List<SyncData> list) {
-                       SyncData data = list.get(0);
-                       if (data.getField("location") != null) {
-                         Map location = SyncUtil.fromJson((String) data.getField("location"));
-                         if (!location.isEmpty()) {
-                           data.addField("geom", SQLFunction.geomfromtext("point(" + location.get("longitude") + "," + location.get("latitude") + ")"));
-                         }
-                       }
-                     }'
-                     
+    sourcePath: /data/config/consumer/ColdFilter.java
   ```
-  - Limitation: 
-    - Not support Single Line Comments or Slash-slash Comments
-
 
 
 

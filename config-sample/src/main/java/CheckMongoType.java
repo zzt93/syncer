@@ -1,7 +1,6 @@
-package com.github.zzt93.syncer.config.code;
-
 import com.github.zzt93.syncer.data.SyncData;
 import com.github.zzt93.syncer.data.util.MethodFilter;
+import org.bson.BsonTimestamp;
 
 import java.math.BigDecimal;
 import java.sql.Timestamp;
@@ -28,7 +27,7 @@ public class CheckMongoType implements MethodFilter {
         String varchar = (String) simple.get("varchar");
         BigDecimal decimal = (BigDecimal) simple.get("decimal");
         Double aDouble = (Double) simple.get("aDouble");
-        org.bson.BsonTimestamp timestamp = (org.bson.BsonTimestamp) simple.get("timestamp");
+        BsonTimestamp timestamp = (BsonTimestamp) simple.get("timestamp");
       }
     }
     if (sync.containField("nestedIn")) {

@@ -1,5 +1,3 @@
-package com.github.zzt93.syncer.config.code;
-
 import com.github.zzt93.syncer.data.SyncData;
 import com.github.zzt93.syncer.data.util.MethodFilter;
 import com.github.zzt93.syncer.data.util.SyncUtil;

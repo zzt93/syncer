@@ -11,6 +11,7 @@
         <module>syncer-data</module>
         <module>syncer-core</module>
         <module>instrumentation</module>
+        <module>config-sample</module>
     </modules>
     <packaging>pom</packaging>
 
