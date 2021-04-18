@@ -17,7 +17,7 @@ input:
           - name: simple_type
 
 filter:
-  sourcePath: /data/config/consumer/ColdFilter.java
+  sourcePath: /data/config/consumer/Simplest.java
 
 output:
   mysql:
