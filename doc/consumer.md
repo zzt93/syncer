@@ -97,7 +97,7 @@ input:
 
 
 - `sourcePath` (**preferred: more powerful and easier to write**) : write a java class implements `MethodFilter`  to handle `SyncData`
-  - Import latest dependency:
+  - Open a new maven project and import latest dependency (not import other dependency):
   ```xml
         <dependency>
             <groupId>com.github.zzt93</groupId>
@@ -108,16 +108,21 @@ input:
   ```
   - Write a class implement `MethodFilter` **without package name**: use all api provided by `SyncData` to do any change you like
   ```java
-    public class MenkorFilterImpl implements MethodFilter {
+    import com.github.zzt93.syncer.data.SyncData;
+    import com.github.zzt93.syncer.data.util.MethodFilter;
+    import com.github.zzt93.syncer.data.util.SyncUtil;
+    
+    import java.util.List;
+    
+    /**
+     * @author zzt
+     */
+    public class Simplest implements MethodFilter {
       @Override
       public void filter(List<SyncData> list) {
-        SyncData data = list.get(0);
-        if (data.getField("location") != null) {
-          Map location = SyncUtil.fromJson((String) data.getField("location"));
-          if (!location.isEmpty()) {
-            data.addField("geom", SQLFunction.geomfromtext("point(" + location.get("longitude") + "," + location.get("latitude") + ")"));
-          }
-        }
+        SyncData sync = list.get(0);
+        SyncUtil.unsignedByte(sync, "tinyint");
+        SyncUtil.unsignedByte(sync, "type");
       }
     }
 
@@ -127,6 +132,9 @@ input:
   filter:
     sourcePath: /data/config/consumer/ColdFilter.java
   ```
+  - debug code
+    - add log if in production env by slf4j logger
+    - [how to add breakpoint to debug?](https://github.com/zzt93/syncer/issues/18)
 
 
 
