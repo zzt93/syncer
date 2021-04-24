@@ -6,7 +6,7 @@ import org.elasticsearch.client.transport.TransportClient;
 import org.elasticsearch.common.settings.Settings;
 import org.elasticsearch.common.settings.Settings.Builder;
 import org.elasticsearch.common.transport.InetSocketTransportAddress;
-import org.elasticsearch.xpack.client.PreBuiltXPackTransportClient;
+import org.elasticsearch.transport.client.PreBuiltTransportClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.util.Assert;
@@ -30,7 +30,7 @@ public class ElasticsearchConnection extends ClusterConnection {
     // https://discuss.elastic.co/t/getting-availableprocessors-is-already-set-to-1-rejecting-1-illegalstateexception-exception/103082
     System.setProperty("es.set.netty.runtime.available.processors", "false");
 
-    TransportClient client = new PreBuiltXPackTransportClient(settings());
+    TransportClient client = new PreBuiltTransportClient(settings());
     for (String clusterNode : getClusterNodes()) {
       String hostName = substringBeforeLast(clusterNode, COLON);
       String port = substringAfterLast(clusterNode, COLON);

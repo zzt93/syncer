@@ -6,6 +6,9 @@ import org.apache.hadoop.hbase.client.Delete;
 import org.apache.hadoop.hbase.client.Mutation;
 import org.apache.hadoop.hbase.client.Put;
 
+import java.math.BigDecimal;
+import java.sql.Timestamp;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -32,11 +35,37 @@ public class HBaseMapper implements Mapper<SyncData, Mutation> {
     Put put = new Put(toBytes(syncData.getDbId()));
     for (Map.Entry<String, Object> e : fields.entrySet()) {
       if (e.getValue() == null) continue;
-      String s = e.getValue().toString();
       String key = e.getKey();
-      put.addColumn(toBytes(syncData.getColumnFamily(key)), toBytes(key), toBytes(s));
+      put.addColumn(toBytes(syncData.getColumnFamily(key)), toBytes(key), typeConversion(e.getValue()));
     }
     return put;
+  }
+
+  private byte[] typeConversion(Object s) {
+    if (s instanceof String) {
+      return toBytes(((String) s));
+    } else if (s instanceof Boolean) {
+      return toBytes(((Boolean) s));
+    } else if (s instanceof Long) {
+      return toBytes(((Long) s));
+    } else if (s instanceof Float) {
+      return toBytes(((Float) s));
+    } else if (s instanceof Double) {
+      return toBytes(((Double) s));
+    } else if (s instanceof Integer) {
+      return toBytes(((Integer) s));
+    } else if (s instanceof Short) {
+      return toBytes(((Short) s));
+    } else if (s instanceof BigDecimal) {
+      return toBytes(((BigDecimal) s));
+    } else if (s instanceof byte[]) {
+      return ((byte[]) s);
+    } else if (s instanceof Timestamp) {
+      return toBytes(((Timestamp) s).getTime());
+    } else if (s instanceof Date) {
+      return toBytes(((Date) s).getTime());
+    }
+    throw new IllegalArgumentException("Unsupported type: " + s.getClass());
   }
 
   private static Delete deleteColumnFamily(String rowKey, String columnFamily) {
