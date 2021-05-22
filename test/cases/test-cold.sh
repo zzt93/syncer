@@ -22,16 +22,16 @@ function test-non-latest() {
 
     docker start syncer
     # cold(latest) vs no cold
-    cmpFromTo extractConst extractESCount ${num} correctness
-    cmpFromTo extractConst extractESCount 0 news
-    cmpFromTo extractConst extractMySqlResultCount ${num} correctness
+    cmpFromTo extractConst extractESCount ${num} test correctness
+    cmpFromTo extractConst extractESCount 0 test news
+    cmpFromTo extractConst extractMySqlResultCount ${num}
 
     # Given
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
     # cold(latest) vs no cold
-    cmpFromTo extractConst extractESCount $(( 2 * num )) correctness
-    cmpFromTo extractConst extractMySqlResultCount $(( 2 * num )) correctness
+    cmpFromTo extractConst extractESCount $(( 2 * num )) test correctness
+    cmpFromTo extractConst extractMySqlResultCount $(( 2 * num ))
 
     # Given
     bash script/generate_data.sh ${num} ${env} $(( 2 * num ))
@@ -42,10 +42,10 @@ function test-non-latest() {
     bash script/load_data.sh ${env}
 
     # Then: sync to es
-    cmpFromTo extractConst extractESCount $(( 4 * num )) correctness
-    cmpFromTo extractConst extractESCount $(( 3 * num )) types
-    cmpFromTo extractConst extractESCount $(( 3 * num )) news
-    cmpFromTo extractConst extractESCount $(( 3 * num )) simple_type
+    cmpFromTo extractConst extractESCount $(( 4 * num )) test correctness
+    cmpFromTo extractConst extractESCount $(( 3 * num )) test types
+    cmpFromTo extractConst extractESCount $(( 3 * num )) test news
+    cmpFromTo extractConst extractESCount $(( 3 * num )) test simple_type
     # Then: sync to mysql
     cmpFromTo extractMySqlCount extractMySqlResultCount
 

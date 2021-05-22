@@ -142,6 +142,7 @@ function cmpFromTo() {
     if [[ -z ${dbs} ]]; then
         dbs=${defaultDBs}
     fi
+    tableSel=$5
 
     hasError=false
     if [[ ${MYSQL_INSTANCE} = 0 ]]; then
@@ -150,6 +151,7 @@ function cmpFromTo() {
         for dbPrefix in ${dbs} ; do
             db=${dbPrefix}_${i}
             for table in ${db2table[${dbPrefix}]} ; do
+              if [[ -n $tableSel ]] && [[ $table = $tableSel ]]; then
                 from=`${fromF} ${instance} ${db} ${table} ${expected}`
                 logi "[Sync input]: $fromF ${instance} ${db}.${table} ${expected}: $from"
                 # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
@@ -159,6 +161,7 @@ function cmpFromTo() {
                     loge "$table not right"
                     hasError=true
                 fi
+              fi
             done
         done
     else
@@ -167,6 +170,7 @@ function cmpFromTo() {
             for dbPrefix in ${dbs} ; do
                 db=${dbPrefix}_${i}
                 for table in ${db2table[${dbPrefix}]} ; do
+                  if [[ -n $tableSel ]] && [[ $table = $tableSel ]]; then
                     from=`${fromF} ${instance} ${db} ${table} ${expected}`
                     logi "[Sync input]: $fromF ${instance} ${db}.${table} ${expected}: $from"
                     # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
@@ -176,6 +180,7 @@ function cmpFromTo() {
                         loge "$table not right"
                         hasError=true
                     fi
+                  fi
                 done
             done
         done
