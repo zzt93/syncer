@@ -56,12 +56,12 @@ public class ColdStart {
     return res;
   }
 
-  public String select(String repo, long page, int pageSize) {
+  public String select(String repo, long offset, int pageSize) {
     String field = fields.toSql();
     if (where == null) {
-      return String.format("select %s from `%s`.`%s` order by %s limit %s,%s", field, repo, entity, pkName, page * pageSize, pageSize);
+      return String.format("select %s from `%s`.`%s` order by %s limit %s,%s", field, repo, entity, pkName, offset, pageSize);
     }
-    return String.format("select %s from `%s`.`%s` where %s order by %s limit %s,%s", field, repo, entity, where, pkName, page * pageSize, pageSize);
+    return String.format("select %s from `%s`.`%s` where %s order by %s limit %s,%s", field, repo, entity, where, pkName, offset, pageSize);
   }
 
   public SyncData[] fromSqlRes(String repo, List<Map<String, Object>> fields, Function<Integer, DataId> nowDataId) {

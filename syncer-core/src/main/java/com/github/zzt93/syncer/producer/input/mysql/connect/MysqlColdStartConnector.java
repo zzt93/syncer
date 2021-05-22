@@ -26,10 +26,12 @@ import static com.github.zzt93.syncer.common.util.RegexUtil.regexToLike;
 public class MysqlColdStartConnector implements MasterConnector {
   private final JdbcTemplate jdbcTemplate;
   private final List<ColdStart> colds;
-  private BinlogDataId nowDataId;
+  private final JdbcRowMapper rowMapper;
+  private final BinlogDataId nowDataId;
 
   public MysqlColdStartConnector(MysqlConnection connection, List<ColdStart> colds) {
     jdbcTemplate = new JdbcTemplate(connection.dataSource());
+    rowMapper = new JdbcRowMapper();
     this.colds = colds;
     nowDataId = init(jdbcTemplate);
   }
@@ -88,9 +90,10 @@ public class MysqlColdStartConnector implements MasterConnector {
     }
 
     log.info("[Cold start] [{}.{}] count({}) {} [{}, {}] pageSize={}", repo, entity, stat.getCount(), pkName, stat.getMinId(), stat.getMaxId(), pageSize);
-    for (long pageNum = 0; pageNum < stat.getCount(); pageNum+= pageSize) {
-      List<Map<String, Object>> fields = jdbcTemplate.queryForList(coldStart.select(repo, pageNum, pageSize));
-      SyncData[] syncData = coldStart.fromSqlRes(repo, fields, i -> nowDataId.copyAndSetOrdinal(i));
+    for (long offset = 0; offset < stat.getCount(); offset += pageSize) {
+      List<Map<String, Object>> fields = jdbcTemplate.query(coldStart.select(repo, offset, pageSize), rowMapper);
+      int finalOffset = (int) offset;
+      SyncData[] syncData = coldStart.fromSqlRes(repo, fields, ordinal -> nowDataId.copyAndSetOrdinal(finalOffset + ordinal));
       producerSink.coldOutput(syncData);
     }
     log.info("[Cold done] [{}.{}] count({})", repo, entity, stat.getCount());

@@ -23,6 +23,7 @@ function test-non-latest() {
     docker start syncer
     # cold(latest) vs no cold
     cmpFromTo extractConst extractESCount ${num} correctness
+    cmpFromTo extractConst extractESCount 0 news
     cmpFromTo extractConst extractMySqlResultCount ${num} correctness
 
     # Given
