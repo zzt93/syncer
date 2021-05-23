@@ -24,7 +24,9 @@ filter:
   sourcePath: /data/config/consumer/ColdFilter.java
 
 output:
-  elasticsearch:
+  mysql:
     connection:
-      clusterName: ${ES_CLUSTER}
-      clusterNodes: ["${ES_ADDR}:9300"]
+      address: ${MYSQL_OUT}
+      port: 3306
+      user: root
+      password: ${MYSQL_OUT_PASS}
