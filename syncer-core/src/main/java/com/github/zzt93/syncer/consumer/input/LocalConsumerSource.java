@@ -73,9 +73,25 @@ public abstract class LocalConsumerSource implements ConsumerSource {
       return false;
     }
     ack.append(connectionIdentifier, data.getDataId());
+    directPut(data);
+    return true;
+  }
+
+  @SneakyThrows
+  @Override
+  public boolean coldInput(SyncData[] data) {
+    for (SyncData datum : data) {
+      if (datum == null) {
+        continue;
+      }
+      directPut(datum);
+    }
+    return true;
+  }
+
+  private void directPut(SyncData data) throws InterruptedException {
     logger.debug("Consumer({}, {}) receive: {}", getSyncInitMeta(), clientId, data);
     toFilter.put(data.setSourceIdentifier(connectionIdentifier));
-    return true;
   }
 
   @SneakyThrows

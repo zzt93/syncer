@@ -18,6 +18,7 @@ import java.sql.Date;
 import java.sql.Timestamp;
 import java.util.HashMap;
 
+import static com.github.zzt93.syncer.common.data.ColdStartDataId.BINLOG_COLD;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -56,6 +57,15 @@ public class SyncDataTest {
     assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=null}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, before=null)))",
         write.toString());
     assertEquals("SyncData(inner=Meta{dataId=mysql-bin.00001/4/6/0, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=null}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, before=null)))",
+        write.toString());
+  }
+
+  @Test
+  public void testColdStartToString() {
+    SyncData write = new SyncData(BINLOG_COLD, SimpleEventType.WRITE, "test", "test", "id", 1234, new NamedFullRow(Maps.newHashMap()));
+    assertEquals("SyncData(inner=Meta{dataId=cold-start, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=null}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, before=null)))",
+        write.toString());
+    assertEquals("SyncData(inner=Meta{dataId=cold-start, connectionIdentifier='null', syncByQuery=null, esScriptUpdate=null, updated=null, partitionField=null, copy=0, extraQueryContext=null}, result=SyncResult(super=SyncResultBase(super=SyncMeta(eventType=WRITE, repo=test, entity=test, id=1234, primaryKeyName=id), fields={}, before=null)))",
         write.toString());
   }
 

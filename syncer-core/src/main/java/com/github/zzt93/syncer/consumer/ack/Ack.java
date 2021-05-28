@@ -1,5 +1,6 @@
 package com.github.zzt93.syncer.consumer.ack;
 
+import com.github.zzt93.syncer.common.data.ColdStartDataId;
 import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.SyncInitMeta;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
@@ -104,6 +105,7 @@ public class Ack {
    * append `outputSize` at the beginning of consumer
    */
   public void append(String identifier, DataId dataId) {
+    if (ColdStartDataId.isCold(dataId)) return;
     if (ackMap.get(identifier).append(dataId, outputSize)) {
       logger.debug("Append {} {} to ack log", identifier, dataId);
     } else {
@@ -115,6 +117,7 @@ public class Ack {
    * remove one when ack is received from a output
    */
   public void remove(String identifier, DataId dataId) {
+    if (ColdStartDataId.isCold(dataId)) return;
     boolean remove = false;
     try {
       remove = ackMap.get(identifier).remove(dataId, 1);

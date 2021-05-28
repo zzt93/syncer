@@ -1,6 +1,6 @@
 package com.github.zzt93.syncer.producer.input.mysql.connect;
 
-import com.github.zzt93.syncer.common.data.BinlogDataId;
+import com.github.zzt93.syncer.common.data.ColdStartDataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.common.MysqlConnection;
@@ -27,13 +27,11 @@ public class MysqlColdStartConnector implements MasterConnector {
   private final JdbcTemplate jdbcTemplate;
   private final List<ColdStart> colds;
   private final JdbcRowMapper rowMapper;
-  private final BinlogDataId nowDataId;
 
   public MysqlColdStartConnector(MysqlConnection connection, List<ColdStart> colds) {
     jdbcTemplate = new JdbcTemplate(connection.dataSource());
     rowMapper = new JdbcRowMapper();
     this.colds = colds;
-    nowDataId = init(jdbcTemplate);
   }
 
   @Getter
@@ -41,14 +39,6 @@ public class MysqlColdStartConnector implements MasterConnector {
   private static class MySQLMasterStatus {
     private String file;
     private long position;
-  }
-
-  private BinlogDataId init(JdbcTemplate jdbcTemplate) {
-    MySQLMasterStatus status = jdbcTemplate.queryForObject("show master status", new BeanPropertyRowMapper<>(MySQLMasterStatus.class));
-    if (status == null) {
-      throw new InvalidConfigException("Fail to fetch binlog info by `show master status`");
-    }
-    return new BinlogDataId(status.getFile(), status.getPosition(), status.getPosition());
   }
 
   @Override
@@ -92,8 +82,7 @@ public class MysqlColdStartConnector implements MasterConnector {
     log.info("[Cold start] [{}.{}] count({}) {} [{}, {}] pageSize={}", repo, entity, stat.getCount(), pkName, stat.getMinId(), stat.getMaxId(), pageSize);
     for (long offset = 0; offset < stat.getCount(); offset += pageSize) {
       List<Map<String, Object>> fields = jdbcTemplate.query(coldStart.select(repo, offset, pageSize), rowMapper);
-      int finalOffset = (int) offset;
-      SyncData[] syncData = coldStart.fromSqlRes(repo, fields, ordinal -> nowDataId.copyAndSetOrdinal(finalOffset + ordinal));
+      SyncData[] syncData = coldStart.fromSqlRes(repo, fields, ColdStartDataId.BINLOG_COLD);
       producerSink.coldOutput(syncData);
     }
     log.info("[Cold done] [{}.{}] count({})", repo, entity, stat.getCount());

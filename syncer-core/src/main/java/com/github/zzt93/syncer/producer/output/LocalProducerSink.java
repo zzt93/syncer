@@ -57,7 +57,7 @@ public class LocalProducerSink implements ProducerSink {
 
   @Override
   public boolean coldOutput(SyncData[] data) {
-    return consumerSource.input(data);
+    return consumerSource.coldInput(data);
   }
 
   @Override

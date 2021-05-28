@@ -18,7 +18,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
-import java.util.function.Function;
 
 @Getter
 @Setter
@@ -64,11 +63,11 @@ public class ColdStart {
     return String.format("select %s from `%s`.`%s` where %s order by %s limit %s,%s", field, repo, entity, where, pkName, offset, pageSize);
   }
 
-  public SyncData[] fromSqlRes(String repo, List<Map<String, Object>> fields, Function<Integer, DataId> nowDataId) {
+  public SyncData[] fromSqlRes(String repo, List<Map<String, Object>> fields, DataId nowDataId) {
     SyncData[] res = new SyncData[fields.size()];
     for (int i = 0; i < fields.size(); i++) {
       Map<String, Object> f = fields.get(i);
-      res[i] = new SyncData(nowDataId.apply(i), SimpleEventType.WRITE, repo, getEntity(), getPkName(), f.get(getPkName()), new NamedFullRow(f));
+      res[i] = new SyncData(nowDataId, SimpleEventType.WRITE, repo, getEntity(), getPkName(), f.get(getPkName()), new NamedFullRow(f));
     }
     return res;
   }

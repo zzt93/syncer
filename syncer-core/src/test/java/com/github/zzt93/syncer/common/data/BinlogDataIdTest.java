@@ -40,6 +40,8 @@ public class BinlogDataIdTest {
 
     Assert.assertEquals(0, _0.compareTo(_0));
     Assert.assertEquals(0, _00.compareTo(_00));
+
+    Assert.assertEquals(-1, ColdStartDataId.BINLOG_COLD.compareTo(_0));
   }
 
 }

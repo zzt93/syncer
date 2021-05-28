@@ -172,10 +172,10 @@ function cmpFromTo() {
                 for table in ${db2table[${dbPrefix}]} ; do
                   if [[ -n $tableSel ]] && [[ $table = $tableSel ]]; then
                     from=`${fromF} ${instance} ${db} ${table} ${expected}`
-                    logi "[Sync input]: $fromF ${instance} ${db}.${table} ${expected}: $from"
+                    logi "[Sync input: $fromF] ${instance} ${db}.${table} ${expected}: $from"
                     # instance is only used by DRDS test case, and target instance is always mysql_0, see drds.yml & sync config
                     to=`${toF} mysql_0 ${db} ${table} ${expected}`
-                    logi "[Sync result: $toF mysql_0 ${db} ${table} ${expected}: $to"
+                    logi "[Sync result: $toF] mysql_0 ${db} ${table} ${expected}: $to"
                     if [[ ${to} -ne "$from" ]];then
                         loge "$table not right"
                         hasError=true

@@ -35,4 +35,5 @@ public interface ConsumerSource extends Hashable {
 
   boolean sent(SyncData data);
 
+  boolean coldInput(SyncData[] data);
 }
