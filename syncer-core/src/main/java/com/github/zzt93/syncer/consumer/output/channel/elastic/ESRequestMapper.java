@@ -4,6 +4,7 @@ import com.github.zzt93.syncer.common.data.ESScriptUpdate;
 import com.github.zzt93.syncer.common.data.Mapper;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
+import com.github.zzt93.syncer.common.util.SyncDataTypeUtil;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.elastic.ESRequestMapping;
 import org.apache.lucene.search.join.ScoreMode;
@@ -56,7 +57,8 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     String index = data.getEsIndex();
     String type = data.getEsType();
     String id = data.getEsId();
-    HashMap<String, Object> source = data.getFields();
+    HashMap<String, Object> source = new HashMap<>();
+    SyncDataTypeUtil.mapTo(data.getFields(), source);
     switch (data.getType()) {
       case WRITE:
         return client.prepareIndex(index, type, id).setSource(source);

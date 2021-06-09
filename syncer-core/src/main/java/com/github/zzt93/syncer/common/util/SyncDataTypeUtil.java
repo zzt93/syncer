@@ -2,8 +2,6 @@ package com.github.zzt93.syncer.common.util;
 
 import com.github.zzt93.syncer.common.data.ExtraQuery;
 import com.github.zzt93.syncer.common.data.ExtraQueryField;
-import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import org.springframework.expression.Expression;
 
 import java.util.HashMap;
@@ -15,50 +13,20 @@ import java.util.Map;
  */
 public class SyncDataTypeUtil {
 
-	public static final String ROW_ALL = "fields.*";
-	public static final String ROW_FLATTEN = "fields.*.flatten";
-	public static final String EXTRA_ALL = "extra.*";
-	public static final String EXTRA_FLATTEN = "extra.*.flatten";
-
 	/**
-	 *
-	 * @param context parse context
 	 * @param mapping unmodifiable structure of json
 	 * @param res result map
-	 * @param interpretSpecialString whether include some special string
-	 *
-	 * @see SyncDataTypeUtil#ROW_ALL
-	 * @see SyncDataTypeUtil#ROW_FLATTEN
 	 */
-	public static void mapToJson(SyncData context, final Map<String, Object> mapping, Map<String, Object> res,
-															 boolean interpretSpecialString) {
+	public static void mapTo(final Map<String, Object> mapping, Map<String, Object> res) {
 		for (String key : mapping.keySet()) {
 			Object value = mapping.get(key);
 			if (value instanceof Expression) {
 				throw new UnsupportedOperationException();
 			} else if (value instanceof Map) {
 				Map map = (Map) value;
-				mapObj(context, res, key, map, interpretSpecialString);
-			} else if (value instanceof String && interpretSpecialString) {
-				String expr = (String) value;
-				switch (expr) {
-					case ROW_ALL:
-						mapObj(context, res, key, context.getFields(), false);
-						break;
-					case EXTRA_ALL:
-						res.put(key, context.getExtras());
-						break;
-					case ROW_FLATTEN:
-						mapToJson(context, context.getFields(), res, false);
-						break;
-					case EXTRA_FLATTEN:
-						res.putAll(context.getExtras());
-						break;
-					default:
-						throw new InvalidConfigException("Unknown special expression: " + expr);
-				}
+				mapObj(res, key, map);
 			} else if (value instanceof ExtraQuery) {
-				res.put(key,  ((ExtraQuery) value).getQueryResult(key));
+				throw new UnsupportedOperationException();
 			} else if (value instanceof ExtraQueryField) {
 				res.put(key, ((ExtraQueryField) value).getQueryResult(key));
 			} else {
@@ -67,26 +35,25 @@ public class SyncDataTypeUtil {
 		}
 	}
 
-	private static void mapObj(SyncData src, Map<String, Object> res, String objKey, Map objMap,
-														 boolean interpretSpecialString) {
+	private static void mapObj(Map<String, Object> res, String objKey, Map objMap) {
 		HashMap<String, Object> sub = new HashMap<>();
-		mapToJson(src, objMap, sub, interpretSpecialString);
+		mapTo(objMap, sub);
 		res.put(objKey, sub);
 	}
 
-	private static Object convert(SyncData context, Object value, String key) {
+	private static Object convert(String key, Object value) {
 		if (value instanceof Expression) {
 			throw new UnsupportedOperationException();
 		} else if (value instanceof Map) {
 			Map<String, Object> map = (Map<String, Object>) value;
 			for (Map.Entry<String, Object> e : map.entrySet()) {
-				e.setValue(convert(context, e.getValue(), e.getKey()));
+				e.setValue(convert(e.getKey(), e.getValue()));
 			}
 			return map;
 		} else if (value instanceof List) {
 			List l = (List) value;
 			for (int i = 0; i < l.size(); i++) {
-				l.set(i, convert(context, l.get(i), null));
+				l.set(i, convert(null, l.get(i)));
 			}
 			return value;
 		} else if (value instanceof ExtraQuery) {
@@ -98,6 +65,6 @@ public class SyncDataTypeUtil {
 	}
 
 	public static void convert(Object value) {
-		convert(null, value, null);
+		convert(null, value);
 	}
 }
