@@ -79,7 +79,7 @@ public class Ack {
   private SyncInitMeta recoverSyncInitMeta(FileBasedMap<DataId> fileBasedMap,
                                            MasterSourceType sourceType, SyncInitMeta syncInitMeta) throws IOException {
     AckMetaData bytes = fileBasedMap.readData();
-    if (bytes.isEmpty()) {
+    if (!bytes.isEmpty()) {
       try {
         String data = bytes.toDataStr();
         switch (sourceType) {
