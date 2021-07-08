@@ -39,14 +39,11 @@ public class SQLMapper implements Mapper<SyncData, String> {
     String schema = data.getDb();
     String table = data.getTable();
     String id = data.getDbId();
-    String idName = data.getPrimaryKeyName();
+    String idName = "id";
     HashMap<String, Object> map = data.getFields();
     switch (data.getType()) {
       case WRITE:
-        // add id for MySQL output, make it idempotent.
-        HashMap<String, Object> copy = new HashMap<>(map);
-        copy.put(idName, id);
-        String[] entry = join(copy, WRITE);
+        String[] entry = join(map, WRITE);
         return ParameterReplace
             .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1], idName, idName);
       case DELETE:
