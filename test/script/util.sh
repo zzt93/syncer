@@ -223,3 +223,42 @@ function assertLogNotExist() {
         exit 77
     fi
 }
+
+function assertFileLogNotExist() {
+  msg=$1
+  dir=${TEST_DIR}/data/syncer/log
+  cd $dir
+  for f in `ls `; do
+    res=`cat $f | grep -v 'Invalid config for' | grep -v 'No such repo' | grep "$msg"`
+    if [[ -n "${res}" ]]; then
+        loge "Should not be fresh run"
+        exit 77
+    fi
+  done
+  cd -
+}
+
+function checkMeta() {
+  dir=${TEST_DIR}/data/syncer/input/last_position
+  if [ ! -d $dir ]; then
+    loge "$dir not exist"
+    exit 77
+  fi
+  cd $dir
+  for consumer in `ls `; do
+#    echo $consumer
+    if [ ! -d $consumer ]; then
+      loge "$consumer not exist"
+      exit 77
+    fi
+    for meta in `ls $consumer`; do
+#      echo $meta
+      content=`cat "$consumer/$meta" `
+      if [ -z "$content" ]; then
+      loge "$content is empty"
+          exit 77
+      fi
+    done
+  done
+  cd -
+}

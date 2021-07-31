@@ -22,7 +22,7 @@ import static com.github.zzt93.syncer.data.SimpleEventType.WRITE;
 public class SQLMapper implements Mapper<SyncData, String> {
 
   // TODO 2019-11-23 ignore dup is right?
-  static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3) ON DUPLICATE KEY UPDATE ?4=?5";
+  static final String INSERT_INTO_VALUES = "insert into `?0`.`?1` (?2) values (?3)";
   static final String DELETE_FROM_WHERE_ID = "delete from `?0`.`?1` where id = ?2";
   static final String UPDATE_SET_WHERE_ID = "update `?0`.`?1` set ?3 where id = ?2";
   static final String UPDATE_SET_WHERE = "update `?0`.`?1` set ?3 where ?2";
@@ -39,13 +39,12 @@ public class SQLMapper implements Mapper<SyncData, String> {
     String schema = data.getDb();
     String table = data.getTable();
     String id = data.getDbId();
-    String idName = "id";
     HashMap<String, Object> map = data.getFields();
     switch (data.getType()) {
       case WRITE:
         String[] entry = join(map, WRITE);
         return ParameterReplace
-            .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1], idName, idName);
+            .orderedParam(INSERT_INTO_VALUES, schema, table, entry[0], entry[1]);
       case DELETE:
         return ParameterReplace.orderedParam(DELETE_FROM_WHERE_ID, schema, table, id);
       case UPDATE:

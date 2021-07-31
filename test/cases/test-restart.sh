@@ -18,12 +18,14 @@ function test-restart() {
     bash script/generate_data.sh ${num} ${env}
     bash script/load_data.sh ${env}
 
-    docker restart syncer
+    docker stop syncer
+    rm -f ${TEST_DIR}/data/syncer/log/*.log
+    docker start syncer
     # Given
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
-    assertLogNotExist syncer Duplicate
+    assertFileLogNotExist syncer 'fresh run'
 
     # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
@@ -36,6 +38,8 @@ function test-restart() {
     all=$(( 4 * num ))
     cmpFromTo extractConst extractESCount ${all} copy
 
+    checkMeta
+    assertLogNotExist syncer Duplicate
     assertLogNotExist syncer ' ERROR '
 }
 
