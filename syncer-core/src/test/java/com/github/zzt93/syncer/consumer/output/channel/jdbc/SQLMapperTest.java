@@ -70,8 +70,8 @@ public class SQLMapperTest {
 
   @Test
   public void insert() {
-    String expected = ParameterReplace.orderedParam(INSERT_INTO_VALUES, "test", "table", "title", "'?4'", "id", "id");
-    Assert.assertEquals("insert into `test`.`table` (title) values ('?4') ON DUPLICATE KEY UPDATE id=id", expected);
+    String expected = ParameterReplace.orderedParam(INSERT_INTO_VALUES, "test", "table", "title", "'?4'");
+    Assert.assertEquals("insert into `test`.`table` (title) values ('?4')", expected);
   }
 
   @Test
