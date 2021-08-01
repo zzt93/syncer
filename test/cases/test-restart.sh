@@ -25,7 +25,7 @@ function test-restart() {
     bash script/generate_data.sh ${num} ${env} ${num}
     bash script/load_data.sh ${env}
 
-    assertFileLogNotExist syncer 'fresh run'
+    assertFileLogNotExist 'fresh run'
 
     # Then: sync to es
     cmpFromTo extractMySqlCount extractESCount
