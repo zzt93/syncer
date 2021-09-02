@@ -43,6 +43,9 @@ public class LocalProducerSink implements ProducerSink {
   @SneakyThrows
   private void holdForColdStart(SyncData... aim) {
     for (SyncData syncData : aim) {
+      if (syncData == null) {
+        continue;
+      }
       if (coldStartingRepo.equals(syncData.getRepo()) && coldStartingEntity.equals(syncData.getEntity())) {
         hold.put(syncData);
       }
