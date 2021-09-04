@@ -56,7 +56,7 @@ to multiple `SyncData`s.
 
 Manipulate `SyncData` via :
 
-- `sourcePath`: write a java class to handle `SyncData` (for more details, see filter part of *[Consumer Pipeline Config](conf.md)*)
+- `sourcePath`: write a java class to handle `SyncData` (for more details, see filter part of *[Consumer Pipeline Config](config/consumer-filter.md)*)
 - or skip it if no action needed
 
 

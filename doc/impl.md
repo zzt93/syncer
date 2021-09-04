@@ -11,6 +11,10 @@
 - Load yml file into environment property source
 - Bind property source into config model class
 
+#### Updated Asynchronously
+The business database query request is delayed as little as possible
+because Syncer listening change by Master-slave sync (binlog/oplog).
+
 #### Problem & Notice
 
 - For collection field: getter and setter will all be invoked -- this behavior depends on Spring Boot
