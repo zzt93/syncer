@@ -23,7 +23,7 @@
       user: root
       password: ${MYSQL_OUT_PASS}
   ```
-Full and usable samples can be found under [`test/config/`](test/config/)
+Full and usable samples can be found under [`test/config/`](../../test/config/)
 
 
 ### More Detail

@@ -7,7 +7,7 @@
     - If a table match multiple schemas & table (because the usage of regex), an error message will be logged and
       syncer will use anyone that match filter column
   - Table name filter
-  - Interested column filter
+  - Column name filter
     - If a change event go through column filter, and only primary key is left:
     - If change event type is `UPDATE`, then discard this change event -- because not support update id now;
     - Other change event type, keep it.
@@ -19,22 +19,23 @@
   - Version: 3.x, 4.0
     - Only 4.0 support field removed detection and sync (Because the limitation of ES/MySQL, it always means setting field to null in output target which may not what you want) 
   - Database filter (naming as `repos`), support regex
+    - If a change event match multiple schemas & table, we will use the first match (config file order) to filter/output,
+      i.e. the specific `repo` config will override the regex `repo` config
   - Collection name filter
-  - In a `UPDATE`, only changed column will be received (different from `MySQL`)
-  - automatic `_id` detection and set into `SyncData#id`
-  - If a change event match multiple schemas & table, we will use the first match (config file order) to filter/output,
-  i.e. the specific `repo` config will override the regex `repo` config
-  - If a change event go through column filter, and only primary key is left:
+  - Column name filter
+    - If a change event go through column filter, and only primary key is left:
     - If change event type is `UPDATE`, then discard this change event -- because not support update id now;
     - Other change event type, keep it.
-  - If config user/password for auth, it should have permission of `[listDatabases, find]`
+  - In a `UPDATE`, only changed column will be received (different from `MySQL`)
+  - automatic `_id` detection and set into `SyncData#id`
+  - If you config user/password for Mongo auth, it should have permission of `[listDatabases, find]`
   - Only support listening first level field (Because MongoDB store json, it may have multiple levels)
 - DRDS:
   - Same config as MySQL, but need to connect directly to RDS's MySQL because DRDS not support binlog dump
   - Remember to fetch partition key in `fields`
 
 ---
-
+#### Other Non-Functional Feature
 - Remember where we leave last time by writing file/position of binlog/oplog, and resume from there so as to avoid any data loss
   - More than once (at-least-once): we can ensure the at least once semantics now, so you need to make sure your output channel (the `consumer` of syncer output)
   is **idempotent** and your destination can handle it without dup. Counterexample: a table without primary key definitely
@@ -67,13 +68,12 @@ Manipulate `SyncData` via :
   - Update/Delete documents by `UpdateByQuery` or `DeleteByQuery`
   - Join/merge documents from different source when push to ES<sup>[1](#join_in_es)</sup>
     - ExtraQuery: do extra query to fetch extra needed info
-      - Support multiple extra dependent query via special mark `$var$`
-    - One to many relationship (parent-child relationship in ES)for document in different index
-    - Self referential relationship handle
+    - One to many relationships (parent-child relationship in ES)for document in different index
+    - Self-referential relationship handle
   - Add `upsert` support, fix `DocumentMissingException` use `upsert`, can be used in following two scenarios
     - Init load for data, by creating index manually and update synced field to ES (only support `MySQL` input) 
     - Fix some un-expected config/sync error
-  - No need code for search data preparation except config
+  - No need for other code for search data preparation
 
 - MySQL
   - [Version](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-versions.html): 5.5, 5.6, 5.7, 8.0
@@ -86,7 +86,7 @@ Manipulate `SyncData` via :
   - Bulk operation
   - Using `id` of data source as `key` of record, making sure the [orders between records](https://stackoverflow.com/questions/29511521/is-key-required-as-part-of-sending-messages-to-kafka)
   - Using `SyncResult` as msg `data`
-  - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
+  - Json serializer/deserializer
   - **Notice**: Kafka msg consumer has to handle change event idempotent;
   - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
   - Easy to re-consume, rebuild without affect biz db;
@@ -117,7 +117,7 @@ Manipulate `SyncData` via :
   - Supported version: depend on this [binlog connector lib](https://github.com/shyiko/mysql-binlog-connector-java)
   - Not support composite primary key
   - Not support update primary key
-  - Only support update/delete by query exact value, i.e. no support query analyzed field (`text` query when update)
+  - If you have extraQuery, only support update/delete by query exact value, i.e. no support query analyzed field (`text` query when update)
   - Data of numeric types (tinyint, etc) always returned **signed** regardless of whether column definition includes "unsigned" keyword or not.
   You may need to convert to unsigned if necessary.
     - If your output is MySQL, Syncer will handle this situation for you in new binlog connector
@@ -126,7 +126,7 @@ Manipulate `SyncData` via :
      // or
      SyncUtil.unsignedByte(sync, "xx");
   ```
-  - data of `*text`/`*blob` types always returned as a byte array (for `var*` this is true in future).
+  - data of `*text`/`*blob` types always returned as a byte array (for `var*` this is true in future version).
   You may need to convert to string if necessary.
     - If your output is MySQL, Syncer handle this situation for you.
   ```
@@ -144,4 +144,4 @@ Manipulate `SyncData` via :
   
 - ES
   - Don't update/delete use `syncer` and other way (REST api or Java api) at the same time, it may cause version conflict and fail the change
-  - Update/Delete by query will be executed at once, i.e. will not be buffered or use batch
+  - Update/Delete-by-query will be executed at once, i.e. will not be buffered or use batch

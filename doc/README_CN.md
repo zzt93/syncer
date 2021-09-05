@@ -3,11 +3,11 @@
 
 ## 特性
 
-- 一致性: 保证【数据源】与【数据目的地】的[数据一致](doc/consistency_CN.md)
+- 一致性: 保证【数据源】与【数据目的地】的[数据一致](consistency_CN.md)
 - 异步同步: 对数据源极小影响
-- 同步并修改: 支持编写Java代码来自定义同步过程[customize sync](doc/detail-feature.md)
-- 支持多种数据源：[MySQL/MongoDB to Kafka/ES/MySQL/HBase](doc/detail-feature.md)
-- ETL全量冷启动 & 增量同步 无缝结合: 不丢失任何数据
+- 同步并修改: 支持编写Java代码来[自定义同步过程](config/consumer-filter_CN.md)
+- 支持多种数据源：[MySQL/MongoDB to Kafka/ES/MySQL/HBase](detail-feature_CN.md)
+- ETL全量冷启动 & 增量同步 无缝结合: 不丢失任何数据，[例子](../test/config/cold/consumer/cold.yml)
 
 
 ## 使用
@@ -15,14 +15,14 @@
 ### 环境
 
 - MySQL 配置
-    - binlog_format: 行
-    - binlog_row_image：完整
+  - binlog_format: row
+  - binlog_row_image: full
 - MongoDB 配置：
   -（可选）更新`bind_ip` 以允许侦听来自配置地址上的应用程序的连接。
-    - 从启用复制集开始：
-      -`mongod --replSet myapp`
-        - 或者使用 docker: `docker run -d --name mongodb -p 27017:27017 -v /root/mongodb-container/db:/data/db mongo:3.2 mongod --replSet chat`
-    - shell 中的初始化复制集：`rs.initiate()`
+  - 启用复制集：
+    -`mongod --replSet myapp`
+      - 或者使用 docker: `docker run -d --name mongodb -p 27017:27017 -v /root/mongodb-container/db:/data/db mongo:3.2 mongod --replSet chat`
+  - shell 中的初始化复制集：`rs.initiate()`
       
 ### 运行
 ```
@@ -33,7 +33,7 @@ cd syncer/ && mvn package
 # use `-XX:+UseG1GC` if you have at least 4g memory and event input rate larger than 2*10^4/s
 java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar [--debug] [--port=40000] [--config=/absolute/path/to/syncerConfig.yml] --producerConfig=/absolute/path/to/producer.yml --consumerConfig=/absolute/path/to/consumer1.yml,/absolute/path/to/consumer2.yml
 ```
-完整可用的配置文件示例可以在 [`test/config/`](test/config/) 下找到，例如 [`test/config/simplest`](test/config/simplest)
+完整可用的配置文件示例可以在 [`test/config/`](../test/config) 下找到，例如 [`test/config/simplest`](../test/config/simplest)
 
 ## 如何 ？
 
@@ -65,4 +65,4 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 ---
 
 ## 实现
-实现细节可以在 [impl.md](doc/impl.md) 中找到
+实现细节可以在 [impl.md](impl.md) 中找到

@@ -1,5 +1,5 @@
 
-Full and usable samples can be found under [`test/config/`](test/config/)
+Full and usable samples can be found under [`test/config/`](../../test/config/)
 
 ### producer.yml
 - `input[]`
@@ -7,11 +7,11 @@ Full and usable samples can be found under [`test/config/`](test/config/)
  - <a name="connection"></a>`connection`: `ip`, `address`, `port`, `user`, `password`, `passwordFile`
  - `file`: absolute path to binlog file
 
-Full and usable samples can be found under [`test/config/`](test/config/)
+Full and usable samples can be found under [`test/config/`](../../test/config/)
 
 ### <a name="consumer_config"></a>consumer.yml
 
-Full and usable samples can be found under [`test/config/`](test/config/)
+Full and usable samples can be found under [`test/config/`](../../test/config/)
 
 #### Input
 - `input[]`:
@@ -34,10 +34,10 @@ Full and usable samples can be found under [`test/config/`](test/config/)
   - `onlyUpdated`: whether sync not `updated` event (only for `MySQL`)
     - `updated` definition: `Objects.deepEquals` == true 
 
-Full and usable samples can be found under [`test/config/`](test/config/)
+Full and usable samples can be found under [`test/config/`](../../test/config/)
 
 
 ### Syncer Config
 
-Usually no need to care, because it is used for meta info of Syncer. Samples can be found in [resources](syncer-core/src/main/resources)
+Usually no need to care, because it is used for meta info of Syncer. Samples can be found in [resources](../../syncer-core/src/main/resources)
 
