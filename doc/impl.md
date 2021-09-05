@@ -11,6 +11,11 @@
 - Load yml file into environment property source
 - Bind property source into config model class
 
+#### Mongo config
+The readConcern option allows you to control the consistency and isolation properties of the data read from replica sets and replica set shards.
+Through the effective use of write concerns and read concerns, you can adjust the level of consistency and availability guarantees as appropriate, such as waiting for stronger consistency guarantees, or loosening consistency requirements to provide higher availability.
+MongoDB drivers updated for MongoDB 3.2 or later support specifying read concern.
+
 #### Updated Asynchronously
 The business database query request is delayed as little as possible
 because Syncer listening change by Master-slave sync (binlog/oplog).

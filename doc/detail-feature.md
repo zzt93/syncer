@@ -4,34 +4,36 @@
 - If Syncer fail to connect to input data source, will abort
 - MySQL master source filter:
   - Schema filter (naming as `repos`), support regex
+    - If a table match multiple schemas & table (because the usage of regex), an error message will be logged and
+      syncer will use anyone that match filter column
   - Table name filter
   - Interested column filter
+    - If a change event go through column filter, and only primary key is left:
+    - If change event type is `UPDATE`, then discard this change event -- because not support update id now;
+    - Other change event type, keep it.
   - In a `UPDATE`, all interested column will be received even no change (different from `MongoDB`)
-  - automatic primary key detection and set into `id`
-  - If a table match multiple schema & table (because the usage of regex), an error message will be logged and
-      syncer will use any one that match filter column
-  - If an event go through column filter, and only primary key is left:
-    - If event type is `UPDATE`, then discard this event -- because not support update id now;
-    - Other event type, keep it.
-  - Support reading from binlog file to do data recovering in case of loss of data (`input.masters[x].file`)
-  - Support specify binlog file/position to start reading (`input.masters[x].connection.syncMeta[]`)
+  - automatic primary key detection and set into `SyncData#id`
+  - Support reading from binlog file to do data recovering in case of loss of data (`input[x].file`)
+  - Support specify binlog file/position to start reading (`input[x].connection.syncMeta[]`)
 - MongoDB master source filter:
   - Version: 3.x, 4.0
     - Only 4.0 support field removed detection and sync (Because the limitation of ES/MySQL, it always means setting field to null in output target which may not what you want) 
   - Database filter (naming as `repos`), support regex
   - Collection name filter
   - In a `UPDATE`, only changed column will be received (different from `MySQL`)
-  - automatic `_id` detection and set into `id`
-  - If an event match multiple schema & table, we will use the first specific match to filter/output,
+  - automatic `_id` detection and set into `SyncData#id`
+  - If a change event match multiple schemas & table, we will use the first match (config file order) to filter/output,
   i.e. the specific `repo` config will override the regex `repo` config
-  - If an event go through column filter, and only primary key is left:
-    - If event type is `UPDATE`, then discard this event -- because not support update id now;
-    - Other event type, keep it.
+  - If a change event go through column filter, and only primary key is left:
+    - If change event type is `UPDATE`, then discard this change event -- because not support update id now;
+    - Other change event type, keep it.
   - If config user/password for auth, it should have permission of `[listDatabases, find]`
   - Only support listening first level field (Because MongoDB store json, it may have multiple levels)
 - DRDS:
   - Same config as MySQL, but need to connect directly to RDS's MySQL because DRDS not support binlog dump
   - Remember to fetch partition key in `fields`
+
+---
 
 - Remember where we leave last time by writing file/position of binlog/oplog, and resume from there so as to avoid any data loss
   - More than once (at-least-once): we can ensure the at least once semantics now, so you need to make sure your output channel (the `consumer` of syncer output)
@@ -40,11 +42,6 @@
 - Multiple consumer can share a common connection to same data source, i.e. MySQL/MongoDB, to reduce the
 burden of remote master
 - Automatically skip synced item for consumers according to register info 
-
-
-The readConcern option allows you to control the consistency and isolation properties of the data read from replica sets and replica set shards.
-Through the effective use of write concerns and read concerns, you can adjust the level of consistency and availability guarantees as appropriate, such as waiting for stronger consistency guarantees, or loosening consistency requirements to provide higher availability.
-MongoDB drivers updated for MongoDB 3.2 or later support specifying read concern.
 
 ---
 
@@ -90,7 +87,7 @@ Manipulate `SyncData` via :
   - Using `id` of data source as `key` of record, making sure the [orders between records](https://stackoverflow.com/questions/29511521/is-key-required-as-part-of-sending-messages-to-kafka)
   - Using `SyncResult` as msg `data`
   - Json serializer/deserializer (see [here](https://github.com/zzt93/syncer/issues/1) for future opt)
-  - **Notice**: Kafka msg consumer has to handle event idempotent;
+  - **Notice**: Kafka msg consumer has to handle change event idempotent;
   - **Notice**: May [in disorder](https://stackoverflow.com/questions/46127716/kafka-ordering-guarantees) if error happen;
   - Easy to re-consume, rebuild without affect biz db;
 - HBase
