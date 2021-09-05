@@ -1,7 +1,7 @@
 
 # Syncer: MySQL/MongoDB => Elasticsearch/MySQL/Kafka/HBase 
 
-[中文文档](doc/README_CN.md)
+# [中文文档](doc/README_CN.md)
 
 ## Features
 
