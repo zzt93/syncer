@@ -12,7 +12,7 @@
         </dependency>
 
   ```
-  - 编写一个类实现`MethodFilter` **不能有包名**：使用`SyncData`提供的所有api来做你需要的任何改变
+  - 编写一个类实现`MethodFilter`（注意**不能有包名**）：使用`SyncData`提供的所有api来做你需要的任何改变
   ```java
     import com.github.zzt93.syncer.data.SyncData;
     import com.github.zzt93.syncer.data.util.MethodFilter;

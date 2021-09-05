@@ -37,12 +37,11 @@ java -server -XX:+UseG1GC -jar ./syncer-core/target/syncer-core-1.0-SNAPSHOT.jar
 
 ## 如何 ？
 
-如果您对如何使用 `Syncer` 或它的错误有任何问题，请写一个问题。
-我会尽快处理的。
+如果您对如何使用 `Syncer` 或有任何使用上的问题，请提一个issue。我会尽快处理的。
  
 ### 常问问题
 
-- 问：“在主题分区 xxx.xxPartition-0 上的相关 ID xxx 中出现错误，正在拆分和重试（还剩 5 次尝试）。错误：MESSAGE_TOO_LARGE”？
+- Q: 遇到报错 "Got error produce response in correlation id xxx on topic-partition xxx.xxPartition-0, splitting and retrying (5 attempts left). Error: MESSAGE_TOO_LARGE"?
     - A: 将消息 `batch.size` 调整为较小的数字或配置 `kafka` 以接收大消息
 
 
