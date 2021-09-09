@@ -7,10 +7,27 @@ import com.github.zzt93.syncer.producer.input.mysql.connect.BinlogInfo;
  */
 public class ColdStartDataId {
 
+  /**
+   * cold start not log in ack log:
+   * <li>no suitable id</li>
+   * <li>affect performance</li>
+   *
+   * @see #isCold(DataId)
+   */
   public static final BinlogDataId BINLOG_COLD = new BinlogDataId("", 0L, 0L) {
     @Override
     public SyncInitMeta getSyncInitMeta() {
       return BinlogInfo.earliest;
+    }
+
+    @Override
+    public BinlogDataId copyAndSetOrdinal(int ordinal) {
+      return this;
+    }
+
+    @Override
+    public BinlogDataId copyAndCount(int copy) {
+      return this;
     }
 
     @Override
