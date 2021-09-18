@@ -28,6 +28,8 @@ public class ColdFilter implements MethodFilter {
         SyncUtil.unsignedByte(sync, "type");
         break;
     }
+    // TODO 2021/9/9 add copyMeta test case
+//    sync.copyMeta()
     sync.mysql(sync.getRepo(), entity + "_bak");
   }
 }

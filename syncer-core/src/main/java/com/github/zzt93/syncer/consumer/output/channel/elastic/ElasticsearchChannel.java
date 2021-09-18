@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.output.channel.elastic;
 
 import com.github.zzt93.syncer.common.LogbackLoggingField;
 import com.github.zzt93.syncer.common.data.SyncData;
-import com.github.zzt93.syncer.common.thread.EventLoop;
+import com.github.zzt93.syncer.common.thread.NotExitEventLoop;
 import com.github.zzt93.syncer.common.thread.ThreadSafe;
 import com.github.zzt93.syncer.common.util.FallBackPolicy;
 import com.github.zzt93.syncer.common.util.NamedThreadFactory;
@@ -147,7 +147,7 @@ public class ElasticsearchChannel implements BufferedChannel<WriteRequest> {
     return true;
   }
 
-  public static class EsOutputJob implements EventLoop {
+  public static class EsOutputJob implements NotExitEventLoop {
     private final BlockingQueue<SyncData> queue;
     private final ElasticsearchChannel elasticsearchChannel;
 

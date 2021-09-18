@@ -5,7 +5,7 @@ import com.github.zzt93.syncer.common.LogbackLoggingField;
 import com.github.zzt93.syncer.common.data.DataId;
 import com.github.zzt93.syncer.common.data.SyncData;
 import com.github.zzt93.syncer.common.exception.FailureException;
-import com.github.zzt93.syncer.common.thread.EventLoop;
+import com.github.zzt93.syncer.common.thread.NotExitEventLoop;
 import com.github.zzt93.syncer.config.common.InvalidConfigException;
 import com.github.zzt93.syncer.config.consumer.output.FailureLogConfig;
 import com.github.zzt93.syncer.config.syncer.SyncerFilter;
@@ -37,7 +37,7 @@ import java.util.concurrent.CopyOnWriteArrayList;
  * @see OutputChannel#output(SyncData)
  * @author zzt
  */
-public class FilterJob implements EventLoop {
+public class FilterJob implements NotExitEventLoop {
 
 
   private final Logger logger = LoggerFactory.getLogger(FilterJob.class);
@@ -105,7 +105,6 @@ public class FilterJob implements EventLoop {
       }
     } catch (InvalidConfigException e) {
       logger.error("Invalid config for {}", poll, e);
-      shutdown(e, outputChannels);
     } catch (Throwable e) {
       failureLog.log(poll, "Invalid config");
       logger.error("Check [input & filter] config, otherwise syncer will be blocked: {}", poll, e);
@@ -121,7 +120,6 @@ public class FilterJob implements EventLoop {
           outputChannel.output(syncData);
         } catch (InvalidConfigException e) {
           logger.error("Invalid config for {}", syncData, e);
-          shutdown(e, outputChannels);
         } catch (FailureException e) {
           String err = FailureException.getErr(outputChannel, consumerId);
           failureLog.log(syncData, err);

@@ -125,7 +125,7 @@ public class ESRequestMapper implements Mapper<SyncData, Object> {
     BoolQueryBuilder builder = boolQuery();
     HashMap<String, Object> syncBy = data.getSyncBy();
     if (CollectionUtils.isEmpty(syncBy)) {
-      throw new InvalidConfigException("No data used to do sync(update/delete) filter: " + data);
+      throw new InvalidConfigException("Invalid config. Did you call `syncByQuery()` without `syncBy()`? " + data);
     }
     for (Entry<String, Object> entry : syncBy.entrySet()) {
       String[] key = entry.getKey().split("\\.");

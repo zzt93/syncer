@@ -2,7 +2,7 @@ package com.github.zzt93.syncer.consumer.output.batch;
 
 import com.github.zzt93.syncer.common.exception.FailureException;
 import com.github.zzt93.syncer.common.exception.ShutDownException;
-import com.github.zzt93.syncer.common.thread.EventLoop;
+import com.github.zzt93.syncer.common.thread.NotExitEventLoop;
 import com.github.zzt93.syncer.consumer.output.channel.BufferedChannel;
 import com.github.zzt93.syncer.health.Health;
 import com.github.zzt93.syncer.health.SyncerHealth;
@@ -12,7 +12,7 @@ import org.slf4j.LoggerFactory;
 /**
  * @author zzt
  */
-public class BatchJob implements EventLoop {
+public class BatchJob implements NotExitEventLoop {
 
   private static final Logger logger = LoggerFactory.getLogger(BatchJob.class);
 

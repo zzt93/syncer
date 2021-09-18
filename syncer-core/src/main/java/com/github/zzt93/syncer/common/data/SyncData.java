@@ -578,7 +578,10 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 	  private Map<String, String> filedNameToColumnFamily;
 
 		public void es(String index, String type) {
-			esIndex = index;
+      if (index == null || type == null) {
+        logger.warn("null index/type config, ignored: {}", this);
+      }
+      esIndex = index;
 			esType = type;
 		}
 
