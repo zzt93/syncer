@@ -26,7 +26,7 @@ public interface NotExitEventLoop extends EventLoop {
         logger.info("Shutting down ...");
         notExit = false;
       } catch (Throwable e) {
-        logger.error("Fail to loop: {}", getClass());
+        logger.error("Fail to loop: {}", getClass(), e);
       }
     }
   }

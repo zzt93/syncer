@@ -579,7 +579,7 @@ public class SyncData implements com.github.zzt93.syncer.data.SyncData, Serializ
 
 		public void es(String index, String type) {
       if (index == null || type == null) {
-        logger.warn("null index/type config, ignored: {}", this);
+        logger.warn("null index={}/type={} config for {}, ignored", index, type, this);
       }
       esIndex = index;
 			esType = type;
